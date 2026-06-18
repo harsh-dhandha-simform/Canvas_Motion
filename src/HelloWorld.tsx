@@ -67,7 +67,12 @@ export const HelloWorld: React.FC<z.infer<typeof myCompSchema>> = ({
           <Title titleText={propOne} titleColor={propTwo} />
         </Sequence>
         {/* The subtitle will only enter on the 75th frame. */}
-        <Sequence from={75}>
+        <Sequence
+          from={75}
+          style={{
+            translate: "464.1px 26.9px",
+          }}
+        >
           <Subtitle />
         </Sequence>
       </AbsoluteFill>
