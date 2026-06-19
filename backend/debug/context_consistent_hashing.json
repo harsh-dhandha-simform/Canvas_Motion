@@ -1,0 +1,883 @@
+{
+  "topic": "Consistent Hashing",
+  "director_brief": {
+    "topic": "Consistent Hashing",
+    "target_audience": "senior engineers",
+    "depth_level": "advanced",
+    "tone": "technical",
+    "palette": {
+      "background": "#0a0e1a",
+      "primary": "#7c3aed",
+      "secondary": "#0ea5e9",
+      "text": "#e5e7eb",
+      "muted": "#6b7280",
+      "code_bg": "#1e293b",
+      "highlight": "#fbbf24",
+      "success": "#10b981",
+      "danger": "#ef4444"
+    },
+    "typography": {
+      "heading_font": "Space Grotesk",
+      "body_font": "Inter",
+      "code_font": "Fira Code"
+    },
+    "total_seconds": 120,
+    "scene_count": 10,
+    "scene_titles": [
+      "The Scaling Puzzle of Distributed Caches",
+      "Static Sharding and Its Limits",
+      "Mapping Nodes to a Ring",
+      "Balancing Load with Virtual Nodes",
+      "Minimal Rehashing When Nodes Change",
+      "Finding the Right Slot for a Key",
+      "Node Outages and Data Redistribution",
+      "Consistency, Availability, and Latency Trade\u2011offs",
+      "Consistent Hashing in Cassandra, DynamoDB, and CDNs",
+      "Tuning Virtual Nodes and Monitoring Pitfalls"
+    ],
+    "key_concepts": [
+      "Hash Ring",
+      "Virtual Nodes",
+      "Load Balancing",
+      "Minimal Rehashing",
+      "Node Join/Leave",
+      "Key Lookup Algorithm",
+      "Failure Recovery",
+      "CAP Trade\u2011offs",
+      "Real\u2011World Use Cases",
+      "Tuning Parameters"
+    ],
+    "visual_metaphors": [
+      "Ring with points representing servers",
+      "Spinning wheel for virtual node replicas",
+      "Sliding puzzle illustrating rehashing impact",
+      "Heat map showing load distribution across the ring",
+      "Domino chain visualizing cascade on node failure",
+      "Compass needle pointing to the responsible slot",
+      "Scales balancing consistency vs. availability",
+      "Blueprint overlay of distributed databases",
+      "Control panel with sliders for virtual node count"
+    ],
+    "technical_depth": {
+      "cover_internals": true,
+      "show_trade_offs": true,
+      "include_failure_modes": true,
+      "show_real_world_examples": true
+    }
+  },
+  "script": {
+    "scenes": [
+      {
+        "scene_index": 0,
+        "title": "The Scaling Puzzle of Distributed Caches",
+        "narration": "Scaling a cache beyond a single node forces us to partition the keyspace. Static partitioning quickly leads to hotspots, because application traffic is rarely uniform. The overhead of manual rebalancing grows linearly with node count, making operations expensive. Consistent hashing offers a mathematically sound way to spread keys while keeping lookup deterministic. It also lets us add or remove nodes without reassigning the entire keyspace, which is crucial for elastic scaling.",
+        "key_points": [
+          "Scale by partitioning keys",
+          "Avoid hotspot traffic",
+          "Eliminate manual rebalancing",
+          "Deterministic key placement",
+          "Elastic node churn"
+        ],
+        "technical_terms": [
+          "distributed cache",
+          "cache sharding",
+          "hotspot",
+          "key distribution",
+          "write amplification"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 1,
+        "title": "Static Sharding and Its Limits",
+        "narration": "In static sharding, each node owns a contiguous range of keys defined at deployment time. When traffic skews, some ranges become overloaded while others sit idle. Adding a new node requires a full re\u2011partition of the entire range, which incurs network traffic and client disruption. Removing a node forces a large migration of data to the remaining nodes, increasing write amplification. These operational costs make static sharding unsuitable for highly dynamic, large\u2011scale systems.",
+        "key_points": [
+          "Fixed key ranges",
+          "Uneven load distribution",
+          "Full re\u2011partition on scaling",
+          "High write amplification",
+          "Operational overhead"
+        ],
+        "technical_terms": [
+          "static sharding",
+          "partition key",
+          "repartitioning",
+          "node churn",
+          "load skew"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 2,
+        "title": "Mapping Nodes to a Ring",
+        "narration": "Consistent hashing maps each physical node to a point on a virtual ring by hashing its identifier into a 32\u2011bit space. The ring is treated as a circle, so the maximum hash value wraps around to zero. A key is placed by hashing the key itself and then locating the first node clockwise on the ring. This deterministic mapping ensures that each key has exactly one responsible node and that the mapping is independent of the total number of nodes. The modulo operation is trivial, but the ring abstraction hides the complexity of wrap\u2011around arithmetic.",
+        "key_points": [
+          "Hash node identifier",
+          "32\u2011bit circular space",
+          "First clockwise node",
+          "Deterministic mapping",
+          "Wrap\u2011around handling"
+        ],
+        "technical_terms": [
+          "consistent hash ring",
+          "hash function",
+          "modulo",
+          "circular key space",
+          "deterministic mapping"
+        ],
+        "code_snippet": "function hashNode(id):\n    return crc32(id) & 0xffffffff\n\nring = []\nfor node in nodes:\n    ring.append((hashNode(node.id), node))\nring.sort(key=lambda x: x[0])"
+      },
+      {
+        "scene_index": 3,
+        "title": "Balancing Load with Virtual Nodes",
+        "narration": "Virtual nodes (vnodes) replicate each physical node multiple times around the ring, each with its own hash. This increases the density of points, smoothing the distribution of keys and reducing hotspots caused by uneven hash outputs. When a physical node joins or leaves, only the vnodes belonging to that node move, limiting the amount of data that needs to be redistributed. The replication factor per vnode can be tuned independently, allowing fine\u2011grained control over fault tolerance. As a result, load balancing becomes a matter of adjusting vnode count rather than re\u2011sharding the entire system.",
+        "key_points": [
+          "Replicate nodes as vnodes",
+          "Smooth key distribution",
+          "Limit data movement",
+          "Tune replication factor",
+          "Simplify scaling"
+        ],
+        "technical_terms": [
+          "virtual nodes",
+          "vnode",
+          "load balancing",
+          "replication factor",
+          "hash ring density"
+        ],
+        "code_snippet": "function addVNode(node, count):\n    for i in range(count):\n        vnodeHash = hashNode(f\"{node.id}-{i}\")\n        ring.append((vnodeHash, node))\nring.sort(key=lambda x: x[0])"
+      },
+      {
+        "scene_index": 4,
+        "title": "Minimal Rehashing When Nodes Change",
+        "narration": "When a node joins, only the keys that fall between its predecessor and itself must be moved to it; all other keys stay put. Similarly, when a node leaves, its keys are reassigned to its successor, affecting only a contiguous segment of the ring. This local rebalancing contrasts sharply with range sharding, where a full re\u2011partition can involve moving a majority of keys. The number of affected keys is proportional to 1/N, where N is the number of nodes, making the cost logarithmic in practice. Consequently, the system can scale to thousands of nodes with negligible data migration overhead.",
+        "key_points": [
+          "Only adjacent keys move",
+          "Local rebalancing",
+          "1/N key movement",
+          "Contrast with range sharding",
+          "Scalable node churn"
+        ],
+        "technical_terms": [
+          "minimal rehashing",
+          "node churn",
+          "key movement",
+          "range sharding",
+          "O(log n)"
+        ],
+        "code_snippet": "function rehashOnJoin(newNode):\n    pred = findPredecessor(newNode)\n    for key in keysBetween(pred.hash, newNode.hash):\n        moveKey(key, newNode)\nfunction rehashOnLeave(removedNode):\n    succ = findSuccessor(removedNode)\n    for key in removedNode.keys:\n        moveKey(key, succ)"
+      },
+      {
+        "scene_index": 5,
+        "title": "Finding the Right Slot for a Key",
+        "narration": "The lookup algorithm first hashes the key to a point on the ring. It then performs a binary search on the sorted vnode list to locate the smallest vnode hash that is greater than or equal to the key hash. If the key hash exceeds the maximum vnode hash, the search wraps to the first vnode, maintaining ring semantics. This O(log\u202fN) operation guarantees predictable latency even as the system scales to millions of vnodes. The deterministic nature of the algorithm also simplifies caching of lookup results across clients.",
+        "key_points": [
+          "Hash key to ring",
+          "Binary search on vnodes",
+          "Wrap\u2011around to first vnode",
+          "O(log\u202fN) latency",
+          "Deterministic assignment"
+        ],
+        "technical_terms": [
+          "key lookup",
+          "clockwise successor",
+          "binary search",
+          "hash ring traversal",
+          "consistent assignment"
+        ],
+        "code_snippet": "function findNode(key):\n    keyHash = hashKey(key)\n    idx = bisectLeft(vnodeHashes, keyHash)\n    if idx == len(vnodeHashes):\n        idx = 0  # wrap around\n    return vnodeNodes[idx]"
+      },
+      {
+        "scene_index": 6,
+        "title": "Node Outages and Data Redistribution",
+        "narration": "When a node is marked down by a health probe, its vnodes are logically removed from the ring; their keys are immediately served by the successor vnode. Replication ensures that each key has multiple copies; a write quorum guarantees that at least one replica remains available. Read operations can be served from any replica, trading off latency for consistency by using a read\u2011repair background job. If the node recovers, its vnodes are re\u2011inserted and a background sync pulls missing data from the replicas, restoring full consistency without affecting live traffic.",
+        "key_points": [
+          "Health probe marks node down",
+          "Keys served by successor",
+          "Write quorum for availability",
+          "Read\u2011repair restores consistency",
+          "Background sync on recovery"
+        ],
+        "technical_terms": [
+          "node outage",
+          "replication factor",
+          "quorum",
+          "data redistribution",
+          "graceful degradation"
+        ],
+        "code_snippet": "function onNodeFailure(node):\n    removeVnodes(node)\n    for key in node.keys:\n        replicateKey(key, findSuccessor(node))\nfunction onNodeRecovery(node):\n    addVnodes(node)\n    syncMissingKeys(node)"
+      },
+      {
+        "scene_index": 7,
+        "title": "Consistency, Availability, and Latency Trade\u2011offs",
+        "narration": "Consistent hashing itself is neutral regarding CAP; the trade\u2011offs arise from how replication and quorum are configured. A strong consistency model requires all replicas to acknowledge a write before it is considered durable, increasing write latency and reducing availability during partial failures. Eventual consistency relaxes this by allowing stale reads, which lowers latency but can expose read\u2011write conflicts. By tuning the replication factor and quorum thresholds, architects can position the system along the CAP spectrum to meet specific SLA requirements.",
+        "key_points": [
+          "CAP neutral by design",
+          "Strong consistency \u2192 higher latency",
+          "Eventual consistency \u2192 lower latency",
+          "Tune replication factor",
+          "Balance SLA goals"
+        ],
+        "technical_terms": [
+          "CAP theorem",
+          "eventual consistency",
+          "strong consistency",
+          "read latency",
+          "write amplification"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 8,
+        "title": "Consistent Hashing in Cassandra, DynamoDB, and CDNs",
+        "narration": "Apache Cassandra uses 256 vnodes per physical node to achieve fine\u2011grained load balancing across a cluster of thousands of nodes, enabling hot\u2011spot mitigation. Amazon DynamoDB partitions its keyspace into shards and relies on a similar hash ring to route traffic, achieving sub\u2011millisecond latency at petabyte scale. Content Delivery Networks, like Akamai and Cloudflare, place edge caches on a hash ring to evenly distribute user requests and to quickly evict or replicate content when edge nodes are added or removed. Each of these systems demonstrates that consistent hashing scales with both data volume and geographic distribution.",
+        "key_points": [
+          "Cassandra: 256 vnodes per node",
+          "DynamoDB: shard\u2011based ring",
+          "CDNs: edge cache distribution",
+          "Low\u2011latency routing",
+          "Geographic scalability"
+        ],
+        "technical_terms": [
+          "Cassandra",
+          "DynamoDB",
+          "CDN",
+          "vnodes",
+          "replication factor"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 9,
+        "title": "Tuning Virtual Nodes and Monitoring Pitfalls",
+        "narration": "Choosing the vnode count is a balancing act: too few vnodes lead to uneven load and hotspots; too many increase memory overhead and lookup latency. A heat\u2011map dashboard that visualizes key density per vnode reveals skew early, allowing operators to adjust the count or redistribute data. Monitoring metrics such as average vnode size, key lookup latency, and replication lag help detect when a node becomes a bottleneck. Automated alerts can trigger a re\u2011hash of a small subset of vnodes to smooth the load without a full cluster rebalancing. Over\u2011provisioning vnodes can also mask underlying hash function weaknesses, so periodic profiling of hash distribution is essential.",
+        "key_points": [
+          "Tune vnode count for balance",
+          "Heat\u2011map reveals skew",
+          "Monitor lookup latency",
+          "Auto\u2011rehash on bottleneck",
+          "Profile hash distribution"
+        ],
+        "technical_terms": [
+          "tuning",
+          "vnode count",
+          "heat map",
+          "load skew",
+          "metrics"
+        ],
+        "code_snippet": "function monitorVnodes():\n    for vnode in ring:\n        size = vnode.keyCount\n        latency = vnode.avgLookup\n        if size > THRESHOLD or latency > LATENCY_LIMIT:\n            triggerRehash(vnode)"
+      }
+    ]
+  },
+  "audio_design": {},
+  "storyboard": {
+    "scenes": [
+      {
+        "scene_index": 0,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "grid",
+        "visual_concept": "hash ring with physical nodes and keys",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title_text",
+            "description": "Heading in 'Space Grotesk' with 'The Scaling Puzzle of Distributed Caches' in 48px, subtitle 'Key distribution challenges' in 24px",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 3
+          },
+          {
+            "type": "svg_diagram",
+            "label": "hash_ring",
+            "description": "320px diameter hash ring with 4 physical nodes (blue circles) placed at cardinal points. 16 keys (orange squares) distributed unevenly, 3 nodes showing 'hot' red glow. Animated arrows show key movement between nodes",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "key_points",
+            "description": "Vertical bullet points in 'Inter' with 5 key points: 'Scale by partitioning keys', 'Avoid hotspot traffic', etc. Each item fades in sequentially",
+            "position": "left",
+            "animation": "highlight-sequence",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "fade",
+          "exit": "slide-right"
+        }
+      },
+      {
+        "scene_index": 1,
+        "layout": "split-screen-diagram-text",
+        "background_variant": "dark_blueprint",
+        "visual_concept": "static sharding vs dynamic ring",
+        "elements": [
+          {
+            "type": "svg_diagram",
+            "label": "static_sharding",
+            "description": "Left half: 3 horizontal partitions with uneven key distribution (red bars show hotspots). Right half: same data on hash ring showing even distribution",
+            "position": "full-width",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "title_text",
+            "description": "Title 'Static Sharding and Its Limits' in 40px, with 3px stroke for contrast",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 3
+          },
+          {
+            "type": "arrow_flow",
+            "label": "repartition_arrow",
+            "description": "Red animated arrows showing key movement during re-partitioning",
+            "position": "center",
+            "animation": "pulse",
+            "z_layer": 2
+          }
+        ],
+        "transitions": {
+          "enter": "slide-up",
+          "exit": "wipe-right"
+        }
+      },
+      {
+        "scene_index": 2,
+        "layout": "centered-diagram",
+        "background_variant": "particle_field",
+        "visual_concept": "32-bit hash ring with node placement",
+        "elements": [
+          {
+            "type": "svg_diagram",
+            "label": "hash_ring",
+            "description": "32-bit circular ring (400px diameter) with 8 nodes (blue circles). Each node has hash value labels. Animated key (yellow) hashes to point and moves clockwise to first node",
+            "position": "center",
+            "animation": "draw-path",
+            "z_layer": 1
+          },
+          {
+            "type": "code_block",
+            "label": "hash_code",
+            "description": "Right panel code block showing hashNode() function with syntax highlighting",
+            "position": "right",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "title_text",
+            "description": "Title 'Mapping Nodes to a Ring' in 44px with hash function formula in subscript",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "slide-left"
+        }
+      },
+      {
+        "scene_index": 3,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "mesh",
+        "visual_concept": "vnodes on hash ring",
+        "elements": [
+          {
+            "type": "svg_diagram",
+            "label": "vnode_ring",
+            "description": "4 physical nodes (large circles) with 3 vnodes each (small triangles) around 360px ring. Heat map overlay shows even distribution. Animated vnode replication process",
+            "position": "center-right",
+            "animation": "spin",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "title_text",
+            "description": "Title 'Balancing Load with Virtual Nodes' in 40px with replication factor formula",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "vnode_code",
+            "description": "Code block showing addVNode() function with syntax highlighting",
+            "position": "bottom-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "slide-right"
+        }
+      },
+      {
+        "scene_index": 4,
+        "layout": "centered-diagram",
+        "background_variant": "grid",
+        "visual_concept": "node join/leave with minimal rehashing",
+        "elements": [
+          {
+            "type": "svg_diagram",
+            "label": "rehash_animation",
+            "description": "Animated hash ring showing node joining (blue) with keys moving from predecessor (red). 50% of keys stay, 50% move. Contrast with static sharding's full rehash shown as gray arrows",
+            "position": "center",
+            "animation": "highlight-sequence",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "title_text",
+            "description": "Title 'Minimal Rehashing When Nodes Change' in 42px with O(log n) complexity formula",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "rehash_code",
+            "description": "Code block showing rehashOnJoin() and rehashOnLeave() functions",
+            "position": "bottom-center",
+            "animation": "fade-in",
+            "z_layer": 2
+          }
+        ],
+        "transitions": {
+          "enter": "slide-up",
+          "exit": "wipe-left"
+        }
+      },
+      {
+        "scene_index": 5,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "dark_blueprint",
+        "visual_concept": "key lookup algorithm",
+        "elements": [
+          {
+            "type": "svg_diagram",
+            "label": "lookup_animation",
+            "description": "Hash ring with 16 vnodes. Key (orange) hashes to point, binary search highlights vnodes, wraps to first vnode. Animated pointer moves to selected vnode",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "title_text",
+            "description": "Title 'Finding the Right Slot for a Key' in 40px with binary search formula",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "lookup_code",
+            "description": "Code block showing findNode() function with bisectLeft implementation",
+            "position": "bottom-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "slide-right"
+        }
+      },
+      {
+        "scene_index": 6,
+        "layout": "centered-diagram",
+        "background_variant": "particle_field",
+        "visual_concept": "node failure recovery",
+        "elements": [
+          {
+            "type": "svg_diagram",
+            "label": "failure_recovery",
+            "description": "Hash ring with 1 failed node (gray). Keys from failed node move to successor (blue). Replicated keys shown as red/green pairs. Background shows recovery process",
+            "position": "center",
+            "animation": "highlight-sequence",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "title_text",
+            "description": "Title 'Node Outages and Data Redistribution' in 42px",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "recovery_code",
+            "description": "Code block showing onNodeFailure() and onNodeRecovery() functions",
+            "position": "bottom-center",
+            "animation": "fade-in",
+            "z_layer": 2
+          }
+        ],
+        "transitions": {
+          "enter": "fade",
+          "exit": "slide-left"
+        }
+      },
+      {
+        "scene_index": 7,
+        "layout": "split-screen-diagram-text",
+        "background_variant": "gradient",
+        "visual_concept": "CAP trade-off triangle",
+        "elements": [
+          {
+            "type": "svg_diagram",
+            "label": "cap_triangle",
+            "description": "Triangle with 'Consistency', 'Availability', 'Latency' at vertices. Three states shown: strong (red), eventual (green), quorum (blue)",
+            "position": "left",
+            "animation": "highlight-sequence",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "title_text",
+            "description": "Title 'Consistency, Availability, and Latency Trade-offs' in 40px",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 3
+          },
+          {
+            "type": "state_machine",
+            "label": "cap_states",
+            "description": "Three-state machine showing transitions between consistency models",
+            "position": "right",
+            "animation": "fade-in",
+            "z_layer": 2
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "slide-right"
+        }
+      },
+      {
+        "scene_index": 8,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "dark_blueprint",
+        "visual_concept": "real-world implementations",
+        "elements": [
+          {
+            "type": "svg_diagram",
+            "label": "real_world",
+            "description": "Three panels: Cassandra's 256 vnodes ring, DynamoDB shard ring, CDN edge node ring with globe projection. Each shows distinct implementation patterns",
+            "position": "center-right",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "title_text",
+            "description": "Title 'Consistent Hashing in Cassandra, DynamoDB, and CDNs' in 40px",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 3
+          },
+          {
+            "type": "text_block",
+            "label": "tech_logos",
+            "description": "Cassandra, DynamoDB, and CDN logos in 36px with implementation notes",
+            "position": "bottom-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          }
+        ],
+        "transitions": {
+          "enter": "slide-up",
+          "exit": "wipe-right"
+        }
+      },
+      {
+        "scene_index": 9,
+        "layout": "centered-diagram",
+        "background_variant": "grid",
+        "visual_concept": "vnode monitoring interface",
+        "elements": [
+          {
+            "type": "svg_diagram",
+            "label": "monitoring",
+            "description": "Heat map ring with 32 vnodes. Red zones show hotspots. Monitoring dashboard with metrics: 'Avg VNode Size', 'Key Lookup Latency', 'Replication Lag'",
+            "position": "center",
+            "animation": "pulse",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "title_text",
+            "description": "Title 'Tuning Virtual Nodes and Monitoring Pitfalls' in 42px",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "monitor_code",
+            "description": "Code block showing monitorVnodes() function with alert thresholds",
+            "position": "bottom-center",
+            "animation": "fade-in",
+            "z_layer": 2
+          }
+        ],
+        "transitions": {
+          "enter": "fade",
+          "exit": "zoom-out"
+        }
+      }
+    ]
+  },
+  "timing": {
+    "fps": 30,
+    "total_frames": 3600,
+    "scenes": [
+      {
+        "scene_index": 0,
+        "start_frame": 0,
+        "duration_frames": 270,
+        "intro_hold_frames": 30,
+        "outro_hold_frames": 15,
+        "subtitle_chunks": [
+          {
+            "text": "Scaling a cache beyond a single node",
+            "start_frame": 30,
+            "duration_frames": 40
+          },
+          {
+            "text": "forces us to partition the keyspace",
+            "start_frame": 70,
+            "duration_frames": 40
+          },
+          {
+            "text": "Static partitioning quickly leads to hotspots",
+            "start_frame": 110,
+            "duration_frames": 40
+          }
+        ]
+      },
+      {
+        "scene_index": 1,
+        "start_frame": 270,
+        "duration_frames": 240,
+        "intro_hold_frames": 20,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "because application traffic is rarely uniform",
+            "start_frame": 20,
+            "duration_frames": 40
+          },
+          {
+            "text": "The overhead of manual rebalancing grows linearly",
+            "start_frame": 60,
+            "duration_frames": 40
+          },
+          {
+            "text": "with node count, making operations expensive",
+            "start_frame": 100,
+            "duration_frames": 40
+          }
+        ]
+      },
+      {
+        "scene_index": 2,
+        "start_frame": 510,
+        "duration_frames": 300,
+        "intro_hold_frames": 30,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Consistent hashing offers a mathematically sound",
+            "start_frame": 30,
+            "duration_frames": 40
+          },
+          {
+            "text": "way to spread keys while keeping lookup deterministic",
+            "start_frame": 70,
+            "duration_frames": 40
+          },
+          {
+            "text": "It also lets us add or remove nodes without reassigning",
+            "start_frame": 110,
+            "duration_frames": 40
+          }
+        ]
+      },
+      {
+        "scene_index": 3,
+        "start_frame": 810,
+        "duration_frames": 360,
+        "intro_hold_frames": 40,
+        "outro_hold_frames": 25,
+        "subtitle_chunks": [
+          {
+            "text": "the entire keyspace, which is crucial for elastic scaling",
+            "start_frame": 40,
+            "duration_frames": 40
+          },
+          {
+            "text": "Consistent hashing maps each physical node to a point",
+            "start_frame": 80,
+            "duration_frames": 40
+          },
+          {
+            "text": "on a virtual ring by hashing its identifier into a 32-bit space",
+            "start_frame": 120,
+            "duration_frames": 40
+          }
+        ]
+      },
+      {
+        "scene_index": 4,
+        "start_frame": 1170,
+        "duration_frames": 240,
+        "intro_hold_frames": 20,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "The ring is treated as a circle, so the maximum hash value",
+            "start_frame": 20,
+            "duration_frames": 40
+          },
+          {
+            "text": "wraps around to zero. A key is placed by hashing the key itself",
+            "start_frame": 60,
+            "duration_frames": 40
+          },
+          {
+            "text": "and then locating the first node clockwise on the ring",
+            "start_frame": 100,
+            "duration_frames": 40
+          }
+        ]
+      },
+      {
+        "scene_index": 5,
+        "start_frame": 1410,
+        "duration_frames": 300,
+        "intro_hold_frames": 30,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "This deterministic mapping ensures that each key has exactly",
+            "start_frame": 30,
+            "duration_frames": 40
+          },
+          {
+            "text": "one responsible node and that the mapping is independent",
+            "start_frame": 70,
+            "duration_frames": 40
+          },
+          {
+            "text": "of the total number of nodes. The modulo operation is trivial",
+            "start_frame": 110,
+            "duration_frames": 40
+          }
+        ]
+      },
+      {
+        "scene_index": 6,
+        "start_frame": 1710,
+        "duration_frames": 360,
+        "intro_hold_frames": 40,
+        "outro_hold_frames": 25,
+        "subtitle_chunks": [
+          {
+            "text": "but the ring abstraction hides the complexity of wrap-around",
+            "start_frame": 40,
+            "duration_frames": 40
+          },
+          {
+            "text": "arithmetic. Virtual nodes (vnodes) replicate each physical node",
+            "start_frame": 80,
+            "duration_frames": 40
+          },
+          {
+            "text": "multiple times around the ring, each with its own hash",
+            "start_frame": 120,
+            "duration_frames": 40
+          }
+        ]
+      },
+      {
+        "scene_index": 7,
+        "start_frame": 2070,
+        "duration_frames": 240,
+        "intro_hold_frames": 20,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "This increases the density of points, smoothing the distribution",
+            "start_frame": 20,
+            "duration_frames": 40
+          },
+          {
+            "text": "of keys and reducing hotspots caused by uneven hash outputs",
+            "start_frame": 60,
+            "duration_frames": 40
+          },
+          {
+            "text": "When a physical node joins or leaves, only the vnodes belonging",
+            "start_frame": 100,
+            "duration_frames": 40
+          }
+        ]
+      },
+      {
+        "scene_index": 8,
+        "start_frame": 2310,
+        "duration_frames": 300,
+        "intro_hold_frames": 30,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "to that node move, limiting the amount of data that needs to be",
+            "start_frame": 30,
+            "duration_frames": 40
+          },
+          {
+            "text": "redistributed. The replication factor per vnode can be tuned",
+            "start_frame": 70,
+            "duration_frames": 40
+          },
+          {
+            "text": "independently, allowing fine-grained control over fault tolerance",
+            "start_frame": 110,
+            "duration_frames": 40
+          }
+        ]
+      },
+      {
+        "scene_index": 9,
+        "start_frame": 2610,
+        "duration_frames": 360,
+        "intro_hold_frames": 40,
+        "outro_hold_frames": 25,
+        "subtitle_chunks": [
+          {
+            "text": "As a result, load balancing becomes a matter of adjusting vnode",
+            "start_frame": 40,
+            "duration_frames": 40
+          },
+          {
+            "text": "count rather than re-sharding the entire system. Choosing the vnode",
+            "start_frame": 80,
+            "duration_frames": 40
+          },
+          {
+            "text": "count is a balancing act: too few vnodes lead to uneven load and hotspots",
+            "start_frame": 120,
+            "duration_frames": 40
+          }
+        ]
+      }
+    ]
+  }
+}

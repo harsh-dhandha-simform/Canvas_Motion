@@ -1,0 +1,10 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "AI Video Generation Pipeline"
+requires-python = ">=3.10"
+dependencies = [
+    "groq>=1.4.0",
+    "langgraph>=1.2.6",
+    "langgraph-checkpoint-sqlite>=3.1.0",
+]

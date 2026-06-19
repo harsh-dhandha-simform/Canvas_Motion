@@ -8,7 +8,10 @@
   "dependencies": {
     "@remotion/animated-emoji": "4.0.481",
     "@remotion/cli": "4.0.481",
+    "@remotion/google-fonts": "^4.0.481",
+    "@remotion/light-leaks": "^4.0.481",
     "@remotion/tailwind-v4": "4.0.481",
+    "@remotion/transitions": "^4.0.481",
     "@remotion/zod-types": "4.0.481",
     "react": "19.2.3",
     "react-dom": "19.2.3",

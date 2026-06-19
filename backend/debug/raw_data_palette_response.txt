@@ -1,0 +1,272 @@
+Here are the generated files:
+
+```xml
+<file path="data.ts">
+import { loadFont } from "@remotion/google-fonts/Inter";
+import { loadFont as loadCodeFont } from "@remotion/google-fonts/FiraCode";
+
+export const FONT = loadFont();
+export const CODE_FONT = loadCodeFont();
+
+export const SCENE_TITLES = [
+  "The Scaling Puzzle of Distributed Caches",
+  "Static Sharding and Its Limits",
+  "Mapping Nodes to a Ring",
+  "Balancing Load with Virtual Nodes",
+  "Minimal Rehashing When Nodes Change",
+  "Finding the Right Slot for a Key",
+  "Node Outages and Data Redistribution",
+  "Consistency, Availability, and Latency Trade-offs",
+  "Consistent Hashing in Cassandra, DynamoDB, and CDNs",
+  "Tuning Virtual Nodes and Monitoring Pitfalls",
+];
+
+export const KEY_CONCEPTS = [
+  "Hash Ring",
+  "Virtual Nodes",
+  "Load Balancing",
+  "Minimal Rehashing",
+  "Node Join/Leave",
+  "Key Lookup Algorithm",
+  "Failure Recovery",
+  "CAP Trade-offs",
+  "Real-world Use Cases",
+  "Tuning Parameters",
+];
+
+export const VISUAL_METAPHORS = [
+  "Ring with points representing servers",
+  "Spinning wheel for virtual node replicas",
+  "Sliding puzzle illustrating rehashing impact",
+  "Heat map showing load distribution across the ring",
+  "Domino chain visualizing cascade on node failure",
+  "Compass needle pointing to the responsible slot",
+  "Scales balancing consistency vs. availability",
+  "Blueprint overlay of distributed databases",
+  "Control panel with sliders for virtual node count",
+];
+
+export const SUBTITLE_CHUNKS = [
+  {
+    text: "Scaling a cache beyond a single node",
+    start_frame: 30,
+    duration_frames: 40,
+  },
+  {
+    text: "forces us to partition the keyspace",
+    start_frame: 70,
+    duration_frames: 40,
+  },
+  {
+    text: "Static partitioning quickly leads to hotspots",
+    start_frame: 110,
+    duration_frames: 40,
+  },
+  {
+    text: "because application traffic is rarely uniform",
+    start_frame: 20,
+    duration_frames: 40,
+  },
+  {
+    text: "The overhead of manual rebalancing grows linearly",
+    start_frame: 60,
+    duration_frames: 40,
+  },
+  {
+    text: "with node count, making operations expensive",
+    start_frame: 100,
+    duration_frames: 40,
+  },
+  {
+    text: "Consistent hashing offers a mathematically sound",
+    start_frame: 30,
+    duration_frames: 40,
+  },
+  {
+    text: "way to spread keys while keeping lookup deterministic",
+    start_frame: 70,
+    duration_frames: 40,
+  },
+  {
+    text: "It also lets us add or remove nodes without reassigning",
+    start_frame: 110,
+    duration_frames: 40,
+  },
+  {
+    text: "the entire keyspace, which is crucial for elastic scaling",
+    start_frame: 40,
+    duration_frames: 40,
+  },
+  {
+    text: "Consistent hashing maps each physical node to a point",
+    start_frame: 80,
+    duration_frames: 40,
+  },
+  {
+    text: "on a virtual ring by hashing its identifier into a 32-bit space",
+    start_frame: 120,
+    duration_frames: 40,
+  },
+  {
+    text: "The ring is treated as a circle, so the maximum hash value",
+    start_frame: 20,
+    duration_frames: 40,
+  },
+  {
+    text: "wraps around to zero. A key is placed by hashing the key itself",
+    start_frame: 60,
+    duration_frames: 40,
+  },
+  {
+    text: "and then locating the first node clockwise on the ring",
+    start_frame: 100,
+    duration_frames: 40,
+  },
+  {
+    text: "This deterministic mapping ensures that each key has exactly",
+    start_frame: 30,
+    duration_frames: 40,
+  },
+  {
+    text: "one responsible node and that the mapping is independent",
+    start_frame: 70,
+    duration_frames: 40,
+  },
+  {
+    text: "of the total number of nodes. The modulo operation is trivial",
+    start_frame: 110,
+    duration_frames: 40,
+  },
+  {
+    text: "but the ring abstraction hides the complexity of wrap-around",
+    start_frame: 40,
+    duration_frames: 40,
+  },
+  {
+    text: "arithmetic. Virtual nodes (vnodes) replicate each physical node",
+    start_frame: 80,
+    duration_frames: 40,
+  },
+  {
+    text: "multiple times around the ring, each with its own hash",
+    start_frame: 120,
+    duration_frames: 40,
+  },
+  {
+    text: "This increases the density of points, smoothing the distribution",
+    start_frame: 20,
+    duration_frames: 40,
+  },
+  {
+    text: "of keys and reducing hotspots caused by uneven hash outputs",
+    start_frame: 60,
+    duration_frames: 40,
+  },
+  {
+    text: "When a physical node joins or leaves, only the vnodes belonging",
+    start_frame: 100,
+    duration_frames: 40,
+  },
+  {
+    text: "to that node move, limiting the amount of data that needs to be",
+    start_frame: 30,
+    duration_frames: 40,
+  },
+  {
+    text: "redistributed. The replication factor per vnode can be tuned",
+    start_frame: 70,
+    duration_frames: 40,
+  },
+  {
+    text: "independently, allowing fine-grained control over fault tolerance",
+    start_frame: 110,
+    duration_frames: 40,
+  },
+  {
+    text: "As a result, load balancing becomes a matter of adjusting vnode",
+    start_frame: 40,
+    duration_frames: 40,
+  },
+  {
+    text: "count rather than re-sharding the entire system. Choosing the vnode",
+    start_frame: 80,
+    duration_frames: 40,
+  },
+  {
+    text: "count is a balancing act: too few vnodes lead to uneven load and hotspots",
+    start_frame: 120,
+    duration_frames: 40,
+  },
+];
+
+export const TIMING = {
+  fps: 30,
+  total_frames: 3600,
+  scenes: [
+    {
+      scene_index: 0,
+      start_frame: 0,
+      duration_frames: 270,
+      intro_hold_frames: 30,
+      outro_hold_frames: 15,
+      subtitle_chunks: [
+        {
+          text: "Scaling a cache beyond a single node",
+          start_frame: 30,
+          duration_frames: 40,
+        },
+        {
+          text: "forces us to partition the keyspace",
+          start_frame: 70,
+          duration_frames: 40,
+        },
+        {
+          text: "Static partitioning quickly leads to hotspots",
+          start_frame: 110,
+          duration_frames: 40,
+        },
+      ],
+    },
+    {
+      scene_index: 1,
+      start_frame: 270,
+      duration_frames: 240,
+      intro_hold_frames: 20,
+      outro_hold_frames: 20,
+      subtitle_chunks: [
+        {
+          text: "because application traffic is rarely uniform",
+          start_frame: 20,
+          duration_frames: 40,
+        },
+        {
+          text: "The overhead of manual rebalancing grows linearly",
+          start_frame: 60,
+          duration_frames: 40,
+        },
+        {
+          text: "with node count, making operations expensive",
+          start_frame: 100,
+          duration_frames: 40,
+        },
+      ],
+    },
+    {
+      scene_index: 2,
+      start_frame: 510,
+      duration_frames: 300,
+      intro_hold_frames: 30,
+      outro_hold_frames: 20,
+      subtitle_chunks: [
+        {
+          text: "Consistent hashing offers a mathematically sound",
+          start_frame: 30,
+          duration_frames: 40,
+        },
+        {
+          text: "way to spread keys while keeping lookup deterministic",
+          start_frame: 70,
+          duration_frames: 40,
+        },
+        {
+          text: "It also lets us add or remove nodes
