@@ -1,0 +1,135 @@
+{
+  "title": "How Neural Networks Learn",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#7c3aed",
+    "secondary": "#f59e0b",
+    "accent": "#34d399",
+    "background": "#0b0f1e",
+    "font": "Inter"
+  },
+  "scenes": [
+    {
+      "id": "scene-intro",
+      "type": "AnimatedTitle",
+      "duration_frames": 120,
+      "transition": "fade",
+      "data": {
+        "title": "How Neural Networks Learn",
+        "subtitle": "Deep Learning Fundamentals",
+        "accentColor": "#7c3aed",
+        "align": "center"
+      }
+    },
+    {
+      "id": "scene-what-is-nn",
+      "type": "AnimatedTitle",
+      "duration_frames": 150,
+      "transition": "slideUp",
+      "data": {
+        "title": "Neurons & Layers",
+        "subtitle": "The Building Blocks",
+        "accentColor": "#f59e0b",
+        "align": "left"
+      }
+    },
+    {
+      "id": "scene-forward-pass",
+      "type": "AnimatedTitle",
+      "duration_frames": 150,
+      "transition": "fade",
+      "data": {
+        "title": "The Forward Pass",
+        "subtitle": "How Input Becomes Prediction",
+        "accentColor": "#34d399",
+        "align": "left"
+      }
+    },
+    {
+      "id": "scene-loss-function",
+      "type": "ComparisonCard",
+      "duration_frames": 180,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Choosing a Loss Function",
+        "pros": [
+          "MSE: smooth gradients for regression",
+          "Cross-entropy: sharp signal for classification",
+          "Huber: robust to outliers"
+        ],
+        "cons": [
+          "MSE punishes large errors quadratically",
+          "Cross-entropy explodes near 0 or 1",
+          "Huber introduces a tunable threshold"
+        ],
+        "accentColor": "#7c3aed"
+      }
+    },
+    {
+      "id": "scene-backprop",
+      "type": "AnimatedTitle",
+      "duration_frames": 180,
+      "transition": "zoom",
+      "data": {
+        "title": "Backpropagation",
+        "subtitle": "The Chain Rule in Action",
+        "accentColor": "#f59e0b",
+        "align": "left"
+      }
+    },
+    {
+      "id": "scene-gradient-descent",
+      "type": "ComparisonCard",
+      "duration_frames": 180,
+      "transition": "fade",
+      "data": {
+        "title": "Gradient Descent Variants",
+        "pros": [
+          "SGD: low memory, noisy escapes local minima",
+          "Adam: adaptive LR per parameter",
+          "RMSProp: stable in recurrent settings"
+        ],
+        "cons": [
+          "SGD: slow convergence, needs LR tuning",
+          "Adam: can overfit, higher memory cost",
+          "RMSProp: no momentum by default"
+        ],
+        "accentColor": "#34d399"
+      }
+    },
+    {
+      "id": "scene-overfitting",
+      "type": "ComparisonCard",
+      "duration_frames": 150,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Overfitting vs Underfitting",
+        "pros": [
+          "Dropout: randomly zeros activations",
+          "L2 regularization: penalises large weights",
+          "Early stopping: halts at val loss plateau"
+        ],
+        "cons": [
+          "Too much dropout slows convergence",
+          "L2 requires careful lambda selection",
+          "Early stopping needs held-out validation set"
+        ],
+        "accentColor": "#f59e0b"
+      }
+    },
+    {
+      "id": "scene-conclusion",
+      "type": "AnimatedTitle",
+      "duration_frames": 690,
+      "transition": "none",
+      "data": {
+        "title": "Train. Evaluate. Iterate.",
+        "subtitle": "The Neural Network Learning Loop",
+        "accentColor": "#7c3aed",
+        "align": "center"
+      }
+    }
+  ]
+}

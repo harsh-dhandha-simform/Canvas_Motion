@@ -19,9 +19,9 @@ export const GeneratedVideo: React.FC = () => {
   return (
     <AbsoluteFill className="bg-slate-950 text-white font-sans overflow-hidden">
       <TransitionSeries
-        from={2}
+        from={-901}
         style={{
-          translate: "105.1px -10.1px",
+          translate: "26.3px 6px",
         }}
       >
         <TransitionSeries.Sequence

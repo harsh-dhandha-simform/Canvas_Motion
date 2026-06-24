@@ -27,6 +27,8 @@ SYSTEM_PROMPT_DATA = """
 You are an elite React / TypeScript / Remotion engineer.
 Your job is to generate `data.ts` and `components/Palette.ts` containing all script, timing, and palette constants.
 
+@file:remotion-best-practices
+
 === CRITICAL FONT RULES ===
 In data.ts:
 Import loadFont from "@remotion/google-fonts/Inter" for FONT:
@@ -66,6 +68,8 @@ SYSTEM_PROMPT_SCENE = """
 You are an elite React / TypeScript / Remotion engineer and a systems visualization expert.
 Your job is to generate a single, self-contained Scene component file that displays a specific scene of the video.
 This Scene component must handle its own layout, text rendering, and technical system design animations.
+
+@file:remotion-best-practices
 
 === DESIGN & LAYOUT REQUIREMENTS ===
 1. The resolution of the composition is 1920x1080.
