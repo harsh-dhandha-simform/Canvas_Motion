@@ -1,7 +1,8 @@
 """
 backend/agents/sync.py — Agent 4: Sync Specialist
 
-Component-aware: uses component_type from the script to assign frame budgets.
+Component-aware timing with multi-panel layout consideration.
+Multi-panel scenes need more time since there's more content to absorb.
 """
 
 import json
@@ -16,7 +17,7 @@ AGENT_NAME = "SyncSpecialist"
 _CTX = build_agent_context()
 
 SYSTEM_PROMPT = f"""
-You are a video timing specialist. Compute Remotion frame timings for a technical video.
+You are a video timing specialist. Compute Remotion frame timings for a multi-panel technical video.
 
 {_CTX["remotion_timing_rules"]}
 
@@ -27,7 +28,7 @@ You are a video timing specialist. Compute Remotion frame timings for a technica
   "scenes": [
     {{
       "scene_index": <int>,
-      "component_type": "<ExactComponentName>",
+      "layout": "<layout name>",
       "start_frame": <int>,
       "duration_frames": <int>
     }}
@@ -36,19 +37,17 @@ You are a video timing specialist. Compute Remotion frame timings for a technica
 
 ## TIMING ALGORITHM
 1. total_frames = total_seconds x 30
-2. Assign each scene a base budget from the per-component table above (use midpoint of range)
-3. Scale all budgets proportionally so they sum to total_frames exactly
-4. Minimum duration_frames for any scene: 90
-
-## ADJUSTMENT RULES
-- AnimatedTitle (intro, index=0): use minimum (120 frames)
-- AnimatedTitle (outro, last scene): use minimum (120 frames)
-- ArchitectureDiagram: use upper half of range (300-360 frames)
-- SplitScreen with code: add 30 extra frames
-- start_frame[0] = 0
-- start_frame[i] = sum of all previous duration_frames
-- sum(all duration_frames) MUST equal total_frames exactly
-  -> adjust the last scene's duration_frames to absorb any rounding difference
+2. Base duration by layout (multi-panel scenes need MORE time to read):
+   - "full" (AnimatedTitle intro/outro): 120 frames (4s)
+   - "full" (other — QuoteCard, TypewriterText): 150-180 frames (5-6s)
+   - "title-content":     210-270 frames (7-9s) — one rich component
+   - "left-right":        240-300 frames (8-10s) — two side-by-side panels
+   - "title-left-right":  270-330 frames (9-11s) — header + two panels
+   - "title-main-sidebar":300-360 frames (10-12s) — three areas to absorb
+3. Assign base frames, then scale proportionally so sum == total_frames exactly
+4. Minimum: 120 frames for any scene
+5. start_frame[0] = 0; start_frame[i] = sum(duration_frames[0..i-1])
+6. Adjust last scene to absorb any rounding difference
 
 Return ONLY valid JSON. No markdown.
 """.strip()
@@ -59,7 +58,7 @@ def run_agent(director_brief: dict, script: dict) -> dict:
     logger.info("[%s] Computing timings: %ds @ 30fps", AGENT_NAME, total_seconds)
 
     scene_lines = "\n".join(
-        f"  Scene {s.get('scene_index', i)}: component_type={s.get('component_type')!r}"
+        f"  Scene {s.get('scene_index', i)}: layout={s.get('layout')!r}"
         for i, s in enumerate(script.get("scenes", []))
     )
 
@@ -67,8 +66,9 @@ def run_agent(director_brief: dict, script: dict) -> dict:
         f"total_seconds: {total_seconds}\n"
         f"total_frames: {total_seconds * 30}\n\n"
         f"Scenes:\n{scene_lines}\n\n"
-        "Compute duration_frames for each scene using the per-component frame budget table. "
-        "Ensure sum(duration_frames) == total_frames exactly. Return only JSON."
+        "Assign duration_frames using the layout-based table above. "
+        "Multi-panel layouts need more time — viewers must read multiple areas. "
+        "Ensure sum(duration_frames) == total_frames. Return only JSON."
     )
 
     raw = chat_completion(
@@ -88,21 +88,21 @@ def run_agent(director_brief: dict, script: dict) -> dict:
     timing["total_frames"] = expected
     timing["fps"] = 30
     scenes = timing.get("scenes", [])
+
     if scenes:
         actual = sum(s.get("duration_frames", 0) for s in scenes)
         if actual != expected:
-            diff = expected - actual
-            scenes[-1]["duration_frames"] = max(90, scenes[-1]["duration_frames"] + diff)
+            scenes[-1]["duration_frames"] = max(120, scenes[-1].get("duration_frames", 120) + (expected - actual))
         # Recompute start_frames
         cursor = 0
         for s in scenes:
             s["start_frame"] = cursor
             cursor += s.get("duration_frames", 0)
-        # Backfill component_type from script
+        # Backfill layout from script
         script_scenes = script.get("scenes", [])
         for i, s in enumerate(scenes):
             if i < len(script_scenes):
-                s["component_type"] = script_scenes[i].get("component_type", s.get("component_type", "BulletList"))
+                s["layout"] = script_scenes[i].get("layout", s.get("layout", "full"))
 
-    logger.info("[%s] ✅ Timing: %d frames, %d scenes", AGENT_NAME, expected, len(scenes))
+    logger.info("[%s] ✅ %d frames, %d scenes", AGENT_NAME, expected, len(scenes))
     return timing

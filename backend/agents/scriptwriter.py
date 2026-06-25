@@ -1,12 +1,8 @@
 """
 backend/agents/scriptwriter.py — Agent 2: Scriptwriter
 
-Component-aware: reads scene_types[] from the director brief and generates
-narration + component-specific data fields per scene.
-
-Text-heavy components (BulletList, StepFlow, SplitScreen, etc.) get their
-full data from this agent. Visual components (ArchitectureDiagram, BarChart,
-TimelineFlow) get only a title here — their nodes/bars/events come from Storyboard.
+Generates dense, technically rich content for every panel in every scene.
+Each scene is a multi-panel layout — the scriptwriter fills data for each panel.
 """
 
 import json
@@ -21,115 +17,131 @@ AGENT_NAME = "Scriptwriter"
 _CTX = build_agent_context()
 
 SYSTEM_PROMPT = f"""
-You are a Principal Engineer writing a component-aware script for a technical education video.
+You are a Principal Engineer writing dense, technically rich content for a multi-panel technical education video.
 
 {_CTX["compact_catalog"]}
 
 ## YOUR JOB
-For each scene, you receive the component type chosen by the Director.
-Write narration AND the component's data fields.
+For each scene you receive: layout, panel_plan (area + component type per panel), title, subtitle.
+Write the narration AND complete data for every panel.
 
 ## OUTPUT SCHEMA (return ONLY this JSON, no markdown):
 {{
   "scenes": [
     {{
       "scene_index": <int>,
-      "component_type": "<ExactComponentName>",
-      "narration": "<3-5 spoken sentences, deeply technical>",
-      "data": {{ ... component-specific fields, see rules below ... }}
+      "layout": "<layout name>",
+      "title": "<scene title — used as header text>",
+      "subtitle": "<1 sentence — shown under header>",
+      "narration": "<3-5 deeply technical spoken sentences>",
+      "panels": [
+        {{
+          "area": "<area name>",
+          "type": "<ExactComponentName>",
+          "data": {{ ... component-specific fields ... }}
+        }}
+      ]
     }}
   ]
 }}
 
-## DATA FIELD RULES PER COMPONENT TYPE
+## DATA RULES PER COMPONENT TYPE
 
-### AnimatedTitle
-data: {{"title": "<punchy title>", "subtitle": "<one compelling line or null>"}}
+### AnimatedTitle  (use in "full" layout, area="panel")
+data: {{"title": "<compelling title>", "subtitle": "<punchy tagline>"}}
 
 ### BulletList
-data: {{"title": "<section heading>", "items": ["<point 1>", "<point 2>", "<point 3>"]}}
-  - 3 to 7 items, each at most 12 words
-  - No full sentences — concise phrases
+data: {{"title": "<heading>", "items": ["<point>", ...]}}
+  - 5-7 items, each ≤12 words, specific and technical
+  - Include exact numbers, system names, trade-offs
 
 ### StepFlow
-data: {{"title": "<process name>", "steps": ["<step 1>", "<step 2>", "<step 3>"]}}
-  - 3 to 6 steps, each at most 10 words
-  - Start with a verb: "Hash the key", "Route to node", "Replicate to followers"
+data: {{"title": "<process name>", "steps": ["<Step>", ...]}}
+  - 4-6 steps, start with a verb: "Hash the key", "Acquire the lease"
+  - Each step ≤10 words
 
 ### ComparisonCard
-data: {{"title": "<what is being compared>", "pros": ["<advantage>"], "cons": ["<disadvantage>"]}}
-  - 3 to 5 items per side, each at most 10 words
-
-### SplitScreen
-data: {{"title": "<heading>", "bullets": ["<point>", "<point>", "<point>"], "codeSnippet": {{"code": "<code>", "language": "<lang>"}} }}
-  - 2 to 5 bullets
-  - Include codeSnippet only if there is genuine code to show; otherwise omit it
-
-### StatCallout
-data: {{"title": "<what the stat measures>", "value": <float>, "suffix": "<unit e.g. ms, req/s, %>", "description": "<one line explanation>"}}
-
-### TypewriterText
-data: {{"lines": ["<dramatic line 1>", "<dramatic line 2>"]}}
-  - 1 to 3 short punchy lines, each at most 8 words
-
-### QuoteCard
-data: {{"quote": "<the quote text>", "author": "<name or null>", "role": "<title or null>"}}
-
-### CodeBlock
-data: {{"title": "<what the code shows>", "code": "<code with \\n for newlines>", "language": "<python|go|yaml|etc>"}}
-
-### TwoColumnLayout
-data: {{"title": "<optional heading>", "left": {{"heading": "<left col name>", "points": ["<point>"]}}, "right": {{"heading": "<right col name>", "points": ["<point>"]}} }}
-  - 3 to 5 points per column
-
-### BarChart
-data: {{"title": "<chart title>", "bars": [{{"label": "<name>", "value": <float>}}]}}
-  - 3 to 6 bars with realistic comparative values
+data: {{"title": "<what is compared>", "pros": ["<pro>", ...], "cons": ["<con>", ...]}}
+  - 4-5 items per side, each ≤10 words with real technical trade-offs
 
 ### ArchitectureDiagram
 data: {{"title": "<diagram title>"}}
-  <- ONLY the title. Nodes and connections will be added by the Storyboard agent.
+  Nodes and connections come from Storyboard. Only output the title here.
+
+### BarChart
+data: {{"title": "<chart title>", "bars": [{{"label": "<name>", "value": <float>}}]}}
+  - 4-6 bars with REALISTIC, accurate values (e.g. latency in ms, throughput in req/s)
+  - Include the unit in the title (e.g. "Read Latency (ms)")
 
 ### TimelineFlow
-data: {{"title": "<optional timeline title>"}}
-  <- ONLY the title. Events will be added by the Storyboard agent.
+data: {{"title": "<timeline title>"}}
+  Events come from Storyboard. Only output the title here.
+
+### CodeBlock
+data: {{"title": "<what it shows>", "code": "<real code with \\n>", "language": "<python|go|yaml|bash|sql>"}}
+  - 8-15 lines of REAL, production-quality code or config
+  - Annotate with comments showing what each part does
+
+### StatCallout
+data: {{"title": "<metric name>", "value": <real float>, "suffix": "<unit>", "description": "<1 sentence context>"}}
+  - Use a real-world number that makes the point dramatically (e.g. 99.99, 6, 10000, 0.03)
+
+### TypewriterText
+data: {{"lines": ["<line 1>", "<line 2>"]}}
+  - 2-3 short, punchy, evocative lines (≤8 words each)
+
+### QuoteCard
+data: {{"quote": "<impactful real quote>", "author": "<name>", "role": "<title or paper>"}}
+
+### SplitScreen
+data: {{"title": "<heading>", "bullets": ["<point>", ...], "codeSnippet": {{"code": "...", "language": "..."}} }}
+  - 4-6 bullets + real code snippet (8-12 lines)
+
+### TwoColumnLayout
+data: {{"title": "<heading>", "left": {{"heading": "<col A>", "points": ["<point>", ...]}}, "right": {{"heading": "<col B>", "points": ["<point>", ...]}} }}
+  - 4-5 points per column, technically precise
 
 ## NARRATION RULES
-- 3-5 complete technical sentences per scene
-- Explain the WHY before the HOW
-- Reference real systems (Kafka, Cassandra, Redis, Kubernetes, etcd) when relevant
-- Progressive complexity — each scene builds on the previous
+- 3-5 complete spoken sentences
+- Explain WHY first, then HOW — motivation-first teaching
+- Reference real systems (Kafka, Cassandra, Redis, Kubernetes, etcd, DynamoDB, Spanner, Zookeeper)
+- Include exact trade-offs, failure modes, or performance numbers in at least 1 sentence
+- Build progressive complexity — each scene assumes the viewer understood the previous
 
 ## CRITICAL
-- scenes array length MUST equal the number of scene_types in the director brief
-- component_type in each scene MUST exactly match the director's scene_types[i]
-- data fields must match the schema for that component type exactly
+- panels array must have exactly the same panels (area + type) as the director's scene_panel_plans[i]
+- data must match the schema for each component type exactly
+- For ArchitectureDiagram and TimelineFlow: only output title in data (visual data comes from Storyboard)
+- NEVER output empty items[], steps[], pros[], cons[], bars[], or lines[]
 - Return ONLY valid JSON
 """.strip()
 
 
 def run_agent(director_brief: dict) -> dict:
     topic = director_brief.get("topic", "")
-    scene_types = director_brief.get("scene_types", [])
     scene_titles = director_brief.get("scene_titles", [])
+    scene_subtitles = director_brief.get("scene_subtitles", [])
+    scene_layouts = director_brief.get("scene_layouts", [])
+    scene_panel_plans = director_brief.get("scene_panel_plans", [])
 
-    logger.info(
-        "[%s] Writing component-aware script: %d scenes, types=%s",
-        AGENT_NAME, len(scene_types), scene_types,
-    )
+    logger.info("[%s] Writing %d multi-panel scenes for %r", AGENT_NAME, len(scene_titles), topic)
 
-    scene_plan = "\n".join(
-        f"  Scene {i+1}: title={title!r}  component_type={ctype!r}"
-        for i, (title, ctype) in enumerate(zip(scene_titles, scene_types))
+    scene_plan_text = "\n".join(
+        f"  Scene {i}: layout={layout!r}  title={title!r}  subtitle={sub!r}\n"
+        f"    panels: {json.dumps(panels)}"
+        for i, (title, sub, layout, panels) in enumerate(
+            zip(scene_titles, scene_subtitles, scene_layouts, scene_panel_plans)
+        )
     )
 
     user_message = (
         f"Topic: {topic!r}\n"
         f"arc_type: {director_brief.get('arc_type')!r}\n"
         f"total_seconds: {director_brief.get('total_seconds')}\n\n"
-        f"Scene plan (you MUST follow these component types exactly):\n{scene_plan}\n\n"
-        "Write narration + component data for each scene. "
-        "Return only JSON matching the output schema."
+        f"Scene plans:\n{scene_plan_text}\n\n"
+        "Write deeply technical narration + panel data for each scene. "
+        "For ArchitectureDiagram and TimelineFlow panels, output only the title in data. "
+        "Return only JSON."
     )
 
     raw = chat_completion(
@@ -138,20 +150,37 @@ def run_agent(director_brief: dict) -> dict:
             {"role": "user", "content": user_message},
         ],
         temperature=0.7,
-        max_tokens=8192,
+        max_tokens=10000,
         agent_name=AGENT_NAME,
     )
 
     script: dict = json.loads(extract_json(raw))
 
-    # Backfill component_type from director if LLM forgot or got it wrong
+    # Backfill layout/title/subtitle from director if LLM omitted them
     for i, scene in enumerate(script.get("scenes", [])):
-        if i < len(scene_types):
-            scene["component_type"] = scene_types[i]
-        if "data" not in scene or not isinstance(scene.get("data"), dict):
-            scene["data"] = {}
-        if "title" not in scene["data"] and i < len(scene_titles):
-            scene["data"]["title"] = scene_titles[i]
+        if i < len(scene_layouts):
+            scene.setdefault("layout", scene_layouts[i])
+        if i < len(scene_titles):
+            scene.setdefault("title", scene_titles[i])
+        if i < len(scene_subtitles):
+            scene.setdefault("subtitle", scene_subtitles[i])
+        # Backfill panel areas/types from director plan
+        if i < len(scene_panel_plans):
+            plan = scene_panel_plans[i]
+            panels = scene.get("panels", [])
+            plan_areas = {p["area"]: p["type"] for p in plan}
+            panel_areas = {p.get("area"): p for p in panels}
+            merged = []
+            for p_plan in plan:
+                area = p_plan["area"]
+                ctype = p_plan["type"]
+                existing = panel_areas.get(area, {})
+                merged.append({
+                    "area": area,
+                    "type": ctype,
+                    "data": existing.get("data", {"title": scene.get("title", "")}),
+                })
+            scene["panels"] = merged
 
     logger.info("[%s] ✅ Script: %d scenes", AGENT_NAME, len(script.get("scenes", [])))
     return script

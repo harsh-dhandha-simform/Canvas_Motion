@@ -10,63 +10,73 @@ logger = logging.getLogger(__name__)
 # Agent context — injected into all agent system prompts at pipeline start
 # ---------------------------------------------------------------------------
 
-COMPACT_CATALOG = """## AVAILABLE COMPONENTS (13 total — use EXACT type names)
+COMPACT_CATALOG = """## LAYOUT SYSTEM — every scene uses one of these 5 layouts
 
-AnimatedTitle
-  Use for: intro title cards, section breaks, outro
+  "full"               One panel, area="panel". Full 1920×1080. Use for intro/outro AnimatedTitle.
+  "left-right"         Two panels: area="left" (960×1080) + area="right" (960×1080). No header.
+  "title-content"      Header bar (auto) + one panel area="main" (1920×920). Deep explanation.
+  "title-left-right"   Header bar + area="left" (960×920) + area="right" (960×920). Most common.
+  "title-main-sidebar" Header bar + area="main" (1248×920, wide) + area="sidebar" (672×920, narrow).
+
+  Header bar is rendered automatically from scene.title + scene.subtitle.
+  Panels only fill the non-header areas listed above.
+  RULE: panels[].area must exactly match the area names for the chosen layout.
+
+## AVAILABLE COMPONENTS (13 total — use EXACT type names)
+
+AnimatedTitle    → Full-screen dramatic title. ONLY use in "full" layout, area="panel".
   data: {title: str, subtitle?: str, align?: "left"|"center"}
 
-BulletList
-  Use for: 3-7 key points, takeaways, feature lists
+BulletList       → 3-7 concise bullets with staggered reveal.
   data: {title: str, items: str[]}
+  GREAT in: "left", "right", "sidebar"
 
-StepFlow
-  Use for: sequential steps, ordered process, how-it-works
-  data: {title: str, steps: str[]}
+StepFlow         → Animated horizontal step-by-step flow.
+  data: {title: str, steps: str[]}  (3-6 steps)
+  GREAT in: "left", "main"
 
-ComparisonCard
-  Use for: pros vs cons, trade-off analysis, A vs B
-  data: {title: str, pros: str[], cons: str[]}
+ComparisonCard   → Side-by-side pros vs cons.
+  data: {title: str, pros: str[], cons: str[]}  (3-5 items each)
+  GREAT in: "main", "panel" (full), "left"
 
-SplitScreen
-  Use for: left-panel bullets + optional right-panel code snippet
-  data: {title: str, bullets?: str[], codeSnippet?: {code: str, language: str}}
-
-StatCallout
-  Use for: single dramatic metric ("99.99% uptime", "10K req/s")
-  data: {title: str, value: float, suffix?: str, description?: str}
-
-ArchitectureDiagram
-  Use for: system topology — servers, LBs, databases, connections
+ArchitectureDiagram → System topology with nodes and connections.
   data: {title: str, nodes: Node[], connections: Connection[]}
-  Node: {id: str, type: "client"|"server"|"loadBalancer"|"database", x: float(0-100), y: float(0-100), label: str}
-  Connection: {fromId: str, toId: str, type: "stream"|"arrow"}
+  Node: {id, type: "client"|"server"|"loadBalancer"|"database", x: 0-100, y: 0-100, label}
+  Connection: {fromId, toId, type: "stream"|"arrow"}
+  RULE: nodes[] must have ≥3 entries. NEVER leave nodes[] empty.
+  GREAT in: "right", "main"
 
-TypewriterText
-  Use for: dramatic single statement, hook reveal, punchy line
-  data: {lines: str[]}
+BarChart         → Animated bar chart comparing numeric values.
+  data: {title?: str, bars: [{label, value, color?}]}  (3-6 bars)
+  GREAT in: "right", "sidebar"
 
-TimelineFlow
-  Use for: chronological events, history, evolution of a technology
-  data: {title?: str, events: Event[], direction?: "vertical"|"horizontal"}
-  Event: {year: str, label: str, description?: str}
+TimelineFlow     → Chronological events with staggered reveal.
+  data: {title?: str, events: [{year, label, description?}]}  (3-6 events)
+  GREAT in: "main", "panel" (full)
 
-QuoteCard
-  Use for: quote from a paper, engineer, or design principle
-  data: {quote: str, author?: str, role?: str}
-
-CodeBlock
-  Use for: code walkthroughs, config examples, pseudocode
+CodeBlock        → macOS-style code window with syntax highlighting.
   data: {code: str, language?: str, title?: str}
+  GREAT in: "right", "main", "sidebar"
 
-TwoColumnLayout
-  Use for: side-by-side comparison with headings and bullet points
+StatCallout      → Large animated metric number.
+  data: {title: str, value: float, suffix?: str, description?: str}
+  GREAT in: "sidebar", "right"
+
+TypewriterText   → Character-by-character text reveal.
+  data: {lines: str[]}  (1-3 short lines)
+  GREAT in: "panel" (full) for dramatic openers
+
+QuoteCard        → Pull quote with author attribution.
+  data: {quote: str, author?: str, role?: str}
+  GREAT in: "panel" (full), "main"
+
+SplitScreen      → Bullets + optional code snippet combined.
+  data: {title: str, bullets?: str[], codeSnippet?: {code: str, language: str}}
+  GREAT in: "main"
+
+TwoColumnLayout  → Two-column comparison with headings.
   data: {title?: str, left: {heading: str, points: str[]}, right: {heading: str, points: str[]}}
-
-BarChart
-  Use for: comparing numeric values — latency, throughput, cost
-  data: {title?: str, bars: Bar[], layout?: "vertical"|"horizontal"}
-  Bar: {label: str, value: float, color?: str}
+  GREAT in: "panel" (full), "main"
 """
 
 REMOTION_TIMING_RULES = """## REMOTION TIMING RULES (fps = 30)

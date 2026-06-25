@@ -1,8 +1,9 @@
 """
 backend/agents/storyboard.py — Agent 3: Storyboard
 
-Produces visual data for diagram/chart components and assigns transitions.
-Text-heavy components get visual_data={} — their data comes from Scriptwriter.
+Provides:
+  - transition + background_variant per scene
+  - visual_data (nodes/bars/events) for diagram/chart panels, keyed by panel area
 """
 
 import json
@@ -17,113 +18,125 @@ AGENT_NAME = "Storyboard"
 _CTX = build_agent_context()
 
 SYSTEM_PROMPT = f"""
-You are a Visual Data Designer for technical education videos.
-Your job: generate structured visual data for diagram/chart components
-and assign transitions for every scene.
+You are a Visual Data Designer for a multi-panel technical education video.
 
 {_CTX["compact_catalog"]}
+
+## YOUR JOB
+For each scene, produce:
+  1. transition (scene-level)
+  2. background_variant (scene-level)
+  3. panel_visual_data: a map of area -> visual_data for diagram/chart panels
 
 ## OUTPUT SCHEMA (return ONLY this JSON, no markdown):
 {{
   "scenes": [
     {{
       "scene_index": <int>,
-      "component_type": "<ExactComponentName>",
       "transition": "<fade|slideLeft|slideUp|zoom|none>",
       "background_variant": "<gradient|grid|dark_blueprint|mesh|solid>",
-      "visual_data": {{ ... see rules below ... }}
+      "panel_visual_data": {{
+        "<area>": {{ ... visual data for that panel ... }},
+        ...
+      }}
     }}
   ]
 }}
 
-## VISUAL DATA RULES PER COMPONENT
+## PANEL VISUAL DATA RULES
 
-### ArchitectureDiagram — REQUIRED non-empty nodes and connections
-visual_data: {{
+### ArchitectureDiagram panels — panel_visual_data["<area>"] must contain:
+{{
   "nodes": [
-    {{"id": "client", "type": "client", "x": 10, "y": 50, "label": "Client"}},
-    {{"id": "lb", "type": "loadBalancer", "x": 35, "y": 50, "label": "Load Balancer"}},
-    {{"id": "server1", "type": "server", "x": 60, "y": 30, "label": "Server A"}},
-    {{"id": "server2", "type": "server", "x": 60, "y": 70, "label": "Server B"}},
-    {{"id": "db", "type": "database", "x": 85, "y": 50, "label": "PostgreSQL"}}
+    {{"id": "lb",      "type": "loadBalancer", "x": 15,  "y": 50,  "label": "Load Balancer"}},
+    {{"id": "svc1",   "type": "server",       "x": 45,  "y": 25,  "label": "Service A"}},
+    {{"id": "svc2",   "type": "server",       "x": 45,  "y": 75,  "label": "Service B"}},
+    {{"id": "db",     "type": "database",     "x": 80,  "y": 50,  "label": "PostgreSQL"}},
+    {{"id": "client", "type": "client",       "x": 5,   "y": 50,  "label": "Client"}}
   ],
   "connections": [
-    {{"fromId": "client", "toId": "lb", "type": "arrow"}},
-    {{"fromId": "lb", "toId": "server1", "type": "arrow"}},
-    {{"fromId": "lb", "toId": "server2", "type": "arrow"}},
-    {{"fromId": "server1", "toId": "db", "type": "stream"}},
-    {{"fromId": "server2", "toId": "db", "type": "stream"}}
+    {{"fromId": "client", "toId": "lb",   "type": "arrow"}},
+    {{"fromId": "lb",     "toId": "svc1", "type": "arrow"}},
+    {{"fromId": "lb",     "toId": "svc2", "type": "arrow"}},
+    {{"fromId": "svc1",   "toId": "db",   "type": "stream"}},
+    {{"fromId": "svc2",   "toId": "db",   "type": "stream"}}
   ]
 }}
-Node rules:
-  - id: short unique string (no spaces)
+Rules:
+  - nodes[] MUST have 3-8 entries (never empty or fewer than 3)
+  - id: unique, short, no spaces
   - type: exactly "client" | "server" | "loadBalancer" | "database"
-  - x, y: float 0-100 (percentage of 1920x1080 canvas). Spread nodes across the canvas.
-  - label: short display name (20 chars max)
-  - At least 3 nodes, at most 8 nodes
-Connection rules:
-  - fromId and toId must match existing node ids
-  - type: "arrow" for request/response flow, "stream" for continuous data
+  - x, y: float 0-100 (percent of the diagram area). Spread spatially:
+      clients at x≈5-15 (left), load balancers at x≈30-40, servers at x≈55-65, databases at x≈80-90
+      Use y to spread vertically: multiple servers at y=20,50,80; single nodes at y=50
+  - Every node must appear in at least one connection
+  - Use "stream" for continuous data flows (writes, replication), "arrow" for request/response
 
-### BarChart
-visual_data: {{
+### BarChart panels — panel_visual_data["<area>"] must contain:
+{{
   "bars": [
-    {{"label": "Option A", "value": 45.0, "color": "#7c3aed"}},
-    {{"label": "Option B", "value": 120.0, "color": "#f59e0b"}}
+    {{"label": "Option A", "value": 120.0, "color": "#6366f1"}},
+    {{"label": "Option B", "value": 45.0,  "color": "#10b981"}},
+    {{"label": "Option C", "value": 280.0, "color": "#f59e0b"}}
   ]
 }}
-  - 3 to 6 bars with REALISTIC numeric values for the technical concept
-  - Use meaningful units (milliseconds, requests/sec, GB, etc.)
+  - 4-6 bars with ACCURATE values matching the topic (latency ms, req/s, GB, %)
+  - Colors should vary and contrast
 
-### TimelineFlow
-visual_data: {{
+### TimelineFlow panels — panel_visual_data["<area>"] must contain:
+{{
   "events": [
-    {{"year": "2006", "label": "Amazon S3 launches", "description": "Object storage at scale"}},
-    {{"year": "2010", "label": "Cassandra open-sourced", "description": "Wide-column NoSQL"}}
+    {{"year": "2003", "label": "Google GFS paper", "description": "Distributed file system for petabyte-scale data"}},
+    {{"year": "2006", "label": "Amazon Dynamo",   "description": "Always-write availability with eventual consistency"}}
   ]
 }}
-  - 3 to 6 events, ordered chronologically
-  - year: string (can be "2006", "Q3 2010", "Early 2015")
+  - 4-6 events in strict chronological order
+  - Descriptions: 1 meaningful sentence each (not just a label)
 
-### ALL OTHER COMPONENTS (AnimatedTitle, BulletList, StepFlow, etc.)
-visual_data: {{}}   <- empty dict, no visual data needed
+### All other panels — DO NOT include them in panel_visual_data
+  Only ArchitectureDiagram, BarChart, and TimelineFlow panels need visual data.
 
-## TRANSITION SELECTION RULES
-- "fade": calm reveal — intro (scene 0), reflective, conclusion scenes
-- "slideLeft": forward motion — between sequential content scenes
-- "slideUp": upward energy — after a comparison or before a reveal
-- "zoom": emphasis — use at most ONCE per video for the key insight scene
-- "none": ONLY for the very last scene (index = total_scenes - 1)
-- Do NOT repeat the same transition for 3+ consecutive scenes
+## TRANSITION RULES
+- "fade":      intro (scene 0), reflective scenes, stat reveals
+- "slideLeft": sequential content scenes (most common)
+- "slideUp":   after a comparison, before a key reveal
+- "zoom":      use ONCE for the most important insight scene
+- "none":      ONLY the very last scene
+- No 3 consecutive identical transitions
 
-## BACKGROUND VARIANT RULES
-- "gradient": AnimatedTitle, QuoteCard, intro/outro
-- "grid": ArchitectureDiagram, CodeBlock (technical/blueprint feel)
-- "dark_blueprint": ArchitectureDiagram (alternative)
-- "mesh": network-heavy diagrams, distributed system scenes
-- "solid": StatCallout, TypewriterText (minimal, clean)
+## BACKGROUND RULES
+- "gradient":      intro/outro AnimatedTitle, QuoteCard scenes
+- "grid":          ArchitectureDiagram-heavy scenes (has right diagram)
+- "dark_blueprint": ArchitectureDiagram scenes (alternative)
+- "mesh":          distributed/network scenes with diagrams
+- "solid":         StatCallout, TypewriterText, CodeBlock-heavy scenes
 
-Return ONLY valid JSON. No markdown fences, no prose.
+Return ONLY valid JSON. No markdown fences.
 """.strip()
 
 
 def run_agent(director_brief: dict, script: dict) -> dict:
-    scene_count = len(script.get("scenes", []))
-    logger.info("[%s] Designing visual data for %d scenes", AGENT_NAME, scene_count)
+    scenes = script.get("scenes", [])
+    logger.info("[%s] Designing visual data for %d scenes", AGENT_NAME, len(scenes))
 
-    scene_lines = "\n".join(
-        f"  Scene {s.get('scene_index', i)+1}: component_type={s.get('component_type')!r}  title={s.get('data', {}).get('title', s.get('title', ''))!r}"
-        for i, s in enumerate(script.get("scenes", []))
-    )
+    # Build a compact scene summary for the user message
+    scene_lines = []
+    for s in scenes:
+        panels_summary = ", ".join(
+            f"{p.get('area')}={p.get('type')}"
+            for p in s.get("panels", [])
+        )
+        scene_lines.append(
+            f"  Scene {s.get('scene_index', '?')}: layout={s.get('layout')!r}  panels=[{panels_summary}]"
+        )
 
     user_message = (
-        f"Topic: {director_brief.get('topic')!r}  arc_type: {director_brief.get('arc_type')!r}\n\n"
-        f"Scenes (you must produce visual_data for each):\n{scene_lines}\n\n"
-        "For ArchitectureDiagram scenes: nodes[] and connections[] are REQUIRED and must be non-empty.\n"
-        "For BarChart: bars[] with realistic values.\n"
-        "For TimelineFlow: events[] with chronological entries.\n"
-        "For ALL others: visual_data must be {}.\n"
-        "Assign a transition and background_variant to every scene.\n"
+        f"Topic: {director_brief.get('topic')!r}\n\n"
+        f"Scenes:\n" + "\n".join(scene_lines) + "\n\n"
+        "For each ArchitectureDiagram panel: provide realistic nodes[] and connections[] in panel_visual_data.\n"
+        "For each BarChart panel: provide accurate bars[] with real-world values.\n"
+        "For each TimelineFlow panel: provide ordered events[].\n"
+        "Assign transition and background_variant to every scene.\n"
         "Return only JSON."
     )
 
@@ -139,20 +152,14 @@ def run_agent(director_brief: dict, script: dict) -> dict:
 
     story: dict = json.loads(extract_json(raw))
 
-    # Backfill component_type and ensure visual_data exists
-    script_scenes = script.get("scenes", [])
-    for i, scene in enumerate(story.get("scenes", [])):
-        if i < len(script_scenes):
-            scene["component_type"] = script_scenes[i].get("component_type", scene.get("component_type", "BulletList"))
-        if "visual_data" not in scene or not isinstance(scene.get("visual_data"), dict):
-            scene["visual_data"] = {}
-        if "transition" not in scene:
-            scene["transition"] = "fade"
+    # Normalize: ensure panel_visual_data exists and last scene is "none"
+    storyboard_scenes = story.get("scenes", [])
+    for scene in storyboard_scenes:
+        scene.setdefault("panel_visual_data", {})
+        scene.setdefault("transition", "slideLeft")
 
-    # Force last scene transition to "none"
-    scenes = story.get("scenes", [])
-    if scenes:
-        scenes[-1]["transition"] = "none"
+    if storyboard_scenes:
+        storyboard_scenes[-1]["transition"] = "none"
 
-    logger.info("[%s] ✅ Storyboard: %d scenes", AGENT_NAME, len(scenes))
+    logger.info("[%s] ✅ Storyboard: %d scenes", AGENT_NAME, len(storyboard_scenes))
     return story
