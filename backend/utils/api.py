@@ -1,178 +1,180 @@
 """
-backend/utils/api.py — Groq API wrapper with automatic retry on rate-limit errors.
+backend/utils/api.py — Groq API wrapper with RPM + TPM rate-limit awareness.
 
-Wraps every chat-completion call with:
-  • Exponential backoff + jitter on HTTP 429 (RateLimitError)
-  • Respect for the `retry-after` header when present
-  • Fallback to a lighter model after MAX_RETRIES exhausted
-  • Structured logging so the operator can monitor progress
+Each call walks the ORDERED_MODELS chain (highest TPM first).  For every
+candidate model it:
+  1. Pre-flight: skips if the sliding-window rate limiter says RPM or TPM
+     would be exceeded (zero wait — instant fallback).
+  2. Calls the Groq API.
+  3. On success: records actual token usage so future calls see accurate state.
+  4. On 429 / 413: exhausts the model's window so it is skipped for ~60 s,
+     then moves to the next candidate without sleeping.
 """
 
 import logging
-import random
 import re
 import time
 from typing import Any
 
 from groq import Groq, RateLimitError, APIStatusError
 
-from config import (
-    GROQ_API_KEY,
-    GROQ_FALLBACK_MODEL,
-    GROQ_MODEL,
-    INITIAL_BACKOFF_SECONDS,
-    MAX_RETRIES,
-)
+from config import GROQ_API_KEY, GROQ_MODEL, INITIAL_BACKOFF_SECONDS, MAX_RETRIES
+from utils.rate_limiter import limiter, estimate_tokens, ORDERED_MODELS, _MODEL_MAP
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Langfuse v4 — @observe decorator + client, degrade gracefully when absent
+# ---------------------------------------------------------------------------
+from utils.tracing import observe as _lf_observe, get_langfuse as _get_lf
 
 # Singleton Groq client — reused across all agents
 _client: Groq | None = None
 
 
 def get_client() -> Groq:
-    """Return (or lazily create) the shared Groq client."""
     global _client
     if _client is None:
         _client = Groq(api_key=GROQ_API_KEY, max_retries=0)
     return _client
 
 
+@_lf_observe(as_type="generation")
 def chat_completion(
     messages: list[dict[str, str]],
     *,
     model: str = GROQ_MODEL,
     temperature: float = 0.7,
-    max_tokens: int = 8192,
+    max_tokens: int | None = None,
     agent_name: str = "agent",
 ) -> str:
     """
-    Send a chat-completion request to Groq with a robust fallback chain of models
-    to bypass rate limit waits (HTTP 429) and payload limits (HTTP 413).
+    Send a chat-completion to Groq, walking ORDERED_MODELS (highest-TPM first).
+
+    Rate limiting strategy:
+    - Pre-flight RPM+TPM check → skip instantly if at limit (no sleep).
+    - 429/413 → exhaust that model's window, move to next immediately.
+    - Empty response → 1 retry on same model, then move on.
+    - Each successful call records actual token cost in the sliding window.
     """
-    # Fallback chain of Groq models
-    chain = [
-        "openai/gpt-oss-120b",
-        "groq/compound",
-        "qwen/qwen3-32b",
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "qwen/qwen3.6-27b",
-        "openai/gpt-oss-20b",
-    ]
-    if model in chain:
-        idx = chain.index(model)
-        models_to_try = chain[idx:]
-    else:
-        models_to_try = [model] + chain
+    lf = _get_lf()
+    if lf:
+        lf.update_current_generation(
+            name=f"{agent_name}-llm",
+            input=messages,
+            metadata={"agent": agent_name, "requested_model": model},
+        )
+
+    est_tokens = estimate_tokens(messages)
+    client = get_client()
+
+    # Build the candidate list: start from the requested model if it's in the
+    # catalogue, otherwise walk the full chain.
+    candidates = limiter.ordered_models(start_from=model if model in _MODEL_MAP else None)
+    if model not in _MODEL_MAP:
+        # Prepend the explicitly requested model as a first attempt
+        from utils.rate_limiter import ModelConfig
+        candidates = [ModelConfig(model, rpm=30, tpm=8_000)] + candidates
 
     last_error: Exception | None = None
+    tried: list[str] = []
 
-    for current_model in models_to_try:
-        # Fallback models have tighter context/limits, cap max_tokens accordingly
-        if current_model == "llama-3.1-8b-instant":
-            current_max_tokens = min(max_tokens, 3500)
-        elif current_model in ("qwen/qwen3.6-27b", "qwen/qwen3-32b"):
-            current_max_tokens = min(max_tokens, 6000)
-        else:
-            current_max_tokens = min(max_tokens, 8192)
-        client = get_client()
+    for cfg in candidates:
+        current_model = cfg.model_id
 
-        backoff = INITIAL_BACKOFF_SECONDS
+        # ── Pre-flight rate-limit check ──────────────────────────────────────
+        if not limiter.can_use(current_model, est_tokens):
+            w = limiter._windows.get(current_model)
+            stats = w.stats() if w else {}
+            logger.info(
+                "[%s] ⏭ Skip %s — at limit (rpm=%d/%d, tpm=%d/%d)",
+                agent_name, current_model,
+                stats.get("requests_in_window", "?"), cfg.rpm,
+                stats.get("tokens_in_window", "?"), cfg.tpm,
+            )
+            continue
 
-        for attempt in range(MAX_RETRIES + 1):
+        current_max_tokens = min(max_tokens, cfg.max_tokens) if max_tokens is not None else cfg.max_tokens
+        tried.append(current_model)
+
+        # ── API call with one empty-response retry ───────────────────────────
+        for attempt in range(2):  # attempt 0 = first try, attempt 1 = retry on empty
             try:
                 logger.info(
-                    "[%s] Calling Groq model=%s attempt=%d/%d",
-                    agent_name,
-                    current_model,
-                    attempt + 1,
-                    MAX_RETRIES + 1,
+                    "[%s] → %s  est_tokens=%d  max_tokens=%d  attempt=%d",
+                    agent_name, current_model, est_tokens, current_max_tokens, attempt + 1,
                 )
-                response = client.chat.completions.create(
+                create_kwargs: dict = dict(
                     model=current_model,
                     messages=messages,  # type: ignore[arg-type]
                     temperature=temperature,
-                    max_tokens=current_max_tokens,
                 )
+                if current_max_tokens is not None:
+                    create_kwargs["max_tokens"] = current_max_tokens
+                response = client.chat.completions.create(**create_kwargs)
                 content: str = response.choices[0].message.content or ""
-                # Strip reasoning/thinking tags (e.g. from Qwen/DeepSeek models)
-                content = re.sub(
-                    r"<think>.*?</think>", "", content, flags=re.DOTALL
-                ).strip()
+                content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
 
                 if not content.strip():
-                    logger.warning(
-                        "[%s] ⚠️ Empty response from %s. Finish reason: %s. Response message: %s. Usage: %s. Retrying...",
-                        agent_name,
-                        current_model,
-                        response.choices[0].finish_reason,
-                        response.choices[0].message,
-                        response.usage,
-                    )
                     last_error = RuntimeError(
-                        f"Model returned empty content (finish_reason: {response.choices[0].finish_reason})"
+                        f"Empty response from {current_model} "
+                        f"(finish={response.choices[0].finish_reason})"
                     )
-                    time.sleep(backoff + random.uniform(0, 2))
-                    backoff *= 2
-                    continue
+                    logger.warning("[%s] ⚠️ Empty response — %s", agent_name, last_error)
+                    time.sleep(1)
+                    continue  # one retry on same model
+
+                usage = response.usage
+                actual_tokens = usage.total_tokens if usage else est_tokens
+                limiter.record(current_model, actual_tokens)
 
                 logger.info(
-                    "[%s] ✅ Success on model %s — tokens used: %s",
-                    agent_name,
-                    current_model,
-                    response.usage,
+                    "[%s] ✅ %s — input=%d output=%d total=%d",
+                    agent_name, current_model,
+                    usage.prompt_tokens if usage else 0,
+                    usage.completion_tokens if usage else 0,
+                    actual_tokens,
                 )
+
+                if lf:
+                    lf.update_current_generation(
+                        model=current_model,
+                        output=content,
+                        usage_details={
+                            "input_tokens": usage.prompt_tokens if usage else 0,
+                            "output_tokens": usage.completion_tokens if usage else 0,
+                        },
+                    )
                 return content
 
             except APIStatusError as exc:
                 last_error = exc
-
-                # If payload too large / TPM limit exceeded (413), fallback immediately
-                if exc.status_code == 413:
+                if exc.status_code in (429, 413):
+                    limiter.exhaust(current_model)
                     logger.warning(
-                        "[%s] ⚠️ Payload/TPM too large (413) on model %s. Switching to fallback in chain.",
-                        agent_name,
-                        current_model,
+                        "[%s] ⚡ %s HTTP %d — exhausted window, trying next model",
+                        agent_name, current_model, exc.status_code,
                     )
-                    break  # Break out of attempt loop to try next model in fallback chain
-
-                # Otherwise treat as standard rate limit / retryable status error (e.g. 429)
-                retry_after: float | None = _parse_retry_after(exc)
-                wait = retry_after if retry_after else backoff + random.uniform(0, 2)
-
-                # If wait time is too long, switch model immediately instead of blocking
-                if wait > 120.0:
-                    logger.warning(
-                        "[%s] ⚠️ Rate limit wait time too large (%.1fs) on model %s. Switching to next fallback model.",
-                        agent_name,
-                        wait,
-                        current_model,
-                    )
-                    break  # Break out of attempt loop to try next model in fallback chain
-
-                if attempt < MAX_RETRIES:
-                    logger.warning(
-                        "[%s] ⚠️ API status error %d (attempt %d/%d). Error details: %s. Waiting %.1fs …",
-                        agent_name,
-                        exc.status_code,
-                        attempt + 1,
-                        MAX_RETRIES,
-                        str(exc),
-                        wait,
-                    )
-                    time.sleep(wait)
-                    backoff *= 2  # Exponential growth
+                    break  # skip to next model immediately — no sleep
                 else:
-                    # Swapping to next model in the fallback list
-                    break
+                    logger.warning(
+                        "[%s] ⚠️ %s HTTP %d — %s",
+                        agent_name, current_model, exc.status_code, str(exc)[:120],
+                    )
+                    break  # non-retryable status; move to next model
+
+            except RateLimitError as exc:
+                last_error = exc
+                limiter.exhaust(current_model)
+                logger.warning("[%s] ⚡ %s RateLimitError — exhausted window", agent_name, current_model)
+                break
 
             except Exception as exc:
-                logger.error("[%s] ❌ Unexpected error: %s", agent_name, exc)
+                logger.error("[%s] ❌ Unexpected error on %s: %s", agent_name, current_model, exc)
                 raise
 
     raise RuntimeError(
-        f"[{agent_name}] All fallback models on Groq exhausted. Last error: {last_error}"
+        f"[{agent_name}] All models exhausted. Tried: {tried}. Last error: {last_error}"
     )
 
 
@@ -218,6 +220,93 @@ def extract_json(text: str) -> str:
     return text.strip()
 
 
+def repair_json(text: str) -> str:
+    """
+    Fix common LLM JSON output issues and return a parseable string.
+
+    Handles:
+    - Literal (unescaped) newlines/tabs inside string values  → \\n / \\t
+    - Trailing commas before ] or }
+    - Truncated output: closes open strings, brackets, braces
+    """
+    # Pass 1: escape literal control characters inside JSON string values
+    out: list[str] = []
+    in_string = False
+    escape_next = False
+    for ch in text:
+        if escape_next:
+            out.append(ch)
+            escape_next = False
+        elif ch == "\\" and in_string:
+            out.append(ch)
+            escape_next = True
+        elif ch == '"':
+            in_string = not in_string
+            out.append(ch)
+        elif in_string:
+            if ch == "\n":
+                out.append("\\n")
+            elif ch == "\r":
+                out.append("\\r")
+            elif ch == "\t":
+                out.append("\\t")
+            else:
+                out.append(ch)
+        else:
+            out.append(ch)
+
+    text = "".join(out)
+
+    # Pass 2: remove trailing commas before ] or }
+    import re
+    text = re.sub(r",\s*([}\]])", r"\1", text)
+
+    # Pass 3: close any unterminated string, then close open brackets/braces
+    in_str = False
+    esc = False
+    depth: list[str] = []
+    for ch in text:
+        if esc:
+            esc = False
+            continue
+        if ch == "\\" and in_str:
+            esc = True
+            continue
+        if ch == '"':
+            in_str = not in_str
+            continue
+        if not in_str:
+            if ch in "{[":
+                depth.append("}" if ch == "{" else "]")
+            elif ch in "}]" and depth:
+                depth.pop()
+
+    if in_str:
+        text += '"'
+    while depth:
+        text += depth.pop()
+
+    return text
+
+
+def parse_json_robust(raw: str, label: str = "agent") -> dict:
+    """
+    extract_json → json.loads, with repair_json fallback.
+    Raises ValueError if both attempts fail.
+    """
+    import json as _json
+    extracted = extract_json(raw)
+    try:
+        return _json.loads(extracted)
+    except _json.JSONDecodeError as first_err:
+        logger.warning("[%s] JSON parse failed (%s) — attempting repair", label, first_err)
+        try:
+            return _json.loads(repair_json(extracted))
+        except _json.JSONDecodeError as second_err:
+            logger.error("[%s] JSON repair also failed: %s", label, second_err)
+            raise ValueError(f"Unparseable JSON from {label}: {second_err}") from second_err
+
+
 _PRIMARY_MODEL = "openai/gpt-oss-120b"
 _FALLBACK_MODEL = "compound-beta"
 
@@ -256,7 +345,6 @@ def call_llm(prompt: str, system_prompt: str) -> tuple[str, str, bool]:
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.7,
-                max_tokens=4096,
             )
             content = response.choices[0].message.content or ""
             content = re.sub(

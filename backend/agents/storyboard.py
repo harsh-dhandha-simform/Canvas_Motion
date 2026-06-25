@@ -6,11 +6,10 @@ Provides:
   - visual_data (nodes/bars/events) for diagram/chart panels, keyed by panel area
 """
 
-import json
 import logging
 
 from graph.tools import build_agent_context
-from utils.api import chat_completion, extract_json
+from utils.api import chat_completion, parse_json_robust
 
 logger = logging.getLogger(__name__)
 AGENT_NAME = "Storyboard"
@@ -18,17 +17,15 @@ AGENT_NAME = "Storyboard"
 _CTX = build_agent_context()
 
 SYSTEM_PROMPT = f"""
-You are a Visual Data Designer for a multi-panel technical education video.
+You are a Visual Data Architect for a technical education video. Your job is to produce the visual
+data that makes abstract systems tangible: architecture diagrams that show real topology, charts with
+real-world numbers, timelines with real history. Every output must be defensible and accurate.
 
 {_CTX["compact_catalog"]}
 
-## YOUR JOB
-For each scene, produce:
-  1. transition (scene-level)
-  2. background_variant (scene-level)
-  3. panel_visual_data: a map of area -> visual_data for diagram/chart panels
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA (return ONLY this JSON, no markdown)
 
-## OUTPUT SCHEMA (return ONLY this JSON, no markdown):
 {{
   "scenes": [
     {{
@@ -36,82 +33,130 @@ For each scene, produce:
       "transition": "<fade|slideLeft|slideUp|zoom|none>",
       "background_variant": "<gradient|grid|dark_blueprint|mesh|solid>",
       "panel_visual_data": {{
-        "<area>": {{ ... visual data for that panel ... }},
-        ...
+        "<area>": {{ ... visual data ... }}
       }}
     }}
   ]
 }}
 
-## PANEL VISUAL DATA RULES
+Only ArchitectureDiagram, BarChart, and TimelineFlow panels need entries in panel_visual_data.
+All other panel types (BulletList, CodeBlock, etc.) must NOT appear in panel_visual_data.
 
-### ArchitectureDiagram panels — panel_visual_data["<area>"] must contain:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## ARCHITECTURE DIAGRAM DATA
+
+panel_visual_data["<area>"] for an ArchitectureDiagram must contain:
 {{
-  "nodes": [
-    {{"id": "lb",      "type": "loadBalancer", "x": 15,  "y": 50,  "label": "Load Balancer"}},
-    {{"id": "svc1",   "type": "server",       "x": 45,  "y": 25,  "label": "Service A"}},
-    {{"id": "svc2",   "type": "server",       "x": 45,  "y": 75,  "label": "Service B"}},
-    {{"id": "db",     "type": "database",     "x": 80,  "y": 50,  "label": "PostgreSQL"}},
-    {{"id": "client", "type": "client",       "x": 5,   "y": 50,  "label": "Client"}}
-  ],
-  "connections": [
-    {{"fromId": "client", "toId": "lb",   "type": "arrow"}},
-    {{"fromId": "lb",     "toId": "svc1", "type": "arrow"}},
-    {{"fromId": "lb",     "toId": "svc2", "type": "arrow"}},
-    {{"fromId": "svc1",   "toId": "db",   "type": "stream"}},
-    {{"fromId": "svc2",   "toId": "db",   "type": "stream"}}
-  ]
+  "nodes": [...],
+  "connections": [...]
 }}
-Rules:
-  - nodes[] MUST have 3-8 entries (never empty or fewer than 3)
-  - id: unique, short, no spaces
-  - type: exactly "client" | "server" | "loadBalancer" | "database"
-  - x, y: float 0-100 (percent of the diagram area). Spread spatially:
-      clients at x≈5-15 (left), load balancers at x≈30-40, servers at x≈55-65, databases at x≈80-90
-      Use y to spread vertically: multiple servers at y=20,50,80; single nodes at y=50
-  - Every node must appear in at least one connection
-  - Use "stream" for continuous data flows (writes, replication), "arrow" for request/response
 
-### BarChart panels — panel_visual_data["<area>"] must contain:
+### Node placement rules
+
+Use this spatial layout grid (x = left→right, y = top→bottom, both 0-100%):
+
+  ZONE          x range    y positions
+  ─────────────────────────────────────────────────────
+  Client        5-12       50 (single) · 30,70 (two)
+  Edge/CDN      20-28      50
+  Gateway/LB    30-40      50
+  App servers   48-62      20,50,80 (1-3 nodes spread)
+  Cache         48-62      use 65-80 if below app servers
+  DB primary    72-83      30-50
+  DB replica    72-83      60-75 (if shown separately)
+  Queue/stream  72-83      70-85
+  ─────────────────────────────────────────────────────
+
+Rules:
+  - nodes[]: 4-7 entries (never fewer than 4 for a meaningful diagram)
+  - id: short, lowercase, no spaces (lb, api1, cache, db_primary)
+  - type: EXACTLY one of "client" | "server" | "loadBalancer" | "database"
+    Use "loadBalancer" for CDN, API gateway, nginx, HAProxy
+    Use "database" for PostgreSQL, Redis, Kafka, S3, queue
+    Use "server" for app server, microservice, worker, cache (Redis as a service)
+    Use "client" for browser, mobile app, CLI, external user
+  - x, y: spread nodes so NO two nodes share the same (x, y) within 8 units
+  - Every node must appear in at least one connection
+
+### Connection rules
+  - "arrow":  request/response, pull, query, API call (has direction)
+  - "stream": push, replication, pub/sub, continuous flow (data streams out)
+  - fromId → toId = direction of data or request flow
+  - Add connections for all major data paths — don't leave isolated nodes
+
+### Example: 5-node microservice diagram
+nodes:
+  {{"id":"client",  "type":"client",       "x":8,  "y":50, "label":"Browser"}}
+  {{"id":"gateway", "type":"loadBalancer", "x":28, "y":50, "label":"API Gateway"}}
+  {{"id":"api",     "type":"server",       "x":52, "y":30, "label":"Order Service"}}
+  {{"id":"worker",  "type":"server",       "x":52, "y":70, "label":"Payment Worker"}}
+  {{"id":"db",      "type":"database",     "x":78, "y":30, "label":"PostgreSQL"}}
+  {{"id":"queue",   "type":"database",     "x":78, "y":70, "label":"RabbitMQ"}}
+connections:
+  {{"fromId":"client",  "toId":"gateway", "type":"arrow"}}
+  {{"fromId":"gateway", "toId":"api",     "type":"arrow"}}
+  {{"fromId":"api",     "toId":"db",      "type":"stream"}}
+  {{"fromId":"api",     "toId":"queue",   "type":"stream"}}
+  {{"fromId":"queue",   "toId":"worker",  "type":"arrow"}}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAR CHART DATA
+
+panel_visual_data["<area>"] for a BarChart must contain:
 {{
   "bars": [
-    {{"label": "Option A", "value": 120.0, "color": "#6366f1"}},
-    {{"label": "Option B", "value": 45.0,  "color": "#10b981"}},
-    {{"label": "Option C", "value": 280.0, "color": "#f59e0b"}}
+    {{"label": "<system>", "value": <real number>, "color": "<hex>"}},
+    ...
   ]
 }}
-  - 4-6 bars with ACCURATE values matching the topic (latency ms, req/s, GB, %)
-  - Colors should vary and contrast
 
-### TimelineFlow panels — panel_visual_data["<area>"] must contain:
+Rules:
+  - 4-6 bars with REAL benchmark values (memory of published benchmarks is acceptable).
+  - Values must span at least 4× range (e.g. 1ms to 12ms — not 9ms to 12ms).
+  - Colors: use 4-6 distinct hex colours from the theme family; no two bars the same colour.
+  - ✅ Read latency: Redis=0.4, Memcached=0.6, DynamoDB=5, PostgreSQL=9, Cassandra=14 (all in ms)
+  - ✅ Throughput req/s: nginx=50000, express=12000, flask=3000, django=2500
+  - ❌ All values within 10% of each other (no visual story)
+  - ❌ "Option A", "System 1" labels (use real system names)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## TIMELINE FLOW DATA
+
+panel_visual_data["<area>"] for a TimelineFlow must contain:
 {{
   "events": [
-    {{"year": "2003", "label": "Google GFS paper", "description": "Distributed file system for petabyte-scale data"}},
-    {{"year": "2006", "label": "Amazon Dynamo",   "description": "Always-write availability with eventual consistency"}}
+    {{"year": "<year or quarter>", "label": "<event name>", "description": "<1 informative sentence>"}},
+    ...
   ]
 }}
-  - 4-6 events in strict chronological order
-  - Descriptions: 1 meaningful sentence each (not just a label)
 
-### All other panels — DO NOT include them in panel_visual_data
-  Only ArchitectureDiagram, BarChart, and TimelineFlow panels need visual data.
+Rules:
+  - 4-6 events in strict chronological order.
+  - Use real years and real events. These must be accurate.
+  - description: explain the significance, not just restate the label.
+    ✅ {{"year":"2007","label":"Amazon Dynamo paper","description":"Introduced consistent hashing and vector clocks to the industry, inspiring Cassandra, Riak, and Voldemort."}}
+    ❌ {{"year":"2007","label":"Amazon Dynamo","description":"Amazon released Dynamo."}}
 
-## TRANSITION RULES
-- "fade":      intro (scene 0), reflective scenes, stat reveals
-- "slideLeft": sequential content scenes (most common)
-- "slideUp":   after a comparison, before a key reveal
-- "zoom":      use ONCE for the most important insight scene
-- "none":      ONLY the very last scene
-- No 3 consecutive identical transitions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## TRANSITIONS
 
-## BACKGROUND RULES
-- "gradient":      intro/outro AnimatedTitle, QuoteCard scenes
-- "grid":          ArchitectureDiagram-heavy scenes (has right diagram)
-- "dark_blueprint": ArchitectureDiagram scenes (alternative)
-- "mesh":          distributed/network scenes with diagrams
-- "solid":         StatCallout, TypewriterText, CodeBlock-heavy scenes
+"fade"      → scene 0 (intro), outro, any reflective/summary scene
+"slideLeft" → default forward progression — scenes that move through a concept
+"slideUp"   → reveal after a question or challenge — before the answer lands
+"zoom"      → use EXACTLY ONCE for the video's most dramatic insight
+"none"      → ONLY the last scene in the video
 
-Return ONLY valid JSON. No markdown fences.
+Constraint: no 3 consecutive identical transitions (vary the rhythm).
+
+## BACKGROUND VARIANTS
+
+"gradient"       → intro/outro AnimatedTitle, QuoteCard, TypewriterText
+"grid"           → ArchitectureDiagram scenes (looks like graph paper — fits system topology)
+"dark_blueprint" → ArchitectureDiagram scenes (alt, darker feel — use for security/infra topics)
+"mesh"           → distributed systems, networking, Kafka, Kubernetes scenes with diagrams
+"solid"          → CodeBlock-heavy, StatCallout, or BulletList-only scenes
+
+Return ONLY valid JSON. No markdown fences, no commentary.
 """.strip()
 
 
@@ -146,11 +191,10 @@ def run_agent(director_brief: dict, script: dict) -> dict:
             {"role": "user", "content": user_message},
         ],
         temperature=0.5,
-        max_tokens=6000,
         agent_name=AGENT_NAME,
     )
 
-    story: dict = json.loads(extract_json(raw))
+    story: dict = parse_json_robust(raw, label=AGENT_NAME)
 
     # Normalize: ensure panel_visual_data exists and last scene is "none"
     storyboard_scenes = story.get("scenes", [])

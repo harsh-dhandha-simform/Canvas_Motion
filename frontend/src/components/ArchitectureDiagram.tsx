@@ -43,7 +43,7 @@ export type ArchitectureDiagramProps = z.infer<typeof ArchitectureDiagramSchema>
 // ---------------------------------------------------------------------------
 
 export const ArchitectureDiagram: React.FC<ArchitectureDiagramProps> = ({
-  title,
+  title: _title,
   nodes = [],
   connections = [],
   accentColor = "#38BDF8"
@@ -72,14 +72,8 @@ export const ArchitectureDiagram: React.FC<ArchitectureDiagramProps> = ({
 
   return (
     <AbsoluteFill style={{ backgroundColor: "transparent" }}>
-      <div className="absolute top-16 left-16 z-10">
-        <h2 className="text-5xl font-black text-white tracking-tight drop-shadow-lg">
-          {title}
-        </h2>
-      </div>
-      
       <AbsoluteFill>
-        
+
         {/* Render Connections first (underneath) */}
         {connections.map((conn, idx) => {
           const fromNode = nodeMap.get(conn.fromId);

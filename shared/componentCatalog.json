@@ -128,5 +128,25 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     }
+  },
+  "PacketFlow": {
+    "description": "An animated network topology where data packets travel along edges between nodes. Nodes are positioned by x/y percentage coordinates. Ideal for showing network protocols, request routing, TCP handshakes, and distributed system data flows.",
+    "schema": {
+      "$ref": "#/definitions/PacketFlowProps",
+      "definitions": {
+        "PacketFlowProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "HttpExchange": {
+    "description": "A side-by-side HTTP request and response viewer with line-by-line animated reveal. Shows method, path, headers, and body for both request and response. Great for explaining APIs, REST calls, and HTTP protocol details.",
+    "schema": {
+      "$ref": "#/definitions/HttpExchangeProps",
+      "definitions": {
+        "HttpExchangeProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
   }
 }

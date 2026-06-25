@@ -52,24 +52,24 @@ if not GROQ_API_KEY:
         "  export GROQ_API_KEY=gsk_..."
     )
 
-# Primary model
-GROQ_MODEL = "openai/gpt-oss-120b"
+# Default starting model — chat_completion walks ORDERED_MODELS from here.
+# Set to the highest-TPM model so cold starts pick the best available.
+GROQ_MODEL = "groq/compound"
 
-# Fallback model if the primary hits quota
-GROQ_FALLBACK_MODEL = "groq/compound"
+# Kept for server.py health endpoint display
+GROQ_FALLBACK_MODEL = "llama-3.3-70b-versatile"
 
 # ---------------------------------------------------------------------------
 # Rate-limit mitigation
 # ---------------------------------------------------------------------------
 
-# Seconds to sleep between consecutive agent calls to stay under RPM limits
-INTER_AGENT_DELAY_SECONDS: float = 2.0
+# Max retries for non-rate-limit errors (e.g. empty response, transient 5xx).
+# Rate-limit (429/413) errors never wait — they instantly exhaust the model
+# window and fall through to the next candidate in the ordered chain.
+MAX_RETRIES: int = 2
 
-# Maximum number of automatic retries on a 429 RateLimitError
-MAX_RETRIES: int = 4
-
-# Initial backoff window in seconds (doubles on each retry + jitter)
-INITIAL_BACKOFF_SECONDS: float = 5.0
+# Initial backoff for non-429 retryable errors
+INITIAL_BACKOFF_SECONDS: float = 2.0
 
 # ---------------------------------------------------------------------------
 # Video canvas defaults (must match Root.tsx Composition props)

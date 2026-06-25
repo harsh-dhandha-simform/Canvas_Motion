@@ -10,73 +10,82 @@ logger = logging.getLogger(__name__)
 # Agent context — injected into all agent system prompts at pipeline start
 # ---------------------------------------------------------------------------
 
-COMPACT_CATALOG = """## LAYOUT SYSTEM — every scene uses one of these 5 layouts
+COMPACT_CATALOG = """## LAYOUT SYSTEM — each scene uses exactly one layout
 
-  "full"               One panel, area="panel". Full 1920×1080. Use for intro/outro AnimatedTitle.
-  "left-right"         Two panels: area="left" (960×1080) + area="right" (960×1080). No header.
-  "title-content"      Header bar (auto) + one panel area="main" (1920×920). Deep explanation.
-  "title-left-right"   Header bar + area="left" (960×920) + area="right" (960×920). Most common.
-  "title-main-sidebar" Header bar + area="main" (1248×920, wide) + area="sidebar" (672×920, narrow).
+LAYOUT NAME          AREAS (exact strings)                    DIMENSIONS
+─────────────────────────────────────────────────────────────────────────────────
+"full"               panel                                    1920×1080 (no header)
+"left-right"         left · right                             960×1080 each (no header)
+"title-content"      main                                     1920×920 (header auto-rendered)
+"title-left-right"   left · right                             960×920 each (header auto-rendered)
+"title-main-sidebar" main · sidebar                           main=1248×920 · sidebar=672×920 (header auto-rendered)
 
-  Header bar is rendered automatically from scene.title + scene.subtitle.
-  Panels only fill the non-header areas listed above.
-  RULE: panels[].area must exactly match the area names for the chosen layout.
+HEADER: auto-rendered from scene.title + scene.subtitle for any title-* layout.
+RULE: panels[].area values MUST exactly match the area strings above for the chosen layout.
 
-## AVAILABLE COMPONENTS (13 total — use EXACT type names)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## COMPONENTS — 15 available (use EXACT type names)
 
-AnimatedTitle    → Full-screen dramatic title. ONLY use in "full" layout, area="panel".
-  data: {title: str, subtitle?: str, align?: "left"|"center"}
+Type               Best areas          Data shape (required fields bold)
+─────────────────────────────────────────────────────────────────────────────────
+AnimatedTitle      panel               {**title**, subtitle?, align?:"left"|"center"}
+                   ONLY in "full" layout.
 
-BulletList       → 3-7 concise bullets with staggered reveal.
-  data: {title: str, items: str[]}
-  GREAT in: "left", "right", "sidebar"
+BulletList         left·right·sidebar  {**title**, **items**:str[5-7]}
+                   Staggered reveal. Items must be specific — include numbers and system names.
 
-StepFlow         → Animated horizontal step-by-step flow.
-  data: {title: str, steps: str[]}  (3-6 steps)
-  GREAT in: "left", "main"
+StepFlow           left·main           {**title**, **steps**:str[4-6]}
+                   Steps start with action verbs. Horizontal animated flow.
 
-ComparisonCard   → Side-by-side pros vs cons.
-  data: {title: str, pros: str[], cons: str[]}  (3-5 items each)
-  GREAT in: "main", "panel" (full), "left"
+ComparisonCard     main·left           {**title**, **pros**:str[4-5], **cons**:str[4-5]}
+                   Side-by-side. Items must be real trade-offs, not marketing language.
 
-ArchitectureDiagram → System topology with nodes and connections.
-  data: {title: str, nodes: Node[], connections: Connection[]}
-  Node: {id, type: "client"|"server"|"loadBalancer"|"database", x: 0-100, y: 0-100, label}
-  Connection: {fromId, toId, type: "stream"|"arrow"}
-  RULE: nodes[] must have ≥3 entries. NEVER leave nodes[] empty.
-  GREAT in: "right", "main"
+ArchitectureDiagram right·main         {**title**, nodes:Node[], connections:Connection[]}
+                   Node: {id, type:"client"|"server"|"loadBalancer"|"database", x:0-100, y:0-100, label}
+                   Connection: {fromId, toId, type:"stream"|"arrow"}
+                   nodes[] must have 4-7 entries. Spread spatially — no two nodes at same position.
+                   Storyboard fills nodes[] and connections[]; Scriptwriter only outputs title.
 
-BarChart         → Animated bar chart comparing numeric values.
-  data: {title?: str, bars: [{label, value, color?}]}  (3-6 bars)
-  GREAT in: "right", "sidebar"
+BarChart           right·sidebar       {title?, **bars**:[{label, value, color?}][4-6]}
+                   Values must be real-world benchmarks. Span at least 4× range. Label with real system names.
+                   Storyboard fills bars[]; Scriptwriter fills title only.
 
-TimelineFlow     → Chronological events with staggered reveal.
-  data: {title?: str, events: [{year, label, description?}]}  (3-6 events)
-  GREAT in: "main", "panel" (full)
+TimelineFlow       main·panel          {title?, events:[{year, label, description}][4-6]}
+                   Strict chronological order. Real events, real years.
+                   Storyboard fills events[]; Scriptwriter fills title only.
 
-CodeBlock        → macOS-style code window with syntax highlighting.
-  data: {code: str, language?: str, title?: str}
-  GREAT in: "right", "main", "sidebar"
+CodeBlock          right·main·sidebar  {**code**:str, language?:str, title?:str}
+                   10-18 lines of real, production-quality code. Escape newlines as \\n.
 
-StatCallout      → Large animated metric number.
-  data: {title: str, value: float, suffix?: str, description?: str}
-  GREAT in: "sidebar", "right"
+StatCallout        sidebar·right       {**title**, **value**:float, suffix?:str, description?:str}
+                   Large animated number. Use a real surprising metric. One number per panel.
 
-TypewriterText   → Character-by-character text reveal.
-  data: {lines: str[]}  (1-3 short lines)
-  GREAT in: "panel" (full) for dramatic openers
+TypewriterText     panel               {**lines**:str[2-3]}
+                   Billboard copy. Max 8 words per line.
 
-QuoteCard        → Pull quote with author attribution.
-  data: {quote: str, author?: str, role?: str}
-  GREAT in: "panel" (full), "main"
+QuoteCard          panel·main          {**quote**:str, author?:str, role?:str}
+                   Verbatim real quotes only. Do not fabricate.
 
-SplitScreen      → Bullets + optional code snippet combined.
-  data: {title: str, bullets?: str[], codeSnippet?: {code: str, language: str}}
-  GREAT in: "main"
+SplitScreen        main                {**title**, bullets?:str[4-6], codeSnippet?:{code, language}}
+                   Hybrid: text + code together.
 
-TwoColumnLayout  → Two-column comparison with headings.
-  data: {title?: str, left: {heading: str, points: str[]}, right: {heading: str, points: str[]}}
-  GREAT in: "panel" (full), "main"
+TwoColumnLayout    panel·main          {title?, **left**:{heading,points:str[4-5]}, **right**:{heading,points:str[4-5]}}
+                   Parallel structure — both columns answer the same questions about different subjects.
+
+PacketFlow         main·panel          {title?, **nodes**:[{id,label,x,y,type?,sublabel?}], **edges**:[{from,to,label?,color?}]}
+                   Animated SVG network: glowing nodes + data packets traveling along edges.
+                   node.type: "client"|"server"|"database"|"router"|"cdn" (controls color and symbol).
+                   x, y: 0-100 percent coordinates. Use same spatial zones as ArchitectureDiagram.
+                   edges: packets animate repeatedly from→to. Add label for protocol name (e.g. "TCP SYN").
+                   Scriptwriter fills all fields (no storyboard delegation needed).
+
+HttpExchange       main·panel          {title?, method?, **path**, host?, requestHeaders?, requestBody?, statusCode?, statusText?, responseHeaders?, responseBody?}
+                   Side-by-side HTTP request + response with line-by-line animated reveal.
+                   method: "GET"|"POST"|"PUT"|"DELETE"|"PATCH" (default GET).
+                   requestHeaders/responseHeaders: {key: value} objects (real HTTP headers).
+                   responseBody: JSON or text string (escape newlines as \\n).
+                   Best for: API explanations, REST deep-dives, protocol scenes.
+─────────────────────────────────────────────────────────────────────────────────
 """
 
 REMOTION_TIMING_RULES = """## REMOTION TIMING RULES (fps = 30)

@@ -3,7 +3,7 @@ import { useCurrentFrame, interpolate } from 'remotion';
 import { PALETTE } from '../generated/Palette';
 
 export interface DataStreamProps {
-  fromX: number;
+  fromX: number;   // 0-100 percentage
   fromY: number;
   toX: number;
   toY: number;
@@ -11,72 +11,89 @@ export interface DataStreamProps {
   particleCount?: number;
 }
 
-export const DataStream: React.FC<DataStreamProps> = ({ 
-  fromX, 
-  fromY, 
-  toX, 
-  toY, 
-  color = PALETTE.secondary, 
-  particleCount = 3 
+// Same logical canvas as ScalingArrow — full-cover SVG trick keeps arrows
+// and nodes in the same coordinate space regardless of panel size.
+const LW = 1920;
+const LH = 1080;
+
+export const DataStream: React.FC<DataStreamProps> = ({
+  fromX,
+  fromY,
+  toX,
+  toY,
+  color = PALETTE.secondary,
+  particleCount = 4,
 }) => {
   const frame = useCurrentFrame();
 
-  const pxFromX = (fromX / 100) * 1920;
-  const pxFromY = (fromY / 100) * 1080;
-  const pxToX = (toX / 100) * 1920;
-  const pxToY = (toY / 100) * 1080;
+  const lFromX = (fromX / 100) * LW;
+  const lFromY = (fromY / 100) * LH;
+  const lToX   = (toX   / 100) * LW;
+  const lToY   = (toY   / 100) * LH;
 
-  const dx = pxToX - pxFromX;
-  const dy = pxToY - pxFromY;
-  const length = Math.sqrt(dx * dx + dy * dy);
-  
-  // Angle for rotation
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  const dx = lToX - lFromX;
+  const dy = lToY - lFromY;
+  const particles = Array.from({ length: particleCount }).map((_, i) => {
+    const phaseOffset = (i / particleCount) * 100;
+    const t = ((frame + phaseOffset) % 100) / 100;
+    const opacity = interpolate(
+      (frame + phaseOffset) % 100,
+      [0, 20, 80, 100],
+      [0, 1, 1, 0],
+      { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+    );
+    return {
+      x: lFromX + dx * t,
+      y: lFromY + dy * t,
+      opacity,
+    };
+  });
 
   return (
-    <div style={{
-      position: 'absolute',
-      left: pxFromX,
-      top: pxFromY,
-      width: length,
-      height: 2,
-      transformOrigin: '0% 50%',
-      transform: `rotate(${angle}deg)`,
-      pointerEvents: 'none',
-    }}>
-      {/* Background track line */}
-      <div style={{
-        position: 'absolute',
+    <svg
+      style={{
+        position: "absolute",
         inset: 0,
-        backgroundColor: color,
-        opacity: 0.2,
-      }} />
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        overflow: "visible",
+      }}
+      viewBox={`0 0 ${LW} ${LH}`}
+      preserveAspectRatio="none"
+    >
+      <defs>
+        <filter id={`stream-glow-${color.replace("#", "")}`}>
+          <feGaussianBlur stdDeviation="5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
 
-      {/* Particles */}
-      {Array.from({ length: particleCount }).map((_, i) => {
-        // Offset each particle's animation phase
-        const phaseOffset = (i / particleCount) * 100; // 100 frames loop cycle
-        
-        // Loop the particle from 0 to width over 100 frames
-        const xPos = ((frame + phaseOffset) % 100) / 100 * length;
-        
-        // Fade out at ends
-        const opacity = interpolate(((frame + phaseOffset) % 100), [0, 20, 80, 100], [0, 1, 1, 0]);
+      {/* Track line */}
+      <line
+        x1={lFromX} y1={lFromY}
+        x2={lToX}   y2={lToY}
+        stroke={color}
+        strokeWidth="3"
+        strokeLinecap="round"
+        opacity={0.2}
+      />
 
-        return (
-          <div key={i} style={{
-            position: 'absolute',
-            left: xPos,
-            top: -3,
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            backgroundColor: color,
-            boxShadow: `0 0 10px ${color}, 0 0 20px ${color}`,
-            opacity,
-          }} />
-        );
-      })}
-    </div>
+      {/* Streaming particles */}
+      {particles.map((p, i) => (
+        <circle
+          key={i}
+          cx={p.x}
+          cy={p.y}
+          r="8"
+          fill={color}
+          opacity={p.opacity}
+          style={{ filter: `url(#stream-glow-${color.replace("#", "")})` }}
+        />
+      ))}
+    </svg>
   );
 };

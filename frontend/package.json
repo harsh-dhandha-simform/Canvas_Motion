@@ -13,6 +13,7 @@
     "@remotion/tailwind-v4": "4.0.482",
     "@remotion/transitions": "4.0.482",
     "@remotion/zod-types": "4.0.482",
+    "headroom-ai": "^0.22.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.482",

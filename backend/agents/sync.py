@@ -5,11 +5,10 @@ Component-aware timing with multi-panel layout consideration.
 Multi-panel scenes need more time since there's more content to absorb.
 """
 
-import json
 import logging
 
 from graph.tools import build_agent_context
-from utils.api import chat_completion, extract_json
+from utils.api import chat_completion, parse_json_robust
 
 logger = logging.getLogger(__name__)
 AGENT_NAME = "SyncSpecialist"
@@ -17,17 +16,22 @@ AGENT_NAME = "SyncSpecialist"
 _CTX = build_agent_context()
 
 SYSTEM_PROMPT = f"""
-You are a video timing specialist. Compute Remotion frame timings for a multi-panel technical video.
+You are a video timing specialist. Your job is to assign a duration_frames to each scene so that:
+  (a) viewers have enough time to absorb every panel's content,
+  (b) the video never drags — no scene overstays its welcome,
+  (c) sum(duration_frames) == total_seconds × 30 EXACTLY.
 
 {_CTX["remotion_timing_rules"]}
 
-## OUTPUT SCHEMA (return ONLY this JSON, no markdown):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA (return ONLY this JSON, no markdown)
+
 {{
   "fps": 30,
-  "total_frames": <int>,
+  "total_frames": <total_seconds × 30>,
   "scenes": [
     {{
-      "scene_index": <int>,
+      "scene_index": <int 0-based>,
       "layout": "<layout name>",
       "start_frame": <int>,
       "duration_frames": <int>
@@ -35,21 +39,72 @@ You are a video timing specialist. Compute Remotion frame timings for a multi-pa
   ]
 }}
 
-## TIMING ALGORITHM
-1. total_frames = total_seconds x 30
-2. Base duration by layout (multi-panel scenes need MORE time to read):
-   - "full" (AnimatedTitle intro/outro): 120 frames (4s)
-   - "full" (other — QuoteCard, TypewriterText): 150-180 frames (5-6s)
-   - "title-content":     210-270 frames (7-9s) — one rich component
-   - "left-right":        240-300 frames (8-10s) — two side-by-side panels
-   - "title-left-right":  270-330 frames (9-11s) — header + two panels
-   - "title-main-sidebar":300-360 frames (10-12s) — three areas to absorb
-3. Assign base frames, then scale proportionally so sum == total_frames exactly
-4. Minimum: 120 frames for any scene
-5. start_frame[0] = 0; start_frame[i] = sum(duration_frames[0..i-1])
-6. Adjust last scene to absorb any rounding difference
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## TIMING ALGORITHM — follow exactly
 
-Return ONLY valid JSON. No markdown.
+Step 1: total_frames = total_seconds × 30
+
+Step 2: Assign a BASE duration to each scene using this table:
+
+  Layout                  Panel count  Component types             Base (frames)
+  ─────────────────────────────────────────────────────────────────────────────
+  full + AnimatedTitle    1            intro/outro                 120
+  full + other            1            QuoteCard, TypewriterText   150
+  title-content           1            ComparisonCard, Timeline    240
+  title-left-right        2            any combo                   300
+  title-main-sidebar      2            any combo (more to absorb)  330
+  left-right              2            dramatic split              270
+  ─────────────────────────────────────────────────────────────────────────────
+
+  Adjustments within a scene:
+  • ArchitectureDiagram present? +30 frames (nodes animate in staggered — takes time)
+  • CodeBlock present?           +30 frames (code needs reading time)
+  • BarChart OR TimelineFlow?    +15 frames
+  • StatCallout only (sidebar)?  -15 frames (quick read)
+  • Two BulletLists?             +15 frames (more text)
+
+Step 3: raw_total = sum of all base durations
+        scale_factor = total_frames / raw_total
+
+Step 4: scaled_duration[i] = round(base[i] × scale_factor)
+        Clamp each to minimum 120 frames.
+
+Step 5: diff = total_frames - sum(scaled_duration)
+        Add diff to the LARGEST non-outro scene (not scene 0 or last scene).
+        If no middle scene exists, add to last scene.
+
+Step 6: start_frame[0] = 0
+        start_frame[i] = sum(duration_frames[0..i-1])
+
+Step 7: Verify: sum(duration_frames) == total_frames. If not, re-check Step 5.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## EXAMPLE (60-second video, 4 scenes)
+
+Input: total_seconds=60, scenes=[
+  {{scene_index:0, layout:"full",              components:["AnimatedTitle"]}},
+  {{scene_index:1, layout:"title-left-right",  components:["BulletList","CodeBlock"]}},
+  {{scene_index:2, layout:"title-main-sidebar",components:["ArchitectureDiagram","BulletList"]}},
+  {{scene_index:3, layout:"full",              components:["AnimatedTitle"]}}
+]
+
+Step 2 bases:  120, 300+30=330, 330+30=360, 120
+Step 3:        raw_total = 930
+Step 4:        scale = 1800/930 = 1.935
+               scaled: 232, 639, 697, 232
+Step 5:        sum = 1800 ✓ (happens to be exact; otherwise adjust scene 2)
+Step 6:        starts: 0, 232, 871, 1568
+
+Output:
+  total_frames: 1800
+  scenes: [
+    {{scene_index:0, layout:"full",               start_frame:0,    duration_frames:232}},
+    {{scene_index:1, layout:"title-left-right",   start_frame:232,  duration_frames:639}},
+    {{scene_index:2, layout:"title-main-sidebar", start_frame:871,  duration_frames:697}},
+    {{scene_index:3, layout:"full",               start_frame:1568, duration_frames:232}}
+  ]
+
+Return ONLY valid JSON. No markdown, no explanation.
 """.strip()
 
 
@@ -58,17 +113,21 @@ def run_agent(director_brief: dict, script: dict) -> dict:
     logger.info("[%s] Computing timings: %ds @ 30fps", AGENT_NAME, total_seconds)
 
     scene_lines = "\n".join(
-        f"  Scene {s.get('scene_index', i)}: layout={s.get('layout')!r}"
+        "  Scene {idx}: layout={layout!r}  components=[{comps}]".format(
+            idx=s.get("scene_index", i),
+            layout=s.get("layout", "full"),
+            comps=", ".join(p.get("type", "?") for p in s.get("panels", [])),
+        )
         for i, s in enumerate(script.get("scenes", []))
     )
 
     user_message = (
         f"total_seconds: {total_seconds}\n"
         f"total_frames: {total_seconds * 30}\n\n"
-        f"Scenes:\n{scene_lines}\n\n"
-        "Assign duration_frames using the layout-based table above. "
-        "Multi-panel layouts need more time — viewers must read multiple areas. "
-        "Ensure sum(duration_frames) == total_frames. Return only JSON."
+        f"Scenes (with component types for timing adjustments):\n{scene_lines}\n\n"
+        "Apply the algorithm from the system prompt step by step. "
+        "Verify sum(duration_frames) == total_frames before returning. "
+        "Return only JSON."
     )
 
     raw = chat_completion(
@@ -77,11 +136,10 @@ def run_agent(director_brief: dict, script: dict) -> dict:
             {"role": "user", "content": user_message},
         ],
         temperature=0.1,
-        max_tokens=3000,
         agent_name=AGENT_NAME,
     )
 
-    timing: dict = json.loads(extract_json(raw))
+    timing: dict = parse_json_robust(raw, label=AGENT_NAME)
 
     # Hard fix: ensure frame sum matches
     expected = total_seconds * 30

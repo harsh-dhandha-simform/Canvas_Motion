@@ -2,16 +2,23 @@ import React from "react";
 import { useCurrentFrame } from "remotion";
 
 export interface ScalingArrowProps {
-  fromX: number;
+  fromX: number;   // 0-100 percentage
   fromY: number;
   toX: number;
   toY: number;
   color?: string;
-  progress?: number; // Line draw progress: 0 to 1
-  animateFlow?: boolean; // Whether to show moving data packets
-  flowSpeed?: number; // Speed of packets
+  progress?: number;
+  animateFlow?: boolean;
+  flowSpeed?: number;
   arrowHeadSize?: number;
 }
+
+// Logical canvas size — must match the coordinate space of GlowingNode/ServerRack's
+// percentage positioning. We render a full-cover SVG with this viewBox so that
+// (x/100)*LW in SVG space == x% of parent container. preserveAspectRatio="none"
+// makes the SVG stretch to fill the panel exactly, keeping nodes and arrows aligned.
+const LW = 1920;
+const LH = 1080;
 
 export const ScalingArrow: React.FC<ScalingArrowProps> = ({
   fromX,
@@ -22,75 +29,61 @@ export const ScalingArrow: React.FC<ScalingArrowProps> = ({
   progress = 1,
   animateFlow = false,
   flowSpeed = 2,
-  arrowHeadSize = 8,
+  arrowHeadSize = 10,
 }) => {
   const frame = useCurrentFrame();
 
-  const pxFromX = (fromX / 100) * 1920;
-  const pxFromY = (fromY / 100) * 1080;
-  const pxToX = (toX / 100) * 1920;
-  const pxToY = (toY / 100) * 1080;
+  // Convert percentages to logical canvas units
+  const lFromX = (fromX / 100) * LW;
+  const lFromY = (fromY / 100) * LH;
+  const lToX   = (toX   / 100) * LW;
+  const lToY   = (toY   / 100) * LH;
 
-  // Bounding box dimensions
-  const minX = Math.min(pxFromX, pxToX) - 40;
-  const minY = Math.min(pxFromY, pxToY) - 40;
-  const maxX = Math.max(pxFromX, pxToX) + 40;
-  const maxY = Math.max(pxFromY, pxToY) + 40;
-  const width = maxX - minX;
-  const height = maxY - minY;
-
-  // Relative coordinates inside the SVG
-  const relFrom = { x: pxFromX - minX, y: pxFromY - minY };
-  const relTo = { x: pxToX - minX, y: pxToY - minY };
-
-  // Calculate distance
-  const dx = relTo.x - relFrom.x;
-  const dy = relTo.y - relFrom.y;
+  const dx = lToX - lFromX;
+  const dy = lToY - lFromY;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // Line dash calculations for draw-in transition
   const strokeDasharray = distance;
   const strokeDashoffset = distance * (1 - progress);
 
-  // Arrow angle
-  const angle = Math.atan2(dy, dx);
-  const angleDeg = (angle * 180) / Math.PI;
+  const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
 
-  // Arrow head point (at progress location)
-  const currentX = relFrom.x + dx * progress;
-  const currentY = relFrom.y + dy * progress;
+  // Arrow head tip position
+  const tipX = lFromX + dx * progress;
+  const tipY = lFromY + dy * progress;
 
-  // Flowing packets animation parameters
+  // Flowing packets
   const packetCount = 3;
   const packets = Array.from({ length: packetCount }).map((_, i) => {
-    // Stagger packet starts using modulo arithmetic on frame
     const offset = (i / packetCount) * distance;
     const currentDistance = (frame * flowSpeed + offset) % distance;
-    const packetProgress = currentDistance / distance;
-
+    const t = currentDistance / distance;
     return {
-      x: relFrom.x + dx * packetProgress,
-      y: relFrom.y + dy * packetProgress,
-      opacity: packetProgress > 0.05 && packetProgress < 0.95 ? 1 : 0, // fade at boundaries
+      x: lFromX + dx * t,
+      y: lFromY + dy * t,
+      opacity: t > 0.05 && t < 0.95 ? 1 : 0,
     };
   });
 
   return (
+    // Full-cover SVG — fills the parent PanelCell exactly.
+    // viewBox="0 0 1920 1080" + preserveAspectRatio="none" means every point at
+    // (x/100*1920, y/100*1080) lands at the same visual position as CSS left:x% top:y%.
     <svg
       style={{
         position: "absolute",
-        left: minX,
-        top: minY,
-        width,
-        height,
+        inset: 0,
+        width: "100%",
+        height: "100%",
         pointerEvents: "none",
+        overflow: "visible",
       }}
-      viewBox={`0 0 ${width} ${height}`}
+      viewBox={`0 0 ${LW} ${LH}`}
+      preserveAspectRatio="none"
     >
-      {/* Glow filter */}
       <defs>
-        <filter id={`glow-${color.replace("#", "")}`} x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
+        <filter id={`arrow-glow-${color.replace("#", "")}`}>
+          <feGaussianBlur stdDeviation="4" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -98,63 +91,54 @@ export const ScalingArrow: React.FC<ScalingArrowProps> = ({
         </filter>
       </defs>
 
-      {/* Main connecting path */}
-      <path
-        d={`M ${relFrom.x} ${relFrom.y} L ${relTo.x} ${relTo.y}`}
-        fill="none"
+      {/* Ghost track */}
+      <line
+        x1={lFromX} y1={lFromY}
+        x2={lToX}   y2={lToY}
         stroke={color}
         strokeWidth="3"
         strokeLinecap="round"
-        opacity={0.4}
+        opacity={0.3}
         strokeDasharray={strokeDasharray}
         strokeDashoffset={strokeDashoffset}
-        style={{
-          filter: `url(#glow-${color.replace("#", "")})`,
-        }}
+        style={{ filter: `url(#arrow-glow-${color.replace("#", "")})` }}
       />
 
       {/* Solid lead line */}
-      <path
-        d={`M ${relFrom.x} ${relFrom.y} L ${currentX} ${currentY}`}
-        fill="none"
+      <line
+        x1={lFromX} y1={lFromY}
+        x2={tipX}   y2={tipY}
         stroke={color}
-        strokeWidth="3.5"
+        strokeWidth="4"
         strokeLinecap="round"
-        opacity={0.85}
-        strokeDasharray={strokeDasharray}
-        strokeDashoffset={strokeDashoffset}
+        opacity={0.9}
       />
 
-      {/* Arrow Head (Only show if progress is notable) */}
+      {/* Arrow head */}
       {progress > 0.02 && (
         <polygon
-          points={`0,0 -${arrowHeadSize * 1.8},-${arrowHeadSize} -${arrowHeadSize * 1.8},${arrowHeadSize}`}
+          points={`0,0 ${-arrowHeadSize * 2},-${arrowHeadSize} ${-arrowHeadSize * 2},${arrowHeadSize}`}
           fill={color}
-          transform={`translate(${currentX}, ${currentY}) rotate(${angleDeg})`}
-          style={{
-            filter: `url(#glow-${color.replace("#", "")})`,
-          }}
+          opacity={0.95}
+          transform={`translate(${tipX},${tipY}) rotate(${angleDeg})`}
+          style={{ filter: `url(#arrow-glow-${color.replace("#", "")})` }}
         />
       )}
 
-      {/* Animating Data Packets (Only show when full line is drawn and flow active) */}
-      {animateFlow && progress > 0.95 && (
-        <>
-          {packets.map((packet, index) => (
-            <circle
-              key={index}
-              cx={packet.x}
-              cy={packet.y}
-              r="5"
-              fill={color}
-              opacity={packet.opacity * 0.9}
-              style={{
-                filter: `url(#glow-${color.replace("#", "")})`,
-              }}
-            />
-          ))}
-        </>
-      )}
+      {/* Animated packets */}
+      {animateFlow && progress > 0.95 &&
+        packets.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r="7"
+            fill={color}
+            opacity={p.opacity * 0.9}
+            style={{ filter: `url(#arrow-glow-${color.replace("#", "")})` }}
+          />
+        ))
+      }
     </svg>
   );
 };

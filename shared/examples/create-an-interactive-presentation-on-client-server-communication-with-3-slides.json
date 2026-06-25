@@ -1,0 +1,245 @@
+{
+  "title": "Client → Server Communication",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#00d4ff",
+    "secondary": "#f59e0b",
+    "accent": "#22d3ee",
+    "background": "#0a0f1e",
+    "font": "Space Grotesk"
+  },
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full",
+      "title": "Client–Server Communication",
+      "subtitle": "How browsers talk to servers — foundations of the web",
+      "duration_frames": 120,
+      "transition": "fade",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "data": {
+            "title": "Client–Server Communication",
+            "subtitle": "Foundations of Networked Systems",
+            "align": "center"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-2",
+      "layout": "title-left-right",
+      "title": "The Request–Response Model",
+      "subtitle": "HTTP methods, stateless protocol, REST conventions",
+      "duration_frames": 300,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BulletList",
+          "data": {
+            "title": "Core Concepts",
+            "items": [
+              "Client initiates — server never pushes first (HTTP/1.x)",
+              "Stateless: each request is self-contained, no session memory",
+              "Methods: GET (read), POST (create), PUT (replace), PATCH (update), DELETE",
+              "Status codes: 2xx success · 3xx redirect · 4xx client error · 5xx server fault",
+              "Headers carry auth tokens, content type, caching directives",
+              "Body carries JSON, form data, or binary (multipart)"
+            ]
+          }
+        },
+        {
+          "area": "right",
+          "type": "CodeBlock",
+          "data": {
+            "title": "Full HTTP Round-Trip",
+            "language": "http",
+            "code": "POST /api/v1/users HTTP/1.1\nHost: api.example.com\nAuthorization: Bearer eyJhbGciOiJSUzI1NiJ9...\nContent-Type: application/json\n\n{\"name\": \"Alice\", \"role\": \"admin\"}\n\n─── Response ─────────────────────────\nHTTP/1.1 201 Created\nContent-Type: application/json\nLocation: /api/v1/users/42\nX-Request-Id: d4e8f3a1\n\n{\"id\": 42, \"name\": \"Alice\",\n \"role\": \"admin\", \"createdAt\": \"2024-01-15T09:30:00Z\"}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-3",
+      "layout": "title-main-sidebar",
+      "title": "Three-Tier Architecture",
+      "subtitle": "Client → Load Balancer → App Server → Database",
+      "duration_frames": 360,
+      "transition": "slideUp",
+      "panels": [
+        {
+          "area": "main",
+          "type": "ArchitectureDiagram",
+          "data": {
+            "title": "Three-Tier Architecture",
+            "nodes": [
+              {
+                "id": "client",
+                "type": "client",
+                "x": 8,
+                "y": 50,
+                "label": "Browser / App"
+              },
+              {
+                "id": "lb",
+                "type": "loadBalancer",
+                "x": 30,
+                "y": 50,
+                "label": "Load Balancer"
+              },
+              {
+                "id": "svc1",
+                "type": "server",
+                "x": 57,
+                "y": 28,
+                "label": "API Server A"
+              },
+              {
+                "id": "svc2",
+                "type": "server",
+                "x": 57,
+                "y": 72,
+                "label": "API Server B"
+              },
+              {
+                "id": "db",
+                "type": "database",
+                "x": 83,
+                "y": 50,
+                "label": "PostgreSQL"
+              }
+            ],
+            "connections": [
+              { "fromId": "client", "toId": "lb",   "type": "arrow" },
+              { "fromId": "lb",     "toId": "svc1", "type": "arrow" },
+              { "fromId": "lb",     "toId": "svc2", "type": "arrow" },
+              { "fromId": "svc1",   "toId": "db",   "type": "stream" },
+              { "fromId": "svc2",   "toId": "db",   "type": "stream" }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "BulletList",
+          "data": {
+            "title": "Why 3 Tiers?",
+            "items": [
+              "Scale each tier independently",
+              "LB distributes load — no single point of failure",
+              "App servers are stateless: add/remove any time",
+              "DB is the single source of truth"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-4",
+      "layout": "title-main-sidebar",
+      "title": "Full Request Journey",
+      "subtitle": "DNS lookup → TLS handshake → API → Cache → DB",
+      "duration_frames": 360,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "main",
+          "type": "ArchitectureDiagram",
+          "data": {
+            "title": "Request Journey with Caching",
+            "nodes": [
+              {
+                "id": "client",
+                "type": "client",
+                "x": 8,
+                "y": 50,
+                "label": "Mobile App"
+              },
+              {
+                "id": "cdn",
+                "type": "loadBalancer",
+                "x": 27,
+                "y": 50,
+                "label": "CDN / Edge"
+              },
+              {
+                "id": "api",
+                "type": "server",
+                "x": 50,
+                "y": 30,
+                "label": "API Server"
+              },
+              {
+                "id": "cache",
+                "type": "server",
+                "x": 50,
+                "y": 70,
+                "label": "Redis Cache"
+              },
+              {
+                "id": "db",
+                "type": "database",
+                "x": 78,
+                "y": 30,
+                "label": "PostgreSQL"
+              },
+              {
+                "id": "queue",
+                "type": "database",
+                "x": 78,
+                "y": 70,
+                "label": "Message Queue"
+              }
+            ],
+            "connections": [
+              { "fromId": "client", "toId": "cdn",   "type": "arrow" },
+              { "fromId": "cdn",    "toId": "api",   "type": "arrow" },
+              { "fromId": "api",    "toId": "cache", "type": "arrow" },
+              { "fromId": "api",    "toId": "db",    "type": "stream" },
+              { "fromId": "cache",  "toId": "db",    "type": "stream" },
+              { "fromId": "api",    "toId": "queue", "type": "arrow" }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "BulletList",
+          "data": {
+            "title": "Latency Budget",
+            "items": [
+              "DNS: 20–120 ms (cached: <1 ms)",
+              "TLS handshake: 50–150 ms",
+              "CDN cache hit: 5–30 ms",
+              "API processing: 10–80 ms",
+              "Redis lookup: 0.5–2 ms",
+              "DB query: 2–50 ms"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-5",
+      "layout": "full",
+      "title": "Key Takeaways",
+      "subtitle": "Design for statelessness, cache aggressively, scale horizontally",
+      "duration_frames": 150,
+      "transition": "none",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "data": {
+            "title": "Build for Scale from Day One",
+            "subtitle": "Stateless · Cached · Distributed",
+            "align": "center"
+          }
+        }
+      ]
+    }
+  ]
+}

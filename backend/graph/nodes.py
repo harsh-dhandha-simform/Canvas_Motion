@@ -190,10 +190,10 @@ def _assembler_llm_fix(raw_script: dict, exc: Exception, topic: str) -> dict[str
                 )},
             ],
             temperature=0.1,
-            max_tokens=8192,
             agent_name="AssemblerFix",
         )
-        fixed = VideoScript.model_validate(json.loads(extract_json(raw)))
+        from utils.api import parse_json_robust
+        fixed = VideoScript.model_validate(parse_json_robust(raw, label="AssemblerFix"))
         logger.info("[assembler-fix] ✅ LLM fix passed")
         return {"video_script": fixed.model_dump(mode="json"), "model_used": "llm-fix", "fallback_triggered": True}
     except Exception as e:

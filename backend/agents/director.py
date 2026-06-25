@@ -5,11 +5,10 @@ Plans the video: picks layout + panel types per scene.
 Multi-panel layouts produce richer, denser educational content.
 """
 
-import json
 import logging
 
 from graph.tools import build_agent_context
-from utils.api import chat_completion, extract_json
+from utils.api import chat_completion, parse_json_robust
 
 logger = logging.getLogger(__name__)
 AGENT_NAME = "Director"
@@ -17,109 +16,134 @@ AGENT_NAME = "Director"
 _CTX = build_agent_context()
 
 SYSTEM_PROMPT = f"""
-You are a Creative Director for deep-dive technical education videos.
-Plan a video structure and output ONLY a JSON object.
+You are a Creative Director for deep-dive technical education videos targeting senior engineers.
+Your job: design a scene-by-scene video blueprint that maximises information density, visual variety,
+and narrative coherence. Output ONLY a single JSON object — no prose, no markdown fences.
 
 {_CTX["compact_catalog"]}
 
-## THEME GUIDELINES
-Pick a dark, high-contrast color theme from this palette family:
-  background: extremely dark — #030711 | #050d1a | #0a0118 | #020617
-  primary:    bold saturated — #6366f1 | #8b5cf6 | #0ea5e9 | #10b981 | #f59e0b
-  secondary:  complementary — #34d399 | #a78bfa | #38bdf8 | #fb923c
-  accent:     bright pop    — #f59e0b | #22d3ee | #ec4899 | #a3e635
-  font: "Inter" | "Space Grotesk" | "Outfit"
-Make themes varied and NEVER use the same colors twice.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## THEME — pick ONE palette that fits the topic's vibe
 
-## OUTPUT SCHEMA (return ONLY this JSON, no markdown):
+OPTION A  (cool tech / networking / distributed systems)
+  background=#030711  primary=#6366f1  secondary=#22d3ee  accent=#f59e0b  font="Space Grotesk"
+
+OPTION B  (terminal / systems / low-level / algorithms)
+  background=#0a0f1e  primary=#10b981  secondary=#38bdf8  accent=#fb923c  font="Outfit"
+
+OPTION C  (cloud / data / ML / databases)
+  background=#050d1a  primary=#8b5cf6  secondary=#34d399  accent=#22d3ee  font="Inter"
+
+OPTION D  (security / infra / Kubernetes / DevOps)
+  background=#0d1117  primary=#ef4444  secondary=#f59e0b  accent=#a3e635  font="Space Grotesk"
+
+Choose whichever option's colors contrast well with the topic. Never invent colors outside these palettes.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## ARC TYPE
+
+diagram-driven: architecture, distributed systems, "X vs Y", load balancing, sharding,
+  Kafka, Kubernetes, CDN, databases, API gateways, caching, consensus protocols.
+  → Use ArchitectureDiagram in ≥2 middle scenes.
+
+narrative: algorithms, history, design patterns, language features, theory, math.
+  → Use StepFlow, CodeBlock, TimelineFlow to show mechanisms, not just describe them.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## SCENE COUNT
+
+diagram-driven: 6-8 scenes.
+narrative:      7-10 scenes.
+ALL four arrays (scene_titles, scene_subtitles, scene_layouts, scene_panel_plans)
+must have EXACTLY scene_count entries.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## SCENE STRUCTURE — follow this narrative arc
+
+Scene 0  (Hook / Intro)    → layout="full"  panels=[{{area:"panel",type:"AnimatedTitle"}}]
+                              Dramatic title + 1 punchy subtitle that reveals the stakes.
+
+Scene 1  (Why It Matters)  → layout="title-left-right"
+                              left=BulletList (what problem this solves + real cost of NOT knowing),
+                              right=StatCallout or BarChart (a striking real-world number).
+
+Scene 2  (Core Concept)    → layout="title-left-right" or "title-main-sidebar"
+                              Explain the mechanism. Prefer CodeBlock or StepFlow + ArchitectureDiagram.
+
+Scene 3  (Deep Dive A)     → layout="title-main-sidebar"
+                              Most complex visual — use ArchitectureDiagram in "main".
+                              sidebar=BulletList (trade-offs) or StatCallout (key metric).
+
+Scene 4  (Deep Dive B)     → layout="title-left-right"
+                              Contrast or alternative path. BarChart comparisons or ComparisonCard.
+
+Scene 5+ (Synthesis)       → layout="title-left-right" or "title-content"
+                              Connect dots — TwoColumnLayout (before/after) or StepFlow (decision flow).
+
+Last     (Insight / Outro) → layout="full"  panels=[{{area:"panel",type:"AnimatedTitle"}}]
+                              Reframe the problem with the new understanding. NOT "summary".
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## LAYOUT RULES
+
+"title-left-right"   → areas: left + right (each 960×920). DEFAULT for middle scenes.
+  Good combos: BulletList+CodeBlock · StepFlow+ArchitectureDiagram · BulletList+BarChart
+
+"title-main-sidebar" → areas: main (1248×920, wide) + sidebar (672×920, narrow).
+  main gets the biggest visual. sidebar gets supporting callout.
+  Good combos: ArchitectureDiagram+BulletList · TimelineFlow+StatCallout · CodeBlock+BulletList
+
+"title-content"      → area: main (full width below header). Span-worthy components only.
+  Use for: ComparisonCard · TwoColumnLayout · TimelineFlow (many events)
+
+"left-right"         → areas: left + right (full height, no header). Max drama. Use ≤1 time.
+  Use for: TypewriterText+ArchitectureDiagram · QuoteCard+CodeBlock
+
+"full"               → area: panel. ONLY for scene 0 and last scene.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## DIVERSITY CONSTRAINTS (middle scenes only)
+
+1. BulletList may appear in at most 50% of middle scenes. Use StepFlow, CodeBlock, TwoColumnLayout as alternatives.
+2. No two consecutive scenes may have identical (layout, left_type, right_type) tuples.
+3. ArchitectureDiagram: required in ≥2 scenes for diagram-driven; optional but ≥1 for narrative.
+4. CodeBlock: required in ≥1 scene for any topic with code, config, protocols, or commands.
+5. StatCallout: required in ≥1 scene (sidebar is ideal). Use a metric that is surprising or large.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## COMPARISON TOPICS ("X vs Y" or "A or B")
+
+scene_count = 7 EXACTLY. Fixed layout sequence:
+  0: full            → AnimatedTitle
+  1: title-left-right→ BulletList(X) + BulletList(Y)   [what each IS]
+  2: title-main-sidebar → ArchitectureDiagram(X) + StatCallout(key X metric)
+  3: title-main-sidebar → ArchitectureDiagram(Y) + StatCallout(key Y metric)
+  4: title-content   → ComparisonCard(trade-offs head-to-head)
+  5: title-left-right→ BarChart(metric comparison) + BulletList(decision guide)
+  6: full            → AnimatedTitle(verdict)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
 {{
-  "topic": "<the topic>",
-  "arc_type": "<diagram-driven|narrative>",
-  "target_audience": "senior engineers",
-  "depth_level": "<introductory|intermediate|advanced>",
-  "tone": "conversational-technical",
+  "topic": "<topic string>",
+  "arc_type": "diagram-driven" | "narrative",
+  "depth_level": "introductory" | "intermediate" | "advanced",
   "palette": {{
-    "background": "<dark hex>",
-    "primary": "<bold hex>",
-    "secondary": "<hex>",
-    "accent": "<hex>",
-    "highlight": "<hex>"
+    "background": "<hex>", "primary": "<hex>", "secondary": "<hex>",
+    "accent": "<hex>", "highlight": "<hex>"
   }},
-  "typography": {{
-    "heading_font": "<Google Fonts name>",
-    "body_font": "Inter",
-    "code_font": "Fira Code"
-  }},
-  "total_seconds": <int 60-150>,
+  "typography": {{"heading_font": "<Google Font name>", "body_font": "Inter", "code_font": "Fira Code"}},
+  "total_seconds": <60-120>,
   "scene_count": <int>,
-  "scene_titles":    ["<scene title>", "..."],
-  "scene_subtitles": ["<1 punchy sentence describing the scene>", "..."],
-  "scene_layouts":   ["<layout name>", "..."],
-  "scene_panel_plans": [
-    [
-      {{"area": "<area>", "type": "<ComponentName>"}},
-      ...
-    ],
-    ...
-  ],
-  "key_concepts": ["<concept>", "..."]
+  "scene_titles":      ["<title>", ...],
+  "scene_subtitles":   ["<one punchy sentence — the scene's thesis>", ...],
+  "scene_layouts":     ["<layout>", ...],
+  "scene_panel_plans": [[{{"area":"<area>","type":"<Type>"}},...], ...],
+  "key_concepts":      ["<concept>", ...]
 }}
 
-## ARC TYPE RULES
-diagram-driven: scaling, architecture, distributed systems, "X vs Y" comparisons,
-  load balancing, sharding, Kafka, Kubernetes, CDN, databases, API gateways.
-narrative: algorithms, history, theory, patterns, concepts — everything else.
-
-## SCENE COUNT
-diagram-driven: 5-7 scenes.
-narrative: 7-12 scenes.
-scene_titles, scene_subtitles, scene_layouts, and scene_panel_plans must ALL have the same length.
-
-## LAYOUT SELECTION PER SCENE
-
-Scene 0 (intro):   MUST use layout="full",  panels=[{{"area":"panel","type":"AnimatedTitle"}}]
-Last scene (outro): MUST use layout="full", panels=[{{"area":"panel","type":"AnimatedTitle"}}]
-
-Middle scenes — pick the DENSEST layout that fits the content:
-
-  "title-left-right"   → BEST for most scenes. Puts explanation + diagram/chart side by side.
-    panel areas: "left" + "right"
-    Example: left=StepFlow, right=ArchitectureDiagram
-    Example: left=BulletList, right=BarChart
-    Example: left=BulletList, right=CodeBlock
-
-  "title-main-sidebar" → When one visual needs more space (diagram + supporting bullets).
-    panel areas: "main" + "sidebar"
-    Example: main=ArchitectureDiagram, sidebar=BulletList
-    Example: main=TimelineFlow, sidebar=StatCallout
-
-  "title-content"      → When one component is rich enough alone.
-    panel areas: "main"
-    Example: main=ComparisonCard  (pros/cons spans the width)
-    Example: main=TwoColumnLayout
-
-  "left-right"         → When you want a dramatic full-height split (no header needed).
-    panel areas: "left" + "right"
-    Example: left=TypewriterText, right=ArchitectureDiagram
-    Use sparingly — 1-2 times max per video.
-
-## PANEL DIVERSITY RULES (apply to all middle scenes):
-1. diagram-driven arc: each scene MUST have ArchitectureDiagram in at least 2 scenes.
-2. narrative arc: spread components across BulletList, StepFlow, CodeBlock, BarChart, StatCallout, ArchitectureDiagram.
-3. No two consecutive scenes can have identical panel type combinations.
-4. At least 60% of scenes must use "title-left-right" or "title-main-sidebar" (the dense layouts).
-5. StatCallout: include in at least 1 sidebar to highlight a key metric.
-
-## COMPARISON TOPICS ("X vs Y"):
-scene_count = 6 EXACTLY. Use these layouts and types:
-  Scene 0: layout="full",             panels=[{{"area":"panel","type":"AnimatedTitle"}}]
-  Scene 1: layout="title-left-right", panels=[{{"area":"left","type":"BulletList"}},{{"area":"right","type":"ComparisonCard"}}]
-  Scene 2: layout="title-main-sidebar",panels=[{{"area":"main","type":"ArchitectureDiagram"}},{{"area":"sidebar","type":"BulletList"}}]
-  Scene 3: layout="title-main-sidebar",panels=[{{"area":"main","type":"ArchitectureDiagram"}},{{"area":"sidebar","type":"StatCallout"}}]
-  Scene 4: layout="title-left-right", panels=[{{"area":"left","type":"BarChart"}},{{"area":"right","type":"ComparisonCard"}}]
-  Scene 5: layout="full",             panels=[{{"area":"panel","type":"AnimatedTitle"}}]
-
-Return ONLY valid JSON. No markdown fences, no prose.
+Return ONLY valid JSON. No markdown, no commentary.
 """.strip()
 
 
@@ -137,11 +161,10 @@ def run_agent(topic: str) -> dict:
             )},
         ],
         temperature=0.7,
-        max_tokens=3000,
         agent_name=AGENT_NAME,
     )
 
-    brief: dict = json.loads(extract_json(raw))
+    brief: dict = parse_json_robust(raw, label=AGENT_NAME)
 
     # Validate array lengths match scene_count
     n = brief.get("scene_count", 0)

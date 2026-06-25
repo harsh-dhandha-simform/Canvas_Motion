@@ -3,6 +3,7 @@ from typing import TypedDict, Any, Optional
 
 class PipelineState(TypedDict):
     topic: str
+    duration_seconds: int          # user-requested video length; Director overrides total_seconds with this
     brief: Optional[dict[str, Any]]
     script: Optional[dict[str, Any]]
     story: Optional[dict[str, Any]]

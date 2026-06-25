@@ -20,6 +20,8 @@ import { QuoteCard, QuoteCardSchema } from "./components/QuoteCard";
 import { CodeBlock, CodeBlockSchema } from "./components/CodeBlock";
 import { TwoColumnLayout, TwoColumnLayoutSchema } from "./components/TwoColumnLayout";
 import { BarChart, BarChartSchema } from "./components/BarChart";
+import { PacketFlow, PacketFlowSchema } from "./components/PacketFlow";
+import { HttpExchange, HttpExchangeSchema } from "./components/HttpExchange";
 
 export const COMPONENT_REGISTRY = {
   AnimatedTitle,
@@ -35,6 +37,8 @@ export const COMPONENT_REGISTRY = {
   CodeBlock,
   TwoColumnLayout,
   BarChart,
+  PacketFlow,
+  HttpExchange,
 } as const;
 
 export const COMPONENT_SCHEMAS = {
@@ -51,6 +55,8 @@ export const COMPONENT_SCHEMAS = {
   CodeBlock: CodeBlockSchema,
   TwoColumnLayout: TwoColumnLayoutSchema,
   BarChart: BarChartSchema,
+  PacketFlow: PacketFlowSchema,
+  HttpExchange: HttpExchangeSchema,
 } as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,6 +114,14 @@ export const COMPONENT_CATALOG = {
   BarChart: {
     description: "An animated bar chart with vertical or horizontal layout. Bars grow in with spring physics and values count up from 0. Use for data comparisons.",
     schema: toJsonSchema(BarChartSchema, "BarChartProps"),
+  },
+  PacketFlow: {
+    description: "An animated network topology where data packets travel along edges between nodes. Nodes are positioned by x/y percentage coordinates. Ideal for showing network protocols, request routing, TCP handshakes, and distributed system data flows.",
+    schema: toJsonSchema(PacketFlowSchema, "PacketFlowProps"),
+  },
+  HttpExchange: {
+    description: "A side-by-side HTTP request and response viewer with line-by-line animated reveal. Shows method, path, headers, and body for both request and response. Great for explaining APIs, REST calls, and HTTP protocol details.",
+    schema: toJsonSchema(HttpExchangeSchema, "HttpExchangeProps"),
   },
 };
 

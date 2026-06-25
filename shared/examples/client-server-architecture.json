@@ -1,0 +1,328 @@
+{
+  "title": "Client-Server Architecture",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#6366f1",
+    "secondary": "#22d3ee",
+    "accent": "#f59e0b",
+    "background": "#030711",
+    "font": "Space Grotesk"
+  },
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full",
+      "title": "Client-Server Architecture: The Backbone of Modern Computing",
+      "subtitle": "Understanding the fundamentals of client-server architecture",
+      "duration_frames": 120,
+      "transition": "fade",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "data": {
+            "title": "Client-Server Architecture: The Backbone of Modern Computing",
+            "subtitle": "Understanding the fundamentals of client-server architecture"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-2",
+      "layout": "title-left-right",
+      "title": "The Problem: Complexity and Scalability",
+      "subtitle": "Why a distributed approach is necessary",
+      "duration_frames": 285,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BulletList",
+          "data": {
+            "title": "The Problem",
+            "items": [
+              "Monolithic systems are hard to scale — adding more users or data leads to exponential complexity",
+              "Tight coupling leads to cascading failures — a single issue can bring down the entire system",
+              "Maintenance and updates are challenging — changing one part affects the entire system"
+            ]
+          }
+        },
+        {
+          "area": "right",
+          "type": "StatCallout",
+          "data": {
+            "title": "The Cost of Complexity",
+            "value": 75,
+            "suffix": "%",
+            "description": "of system failures due to complexity — a staggering 75% of system failures can be attributed to complexity issues"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-3",
+      "layout": "title-main-sidebar",
+      "title": "Core Concept: Separation of Concerns",
+      "subtitle": "Separating concerns for a more scalable system",
+      "duration_frames": 435,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "main",
+          "type": "ArchitectureDiagram",
+          "data": {
+            "title": "Client-Server Architecture",
+            "nodes": [
+              {
+                "id": "client",
+                "type": "client",
+                "x": 8,
+                "y": 50,
+                "label": "Web Browser"
+              },
+              {
+                "id": "lb",
+                "type": "loadBalancer",
+                "x": 30,
+                "y": 50,
+                "label": "NGINX"
+              },
+              {
+                "id": "app",
+                "type": "server",
+                "x": 52,
+                "y": 30,
+                "label": "App Server"
+              },
+              {
+                "id": "db",
+                "type": "database",
+                "x": 78,
+                "y": 30,
+                "label": "PostgreSQL"
+              }
+            ],
+            "connections": [
+              {
+                "fromId": "client",
+                "toId": "lb",
+                "type": "arrow"
+              },
+              {
+                "fromId": "lb",
+                "toId": "app",
+                "type": "arrow"
+              },
+              {
+                "fromId": "app",
+                "toId": "db",
+                "type": "stream"
+              }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "BulletList",
+          "data": {
+            "title": "Benefits",
+            "items": [
+              "Separation of concerns — clients focus on user interaction, servers on data processing",
+              "Scalability — add more servers to handle increased load",
+              "Flexibility — choose the best technology stack for each component"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-4",
+      "layout": "title-main-sidebar",
+      "title": "Deep Dive: Client-Server Communication",
+      "subtitle": "How clients and servers interact",
+      "duration_frames": 375,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "main",
+          "type": "ArchitectureDiagram",
+          "data": {
+            "title": "Client-Server Communication",
+            "nodes": [
+              {
+                "id": "client",
+                "type": "client",
+                "x": 8,
+                "y": 50,
+                "label": "Mobile App"
+              },
+              {
+                "id": "lb",
+                "type": "loadBalancer",
+                "x": 30,
+                "y": 50,
+                "label": "HAProxy"
+              },
+              {
+                "id": "app1",
+                "type": "server",
+                "x": 48,
+                "y": 20,
+                "label": "Microservice 1"
+              },
+              {
+                "id": "app2",
+                "type": "server",
+                "x": 48,
+                "y": 80,
+                "label": "Microservice 2"
+              },
+              {
+                "id": "db",
+                "type": "database",
+                "x": 78,
+                "y": 50,
+                "label": "MySQL"
+              }
+            ],
+            "connections": [
+              {
+                "fromId": "client",
+                "toId": "lb",
+                "type": "arrow"
+              },
+              {
+                "fromId": "lb",
+                "toId": "app1",
+                "type": "arrow"
+              },
+              {
+                "fromId": "lb",
+                "toId": "app2",
+                "type": "arrow"
+              },
+              {
+                "fromId": "app1",
+                "toId": "db",
+                "type": "stream"
+              },
+              {
+                "fromId": "app2",
+                "toId": "db",
+                "type": "stream"
+              }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "StatCallout",
+          "data": {
+            "title": "Request-Response Cycle",
+            "value": 50,
+            "suffix": "ms",
+            "description": "Average response time — 50ms is a typical response time for a well-optimized client-server interaction"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-5",
+      "layout": "title-left-right",
+      "title": "Deep Dive: Load Balancing and Scaling",
+      "subtitle": "Ensuring high availability and performance",
+      "duration_frames": 330,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BarChart",
+          "data": {
+            "title": "Load Balancing",
+            "bars": [
+              {
+                "label": "nginx",
+                "value": 50000,
+                "color": "#3498db"
+              },
+              {
+                "label": "express",
+                "value": 12000,
+                "color": "#f1c40f"
+              },
+              {
+                "label": "flask",
+                "value": 3000,
+                "color": "#2ecc71"
+              },
+              {
+                "label": "django",
+                "value": 2500,
+                "color": "#e74c3c"
+              }
+            ]
+          }
+        },
+        {
+          "area": "right",
+          "type": "BulletList",
+          "data": {
+            "title": "Scaling Strategies",
+            "items": [
+              "Horizontal scaling — add more servers to distribute the load",
+              "Vertical scaling — increase server resources to handle more load",
+              "Caching — store frequently accessed data to reduce server load"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-6",
+      "layout": "title-content",
+      "title": "Synthesis: Trade-Offs and Best Practices",
+      "subtitle": "Making informed decisions for your architecture",
+      "duration_frames": 270,
+      "transition": "slideUp",
+      "panels": [
+        {
+          "area": "main",
+          "type": "ComparisonCard",
+          "data": {
+            "title": "Trade-Offs",
+            "pros": [
+              "Scalability — easily add more servers to handle increased load",
+              "Flexibility — choose the best technology stack for each component",
+              "Maintainability — separate concerns make maintenance easier"
+            ],
+            "cons": [
+              "Added complexity — multiple components require more management",
+              "Communication overhead — client-server interactions introduce latency",
+              "Security concerns — multiple components increase the attack surface"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-7",
+      "layout": "full",
+      "title": "Conclusion: The Future of Client-Server Architecture",
+      "subtitle": "The evolving landscape of client-server architecture",
+      "duration_frames": 885,
+      "transition": "none",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "data": {
+            "title": "The Future of Client-Server Architecture",
+            "subtitle": "Evolving to meet new demands"
+          }
+        }
+      ]
+    }
+  ]
+}

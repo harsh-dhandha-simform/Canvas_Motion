@@ -1,0 +1,197 @@
+{
+  "title": "Kubernetes",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#3b82f6",
+    "secondary": "#10b981",
+    "accent": "#fbbf24",
+    "background": "#1e1e2f",
+    "font": "Inter"
+  },
+  "scenes": [
+    {
+      "id": "scene-1",
+      "type": "AnimatedTitle",
+      "duration_frames": 120,
+      "transition": "fade",
+      "data": {
+        "title": "What is Kubernetes?",
+        "subtitle": "Container Orchestration",
+        "accentColor": null,
+        "align": "center"
+      }
+    },
+    {
+      "id": "scene-2",
+      "type": "ArchitectureDiagram",
+      "duration_frames": 330,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Kubernetes Architecture Overview",
+        "nodes": [
+          {
+            "id": "client",
+            "type": "client",
+            "x": 10.0,
+            "y": 50.0,
+            "label": "Client",
+            "metrics": null
+          },
+          {
+            "id": "api_server",
+            "type": "server",
+            "x": 35.0,
+            "y": 50.0,
+            "label": "API Server",
+            "metrics": null
+          },
+          {
+            "id": "controller_manager",
+            "type": "server",
+            "x": 35.0,
+            "y": 30.0,
+            "label": "Controller Manager",
+            "metrics": null
+          },
+          {
+            "id": "scheduler",
+            "type": "server",
+            "x": 35.0,
+            "y": 70.0,
+            "label": "Scheduler",
+            "metrics": null
+          },
+          {
+            "id": "etcd",
+            "type": "database",
+            "x": 60.0,
+            "y": 50.0,
+            "label": "etcd",
+            "metrics": null
+          },
+          {
+            "id": "worker_node",
+            "type": "server",
+            "x": 85.0,
+            "y": 30.0,
+            "label": "Worker Node",
+            "metrics": null
+          },
+          {
+            "id": "pod",
+            "type": "server",
+            "x": 85.0,
+            "y": 70.0,
+            "label": "Pod",
+            "metrics": null
+          }
+        ],
+        "connections": [
+          {
+            "fromId": "client",
+            "toId": "api_server",
+            "type": "arrow",
+            "label": null
+          },
+          {
+            "fromId": "api_server",
+            "toId": "controller_manager",
+            "type": "arrow",
+            "label": null
+          },
+          {
+            "fromId": "api_server",
+            "toId": "scheduler",
+            "type": "arrow",
+            "label": null
+          },
+          {
+            "fromId": "controller_manager",
+            "toId": "etcd",
+            "type": "stream",
+            "label": null
+          },
+          {
+            "fromId": "scheduler",
+            "toId": "etcd",
+            "type": "stream",
+            "label": null
+          },
+          {
+            "fromId": "api_server",
+            "toId": "worker_node",
+            "type": "arrow",
+            "label": null
+          },
+          {
+            "fromId": "worker_node",
+            "toId": "pod",
+            "type": "arrow",
+            "label": null
+          }
+        ],
+        "accentColor": null
+      }
+    },
+    {
+      "id": "scene-3",
+      "type": "BulletList",
+      "duration_frames": 195,
+      "transition": "slideUp",
+      "data": {
+        "title": "Control Plane Responsibilities",
+        "items": [
+          "Managing cluster state",
+          "Handling API requests",
+          "Scheduling pods",
+          "Maintaining desired state"
+        ],
+        "accentColor": null,
+        "numbered": null,
+        "align": null
+      }
+    },
+    {
+      "id": "scene-4",
+      "type": "SplitScreen",
+      "duration_frames": 225,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Pod Scheduling Workflow",
+        "subtitle": null,
+        "accentColor": null,
+        "bullets": [
+          "Pod creation request",
+          "Scheduler selects node",
+          "Pod assigned to node"
+        ],
+        "codeSnippet": {
+          "code": "kubectl create pod example-pod",
+          "language": "bash"
+        },
+        "mediaUrl": null
+      }
+    },
+    {
+      "id": "scene-5",
+      "type": "ComparisonCard",
+      "duration_frames": 30,
+      "transition": "none",
+      "data": {
+        "title": "Scaling Strategies: HPA vs Manual",
+        "pros": [
+          "Automatic scaling",
+          "Efficient resource usage"
+        ],
+        "cons": [
+          "Complexity",
+          "Potential for over-scaling"
+        ],
+        "accentColor": null,
+        "visibleCount": null
+      }
+    }
+  ]
+}

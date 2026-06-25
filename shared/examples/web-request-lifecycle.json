@@ -1,0 +1,392 @@
+{
+  "title": "50 Milliseconds: The Life of a Web Request",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#6366f1",
+    "secondary": "#22d3ee",
+    "accent": "#f59e0b",
+    "background": "#030711",
+    "font": "Space Grotesk"
+  },
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full",
+      "title": "50 Milliseconds: The Life of a Web Request",
+      "subtitle": "From Enter key to rendered page — a complete engineering journey",
+      "duration_frames": 105,
+      "transition": "fade",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "data": {
+            "title": "50 Milliseconds",
+            "subtitle": "The complete life of a web request — from keystroke to pixel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-2",
+      "layout": "left-right",
+      "title": "The Scale of the Web",
+      "subtitle": "Every second, millions of requests travel the globe",
+      "duration_frames": 210,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "left",
+          "type": "TypewriterText",
+          "data": {
+            "lines": [
+              "$ curl https://api.github.com/users/torvalds",
+              "> Resolving api.github.com...",
+              "> TCP handshake complete (12ms)",
+              "> TLS 1.3 negotiated (8ms)",
+              "> HTTP/2 GET /users/torvalds",
+              "> 200 OK — 847 bytes (4ms)",
+              "{ \"login\": \"torvalds\", \"repos\": 7 }"
+            ],
+            "accentColor": "#22d3ee",
+            "fontSize": 32,
+            "charPerFrame": 3,
+            "showCursor": true
+          }
+        },
+        {
+          "area": "right",
+          "type": "StatCallout",
+          "data": {
+            "title": "HTTP Requests Per Second",
+            "value": 5400000,
+            "suffix": "",
+            "description": "Over 5.4 million HTTP requests hit the internet every single second — each one a complete engineering symphony",
+            "accentColor": "#6366f1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-3",
+      "layout": "title-left-right",
+      "title": "Step 1 — DNS: Translating Names to Addresses",
+      "subtitle": "The phone book of the internet, distributed across 13 root server clusters",
+      "duration_frames": 255,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "left",
+          "type": "StepFlow",
+          "data": {
+            "title": "DNS Resolution Chain",
+            "steps": [
+              "Browser Cache",
+              "OS Cache",
+              "Recursive Resolver",
+              "Root Nameserver",
+              "TLD (.com)",
+              "Auth Nameserver"
+            ],
+            "accentColor": "#22d3ee"
+          }
+        },
+        {
+          "area": "right",
+          "type": "BulletList",
+          "data": {
+            "title": "DNS Fast Facts",
+            "items": [
+              "First visit: 20–120ms lookup — subsequent visits hit the browser cache instantly",
+              "TTL controls caching — GitHub's TTL is 60s, Cloudflare's is 300s",
+              "Google's 8.8.8.8 resolver handles over 1 trillion queries per day",
+              "DNSSEC cryptographically signs records — prevents cache poisoning attacks",
+              "DNS over HTTPS (DoH) encrypts queries, hiding your browsing from ISPs"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-4",
+      "layout": "title-main-sidebar",
+      "title": "Step 2 — TCP + TLS: Establishing a Secure Channel",
+      "subtitle": "Three packets to connect, two round-trips to secure — then you're in",
+      "duration_frames": 300,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "main",
+          "type": "PacketFlow",
+          "data": {
+            "nodes": [
+              { "id": "browser", "label": "Browser", "x": 8, "y": 50, "type": "client" },
+              { "id": "dns", "label": "DNS Resolver", "x": 30, "y": 22, "type": "router", "sublabel": "8.8.8.8" },
+              { "id": "cdn", "label": "CDN Edge", "x": 52, "y": 50, "type": "cdn", "sublabel": "Cloudflare" },
+              { "id": "lb", "label": "Load Balancer", "x": 72, "y": 30, "type": "router", "sublabel": "NGINX" },
+              { "id": "app", "label": "App Server", "x": 88, "y": 50, "type": "server", "sublabel": "Node.js" },
+              { "id": "cache", "label": "Redis Cache", "x": 72, "y": 72, "type": "database", "sublabel": "0.4ms" }
+            ],
+            "edges": [
+              { "from": "browser", "to": "dns", "label": "DNS query", "color": "#22d3ee" },
+              { "from": "browser", "to": "cdn", "label": "TCP SYN", "color": "#6366f1" },
+              { "from": "cdn", "to": "lb", "label": "route", "color": "#f59e0b" },
+              { "from": "lb", "to": "app", "label": "request", "color": "#10b981" },
+              { "from": "app", "to": "cache", "label": "cache lookup", "color": "#8b5cf6" }
+            ],
+            "accentColor": "#22d3ee",
+            "packetInterval": 16
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "BulletList",
+          "data": {
+            "title": "Handshake Steps",
+            "items": [
+              "SYN → Client sends sequence number, max segment size",
+              "SYN-ACK → Server acknowledges, sends its own sequence",
+              "ACK → Connection established (1 round-trip)",
+              "ClientHello → TLS version, cipher suites, random",
+              "ServerHello → Certificate + chosen cipher",
+              "Finished → Encrypted from here on (TLS 1.3: 1-RTT)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-5",
+      "layout": "title-content",
+      "title": "Step 3 — The HTTP Request & Response",
+      "subtitle": "A structured conversation between client and server",
+      "duration_frames": 270,
+      "transition": "zoom",
+      "panels": [
+        {
+          "area": "main",
+          "type": "HttpExchange",
+          "data": {
+            "method": "GET",
+            "path": "/api/v2/users/42/profile",
+            "host": "api.example.com",
+            "requestHeaders": {
+              "Authorization": "Bearer eyJhbGciOiJSUzI1NiJ9...",
+              "Accept": "application/json",
+              "Accept-Encoding": "gzip, br",
+              "X-Request-ID": "d4e5f6a7-b8c9",
+              "Cache-Control": "no-cache"
+            },
+            "statusCode": 200,
+            "statusText": "OK",
+            "responseHeaders": {
+              "Content-Type": "application/json; charset=utf-8",
+              "Content-Encoding": "gzip",
+              "Cache-Control": "private, max-age=300",
+              "X-Response-Time": "12ms",
+              "X-RateLimit-Remaining": "4987"
+            },
+            "responseBody": "{ \"id\": 42, \"name\": \"Ada Lovelace\",\n  \"role\": \"engineer\", \"joined\": \"2019-03\" }"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-6",
+      "layout": "title-main-sidebar",
+      "title": "Step 4 — Load Balancing Across App Servers",
+      "subtitle": "No single server handles it all — traffic is distributed intelligently",
+      "duration_frames": 315,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "main",
+          "type": "ArchitectureDiagram",
+          "data": {
+            "title": "Production Request Path",
+            "nodes": [
+              { "id": "client", "type": "client", "x": 6, "y": 50, "label": "Browser" },
+              { "id": "cdn", "type": "loadBalancer", "x": 22, "y": 50, "label": "Cloudflare CDN" },
+              { "id": "lb", "type": "loadBalancer", "x": 40, "y": 50, "label": "NGINX L7" },
+              { "id": "app1", "type": "server", "x": 60, "y": 22, "label": "API Server 1" },
+              { "id": "app2", "type": "server", "x": 60, "y": 50, "label": "API Server 2" },
+              { "id": "app3", "type": "server", "x": 60, "y": 78, "label": "API Server 3" },
+              { "id": "redis", "type": "database", "x": 80, "y": 30, "label": "Redis" },
+              { "id": "pg", "type": "database", "x": 80, "y": 68, "label": "PostgreSQL" }
+            ],
+            "connections": [
+              { "fromId": "client", "toId": "cdn", "type": "arrow" },
+              { "fromId": "cdn", "toId": "lb", "type": "arrow" },
+              { "fromId": "lb", "toId": "app1", "type": "arrow" },
+              { "fromId": "lb", "toId": "app2", "type": "arrow" },
+              { "fromId": "lb", "toId": "app3", "type": "arrow" },
+              { "fromId": "app1", "toId": "redis", "type": "stream" },
+              { "fromId": "app2", "toId": "redis", "type": "stream" },
+              { "fromId": "app3", "toId": "pg", "type": "stream" }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "StatCallout",
+          "data": {
+            "title": "P99 Response Time",
+            "value": 48,
+            "suffix": "ms",
+            "description": "With caching + connection pooling + HTTP/2 multiplexing, well-optimized services hit under 50ms at the 99th percentile",
+            "accentColor": "#10b981"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-7",
+      "layout": "title-left-right",
+      "title": "Step 5 — The Database Query",
+      "subtitle": "Most latency lives here — indexes, query plans, and connection pools determine speed",
+      "duration_frames": 285,
+      "transition": "slideUp",
+      "panels": [
+        {
+          "area": "left",
+          "type": "CodeBlock",
+          "data": {
+            "title": "Optimized SQL Query",
+            "language": "sql",
+            "code": "-- Profile fetch with EXPLAIN ANALYZE\nSELECT\n  u.id, u.name, u.email,\n  u.role, u.created_at,\n  COUNT(p.id)  AS post_count,\n  MAX(p.created_at) AS last_post\nFROM users u\nLEFT JOIN posts p\n  ON p.user_id = u.id\n  AND p.deleted_at IS NULL\nWHERE u.id = $1\n  AND u.deleted_at IS NULL\nGROUP BY u.id;\n\n-- Execution: 0.8ms (index scan on users_pkey)\n-- Rows examined: 1 (covering index)",
+            "revealMode": "lines",
+            "highlightLines": [2, 3, 4, 5, 13, 14],
+            "fontSize": 24
+          }
+        },
+        {
+          "area": "right",
+          "type": "TimelineFlow",
+          "data": {
+            "title": "Request Milliseconds Breakdown",
+            "direction": "vertical",
+            "events": [
+              { "year": "0ms", "label": "Request received", "description": "NGINX accepts TCP packet, parses HTTP headers, routes to upstream", "highlight": false },
+              { "year": "2ms", "label": "Auth validated", "description": "JWT signature verified against public key stored in Redis — no DB hit needed", "highlight": false },
+              { "year": "5ms", "label": "Cache miss", "description": "Redis HGETALL returns nil — user profile not cached, proceed to PostgreSQL", "highlight": true },
+              { "year": "8ms", "label": "DB query starts", "description": "Connection pool provides existing connection, query planner chooses index scan", "highlight": false },
+              { "year": "9ms", "label": "Query returns", "description": "1 row fetched via users_pkey B-tree index — 0.8ms execution time", "highlight": true },
+              { "year": "12ms", "label": "Response sent", "description": "JSON serialized, gzip compressed 847→312 bytes, streamed back to client", "highlight": false }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-8",
+      "layout": "title-left-right",
+      "title": "Step 6 — Caching: The 100× Speed Multiplier",
+      "subtitle": "A cache hit turns 50ms into 0.4ms — the most powerful optimization in distributed systems",
+      "duration_frames": 270,
+      "transition": "slideLeft",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BarChart",
+          "data": {
+            "title": "Read Latency Comparison (ms)",
+            "layout": "horizontal",
+            "showValues": true,
+            "bars": [
+              { "label": "Redis (in-memory)", "value": 1, "color": "#10b981", "sublabel": "0.4ms avg" },
+              { "label": "Memcached", "value": 2, "color": "#22d3ee", "sublabel": "0.6ms avg" },
+              { "label": "CDN Edge Cache", "value": 8, "color": "#6366f1", "sublabel": "5ms avg" },
+              { "label": "App + DB (cached)", "value": 20, "color": "#f59e0b", "sublabel": "15ms avg" },
+              { "label": "Full DB round-trip", "value": 60, "color": "#ef4444", "sublabel": "50ms avg" },
+              { "label": "Cold DB + no pool", "value": 100, "color": "#dc2626", "sublabel": "200ms+ cold" }
+            ]
+          }
+        },
+        {
+          "area": "right",
+          "type": "ComparisonCard",
+          "data": {
+            "title": "Cache Hit vs Cache Miss",
+            "accentColor": "#10b981",
+            "pros": [
+              "Cache HIT: 0.4ms Redis lookup — 125× faster than DB",
+              "No database CPU consumed — servers stay free for writes",
+              "Consistent response time regardless of DB load spikes",
+              "Survives database outages gracefully with stale-while-revalidate"
+            ],
+            "cons": [
+              "Cache MISS: full DB query + cache write overhead adds ~5ms",
+              "Stale data risk — cache invalidation is a notoriously hard problem",
+              "Memory pressure — Redis evicts LRU keys under memory limits",
+              "Cold start penalty after deploy or crash flushes the entire cache"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-9",
+      "layout": "title-content",
+      "title": "The Full Stack — Frontend vs Backend Contract",
+      "subtitle": "Two worlds, one API boundary — each side owns its complexity",
+      "duration_frames": 255,
+      "transition": "slideUp",
+      "panels": [
+        {
+          "area": "main",
+          "type": "TwoColumnLayout",
+          "data": {
+            "title": "What Each Side Owns",
+            "dividerLabel": "HTTP API",
+            "left": {
+              "heading": "Frontend (Client)",
+              "color": "#6366f1",
+              "icon": "◉",
+              "points": [
+                "Renders UI from JSON — no business logic in components",
+                "Manages local state, optimistic updates, loading skeletons",
+                "Caches API responses in memory (SWR / React Query)",
+                "Handles auth tokens — refresh before expiry, redirect on 401",
+                "Bundle splitting — only ship code the current route needs",
+                "Service Worker for offline — cache-first, network-fallback"
+              ]
+            },
+            "right": {
+              "heading": "Backend (Server)",
+              "color": "#10b981",
+              "icon": "▣",
+              "points": [
+                "Validates every input — trust nothing from the client",
+                "Authorizes every request — check ownership, not just auth",
+                "Owns all database queries — ORM or raw SQL, never client-built",
+                "Rate limits per user/IP — Redis sliding window counters",
+                "Idempotency keys on mutations — safe to retry POST/PUT",
+                "Structured logs + traces — every request gets a correlation ID"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-10",
+      "layout": "full",
+      "title": "Every Click Is an Engineering Marvel",
+      "subtitle": "DNS, TCP, TLS, HTTP, load balancing, caching, SQL — all in under 50ms",
+      "duration_frames": 105,
+      "transition": "none",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "data": {
+            "title": "Every Click Is an Engineering Marvel",
+            "subtitle": "The invisible infrastructure that makes the modern web feel instant"
+          }
+        }
+      ]
+    }
+  ]
+}

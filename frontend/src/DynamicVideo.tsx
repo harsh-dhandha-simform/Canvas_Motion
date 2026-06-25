@@ -1,5 +1,12 @@
 import React from "react";
-import { AbsoluteFill, Sequence, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  AbsoluteFill,
+  Sequence,
+  interpolate,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import { ThemeProvider, Theme, useTheme } from "./ThemeContext";
 import { COMPONENT_REGISTRY, SceneType } from "./registry";
 
@@ -29,7 +36,9 @@ type SceneSpec = {
 };
 
 /** Normalise both old {type,data} and new {layout,panels[]} scene shapes. */
-function normaliseScene(scene: SceneSpec): Required<Pick<SceneSpec, "layout" | "title" | "panels">> {
+function normaliseScene(
+  scene: SceneSpec,
+): Required<Pick<SceneSpec, "layout" | "title" | "panels">> {
   if (scene.panels && scene.panels.length > 0) {
     return {
       layout: scene.layout ?? "full",
@@ -111,7 +120,10 @@ const LAYOUTS: Record<string, LayoutConfig> = {
 // Scene header bar (rendered by DynamicVideo for title-* layouts)
 // ---------------------------------------------------------------------------
 
-const SceneHeader: React.FC<{ title: string; subtitle?: string }> = ({ title, subtitle }) => {
+const SceneHeader: React.FC<{ title: string; subtitle?: string }> = ({
+  title,
+  subtitle,
+}) => {
   const frame = useCurrentFrame();
   const theme = useTheme();
 
@@ -193,11 +205,17 @@ const SceneHeader: React.FC<{ title: string; subtitle?: string }> = ({ title, su
 // Panel renderer — wraps one component in its grid area
 // ---------------------------------------------------------------------------
 
-const PanelCell: React.FC<{ panel: Panel; gridArea: string }> = ({ panel, gridArea }) => {
+const PanelCell: React.FC<{ panel: Panel; gridArea: string }> = ({
+  panel,
+  gridArea,
+}) => {
   const Component = COMPONENT_REGISTRY[panel.type as SceneType];
 
   const safeProps = Object.fromEntries(
-    Object.entries(panel.data).map(([k, v]: [string, unknown]) => [k, v === null ? undefined : v])
+    Object.entries(panel.data).map(([k, v]: [string, unknown]) => [
+      k,
+      v === null ? undefined : v,
+    ]),
   ) as Record<string, unknown>;
 
   if (!Component) {
@@ -242,7 +260,9 @@ const SceneWrapper: React.FC<{ scene: SceneSpec; background: string }> = ({
   const contentH = config.hasHeader ? CONTENT_H : 1080;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: background, flexDirection: "column" }}>
+    <AbsoluteFill
+      style={{ backgroundColor: background, flexDirection: "column" }}
+    >
       {/* Header bar */}
       {config.hasHeader && (
         <SceneHeader title={title} subtitle={scene.subtitle} />
@@ -283,7 +303,9 @@ const SceneWrapper: React.FC<{ scene: SceneSpec; background: string }> = ({
 // Transition overlay
 // ---------------------------------------------------------------------------
 
-const TransitionOverlay: React.FC<{ transition: TransitionType }> = ({ transition }) => {
+const TransitionOverlay: React.FC<{ transition: TransitionType }> = ({
+  transition,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -294,14 +316,25 @@ const TransitionOverlay: React.FC<{ transition: TransitionType }> = ({ transitio
     durationInFrames: TRANSITION_FRAMES,
   });
 
-  const fadeOpacity = interpolate(frame, [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES], [0, 1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const fadeOpacity = interpolate(
+    frame,
+    [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES],
+    [0, 1, 0],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
 
   if (transition === "fade") {
     return (
-      <AbsoluteFill style={{ backgroundColor: "#000", opacity: fadeOpacity, pointerEvents: "none" }} />
+      <AbsoluteFill
+        style={{
+          backgroundColor: "#000",
+          opacity: fadeOpacity,
+          pointerEvents: "none",
+        }}
+      />
     );
   }
   if (transition === "slideLeft") {
@@ -364,6 +397,9 @@ export const DynamicVideo: React.FC<VideoScriptProps> = ({ theme, scenes }) => {
             from={from}
             durationInFrames={scene.duration_frames}
             premountFor={30}
+            style={{
+              translate: "-19px 3.6px",
+            }}
           >
             <SceneWrapper scene={scene} background={theme.background} />
           </Sequence>

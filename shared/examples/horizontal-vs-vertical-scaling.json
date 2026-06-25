@@ -1,0 +1,222 @@
+{
+  "title": "Scaling Dilemmas",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#7c3aed",
+    "secondary": "#ff69b4",
+    "accent": "#ffd700",
+    "background": "#1a1d23",
+    "font": "Space Grotesk"
+  },
+  "scenes": [
+    {
+      "id": "scene-1",
+      "type": "AnimatedTitle",
+      "duration_frames": 210,
+      "transition": "fade",
+      "data": {
+        "title": "Scaling Dilemmas",
+        "subtitle": "Scalability Challenges, Resource Utilization, Response Time, Load Balancing, Distributed Systems",
+        "accentColor": null,
+        "align": null
+      }
+    },
+    {
+      "id": "scene-2",
+      "type": "SplitScreen",
+      "duration_frames": 240,
+      "transition": "slideUp",
+      "data": {
+        "title": "The Problem: Scaling Challenges",
+        "subtitle": null,
+        "accentColor": null,
+        "bullets": null,
+        "codeSnippet": null,
+        "mediaUrl": null
+      }
+    },
+    {
+      "id": "scene-3",
+      "type": "ArchitectureDiagram",
+      "duration_frames": 300,
+      "transition": "zoom",
+      "data": {
+        "title": "Vertical Scaling Architecture",
+        "nodes": [
+          {
+            "id": "client",
+            "type": "client",
+            "x": 10.0,
+            "y": 50.0,
+            "label": "Client",
+            "metrics": null
+          },
+          {
+            "id": "loadBalancer",
+            "type": "loadBalancer",
+            "x": 40.0,
+            "y": 50.0,
+            "label": "Load Balancer",
+            "metrics": null
+          },
+          {
+            "id": "server",
+            "type": "server",
+            "x": 70.0,
+            "y": 50.0,
+            "label": "Server",
+            "metrics": null
+          },
+          {
+            "id": "database",
+            "type": "database",
+            "x": 50.0,
+            "y": 90.0,
+            "label": "Database",
+            "metrics": null
+          }
+        ],
+        "connections": [
+          {
+            "fromId": "client",
+            "toId": "loadBalancer",
+            "type": "arrow",
+            "label": null
+          },
+          {
+            "fromId": "loadBalancer",
+            "toId": "server",
+            "type": "arrow",
+            "label": null
+          },
+          {
+            "fromId": "server",
+            "toId": "database",
+            "type": "stream",
+            "label": null
+          }
+        ],
+        "accentColor": null
+      }
+    },
+    {
+      "id": "scene-4",
+      "type": "ArchitectureDiagram",
+      "duration_frames": 270,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Horizontal Scaling Architecture",
+        "nodes": [
+          {
+            "id": "client",
+            "type": "client",
+            "x": 10.0,
+            "y": 50.0,
+            "label": "Client",
+            "metrics": null
+          },
+          {
+            "id": "loadBalancer",
+            "type": "loadBalancer",
+            "x": 40.0,
+            "y": 50.0,
+            "label": "Load Balancer",
+            "metrics": null
+          },
+          {
+            "id": "server1",
+            "type": "server",
+            "x": 30.0,
+            "y": 80.0,
+            "label": "Server 1",
+            "metrics": null
+          },
+          {
+            "id": "server2",
+            "type": "server",
+            "x": 60.0,
+            "y": 80.0,
+            "label": "Server 2",
+            "metrics": null
+          },
+          {
+            "id": "database",
+            "type": "database",
+            "x": 50.0,
+            "y": 110.0,
+            "label": "Database",
+            "metrics": null
+          }
+        ],
+        "connections": [
+          {
+            "fromId": "client",
+            "toId": "loadBalancer",
+            "type": "arrow",
+            "label": null
+          },
+          {
+            "fromId": "loadBalancer",
+            "toId": "server1",
+            "type": "arrow",
+            "label": null
+          },
+          {
+            "fromId": "loadBalancer",
+            "toId": "server2",
+            "type": "arrow",
+            "label": null
+          },
+          {
+            "fromId": "server1",
+            "toId": "database",
+            "type": "stream",
+            "label": null
+          },
+          {
+            "fromId": "server2",
+            "toId": "database",
+            "type": "stream",
+            "label": null
+          }
+        ],
+        "accentColor": null
+      }
+    },
+    {
+      "id": "scene-5",
+      "type": "ComparisonCard",
+      "duration_frames": 180,
+      "transition": "none",
+      "data": {
+        "title": "Trade-Offs and Failure Modes",
+        "pros": [
+          "Fault Tolerance",
+          "Scalability",
+          "Load Balancing"
+        ],
+        "cons": [
+          "Load Balancing Complexity",
+          "Data Replication",
+          "Kubernetes Complexity"
+        ],
+        "accentColor": null,
+        "visibleCount": null
+      }
+    },
+    {
+      "id": "scene-6",
+      "type": "AnimatedTitle",
+      "duration_frames": 30,
+      "transition": "none",
+      "data": {
+        "title": "Scaling Dilemmas: Conclusion",
+        "subtitle": "",
+        "accentColor": null,
+        "align": null
+      }
+    }
+  ]
+}
