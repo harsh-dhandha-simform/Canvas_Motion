@@ -17,13 +17,39 @@ type Panel = {
 
 type SceneSpec = {
   id: string;
-  layout: string;
-  title: string;
+  layout?: string;
+  title?: string;
   subtitle?: string;
   duration_frames: number;
   transition: TransitionType;
-  panels: Panel[];
+  panels?: Panel[];
+  // Legacy single-component format (old JSON files)
+  type?: string;
+  data?: Record<string, unknown>;
 };
+
+/** Normalise both old {type,data} and new {layout,panels[]} scene shapes. */
+function normaliseScene(scene: SceneSpec): Required<Pick<SceneSpec, "layout" | "title" | "panels">> {
+  if (scene.panels && scene.panels.length > 0) {
+    return {
+      layout: scene.layout ?? "full",
+      title: scene.title ?? "",
+      panels: scene.panels,
+    };
+  }
+  // Legacy: wrap the single component into a full-layout panel
+  return {
+    layout: "full",
+    title: scene.title ?? "",
+    panels: [
+      {
+        area: "panel",
+        type: scene.type ?? "BulletList",
+        data: scene.data ?? {},
+      },
+    ],
+  };
+}
 
 export type VideoScriptProps = {
   title: string;
@@ -211,14 +237,15 @@ const SceneWrapper: React.FC<{ scene: SceneSpec; background: string }> = ({
   scene,
   background,
 }) => {
-  const config = LAYOUTS[scene.layout] ?? LAYOUTS["full"];
+  const { layout, title, panels } = normaliseScene(scene);
+  const config = LAYOUTS[layout] ?? LAYOUTS["full"];
   const contentH = config.hasHeader ? CONTENT_H : 1080;
 
   return (
     <AbsoluteFill style={{ backgroundColor: background, flexDirection: "column" }}>
       {/* Header bar */}
       {config.hasHeader && (
-        <SceneHeader title={scene.title} subtitle={scene.subtitle} />
+        <SceneHeader title={title} subtitle={scene.subtitle} />
       )}
 
       {/* Content grid */}
@@ -233,7 +260,7 @@ const SceneWrapper: React.FC<{ scene: SceneSpec; background: string }> = ({
           gap: 0,
         }}
       >
-        {scene.panels.map((panel) => (
+        {panels.map((panel) => (
           <PanelCell key={panel.area} panel={panel} gridArea={panel.area} />
         ))}
       </div>
