@@ -44,7 +44,7 @@ AGENT_NAME = "SyncSpecialist"
 SYSTEM_PROMPT = """
 You are a video timing specialist for long-form technical educational content.
 Your job is to compute precise Remotion frame timings for a multi-scene system
-design video — scenes are 90–150 seconds long in total.
+design video — scenes are 60–150 seconds long in total.
 
 Given a Director's Brief and a Script, output ONLY a JSON timing plan
 (no markdown, no prose) using this exact structure:
@@ -91,6 +91,15 @@ Given a Director's Brief and a Script, output ONLY a JSON timing plan
 - Each scene's start_frame = sum of all previous scenes' duration_frames.
 - The sum of all duration_frames must equal total_frames exactly.
 
+=== DIAGRAM-DRIVEN ARC RULES ===
+When director_brief.arc_type == "diagram-driven" (architecture/scaling/comparison topics):
+- scene_count will be 5–7 (much fewer scenes than a narrative arc).
+- Each scene gets a LARGER frame budget since there are fewer scenes.
+- Allow individual scenes up to 600 frames (20s) for diagram-heavy scenes.
+- ArchitectureDiagram scenes: 240–360 frames minimum.
+- AnimatedTitle scenes (intro/outro): 120–180 frames.
+- SplitScreen and ComparisonCard scenes: 180–270 frames.
+
 Return ONLY valid JSON.
 """.strip()
 
@@ -115,15 +124,16 @@ def run_agent(director_brief: dict, script: dict) -> dict:
     # Prune inputs to minimize prompt size (avoiding Groq TPM limits / 413 Payload Too Large)
     pruned_brief = {
         "topic": director_brief.get("topic"),
+        "arc_type": director_brief.get("arc_type", "narrative"),
         "total_seconds": director_brief.get("total_seconds"),
-        "scene_count": director_brief.get("scene_count")
+        "scene_count": director_brief.get("scene_count"),
     }
     pruned_script = {
         "scenes": [
             {
                 "scene_index": s.get("scene_index"),
                 "title": s.get("title"),
-                "narration": s.get("narration")
+                "narration": s.get("narration"),
             }
             for s in script.get("scenes", [])
         ]
@@ -142,7 +152,7 @@ def run_agent(director_brief: dict, script: dict) -> dict:
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_message},
         ],
-        temperature=0.2,   # Very low temperature — deterministic math output
+        temperature=0.2,  # Very low temperature — deterministic math output
         max_tokens=12000,
         agent_name=AGENT_NAME,
     )
@@ -153,7 +163,12 @@ def run_agent(director_brief: dict, script: dict) -> dict:
         timing: dict = json.loads(cleaned)
         total = timing.get("total_frames", "?")
         scene_count = len(timing.get("scenes", []))
-        logger.info("[%s] ✅ Timing plan: %s total frames, %d scenes", AGENT_NAME, total, scene_count)
+        logger.info(
+            "[%s] ✅ Timing plan: %s total frames, %d scenes",
+            AGENT_NAME,
+            total,
+            scene_count,
+        )
         return timing
     except json.JSONDecodeError as exc:
         logger.error("[%s] ❌ Failed to parse JSON: %s\nRaw:\n%s", AGENT_NAME, exc, raw)

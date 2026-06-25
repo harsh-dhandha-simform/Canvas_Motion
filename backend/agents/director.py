@@ -5,32 +5,23 @@ Responsibilities:
   - Analyse the topic from a system design / technical education perspective.
   - Produce a richly-detailed Director's Brief: visual tone, color palette,
     typography, scene structure, key concepts to cover, and target audience.
+  - Classify the topic as diagram-driven or narrative arc.
   - All downstream agents depend on this brief as their "source of truth".
 
 Output contract (JSON object):
   {
     "topic":        str,
+    "arc_type":     str,         // "diagram-driven" | "narrative"
     "target_audience": str,     // e.g. "senior engineers", "CS students"
     "depth_level":  str,        // "introductory" | "intermediate" | "advanced"
     "tone":         str,        // e.g. "technical", "academic", "conversational"
-    "palette": {
-      "background":   str,      // hex color
-      "primary":      str,      // accent / highlight color
-      "secondary":    str,
-      "text":         str,
-      "muted":        str,
-      "code_bg":      str
-    },
-    "typography": {
-      "heading_font":   str,    // Google Fonts name
-      "body_font":      str,
-      "code_font":      str     // e.g. "Fira Code"
-    },
-    "total_seconds":  int,      // 60–120 for in-depth system design
-    "scene_count":    int,      // 6–12 scenes
+    "palette": { ... },
+    "typography": { ... },
+    "total_seconds":  int,
+    "scene_count":    int,      // 5-7 for diagram-driven, 6-12 for narrative
     "scene_titles":   list[str],
-    "key_concepts":   list[str],  // core technical concepts to visualise
-    "visual_metaphors": list[str] // e.g. "nodes as circles", "queues as conveyor belts"
+    "key_concepts":   list[str],
+    "visual_metaphors": list[str]
   }
 """
 
@@ -58,6 +49,7 @@ no prose) with this exact structure:
 
 {
   "topic":            "<the topic>",
+  "arc_type":         "<diagram-driven|narrative>",
   "target_audience":  "<e.g. senior engineers, distributed systems practitioners>",
   "depth_level":      "<introductory|intermediate|advanced>",
   "tone":             "<technical|academic|conversational-technical>",
@@ -77,8 +69,8 @@ no prose) with this exact structure:
     "body_font":    "<Google Fonts name>",
     "code_font":    "Fira Code"
   },
-  "total_seconds":   <int, between 90 and 150>,
-  "scene_count":     <int, between 8 and 12>,
+  "total_seconds":   <int, between 60 and 150>,
+  "scene_count":     <int — see rules below>,
   "scene_titles":    ["<title 1>", "...", "<title N>"],
   "key_concepts":    ["<core concept 1>", "..."],
   "visual_metaphors": ["<metaphor 1 for visualisation>", "..."],
@@ -90,9 +82,39 @@ no prose) with this exact structure:
   }
 }
 
-=== SCENE PLANNING RULES ===
+=== TOPIC CLASSIFICATION RULES ===
 
-Design scenes that progressively build deep understanding:
+First, determine arc_type based on the topic:
+
+  arc_type = "diagram-driven" if the topic involves any of:
+    - Scaling, architecture, infrastructure, distributed systems
+    - Load balancing, sharding, replication, consensus
+    - A comparison of two technologies/approaches ("X vs Y", "X versus Y", "X compared to Y")
+    - System topologies (Kafka, Kubernetes, Cassandra, Redis, CDN, API gateway, service mesh)
+    - Database design, caching strategies, message queues
+
+  arc_type = "narrative" for all other topics (algorithms, history, theory, soft skills).
+
+=== SCENE COUNT RULES ===
+
+  If arc_type == "diagram-driven":
+    - scene_count MUST be 5, 6, or 7
+    - For "X vs Y" comparison topics: scene_count = 6 exactly
+    - scene_titles must follow this template for comparisons:
+        1. "<Hook Title>" (AnimatedTitle intro)
+        2. "The Core Dilemma" or "The Problem" (SplitScreen with context)
+        3. "<Approach A> Architecture" (ArchitectureDiagram)
+        4. "<Approach B> Architecture" (ArchitectureDiagram)
+        5. "Trade-off Analysis" or "Head-to-Head" (ComparisonCard)
+        6. "Key Takeaways" or "When to Choose What" (AnimatedTitle outro)
+
+  If arc_type == "narrative":
+    - scene_count between 6 and 12
+    - Design scenes that progressively build deep understanding
+
+=== GENERAL SCENE PLANNING RULES ===
+
+For narrative arc:
   1. HOOK — A compelling problem statement or failure scenario. Why does this matter?
   2. NAIVE SOLUTION — The obvious, simple approach and why it breaks at scale.
   3-N. CORE CONCEPTS — Each key component, algorithm, or mechanism gets its own scene.
@@ -106,7 +128,6 @@ Design scenes that progressively build deep understanding:
 - Secondary accent: a complementary contrasting color.
 - Use a monospace font (Fira Code) for any code snippets or technical values.
 - Fonts must be available on Google Fonts (Inter, Outfit, Space Grotesk, Fira Code, JetBrains Mono).
-- total_seconds must be 90–150 to allow in-depth coverage.
 - scene_titles length must exactly equal scene_count.
 - Return ONLY valid JSON — no markdown fences, no prose.
 """.strip()

@@ -1,0 +1,171 @@
+{
+  "title": "Canvas Motion Full Showcase",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#3b82f6",
+    "secondary": "#10b981",
+    "accent": "#f59e0b",
+    "background": "#0f172a",
+    "font": "Inter"
+  },
+  "scenes": [
+    {
+      "id": "intro",
+      "type": "AnimatedTitle",
+      "duration_frames": 150,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Welcome to Canvas Motion",
+        "subtitle": "Showcasing every JSON-friendly component",
+        "align": "center"
+      }
+    },
+    {
+      "id": "bullets",
+      "type": "BulletList",
+      "duration_frames": 210,
+      "transition": "slideUp",
+      "data": {
+        "title": "Key Features",
+        "items": [
+          "JSON Driven Scenes",
+          "Automated Orchestration",
+          "Remotion Rendering"
+        ],
+        "numbered": false,
+        "align": "left"
+      }
+    },
+    {
+      "id": "steps",
+      "type": "StepFlow",
+      "duration_frames": 210,
+      "transition": "fade",
+      "data": {
+        "title": "How it works",
+        "steps": [
+          "Prompt",
+          "Scriptwriter",
+          "Render"
+        ]
+      }
+    },
+    {
+      "id": "compare",
+      "type": "ComparisonCard",
+      "duration_frames": 210,
+      "transition": "zoom",
+      "data": {
+        "title": "Old vs New Pipeline",
+        "pros": ["JSON Output", "Multi-Agent"],
+        "cons": ["Hardcoded Text", "Monolithic"]
+      }
+    },
+    {
+      "id": "stat",
+      "type": "StatCallout",
+      "duration_frames": 150,
+      "transition": "slideUp",
+      "data": {
+        "title": "Codebase Size",
+        "value": 100,
+        "suffix": "x",
+        "description": "More modular than before"
+      }
+    },
+    {
+      "id": "split",
+      "type": "SplitScreen",
+      "duration_frames": 240,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Code Snippets Example",
+        "bullets": [
+          "Render code directly",
+          "Fully syntax highlighted"
+        ],
+        "codeSnippet": {
+          "language": "typescript",
+          "code": "const isCool = true;\nif (isCool) {\n  console.log('Very cool');\n}"
+        }
+      }
+    },
+    {
+      "id": "architecture",
+      "type": "ArchitectureDiagram",
+      "duration_frames": 300,
+      "transition": "zoom",
+      "data": {
+        "title": "System Architecture",
+        "nodes": [
+          {
+            "id": "client1",
+            "type": "client",
+            "label": "User",
+            "x": 15,
+            "y": 50
+          },
+          {
+            "id": "lb1",
+            "type": "loadBalancer",
+            "label": "Gateway",
+            "x": 40,
+            "y": 50
+          },
+          {
+            "id": "web1",
+            "type": "server",
+            "label": "Web A",
+            "x": 70,
+            "y": 30,
+            "metrics": { "cpu": "32 Cores", "ram": "64 GB" }
+          },
+          {
+            "id": "web2",
+            "type": "server",
+            "label": "Web B",
+            "x": 70,
+            "y": 70,
+            "metrics": { "cpu": "16 Cores", "ram": "32 GB" }
+          },
+          {
+            "id": "db",
+            "type": "database",
+            "label": "Postgres",
+            "x": 90,
+            "y": 50
+          }
+        ],
+        "connections": [
+          {
+            "fromId": "client1",
+            "toId": "lb1",
+            "type": "arrow"
+          },
+          {
+            "fromId": "lb1",
+            "toId": "web1",
+            "type": "stream"
+          },
+          {
+            "fromId": "lb1",
+            "toId": "web2",
+            "type": "stream"
+          },
+          {
+            "fromId": "web1",
+            "toId": "db",
+            "type": "arrow"
+          },
+          {
+            "fromId": "web2",
+            "toId": "db",
+            "type": "arrow"
+          }
+        ]
+      }
+    }
+  ]
+}

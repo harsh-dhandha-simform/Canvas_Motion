@@ -1,0 +1,132 @@
+{
+  "AnimatedTitle": {
+    "description": "A large title with an optional subtitle and an animated underline. Good for intros and transitions.",
+    "schema": {
+      "$ref": "#/definitions/AnimatedTitleProps",
+      "definitions": {
+        "AnimatedTitleProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "ComparisonCard": {
+    "description": "A card displaying a side-by-side comparison with pros and cons. Good for evaluating options.",
+    "schema": {
+      "$ref": "#/definitions/ComparisonCardProps",
+      "definitions": {
+        "ComparisonCardProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "BulletList": {
+    "description": "A bulleted or numbered list with staggered reveal animation.",
+    "schema": {
+      "$ref": "#/definitions/BulletListProps",
+      "definitions": {
+        "BulletListProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "StepFlow": {
+    "description": "A horizontal step-by-step flow diagram with an animated connector line.",
+    "schema": {
+      "$ref": "#/definitions/StepFlowProps",
+      "definitions": {
+        "StepFlowProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "StatCallout": {
+    "description": "A large statistic callout with an animated counting number.",
+    "schema": {
+      "$ref": "#/definitions/StatCalloutProps",
+      "definitions": {
+        "StatCalloutProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "ArchitectureDiagram": {
+    "description": "Renders an architecture diagram with servers, databases, and load balancers connected by animated data streams and arrows. Specify nodes and connections.",
+    "schema": {
+      "$ref": "#/definitions/ArchitectureDiagramProps",
+      "definitions": {
+        "ArchitectureDiagramProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "SplitScreen": {
+    "description": "A layout scene showing a title, bullet points, code snippets, and optional media on the right side. Great for explaining technical concepts.",
+    "schema": {
+      "$ref": "#/definitions/SplitScreenProps",
+      "definitions": {
+        "SplitScreenProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "TypewriterText": {
+    "description": "Animated typewriter effect with a blinking cursor. Reveals one or more lines of text character by character. Great for code reveals or dramatic text.",
+    "schema": {
+      "$ref": "#/definitions/TypewriterTextProps",
+      "definitions": {
+        "TypewriterTextProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "TimelineFlow": {
+    "description": "An animated vertical or horizontal timeline with events appearing in staggered sequence. Use for history, roadmaps, or step-by-step processes.",
+    "schema": {
+      "$ref": "#/definitions/TimelineFlowProps",
+      "definitions": {
+        "TimelineFlowProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "QuoteCard": {
+    "description": "A full-screen animated pull quote with an optional highlight sweep on key words and author attribution. Great for testimonials and impactful statements.",
+    "schema": {
+      "$ref": "#/definitions/QuoteCardProps",
+      "definitions": {
+        "QuoteCardProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "CodeBlock": {
+    "description": "A macOS-style code window with syntax highlighting, line numbers, and optional line-by-line reveal animation. Ideal for showing code examples.",
+    "schema": {
+      "$ref": "#/definitions/CodeBlockProps",
+      "definitions": {
+        "CodeBlockProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "TwoColumnLayout": {
+    "description": "A two-column comparison layout with an animated center divider. Each column has a heading and bullet points that slide in from opposite sides.",
+    "schema": {
+      "$ref": "#/definitions/TwoColumnLayoutProps",
+      "definitions": {
+        "TwoColumnLayoutProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "BarChart": {
+    "description": "An animated bar chart with vertical or horizontal layout. Bars grow in with spring physics and values count up from 0. Use for data comparisons.",
+    "schema": {
+      "$ref": "#/definitions/BarChartProps",
+      "definitions": {
+        "BarChartProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

@@ -96,7 +96,11 @@ def run_agent(director_brief: dict) -> dict:
     Returns:
         Script dict with per-scene narration, key points, technical terms, and code snippets.
     """
-    logger.info("[%s] Writing deep-dive script for topic: %r", AGENT_NAME, director_brief.get("topic"))
+    logger.info(
+        "[%s] Writing deep-dive script for topic: %r",
+        AGENT_NAME,
+        director_brief.get("topic"),
+    )
 
     user_message = (
         f"Director's Brief:\n{json.dumps(director_brief, indent=2)}\n\n"

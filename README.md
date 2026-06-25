@@ -298,10 +298,8 @@ That's it. The next call to `POST /api/generate-script` will include the new com
 my-video/
 ├── backend/
 │   ├── server.py           ← FastAPI HTTP server (JSON generation)
-│   ├── main.py             ← Legacy LangGraph CLI pipeline
 │   ├── config.py           ← Groq keys, model names, paths
-│   ├── agents/             ← Legacy 6-agent pipeline agents
-│   ├── graph/              ← LangGraph state + nodes
+│   ├── agents/             ← 4-agent pipeline agents
 │   └── utils/api.py        ← Groq chat_completion() with retry chain
 │
 ├── frontend/
@@ -319,8 +317,7 @@ my-video/
 │       │   ├── DataStream.tsx
 │       │   ├── GlassPanel.tsx
 │       │   └── GlowingNode.tsx
-│       ├── scenes/             ← Hand-crafted demo scenes
-│       └── generated/          ← Output of the legacy CLI pipeline
+│       └── scenes/             ← Hand-crafted demo scenes
 │
 └── shared/
     ├── videoScriptSchema.ts    ← TypeScript types (source of truth)

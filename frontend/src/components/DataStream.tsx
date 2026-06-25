@@ -2,16 +2,32 @@ import React from 'react';
 import { useCurrentFrame, interpolate } from 'remotion';
 import { PALETTE } from '../generated/Palette';
 
-export const DataStream: React.FC<{
-  from: { x: number; y: number };
-  to: { x: number; y: number };
+export interface DataStreamProps {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
   color?: string;
   particleCount?: number;
-}> = ({ from, to, color = PALETTE.secondary, particleCount = 3 }) => {
+}
+
+export const DataStream: React.FC<DataStreamProps> = ({ 
+  fromX, 
+  fromY, 
+  toX, 
+  toY, 
+  color = PALETTE.secondary, 
+  particleCount = 3 
+}) => {
   const frame = useCurrentFrame();
 
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
+  const pxFromX = (fromX / 100) * 1920;
+  const pxFromY = (fromY / 100) * 1080;
+  const pxToX = (toX / 100) * 1920;
+  const pxToY = (toY / 100) * 1080;
+
+  const dx = pxToX - pxFromX;
+  const dy = pxToY - pxFromY;
   const length = Math.sqrt(dx * dx + dy * dy);
   
   // Angle for rotation
@@ -20,8 +36,8 @@ export const DataStream: React.FC<{
   return (
     <div style={{
       position: 'absolute',
-      left: from.x,
-      top: from.y,
+      left: pxFromX,
+      top: pxFromY,
       width: length,
       height: 2,
       transformOrigin: '0% 50%',

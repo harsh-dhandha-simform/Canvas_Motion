@@ -1,5 +1,14 @@
 import React from "react";
 import { interpolate, Easing, useCurrentFrame } from "remotion";
+import { z } from "zod";
+
+export const ComparisonCardSchema = z.object({
+  title: z.string(),
+  pros: z.array(z.string()),
+  cons: z.array(z.string()),
+  accentColor: z.string().optional(),
+  visibleCount: z.number().optional(),
+});
 
 interface ComparisonCardProps {
   title: string;

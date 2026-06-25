@@ -1,42 +1,47 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
 
-interface ScalingArrowProps {
-  from: { x: number; y: number };
-  to: { x: number; y: number };
+export interface ScalingArrowProps {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
   color?: string;
   progress?: number; // Line draw progress: 0 to 1
   animateFlow?: boolean; // Whether to show moving data packets
   flowSpeed?: number; // Speed of packets
   arrowHeadSize?: number;
-  style?: React.CSSProperties;
-  className?: string;
 }
 
 export const ScalingArrow: React.FC<ScalingArrowProps> = ({
-  from,
-  to,
+  fromX,
+  fromY,
+  toX,
+  toY,
   color = "#38BDF8",
   progress = 1,
   animateFlow = false,
   flowSpeed = 2,
   arrowHeadSize = 8,
-  style,
-  className,
 }) => {
   const frame = useCurrentFrame();
 
+  const pxFromX = (fromX / 100) * 1920;
+  const pxFromY = (fromY / 100) * 1080;
+  const pxToX = (toX / 100) * 1920;
+  const pxToY = (toY / 100) * 1080;
+
   // Bounding box dimensions
-  const minX = Math.min(from.x, to.x) - 40;
-  const minY = Math.min(from.y, to.y) - 40;
-  const maxX = Math.max(from.x, to.x) + 40;
-  const maxY = Math.max(from.y, to.y) + 40;
+  const minX = Math.min(pxFromX, pxToX) - 40;
+  const minY = Math.min(pxFromY, pxToY) - 40;
+  const maxX = Math.max(pxFromX, pxToX) + 40;
+  const maxY = Math.max(pxFromY, pxToY) + 40;
   const width = maxX - minX;
   const height = maxY - minY;
 
   // Relative coordinates inside the SVG
-  const relFrom = { x: from.x - minX, y: from.y - minY };
-  const relTo = { x: to.x - minX, y: to.y - minY };
+  const relFrom = { x: pxFromX - minX, y: pxFromY - minY };
+  const relTo = { x: pxToX - minX, y: pxToY - minY };
 
   // Calculate distance
   const dx = relTo.x - relFrom.x;
@@ -79,9 +84,7 @@ export const ScalingArrow: React.FC<ScalingArrowProps> = ({
         width,
         height,
         pointerEvents: "none",
-        ...style,
       }}
-      className={className}
       viewBox={`0 0 ${width} ${height}`}
     >
       {/* Glow filter */}

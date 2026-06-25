@@ -1,44 +1,42 @@
 import "./index.css";
 import { Composition } from "remotion";
-import { GeneratedVideo } from "./generated/GeneratedVideo";
-import { ScalingScene } from "./scenes/ScalingScene";
 import { DynamicVideo, VideoScriptProps } from "./DynamicVideo";
-import demoScript from "../../shared/examples/demo.json";
+import { EXAMPLE_SCRIPTS } from "./generated/examples.generated";
 
 export const RemotionRoot: React.FC = () => {
-  const script = demoScript as VideoScriptProps;
-  const totalFrames = script.scenes.reduce(
-    (sum, s) => sum + s.duration_frames,
-    0
-  );
-
   return (
     <>
-      <Composition
-        id="DynamicVideo"
-        component={DynamicVideo}
-        durationInFrames={totalFrames}
-        fps={script.fps}
-        width={script.width}
-        height={script.height}
-        defaultProps={script}
-      />
-      <Composition
-        id="GeneratedVideo"
-        component={GeneratedVideo}
-        durationInFrames={3600}
-        fps={30}
-        width={1920}
-        height={1080}
-      />
-      <Composition
-        id="ScalingScene"
-        component={ScalingScene}
-        durationInFrames={1800}
-        fps={30}
-        width={1920}
-        height={1080}
-      />
+      {Object.entries(EXAMPLE_SCRIPTS).map(([slug, script]) => {
+        const totalFrames = script.scenes.reduce(
+          (sum, s) => sum + s.duration_frames,
+          0
+        );
+        return (
+          <Composition
+            key={slug}
+            id={slug}
+            component={DynamicVideo}
+            durationInFrames={totalFrames}
+            fps={script.fps}
+            width={script.width}
+            height={script.height}
+            defaultProps={script as VideoScriptProps}
+          />
+        );
+      })}
+
+      {/* Fallback for stale browser URLs from before the refactor */}
+      {EXAMPLE_SCRIPTS["scaling"] && (
+        <Composition
+          id="DynamicVideo"
+          component={DynamicVideo}
+          durationInFrames={EXAMPLE_SCRIPTS["scaling"].scenes.reduce((sum, s) => sum + s.duration_frames, 0)}
+          fps={EXAMPLE_SCRIPTS["scaling"].fps}
+          width={EXAMPLE_SCRIPTS["scaling"].width}
+          height={EXAMPLE_SCRIPTS["scaling"].height}
+          defaultProps={EXAMPLE_SCRIPTS["scaling"] as VideoScriptProps}
+        />
+      )}
     </>
   );
 };

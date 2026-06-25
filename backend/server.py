@@ -1,7 +1,6 @@
 """
 backend/server.py — FastAPI HTTP server for JSON video script generation.
 
-Separate from the existing LangGraph CLI pipeline (main.py).
 This server accepts a topic and returns a structured JSON video script
 that the Remotion frontend can render directly.
 
@@ -29,10 +28,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from config import GROQ_API_KEY, GROQ_MODEL, GROQ_FALLBACK_MODEL, INTER_AGENT_DELAY_SECONDS
-from utils.api import get_client
+from config import (
+    GROQ_API_KEY,
+    GROQ_MODEL,
+    GROQ_FALLBACK_MODEL,
+    INTER_AGENT_DELAY_SECONDS,
+)
+from utils.api import get_client, _PRIMARY_MODEL, _FALLBACK_MODEL, _MODEL_CHAIN
 
-# Agent modules — the same agents used by the LangGraph CLI pipeline (main.py).
+# Agent modules.
 # Imported here so the HTTP endpoint can fire them in sequence instead of a
 # single LLM call.
 from agents import director as _director
@@ -51,7 +55,9 @@ logger = logging.getLogger("server")
 # Remotion best-practice skills loader
 # ---------------------------------------------------------------------------
 
-_SKILLS_DIR = _BACKEND_DIR.parent / ".agents" / "skills" / "remotion-best-practices" / "rules"
+_SKILLS_DIR = (
+    _BACKEND_DIR.parent / ".agents" / "skills" / "remotion-best-practices" / "rules"
+)
 
 
 def _load_skill(filename: str) -> str:
@@ -64,7 +70,7 @@ def _load_skill(filename: str) -> str:
     if content.startswith("---"):
         end = content.find("---", 3)
         if end != -1:
-            content = content[end + 3:].strip()
+            content = content[end + 3 :].strip()
     return content
 
 
@@ -77,9 +83,9 @@ def _build_remotion_knowledge() -> str:
     Extracts only the rules that matter when authoring a JSON video script.
     """
     # Load raw skill content (used below for inline citation)
-    _load_skill("timing.md")        # noqa: confirms file exists
-    _load_skill("sequencing.md")    # noqa
-    _load_skill("transitions.md")   # noqa
+    _load_skill("timing.md")  # noqa: confirms file exists
+    _load_skill("sequencing.md")  # noqa
+    _load_skill("transitions.md")  # noqa
     _load_skill("compositions.md")  # noqa
 
     return """## REMOTION BEST-PRACTICE REFERENCE
@@ -132,7 +138,9 @@ Remotion passes `data` directly to the React component as props.
 
 
 REMOTION_KNOWLEDGE = _build_remotion_knowledge()
-logger.info("Loaded Remotion best-practice knowledge block (%d chars)", len(REMOTION_KNOWLEDGE))
+logger.info(
+    "Loaded Remotion best-practice knowledge block (%d chars)", len(REMOTION_KNOWLEDGE)
+)
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -152,205 +160,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------------------------------------------------------------------------
-# Component metadata — hardcoded for now, structured for future dynamic use
-# ---------------------------------------------------------------------------
-
-class ComponentMeta:
-    def __init__(self, name: str, description: str, props: dict[str, Any]):
-        self.name = name
-        self.description = description
-        self.props = props
-
-
-COMPONENTS: list[ComponentMeta] = [
-    ComponentMeta(
-        name="AnimatedTitle",
-        description=(
-            "A full-screen animated title card with a large heading and optional subtitle. "
-            "Use for intro, section breaks, key concept reveals, and conclusions. "
-            "Animates in with a slide-up bezier and draws an accent underline beneath the title."
-        ),
-        props={
-            "title": "string (required) — the main heading text",
-            "subtitle": "string (optional) — smaller text displayed above the title",
-            "accentColor": "string (optional) — hex color for the subtitle, accent dot, and underline. Defaults to #38BDF8",
-            "align": '"center" | "left" (optional) — text alignment. Defaults to "center"',
-        },
-    ),
-    ComponentMeta(
-        name="ComparisonCard",
-        description=(
-            "A 500×550px comparison card showing pros (Advantages) and cons (Limitations) "
-            "with staggered list reveal. Use for trade-off analysis, before/after comparisons, "
-            "feature comparisons, or any scene that needs a structured two-column list. "
-            "Best used when the scene focuses on a single concept being evaluated."
-        ),
-        props={
-            "title": "string (required) — the card heading",
-            "pros": "string[] (required) — list of advantages/positives (2–5 items)",
-            "cons": "string[] (required) — list of limitations/negatives (2–5 items)",
-            "accentColor": "string (optional) — hex color for the title dot and border glow. Defaults to #38BDF8",
-            "visibleCount": "number (optional) — how many items to show; used for staggered reveal. Defaults to 99 (show all)",
-        },
-    ),
-]
-
-
-def build_system_prompt(components: list[ComponentMeta], remotion_knowledge: str = "") -> str:
-    """
-    Build the Groq system prompt by describing all available components.
-
-    Accepts an optional `remotion_knowledge` block (sourced from the
-    skills/remotion-best-practices library at startup) that teaches the LLM
-    Remotion-specific timing, sequencing, and transition rules so it can make
-    informed decisions when choosing duration_frames and transition values.
-
-    Structured as a function so that in the future the component list can be
-    sourced dynamically (e.g. auto-parsed from frontend/src/components/).
-    For now the list is hardcoded in COMPONENTS above.
-    """
-    component_docs = "\n\n".join(
-        f'### {c.name}\n{c.description}\n\nProps:\n'
-        + "\n".join(f'  - `{k}`: {v}' for k, v in c.props.items())
-        for c in components
-    )
-
-    knowledge_section = f"\n\n{remotion_knowledge.strip()}" if remotion_knowledge.strip() else ""
-
-    return f"""You are a world-class educational video script writer specialized in producing
-structured JSON video scripts for the Remotion animation framework.
-
-Your ONLY output is a raw JSON object. No markdown, no backticks, no explanations, no preamble.
-{knowledge_section}
-
-## AVAILABLE SCENE COMPONENTS
-
-The following components are the ONLY valid values for a scene's "type" field.
-Each scene's "data" object must EXACTLY match the listed props for that component.
-
-{component_docs}
-
-## JSON STRUCTURE
-
-Output a single JSON object with this exact structure:
-
-{{
-  "title": "string — the video title",
-  "fps": 30,
-  "width": 1920,
-  "height": 1080,
-  "theme": {{
-    "primary": "#hex — main accent color",
-    "secondary": "#hex — complementary accent",
-    "accent": "#hex — highlight color",
-    "background": "#hex — dark background (e.g. #0a0e1a)",
-    "font": "string — Google Font name (e.g. Inter)"
-  }},
-  "scenes": [
-    {{
-      "id": "scene-1",
-      "type": "ExactComponentName",
-      "duration_frames": 90,
-      "transition": "fade | slideLeft | slideUp | zoom | none",
-      "data": {{ /* must match the component's props exactly */ }}
-    }}
-  ]
-}}
-
-## RULES
-
-1. `type` must be one of: {", ".join(repr(c.name) for c in components)}. No other values.
-2. `data` must contain ONLY the props listed for the chosen component. No extra fields.
-3. `fps` is always 30. `width` is always 1920. `height` is always 1080.
-4. The sum of all `duration_frames` MUST equal EXACTLY `duration_seconds × 30`. Transitions are overlays inside each scene's own frames — they do NOT reduce this sum.
-5. Apply the minimum frame budgets from the Remotion reference above. Never go below the minimums.
-6. Follow the sequencing pattern: AnimatedTitle intro → alternating types → AnimatedTitle outro with transition "none".
-7. Choose a coherent `theme` (colors, font) that fits the topic's mood and domain.
-8. Use dark backgrounds (near-black). Primary/secondary should be vibrant accent colors.
-9. For `align` in AnimatedTitle: use "center" for intro/outro cards, "left" for mid-video section headers.
-10. For ComparisonCard: ensure `pros` and `cons` each have 2–5 items, concise (≤10 words each).
-11. Return ONLY the raw JSON object. No markdown. No backticks. No explanations.
-""".strip()
-
-
-SYSTEM_PROMPT = build_system_prompt(COMPONENTS, REMOTION_KNOWLEDGE)
-
-# ---------------------------------------------------------------------------
-# LLM caller with primary → fallback tracking
-# ---------------------------------------------------------------------------
-
-_PRIMARY_MODEL = "openai/gpt-oss-120b"
-_FALLBACK_MODEL = "compound-beta"
-
-_MODEL_CHAIN = [
-    "openai/gpt-oss-120b",
-    "compound-beta",
-    "llama-3.3-70b-versatile",
-]
-
-
-def call_llm(prompt: str, system_prompt: str) -> tuple[str, str, bool]:
-    """
-    Send a chat completion request, trying the primary model first and falling
-    back to the fallback model on any exception.
-
-    Returns:
-        (content, model_used, fallback_triggered)
-    """
-    import random
-    import re
-    from groq import APIStatusError
-
-    client = get_client()
-    last_error: Exception | None = None
-    fallback_triggered = False
-
-    for i, model in enumerate(_MODEL_CHAIN):
-        if i > 0:
-            fallback_triggered = True
-
-        try:
-            logger.info("[call_llm] Trying model: %s", model)
-            response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.7,
-                max_tokens=4096,
-            )
-            content: str = response.choices[0].message.content or ""
-            content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
-
-            if not content.strip():
-                last_error = RuntimeError(f"Empty response from {model}")
-                continue
-
-            logger.info("[call_llm] ✅ Success with model: %s", model)
-            return content, model, fallback_triggered
-
-        except Exception as exc:
-            last_error = exc
-            logger.warning("[call_llm] ⚠️ Model %s failed: %s", model, exc)
-            continue
-
-    raise HTTPException(
-        status_code=503,
-        detail=f"All LLM models failed. Last error: {last_error}",
-    )
-
+# Component system prompts are now handled by graph.nodes.assembler_node
 
 # ---------------------------------------------------------------------------
 # Request / Response models
 # ---------------------------------------------------------------------------
 
+
 class GenerateScriptRequest(BaseModel):
     topic: str = Field(..., description="The subject of the educational video")
-    context: Optional[str] = Field(None, description="Additional context or constraints")
-    duration_seconds: int = Field(60, ge=10, le=300, description="Target video length in seconds")
+    context: Optional[str] = Field(
+        None, description="Additional context or constraints"
+    )
+    duration_seconds: int = Field(
+        60, ge=10, le=300, description="Target video length in seconds"
+    )
     style: str = Field("educational", description="educational | explainer | tutorial")
+    write_to_examples: bool = Field(
+        True,
+        description="If True (default), write the assembled JSON to shared/examples/<slug>.json for Remotion Studio preview.",
+    )
 
 
 class GenerateMeta(BaseModel):
@@ -376,147 +205,13 @@ class ComponentListResponse(BaseModel):
     components: list[ComponentInfo]
 
 
-# ---------------------------------------------------------------------------
-# Multi-agent pipeline helpers
-# ---------------------------------------------------------------------------
-
-_AGENT_SEQUENCE = ["Director", "Scriptwriter", "Storyboard", "Sync", "Assembler"]
-
-
-def _pace() -> None:
-    """Sleep between agent calls to respect Groq RPM limits."""
-    logger.info("   ⏳ Rate-limit pause (%.1fs)…", INTER_AGENT_DELAY_SECONDS)
-    time.sleep(INTER_AGENT_DELAY_SECONDS)
-
-
-def _assemble_video_script(
-    brief: dict,
-    script: dict,
-    story: dict,
-    timing: dict,
-    req: "GenerateScriptRequest",
-) -> tuple[str, str, bool]:
-    """
-    Final LLM call: maps the 4-agent pipeline output to VideoScript JSON.
-
-    The duration_frames produced by the Sync agent are passed to the LLM as
-    FIXED values — it must copy them verbatim.  The LLM's only job here is
-    to choose the right scene type (AnimatedTitle / ComparisonCard) and
-    populate the data fields from the script content.
-    """
-    palette = brief.get("palette", {})
-    typo = brief.get("typography", {})
-
-    # Build a compact per-scene block: title, key_points, FIXED frame count
-    scene_rows: list[str] = []
-    for i, (s_script, s_timing) in enumerate(
-        zip(script.get("scenes", []), timing.get("scenes", []))
-    ):
-        scene_rows.append(
-            f"  [{i+1}] title={s_script.get('title')!r} | "
-            f"duration_frames={s_timing.get('duration_frames')} (FIXED — do not change) | "
-            f"key_points={s_script.get('key_points', [])}"
-        )
-
-    total_frames = sum(s.get("duration_frames", 0) for s in timing.get("scenes", []))
-
-    assembler_prompt = (
-        f"Convert this multi-agent pipeline output to a VideoScript JSON.\n"
-        f"Topic: {req.topic!r}\n\n"
-        f"SCENE PLAN — duration_frames values are EXACT, copy them unchanged:\n"
-        + "\n".join(scene_rows)
-        + f"\n\nTheme — use these EXACT hex values:\n"
-        f'  background="{palette.get("background", "#0b0f1e")}"  '
-        f'primary="{palette.get("primary", "#7c3aed")}"  '
-        f'secondary="{palette.get("secondary", "#f59e0b")}"  '
-        f'accent="{palette.get("highlight", "#34d399")}"  '
-        f'font="{typo.get("heading_font", "Inter")}"\n\n'
-        f"Total frames = {total_frames} (sum of all duration_frames must equal this exactly).\n"
-        f"Scene 1 and the last scene must be AnimatedTitle.\n"
-        f"Use ComparisonCard for trade-off or comparison scenes — split key_points into "
-        f"pros (first half) and cons (second half).\n"
-        f"Use AnimatedTitle for concept-introduction and narrative scenes.\n"
-        f"Alternate types where possible. Last scene transition must be 'none'."
-    )
-
-    return call_llm(assembler_prompt, SYSTEM_PROMPT)
-
-
-def _run_agent_pipeline(req: "GenerateScriptRequest") -> tuple[dict, str, bool]:
-    """
-    Fire all 4 specialist agents then call the LLM assembler.
-
-    Director  → Scriptwriter → Storyboard → Sync → Assembler
-       ↓              ↓             ↓           ↓         ↓
-    brief         script         story       timing    VideoScript JSON
-
-    Returns (script_dict, assembler_model_used, fallback_triggered).
-    """
-    total_frames = req.duration_seconds * 30
-
-    # ── Step 1 / 5: Director ────────────────────────────────────────────────
-    logger.info("── [Pipeline 1/5] Director — planning topic: %r", req.topic)
-    brief = _director.run_agent(req.topic)
-    # Override total_seconds with the caller's explicit request (Director
-    # defaults to 90–150 s; the HTTP caller may ask for something different).
-    brief["total_seconds"] = req.duration_seconds
-    brief["scene_count"] = max(4, min(12, req.duration_seconds // 12))
-    _pace()
-
-    # ── Step 2 / 5: Scriptwriter ─────────────────────────────────────────────
-    logger.info("── [Pipeline 2/5] Scriptwriter — writing scene narrations")
-    script = _scriptwriter.run_agent(brief)
-    _pace()
-
-    # ── Step 3 / 5: Storyboard ───────────────────────────────────────────────
-    logger.info("── [Pipeline 3/5] Storyboard — designing visual layouts")
-    story = _storyboard.run_agent(brief, script)
-    _pace()
-
-    # ── Step 4 / 5: Sync Specialist ──────────────────────────────────────────
-    logger.info("── [Pipeline 4/5] Sync — computing frame-accurate timings")
-    timing = _sync.run_agent(brief, script)
-    _pace()
-
-    # Guard: if Sync returned wrong total, rescale the last scene
-    sync_total = sum(s.get("duration_frames", 0) for s in timing.get("scenes", []))
-    if sync_total != total_frames:
-        logger.warning(
-            "[Pipeline] Sync frame total %d ≠ expected %d — adjusting last scene",
-            sync_total, total_frames,
-        )
-        scenes = timing.get("scenes", [])
-        if scenes:
-            scenes[-1]["duration_frames"] = max(
-                30, scenes[-1]["duration_frames"] + (total_frames - sync_total)
-            )
-
-    # ── Step 5 / 5: LLM Assembler ────────────────────────────────────────────
-    logger.info("── [Pipeline 5/5] Assembler — converting to VideoScript JSON")
-    raw, model_used, fallback = _assemble_video_script(brief, script, story, timing, req)
-    script_dict = json.loads(_extract_json(raw))
-
-    # Enforce theme from Director palette (LLM may drift on colors)
-    palette = brief.get("palette", {})
-    typo = brief.get("typography", {})
-    script_dict["theme"] = {
-        "primary":    palette.get("primary", "#7c3aed"),
-        "secondary":  palette.get("secondary", "#f59e0b"),
-        "accent":     palette.get("highlight", "#34d399"),
-        "background": palette.get("background", "#0b0f1e"),
-        "font":       typo.get("heading_font", "Inter"),
-    }
-    script_dict["fps"] = 30
-    script_dict["width"] = 1920
-    script_dict["height"] = 1080
-    script_dict.setdefault("title", req.topic)
-
-    return script_dict, model_used, fallback
-
+from graph.pipeline import compiled_graph
+from component_catalog import get_catalog
 
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
 
 @app.get("/health")
 def health():
@@ -546,41 +241,91 @@ def get_skills():
     }
 
 
+@app.get("/api/examples")
+def list_examples():
+    """
+    List all available video script JSON files in shared/examples/.
+    Returns a list of {slug, path, scene_count, title} objects.
+    """
+    from utils.file_output import list_example_scripts
+    import json
+
+    results = []
+    for path in list_example_scripts():
+        slug = path.stem
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            results.append({
+                "slug": slug,
+                "title": data.get("title", slug),
+                "scene_count": len(data.get("scenes", [])),
+                "fps": data.get("fps", 30),
+                "total_frames": sum(s.get("duration_frames", 0) for s in data.get("scenes", [])),
+                "path": str(path),
+            })
+        except Exception as exc:
+            results.append({"slug": slug, "error": str(exc)})
+
+    return {"examples": results, "count": len(results)}
+
+
 @app.get("/api/components", response_model=ComponentListResponse)
 def list_components():
     """
     Return the list of currently available scene component names and their props.
-    Hardcoded for now; structured to be made dynamic in the future.
     """
-    return ComponentListResponse(
-        components=[
-            ComponentInfo(name=c.name, description=c.description, props=c.props)
-            for c in COMPONENTS
-        ]
-    )
+    catalog = get_catalog()
+    components = []
+    for name, data in catalog.items():
+        # Extrapolate props from schema
+        props = {}
+        schema = data.get("schema", {}).get("properties", {})
+        for k, v in schema.items():
+            props[k] = v.get("type", "unknown")
+
+        components.append(
+            ComponentInfo(
+                name=name, description=data.get("description", ""), props=props
+            )
+        )
+
+    return ComponentListResponse(components=components)
 
 
 @app.post("/api/generate-script", response_model=GenerateScriptResponse)
 def generate_script(req: GenerateScriptRequest):
     """
-    Generate a structured JSON video script by firing the full multi-agent pipeline:
-      Director → Scriptwriter → Storyboard → Sync → LLM Assembler
-
-    Each specialist agent contributes its expertise:
-      - Director:     palette, tone, scene count, scene titles
-      - Scriptwriter: per-scene narration, key_points
-      - Storyboard:   visual layout hints for scene type selection
-      - Sync:         frame-accurate duration_frames per scene
-      - Assembler:    maps all context → VideoScript JSON (AnimatedTitle / ComparisonCard)
+    Generate a structured JSON video script using LangGraph pipeline.
     """
     total_frames = req.duration_seconds * 30
     t0 = time.monotonic()
 
+    # Initial state
+    initial_state = {
+        "topic": req.topic,
+        "brief": None,
+        "script": None,
+        "story": None,
+        "timing": None,
+        "video_script": None,
+        "errors": [],
+        "model_used": None,
+        "fallback_triggered": False,
+    }
+
     try:
-        script, model_used, fallback_triggered = _run_agent_pipeline(req)
-    except (ValueError, json.JSONDecodeError) as exc:
+        final_state = compiled_graph.invoke(initial_state)
+    except Exception as exc:
         logger.error("Pipeline failed: %s", exc)
         raise HTTPException(status_code=422, detail=str(exc))
+
+    if final_state.get("errors"):
+        logger.error("Pipeline errors: %s", final_state["errors"])
+        raise HTTPException(status_code=422, detail="; ".join(final_state["errors"]))
+
+    script = final_state.get("video_script", {})
+    model_used = final_state.get("model_used", "unknown")
+    fallback_triggered = final_state.get("fallback_triggered", False)
 
     elapsed_ms = int((time.monotonic() - t0) * 1000)
 
@@ -592,8 +337,9 @@ def generate_script(req: GenerateScriptRequest):
                 detail=f"Assembler output missing required field: '{field}'",
             )
 
-    # Validate scene types
-    valid_types = {c.name for c in COMPONENTS}
+    # Validate scene types against dynamic catalog
+    catalog = get_catalog()
+    valid_types = set(catalog.keys())
     for scene in script.get("scenes", []):
         stype = scene.get("type")
         if stype not in valid_types:
@@ -605,16 +351,28 @@ def generate_script(req: GenerateScriptRequest):
                 ),
             )
 
-    # Validate frame sum — last resort correction if Assembler drifted
+    # Validate frame sum
     total = sum(s.get("duration_frames", 0) for s in script.get("scenes", []))
     if total != total_frames:
         logger.warning(
             "Assembler frame sum %d ≠ expected %d — correcting last scene",
-            total, total_frames,
+            total,
+            total_frames,
         )
         scenes = script["scenes"]
         if scenes:
-            scenes[-1]["duration_frames"] = max(30, scenes[-1]["duration_frames"] + (total_frames - total))
+            scenes[-1]["duration_frames"] = max(
+                30, scenes[-1]["duration_frames"] + (total_frames - total)
+            )
+
+    # Write to shared/examples/<slug>.json for Remotion Studio (dev flow)
+    if req.write_to_examples:
+        try:
+            from utils.file_output import write_example_script
+            written_path = write_example_script(script, req.topic)
+            logger.info("[server] Wrote example JSON to %s", written_path)
+        except Exception as exc:
+            logger.warning("[server] Could not write example JSON: %s", exc)
 
     return GenerateScriptResponse(
         script=script,
@@ -622,8 +380,8 @@ def generate_script(req: GenerateScriptRequest):
             model_used=model_used,
             fallback_triggered=fallback_triggered,
             generation_time_ms=elapsed_ms,
-            agents_used=_AGENT_SEQUENCE,
-            pipeline_mode="multi-agent",
+            agents_used=["director", "scriptwriter", "storyboard", "sync", "assembler"],
+            pipeline_mode="langgraph",
         ),
     )
 
@@ -631,6 +389,7 @@ def generate_script(req: GenerateScriptRequest):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _extract_json(text: str) -> str:
     """Strip markdown fences and extract the first JSON object or array."""

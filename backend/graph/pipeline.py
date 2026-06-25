@@ -1,44 +1,33 @@
-"""
-backend/graph/pipeline.py — LangGraph Pipeline Builder
-
-Assembles the StateGraph by wiring all node transitions sequentially.
-"""
-
-from langgraph.graph import StateGraph, START, END
-
+from langgraph.graph import StateGraph, END
 from graph.state import PipelineState
 from graph.nodes import (
     director_node,
     scriptwriter_node,
     storyboard_node,
     sync_node,
-    code_generator_node,
-    post_process_node,
+    assembler_node,
 )
 
 
-def create_pipeline() -> StateGraph:
-    """
-    Construct the video generation pipeline graph.
-    Wires: START -> director -> scriptwriter -> storyboard -> sync -> code_generator -> post_process -> END
-    """
-    builder = StateGraph(PipelineState)
+def build_state_graph():
+    workflow = StateGraph(PipelineState)
 
-    # Register Nodes
-    builder.add_node("director", director_node)
-    builder.add_node("scriptwriter", scriptwriter_node)
-    builder.add_node("storyboard", storyboard_node)
-    builder.add_node("sync", sync_node)
-    builder.add_node("code_generator", code_generator_node)
-    builder.add_node("post_process", post_process_node)
+    # Add nodes
+    workflow.add_node("director", director_node)
+    workflow.add_node("scriptwriter", scriptwriter_node)
+    workflow.add_node("storyboard", storyboard_node)
+    workflow.add_node("sync", sync_node)
+    workflow.add_node("assembler", assembler_node)
 
-    # Register Edges
-    builder.add_edge(START, "director")
-    builder.add_edge("director", "scriptwriter")
-    builder.add_edge("scriptwriter", "storyboard")
-    builder.add_edge("storyboard", "sync")
-    builder.add_edge("sync", "code_generator")
-    builder.add_edge("code_generator", "post_process")
-    builder.add_edge("post_process", END)
+    # Define edges (linear flow)
+    workflow.set_entry_point("director")
+    workflow.add_edge("director", "scriptwriter")
+    workflow.add_edge("scriptwriter", "storyboard")
+    workflow.add_edge("storyboard", "sync")
+    workflow.add_edge("sync", "assembler")
+    workflow.add_edge("assembler", END)
 
-    return builder
+    return workflow.compile()
+
+
+compiled_graph = build_state_graph()

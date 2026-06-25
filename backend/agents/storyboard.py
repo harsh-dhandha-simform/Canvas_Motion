@@ -128,7 +128,11 @@ def run_agent(director_brief: dict, script: dict) -> dict:
     Returns:
         Storyboard dict with per-scene visual element descriptions.
     """
-    logger.info("[%s] Designing storyboard for %d scenes", AGENT_NAME, director_brief.get("scene_count"))
+    logger.info(
+        "[%s] Designing storyboard for %d scenes",
+        AGENT_NAME,
+        director_brief.get("scene_count"),
+    )
 
     user_message = (
         f"Director's Brief:\n{json.dumps(director_brief, indent=2)}\n\n"

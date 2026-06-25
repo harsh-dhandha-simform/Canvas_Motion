@@ -44,10 +44,15 @@ const TransitionOverlay: React.FC<{
   });
 
   if (transition === "fade") {
-    const opacity = interpolate(frame, [0, durationFrames / 2, durationFrames], [0, 1, 0], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    const opacity = interpolate(
+      frame,
+      [0, durationFrames / 2, durationFrames],
+      [0, 1, 0],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
     return (
       <AbsoluteFill
         style={{ backgroundColor: "#000000", opacity, pointerEvents: "none" }}
@@ -94,10 +99,15 @@ const TransitionOverlay: React.FC<{
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     });
-    const opacity = interpolate(frame, [0, durationFrames / 2, durationFrames], [0, 0.5, 0], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    const opacity = interpolate(
+      frame,
+      [0, durationFrames / 2, durationFrames],
+      [0, 0.5, 0],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
     return (
       <AbsoluteFill
         style={{
@@ -177,10 +187,7 @@ const SceneWrapper: React.FC<{
 // DynamicVideo — the top-level composition driven by the JSON script
 // ---------------------------------------------------------------------------
 
-export const DynamicVideo: React.FC<VideoScriptProps> = ({
-  theme,
-  scenes,
-}) => {
+export const DynamicVideo: React.FC<VideoScriptProps> = ({ theme, scenes }) => {
   // Calculate cumulative start frames for each scene
   let cursor = 0;
   const positioned = scenes.map((scene) => {
@@ -198,6 +205,9 @@ export const DynamicVideo: React.FC<VideoScriptProps> = ({
             from={from}
             durationInFrames={scene.duration_frames}
             premountFor={30}
+            style={{
+              translate: "-16.6px 15.4px",
+            }}
           >
             <SceneWrapper scene={scene} background={theme.background} />
           </Sequence>

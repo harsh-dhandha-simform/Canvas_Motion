@@ -25,6 +25,11 @@ GENERATED_DIR = FRONTEND_ROOT / "src" / "generated"
 # Root.tsx path — updated by orchestrator to register the generated composition
 ROOT_TSX_PATH = FRONTEND_ROOT / "src" / "Root.tsx"
 
+# Shared directory for catalog
+SHARED_DIR = REPO_ROOT / "shared"
+COMPONENT_CATALOG_PATH = SHARED_DIR / "componentCatalog.json"
+EXAMPLES_DIR = SHARED_DIR / "examples"
+
 # ---------------------------------------------------------------------------
 # Groq API
 # ---------------------------------------------------------------------------

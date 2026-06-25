@@ -2,13 +2,29 @@ import React from 'react';
 import { useCurrentFrame, interpolate } from 'remotion';
 import { PALETTE } from '../generated/Palette';
 
-export const GlowingNode: React.FC<{ 
-  color?: string; 
-  size?: number; 
-  pulsing?: boolean; 
-  children?: React.ReactNode; 
-  style?: React.CSSProperties;
-}> = ({ color = PALETTE.primary, size = 100, pulsing = true, children, style }) => {
+export interface GlowingNodeProps {
+  label?: string;
+  icon?: string;
+  x?: number;
+  y?: number;
+  color?: string;
+  size?: number;
+  pulsing?: boolean;
+  scale?: number;
+  opacity?: number;
+}
+
+export const GlowingNode: React.FC<GlowingNodeProps> = ({ 
+  label,
+  icon,
+  x = 0,
+  y = 0,
+  color = PALETTE.primary, 
+  size = 100, 
+  pulsing = true,
+  scale = 1,
+  opacity = 1,
+}) => {
   const frame = useCurrentFrame();
   
   // Sine wave for pulsing glow
@@ -17,6 +33,11 @@ export const GlowingNode: React.FC<{
 
   return (
     <div style={{
+      position: 'absolute',
+      left: `${x}%`,
+      top: `${y}%`,
+      transform: `translate(-50%, -50%) scale(${scale})`,
+      opacity,
       width: size,
       height: size,
       borderRadius: '25%', // Squircle
@@ -24,12 +45,13 @@ export const GlowingNode: React.FC<{
       border: `2px solid ${color}`,
       boxShadow: `0 0 ${shadowSpread}px rgba(${hexToRgb(color)}, ${glowIntensity}), inset 0 0 10px rgba(${hexToRgb(color)}, 0.3)`,
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      position: 'relative',
-      ...style
+      gap: 8,
     }}>
-      {children}
+      {icon && <span style={{ fontSize: size * 0.4 }}>{icon}</span>}
+      {label && <span style={{ color: PALETTE.text, fontSize: size * 0.16, fontWeight: 'bold' }}>{label}</span>}
     </div>
   );
 };

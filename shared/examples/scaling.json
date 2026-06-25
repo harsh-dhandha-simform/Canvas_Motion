@@ -1,0 +1,181 @@
+{
+  "title": "Horizontal vs Vertical Scaling",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#7c3aed",
+    "secondary": "#f59e0b",
+    "accent": "#34d399",
+    "background": "#0b0f1e",
+    "font": "Inter"
+  },
+  "scenes": [
+    {
+      "id": "intro",
+      "type": "AnimatedTitle",
+      "duration_frames": 150,
+      "transition": "zoom",
+      "data": {
+        "title": "System Scaling",
+        "subtitle": "Horizontal vs Vertical Approaches",
+        "align": "center"
+      }
+    },
+    {
+      "id": "concept",
+      "type": "SplitScreen",
+      "duration_frames": 240,
+      "transition": "slideLeft",
+      "data": {
+        "title": "The Core Dilemma",
+        "bullets": [
+          "Your app is going viral",
+          "Traffic has increased 10x",
+          "Your server is struggling",
+          "How do you handle the load?"
+        ],
+        "codeSnippet": {
+          "language": "shell",
+          "code": "$ top\nCPU: 99.9% us, 0.1% sy, 0.0% ni\nMem: 8192M total, 8100M used"
+        }
+      }
+    },
+    {
+      "id": "vertical-arch",
+      "type": "ArchitectureDiagram",
+      "duration_frames": 240,
+      "transition": "fade",
+      "data": {
+        "title": "Vertical Scaling (Scaling Up)",
+        "nodes": [
+          {
+            "id": "users",
+            "type": "client",
+            "label": "100k Users",
+            "x": 20,
+            "y": 50
+          },
+          {
+            "id": "server-huge",
+            "type": "server",
+            "label": "Super Server",
+            "x": 60,
+            "y": 50,
+            "metrics": { "cpu": "128 Cores", "ram": "512 GB" }
+          },
+          {
+            "id": "db",
+            "type": "database",
+            "label": "Database",
+            "x": 85,
+            "y": 50
+          }
+        ],
+        "connections": [
+          { "fromId": "users", "toId": "server-huge", "type": "stream" },
+          { "fromId": "server-huge", "toId": "db", "type": "arrow" }
+        ],
+        "accentColor": "#f59e0b"
+      }
+    },
+    {
+      "id": "horizontal-arch",
+      "type": "ArchitectureDiagram",
+      "duration_frames": 270,
+      "transition": "slideUp",
+      "data": {
+        "title": "Horizontal Scaling (Scaling Out)",
+        "nodes": [
+          {
+            "id": "users",
+            "type": "client",
+            "label": "100k Users",
+            "x": 10,
+            "y": 50
+          },
+          {
+            "id": "lb",
+            "type": "loadBalancer",
+            "label": "Load Balancer",
+            "x": 35,
+            "y": 50
+          },
+          {
+            "id": "web1",
+            "type": "server",
+            "label": "Node A",
+            "x": 65,
+            "y": 25,
+            "metrics": { "cpu": "4 Cores", "ram": "8 GB" }
+          },
+          {
+            "id": "web2",
+            "type": "server",
+            "label": "Node B",
+            "x": 65,
+            "y": 50,
+            "metrics": { "cpu": "4 Cores", "ram": "8 GB" }
+          },
+          {
+            "id": "web3",
+            "type": "server",
+            "label": "Node C",
+            "x": 65,
+            "y": 75,
+            "metrics": { "cpu": "4 Cores", "ram": "8 GB" }
+          },
+          {
+            "id": "db",
+            "type": "database",
+            "label": "Database Cluster",
+            "x": 90,
+            "y": 50
+          }
+        ],
+        "connections": [
+          { "fromId": "users", "toId": "lb", "type": "stream" },
+          { "fromId": "lb", "toId": "web1", "type": "stream" },
+          { "fromId": "lb", "toId": "web2", "type": "stream" },
+          { "fromId": "lb", "toId": "web3", "type": "stream" },
+          { "fromId": "web1", "toId": "db", "type": "arrow" },
+          { "fromId": "web2", "toId": "db", "type": "arrow" },
+          { "fromId": "web3", "toId": "db", "type": "arrow" }
+        ],
+        "accentColor": "#34d399"
+      }
+    },
+    {
+      "id": "comparison",
+      "type": "ComparisonCard",
+      "duration_frames": 240,
+      "transition": "zoom",
+      "data": {
+        "title": "Which is better?",
+        "pros": [
+          "Vertical: Simple setup",
+          "Vertical: No code changes",
+          "Horizontal: Infinite scale",
+          "Horizontal: High availability"
+        ],
+        "cons": [
+          "Vertical: Hardware limits",
+          "Vertical: Single point of failure",
+          "Horizontal: Complex networking",
+          "Horizontal: Data consistency is hard"
+        ]
+      }
+    },
+    {
+      "id": "outro",
+      "type": "AnimatedTitle",
+      "duration_frames": 150,
+      "transition": "fade",
+      "data": {
+        "title": "Scale smartly.",
+        "subtitle": "Canvas Motion",
+        "align": "center"
+      }
+    }
+  ]
+}

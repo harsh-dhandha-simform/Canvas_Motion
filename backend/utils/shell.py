@@ -74,7 +74,9 @@ def npm_install(frontend_root: Path) -> None:
 
 def npm_run_dev(frontend_root: Path) -> subprocess.CompletedProcess[str]:
     """Start the Remotion Studio dev server (non-blocking helper)."""
-    return run(["npm", "run", "dev"], cwd=frontend_root, check=False, capture_output=False)
+    return run(
+        ["npm", "run", "dev"], cwd=frontend_root, check=False, capture_output=False
+    )
 
 
 def remotion_render(

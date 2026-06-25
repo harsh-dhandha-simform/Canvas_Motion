@@ -1,16 +1,17 @@
 import React from "react";
 import { useCurrentFrame } from "remotion";
 
-interface ServerRackProps {
-  scale: number;
+export interface ServerRackProps {
+  scale?: number;
+  x?: number;
+  y?: number;
   label?: string;
   cpu?: string;
   ram?: string;
   isActive?: boolean;
   isLoadBalancer?: boolean;
   color?: string;
-  style?: React.CSSProperties;
-  className?: string;
+  opacity?: number;
 }
 
 // Helper to extract numeric progress for bars
@@ -38,15 +39,16 @@ const getLedOn = (frame: number, isActive: boolean, index: number) => {
 };
 
 export const ServerRack: React.FC<ServerRackProps> = ({
-  scale,
+  scale = 1,
+  x = 0,
+  y = 0,
   label = "Server Node",
   cpu,
   ram,
   isActive = true,
   isLoadBalancer = false,
   color = "#38BDF8", // Sky blue default
-  style,
-  className,
+  opacity = 1,
 }) => {
   const frame = useCurrentFrame();
 
@@ -58,8 +60,11 @@ export const ServerRack: React.FC<ServerRackProps> = ({
   return (
     <div
       style={{
-        ...style,
-        transform: style?.transform ? `${style.transform} scale(${scale})` : `scale(${scale})`,
+        position: 'absolute',
+        left: `${x}%`,
+        top: `${y}%`,
+        transform: `translate(-50%, -50%) scale(${scale})`,
+        opacity,
         transformOrigin: "center center",
         borderColor: isActive ? color : "#334155",
         boxShadow: isActive
@@ -67,7 +72,7 @@ export const ServerRack: React.FC<ServerRackProps> = ({
           : "0 10px 20px -10px rgba(0, 0, 0, 0.5)",
         transition: "all 0.1s ease-out",
       }}
-      className={`w-72 rounded-2xl border-2 bg-slate-900/90 p-5 flex flex-col items-stretch overflow-hidden select-none ${className || ""}`}
+      className="w-72 rounded-2xl border-2 bg-slate-900/90 p-5 flex flex-col items-stretch overflow-hidden select-none"
     >
       {/* Top metallic bar */}
       <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">

@@ -1,0 +1,892 @@
+{
+  "topic": "How ticket booking system works",
+  "director_brief": {
+    "topic": "How ticket booking system works",
+    "target_audience": "senior engineers",
+    "depth_level": "advanced",
+    "tone": "technical",
+    "palette": {
+      "background": "#0a0e1a",
+      "primary": "#7c3aed",
+      "secondary": "#f59e0b",
+      "text": "#e5e7eb",
+      "muted": "#9ca3af",
+      "code_bg": "#1e1e2e",
+      "highlight": "#fffb00",
+      "success": "#34d399",
+      "danger": "#f43f5e"
+    },
+    "typography": {
+      "heading_font": "Space Grotesc",
+      "body_font": "Inter",
+      "code_font": "Fira Code"
+    },
+    "total_seconds": 120,
+    "scene_count": 10,
+    "scene_titles": [
+      "The Ticketing Nightmare: Lost Sales During Peak Demand",
+      "Na\u00efve Single-Server Booking: Why It Crashes Under Load",
+      "Atomic Seat Allocation with Distributed Locks",
+      "Inventory Management via Optimistic Concurrency",
+      "Eventual Consistency vs Strong Consistency in Seat Availability",
+      "Queue-Based Reservation Pipeline and Back\u2011Pressure",
+      "Idempotent Reservation API and Idempotency Keys",
+      "Caching Strategies for Read\u2011Heavy Ticket Queries",
+      "Trade\u2011offs: Latency, Consistency, Availability, and Cost",
+      "Real\u2011World Implementations: Netflix, Ticketmaster, and Eventbrite"
+    ],
+    "key_concepts": [
+      "Capacity planning and traffic spikes",
+      "Concurrent seat allocation",
+      "Distributed locking (e.g., RedLock, ZAB)",
+      "Optimistic vs pessimistic concurrency control",
+      "Eventual consistency models",
+      "Message queues and back\u2011pressure",
+      "Idempotency keys and safe retries",
+      "Cache invalidation patterns",
+      "CAP theorem trade\u2011offs",
+      "Failure detection and graceful degradation"
+    ],
+    "visual_metaphors": [
+      "Theater seating grid as a matrix of resources",
+      "Lock token visualized as a golden ticket",
+      "Conveyor belt representing the message queue",
+      "Hash ring diagram for sharding seat ranges",
+      "State machine diagram for reservation lifecycle",
+      "Traffic lights indicating success (green) and failure (red)"
+    ],
+    "technical_depth": {
+      "cover_internals": true,
+      "show_trade_offs": true,
+      "include_failure_modes": true,
+      "show_real_world_examples": true
+    }
+  },
+  "script": {
+    "scenes": [
+      {
+        "scene_index": 1,
+        "title": "The Ticketing Nightmare: Lost Sales During Peak Demand",
+        "narration": "When a popular event goes on sale, ticketing systems face a sudden surge in requests, often leading to lost sales and frustrated customers. This is due to the inherent limitations of traditional single-server architectures, which struggle to scale under extreme loads. To mitigate this, systems can employ load balancing techniques, such as round-robin or least connections, to distribute incoming traffic across multiple servers. However, this alone is insufficient, as it does not address the underlying issue of resource contention. As a result, ticketing systems must be designed with scalability and concurrency in mind from the outset. For instance, Netflix's architecture is designed to handle massive traffic spikes during new releases, utilizing a combination of load balancing, caching, and distributed databases.",
+        "key_points": [
+          "Scalability",
+          "Concurrency",
+          "Load Balancing",
+          "Distributed Databases"
+        ],
+        "technical_terms": [
+          "Load Balancing",
+          "Round-Robin",
+          "Least Connections"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 2,
+        "title": "Na\u00efve Single-Server Booking: Why It Crashes Under Load",
+        "narration": "A naive single-server booking system, where all requests are processed sequentially, will inevitably crash under high load due to the fundamental limitations of sequential processing. As the request queue grows, the system becomes increasingly unresponsive, leading to timeouts and failed transactions. This is because the system is unable to process requests concurrently, resulting in a bottleneck. In contrast, distributed systems, such as those employed by Ticketmaster, can process multiple requests in parallel, significantly improving throughput and reducing the likelihood of crashes. To achieve this, systems can utilize message queues, such as Apache Kafka or RabbitMQ, to handle incoming requests and distribute them across multiple worker nodes.",
+        "key_points": [
+          "Sequential Processing",
+          "Concurrency",
+          "Distributed Systems"
+        ],
+        "technical_terms": [
+          "Message Queues",
+          "Worker Nodes"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 3,
+        "title": "Atomic Seat Allocation with Distributed Locks",
+        "narration": "To ensure atomicity in seat allocation, distributed locks can be employed to prevent concurrent modifications to the same resource. This is achieved through the use of lock tokens, which are acquired by a node before modifying the resource. If a node fails to acquire the lock, it must retry or abort the operation. Distributed locks, such as RedLock or ZAB, provide a mechanism for nodes to agree on a single value, ensuring that only one node can modify the resource at a time. For example, in a distributed database like Cassandra, distributed locks are used to ensure that only one node can update a particular row, preventing inconsistencies and ensuring data integrity.",
+        "key_points": [
+          "Atomicity",
+          "Distributed Locks",
+          "Lock Tokens"
+        ],
+        "technical_terms": [
+          "RedLock",
+          "ZAB"
+        ],
+        "code_snippet": "lock_token = acquire_lock('seat_123')\nif lock_token:\n    # modify seat allocation\n    release_lock('seat_123', lock_token)"
+      },
+      {
+        "scene_index": 4,
+        "title": "Inventory Management via Optimistic Concurrency",
+        "narration": "Optimistic concurrency control is a strategy for managing inventory, where multiple nodes can read the current state of the inventory, but only one node can successfully update it. This is achieved through the use of version numbers or timestamps, which are checked before updating the inventory. If a node detects a conflict, it must retry or abort the operation. Optimistic concurrency control is particularly useful in systems where read operations outnumber write operations, such as in a ticketing system where seats are frequently queried but rarely updated. For instance, Eventbrite's system utilizes optimistic concurrency control to manage inventory, ensuring that only one node can update the availability of a particular seat.",
+        "key_points": [
+          "Optimistic Concurrency",
+          "Version Numbers",
+          "Timestamps"
+        ],
+        "technical_terms": [
+          "Version Numbers",
+          "Timestamps"
+        ],
+        "code_snippet": "version = get_version('seat_123')\nif version == expected_version:\n    # update seat allocation\n    update_version('seat_123', version + 1)"
+      },
+      {
+        "scene_index": 5,
+        "title": "Eventual Consistency vs Strong Consistency in Seat Availability",
+        "narration": "Eventual consistency and strong consistency are two fundamentally different approaches to ensuring data consistency in a distributed system. Eventual consistency allows nodes to temporarily disagree on the state of the system, while strong consistency requires all nodes to agree on the state before proceeding. In a ticketing system, eventual consistency may be acceptable for read-heavy operations, such as querying seat availability, but strong consistency is necessary for write-heavy operations, such as updating seat allocation. For example, a system like Amazon's DynamoDB may employ eventual consistency for read operations, but use strong consistency for write operations to ensure data integrity.",
+        "key_points": [
+          "Eventual Consistency",
+          "Strong Consistency",
+          "Data Integrity"
+        ],
+        "technical_terms": [
+          "Eventual Consistency",
+          "Strong Consistency"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 6,
+        "title": "Queue-Based Reservation Pipeline and Back\u2011Pressure",
+        "narration": "A queue-based reservation pipeline is a design pattern that allows for the decoupling of request processing from response generation. This is achieved through the use of message queues, such as Apache Kafka or RabbitMQ, which handle incoming requests and distribute them across multiple worker nodes. However, if the queue grows too large, back-pressure can occur, causing the system to become unresponsive. To mitigate this, systems can employ techniques such as flow control or load shedding to prevent the queue from growing too large. For instance, a system like Ticketmaster's may utilize a queue-based pipeline to handle incoming requests, but also employ flow control to prevent back-pressure and ensure responsive performance.",
+        "key_points": [
+          "Queue-Based Pipeline",
+          "Back-Pressure",
+          "Flow Control"
+        ],
+        "technical_terms": [
+          "Message Queues",
+          "Flow Control"
+        ],
+        "code_snippet": "queue = create_queue('reservations')\nwhile True:\n    request = queue.get()\n    # process request\n    queue.ack(request)"
+      },
+      {
+        "scene_index": 7,
+        "title": "Idempotent Reservation API and Idempotency Keys",
+        "narration": "An idempotent reservation API is one that can be safely retried without causing unintended side effects. This is achieved through the use of idempotency keys, which uniquely identify each request and prevent duplicate processing. Idempotency keys can be implemented using techniques such as token-based idempotence or request-based idempotence. For example, a system like Eventbrite's may employ idempotent APIs to handle reservation requests, using idempotency keys to prevent duplicate processing and ensure data integrity.",
+        "key_points": [
+          "Idempotent API",
+          "Idempotency Keys",
+          "Token-Based Idempotence"
+        ],
+        "technical_terms": [
+          "Idempotency Keys",
+          "Token-Based Idempotence"
+        ],
+        "code_snippet": "idempotency_key = generate_idempotency_key()\nrequest = create_request('reservation', idempotency_key)\n# send request"
+      },
+      {
+        "scene_index": 8,
+        "title": "Caching Strategies for Read\u2011Heavy Ticket Queries",
+        "narration": "Caching is a technique used to improve the performance of read-heavy systems by storing frequently accessed data in a fast, in-memory cache. In a ticketing system, caching can be used to store seat availability, pricing, and other frequently queried data. However, caching introduces complexities such as cache invalidation and consistency, which must be carefully managed to ensure data integrity. For example, a system like Netflix's may employ caching to improve performance, using techniques such as time-to-live (TTL) or least-recently-used (LRU) to manage cache invalidation.",
+        "key_points": [
+          "Caching",
+          "Cache Invalidation",
+          "Consistency"
+        ],
+        "technical_terms": [
+          "Cache Invalidation",
+          "TTL",
+          "LRU"
+        ],
+        "code_snippet": "cache = create_cache('seat_availability')\n# store data in cache\n# set TTL or LRU policy"
+      },
+      {
+        "scene_index": 9,
+        "title": "Trade\u2011offs: Latency, Consistency, Availability, and Cost",
+        "narration": "When designing a distributed system, trade-offs must be made between latency, consistency, availability, and cost. The CAP theorem states that it is impossible to achieve all three of consistency, availability, and partition tolerance simultaneously. As a result, system designers must carefully evaluate the requirements of their system and make trade-offs accordingly. For example, a system like Amazon's may prioritize consistency and availability over latency, while a system like Google's may prioritize latency and availability over consistency. Ultimately, the choice of trade-offs will depend on the specific use case and requirements of the system.",
+        "key_points": [
+          "Latency",
+          "Consistency",
+          "Availability",
+          "Cost"
+        ],
+        "technical_terms": [
+          "CAP Theorem",
+          "Partition Tolerance"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 10,
+        "title": "Real\u2011World Implementations: Netflix, Ticketmaster, and Eventbrite",
+        "narration": "Real-world systems such as Netflix, Ticketmaster, and Eventbrite have implemented various design patterns and trade-offs to achieve high performance, scalability, and reliability. For example, Netflix's architecture is designed to handle massive traffic spikes during new releases, utilizing a combination of load balancing, caching, and distributed databases. Ticketmaster's system, on the other hand, employs a queue-based pipeline to handle incoming requests, while Eventbrite's system utilizes optimistic concurrency control to manage inventory. By studying these real-world implementations, system designers can gain valuable insights and lessons for designing their own distributed systems.",
+        "key_points": [
+          "Netflix",
+          "Ticketmaster",
+          "Eventbrite",
+          "Real-World Implementations"
+        ],
+        "technical_terms": [
+          "Load Balancing",
+          "Caching",
+          "Distributed Databases"
+        ],
+        "code_snippet": null
+      }
+    ]
+  },
+  "audio_design": {},
+  "storyboard": {
+    "scenes": [
+      {
+        "scene_index": 1,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "gradient",
+        "visual_concept": "Load\u2011balancer fronting a theater\u2011seating matrix",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "scene1_title",
+            "description": "The Ticketing Nightmare: Lost Sales During Peak Demand",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "scene1_key_points",
+            "description": "\u2022 Scalability\n\u2022 Concurrency\n\u2022 Load Balancing\n\u2022 Distributed Databases",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene1_load_balancer_grid",
+            "description": "A dark\u2011blue canvas. At the left, a rounded rectangle (width 200px, height 80px) labeled 'Load Balancer' in primary color. Three outward arrows (curved, 30px stroke) point to four server nodes arranged in a 2x2 grid (each node: circle radius 48px, fill #1e1e2e, border 2px #7c3aed). Behind the servers, a 10x10 matrix of tiny rectangles (8px x 12px) forms a theater seating grid; sold seats are filled red (#f43f5e), available seats are muted gray (#9ca3af). A golden ticket icon (stroke #fffb00, fill none) hovers over one server to indicate the token that decides which server receives the next request. The diagram occupies the right half of the frame.",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "fade",
+          "exit": "slide-left"
+        }
+      },
+      {
+        "scene_index": 2,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "dark_blueprint",
+        "visual_concept": "Na\u00efve single\u2011server bottleneck",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "scene2_title",
+            "description": "Na\u00efve Single\u2011Server Booking: Why It Crashes Under Load",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "scene2_key_points",
+            "description": "\u2022 Sequential Processing\n\u2022 Concurrency\n\u2022 Distributed Systems",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene2_bottleneck",
+            "description": "A single large server node (circle radius 80px, fill #1e1e2e, border 3px #7c3aed) centered. A vertical queue of 12 small request icons (rounded squares 20px, fill #f59e0b) stacks on its left, each arrow pointing into the server. From the server, a single thin arrow exits to a client icon, illustrating a single throughput path. The background grid lines (0.5px, #2a2e3d) emphasize the bottleneck. The diagram fills the right half of the screen.",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 3
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene2_distributed_alternative",
+            "description": "Four worker nodes (circles radius 48px, fill #1e1e2e) arranged in a square, each connected to a shared Kafka topic (vertical rectangle 120px height, 30px width, fill #2a2e3d). Curved arrows from a producer box (rounded rectangle, fill #7c3aed) flow into the topic, then split to each worker. This secondary diagram appears below the bottleneck diagram, scaled to 60% size, illustrating the distributed alternative.",
+            "position": "bottom-center",
+            "animation": "slide-up",
+            "z_layer": 2
+          }
+        ],
+        "transitions": {
+          "enter": "slide-up",
+          "exit": "wipe-left"
+        }
+      },
+      {
+        "scene_index": 3,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "particle_field",
+        "visual_concept": "Atomic seat allocation with distributed locks",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "scene3_title",
+            "description": "Atomic Seat Allocation with Distributed Locks",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "scene3_key_points",
+            "description": "\u2022 Atomicity\n\u2022 Distributed Locks\n\u2022 Lock Tokens",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene3_hash_ring_locks",
+            "description": "A circular hash ring (radius 280px, stroke #7c3aed, stroke-width 4px) centered. 8 tick marks around the circumference (small lines 10px). Four real server nodes placed at 12, 3, 6, 9 o'clock positions as filled circles radius 48px, primary color fill. Each server hosts 3 virtual nodes shown as smaller triangles (side 20px) evenly spaced around the ring. A golden ticket icon (stroke #fffb00, fill none) is attached to the node at 3 o'clock, pulsing to indicate the lock holder. An arrow labeled 'Lock Request' sweeps clockwise from a client box (rounded rectangle left side) to the nearest virtual node, then a second arrow labeled 'Lock Granted' returns to the client. The diagram occupies the right half.",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "scene3_code",
+            "description": "lock_token = acquire_lock('seat_123')\nif lock_token:\n    # modify seat allocation\n    release_lock('seat_123', lock_token)",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 4
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "wipe-right"
+        }
+      },
+      {
+        "scene_index": 4,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "grid",
+        "visual_concept": "Optimistic concurrency control for inventory",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "scene4_title",
+            "description": "Inventory Management via Optimistic Concurrency",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "scene4_key_points",
+            "description": "\u2022 Optimistic Concurrency\n\u2022 Version Numbers\n\u2022 Timestamps",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene4_version_flow",
+            "description": "Three client nodes (circles radius 48px) on the left, each with a small label 'Node A/B/C'. They all point arrows to a shared inventory record box (rectangle 200px width, 80px height, fill #2a2e3d) labeled 'Seat 123'. Inside the box, a version number field shows 'v=5'. Each node displays its own 'expected_version' bubble (rounded rectangle, fill #7c3aed) above the arrow. When Node B's expected_version matches v, a green check arrow (stroke #34d399) returns, indicating successful update and increment to v=6. When Node C's expected_version mismatches, a red cross arrow (stroke #f43f5e) returns, indicating conflict and retry. The diagram fills the right side.",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "scene4_code",
+            "description": "version = get_version('seat_123')\nif version == expected_version:\n    # update seat allocation\n    update_version('seat_123', version + 1)",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 4
+          }
+        ],
+        "transitions": {
+          "enter": "slide-right",
+          "exit": "fade"
+        }
+      },
+      {
+        "scene_index": 5,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "mesh",
+        "visual_concept": "Eventual vs Strong Consistency timeline",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "scene5_title",
+            "description": "Eventual Consistency vs Strong Consistency in Seat Availability",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "scene5_key_points",
+            "description": "\u2022 Eventual Consistency\n\u2022 Strong Consistency\n\u2022 Data Integrity",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene5_consistency_timeline",
+            "description": "Horizontal timeline bar (width 600px, height 8px, fill #9ca3af) centered vertically. Five event markers (circles radius 12px) spaced evenly. Marker 1 labeled 'Write'. From marker 1, two diverging paths: a solid green line (strong consistency) reaches marker 2 ('Read') after 1s, while a dashed yellow line (eventual) reaches marker 3 ('Read') after 3s, then converges at marker 4 ('Sync'). Each path animates scaling in sequence. Above the timeline, a small state machine box shows states: 'Pending' \u2192 'Committed' (strong) and 'Pending' \u2192 'Stale' \u2192 'Committed' (eventual). The whole diagram occupies the right half.",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "wipe-left"
+        }
+      },
+      {
+        "scene_index": 6,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "dark_blueprint",
+        "visual_concept": "Queue\u2011based reservation pipeline with back\u2011pressure",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "scene6_title",
+            "description": "Queue\u2011Based Reservation Pipeline and Back\u2011Pressure",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "scene6_key_points",
+            "description": "\u2022 Queue\u2011Based Pipeline\n\u2022 Back\u2011Pressure\n\u2022 Flow Control",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene6_conveyor_queue",
+            "description": "A conveyor belt metaphor: three producer boxes (rounded rectangles, primary color) on the left, each with an arrow feeding onto a horizontal belt (rectangular path width 600px, height 40px, fill #2a2e3d). The belt leads to a large Kafka\u2011style queue icon (cylinder, radius 50px, fill #1e1e2e) labeled 'reservations'. From the queue, three worker nodes (circles radius 48px) on the right pull items via arrows. A red exclamation icon appears above the queue when its length exceeds 20 items; a blue flow\u2011control valve icon appears on the belt, shrinking to indicate throttling. The diagram fills the right side.",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "scene6_code",
+            "description": "queue = create_queue('reservations')\nwhile True:\n    request = queue.get()\n    # process request\n    queue.ack(request)",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 4
+          }
+        ],
+        "transitions": {
+          "enter": "slide-up",
+          "exit": "wipe-right"
+        }
+      },
+      {
+        "scene_index": 7,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "particle_field",
+        "visual_concept": "Idempotent reservation API with idempotency keys",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "scene7_title",
+            "description": "Idempotent Reservation API and Idempotency Keys",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "scene7_key_points",
+            "description": "\u2022 Idempotent API\n\u2022 Idempotency Keys\n\u2022 Token\u2011Based Idempotence",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene7_idempotency_flow",
+            "description": "A client box (rounded rectangle, primary color) on the left generates a UUID key (small badge icon, fill #fffb00) labeled 'Idempotency\u2011Key'. An arrow labeled 'POST /reserve' points to an API gateway rectangle (fill #2a2e3d). Inside the gateway, a decision diamond (stroke #7c3aed) checks 'Key Seen?'. If no, green arrow proceeds to 'Create Reservation' box; if yes, blue arrow loops back to 'Return Existing Reservation' box. The flow diagram occupies the right half, with the key badge pulsing on each retry to illustrate safe retries.",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "scene7_code",
+            "description": "idempotency_key = generate_idempotency_key()\nrequest = create_request('reservation', idempotency_key)\n# send request",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 4
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "fade"
+        }
+      },
+      {
+        "scene_index": 8,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "grid",
+        "visual_concept": "Caching strategies for read\u2011heavy ticket queries",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "scene8_title",
+            "description": "Caching Strategies for Read\u2011Heavy Ticket Queries",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "scene8_key_points",
+            "description": "\u2022 Caching\n\u2022 Cache Invalidation\n\u2022 Consistency",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene8_cache_hierarchy",
+            "description": "Three\u2011layer cache diagram: Application layer (box left), Cache layer (middle) and Database layer (right). The cache layer consists of two shards represented as circles (radius 48px) with a hash ring overlay (radius 120px, tick marks 16). Arrows from Application to each cache shard labeled 'GET seat_123'. From each shard, a green arrow (hit) loops back to Application; a red arrow (miss) proceeds to Database box (cylinder, fill #1e1e2e) and returns data to the cache with a TTL badge (small clock icon, fill #fffb00). The diagram fills the right side.",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "scene8_code",
+            "description": "cache = create_cache('seat_availability')\n# store data in cache\n# set TTL or LRU policy",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 4
+          }
+        ],
+        "transitions": {
+          "enter": "slide-right",
+          "exit": "wipe-left"
+        }
+      },
+      {
+        "scene_index": 9,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "mesh",
+        "visual_concept": "CAP theorem trade\u2011offs triangle",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "scene9_title",
+            "description": "Trade\u2011offs: Latency, Consistency, Availability, and Cost",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "scene9_key_points",
+            "description": "\u2022 Latency\n\u2022 Consistency\n\u2022 Availability\n\u2022 Cost",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene9_cap_triangle",
+            "description": "Equilateral triangle (side 300px) centered. Vertices labeled 'Consistency', 'Availability', 'Partition Tolerance'. Inside the triangle, three smaller overlapping circles (Venn diagram style) colored primary, secondary, and muted, showing trade\u2011off regions. A moving pointer (small arrow) animates around the perimeter to illustrate different system choices (e.g., Amazon DynamoDB near Consistency\u2011Availability edge, Google Spanner near Consistency\u2011Latency edge). The diagram occupies the right half.",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 3
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene9_latency_cost_chart",
+            "description": "A bar chart (width 400px) with three bars: 'Low Latency' (green), 'High Consistency' (yellow), 'Low Cost' (blue). Bars animate count\u2011up to their values (e.g., 30ms, 99.9% SLA, $0.02 per request). Positioned below the CAP triangle, centered.",
+            "position": "bottom-center",
+            "animation": "scale-in",
+            "z_layer": 2
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "fade"
+        }
+      },
+      {
+        "scene_index": 10,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "gradient",
+        "visual_concept": "Real\u2011world implementations comparison",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "scene10_title",
+            "description": "Real\u2011World Implementations: Netflix, Ticketmaster, and Eventbrite",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "scene10_key_points",
+            "description": "\u2022 Netflix\n\u2022 Ticketmaster\n\u2022 Eventbrite\n\u2022 Load Balancing, Caching, Distributed DBs",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scene10_comparison",
+            "description": "Three vertical columns, each 200px wide, separated by thin vertical lines. Column 1 titled 'Netflix' contains a load balancer icon feeding into a CDN node, then into a distributed cache (grid of squares) and finally a NoSQL DB cluster (circles). Column 2 titled 'Ticketmaster' shows a queue\u2011based pipeline (conveyor belt) feeding worker nodes, then a relational DB. Column 3 titled 'Eventbrite' displays an optimistic concurrency diagram (versioned seat record) with a hash ring for sharding. Arrows between components are colored primary; each column has a subtle glow matching its brand color (purple for Netflix, orange for Ticketmaster, teal for Eventbrite). The whole composite diagram fills the right side.",
+            "position": "center-right",
+            "animation": "draw-path",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "slide-up",
+          "exit": "wipe-right"
+        }
+      }
+    ]
+  },
+  "timing": {
+    "fps": 30,
+    "total_frames": 3600,
+    "scenes": [
+      {
+        "scene_index": 1,
+        "start_frame": 0,
+        "duration_frames": 420,
+        "intro_hold_frames": 30,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Ticketing systems face a sudden surge",
+            "start_frame": 30,
+            "duration_frames": 120
+          },
+          {
+            "text": "in requests, often leading to lost sales",
+            "start_frame": 150,
+            "duration_frames": 120
+          },
+          {
+            "text": "and frustrated customers due to limitations",
+            "start_frame": 270,
+            "duration_frames": 120
+          }
+        ]
+      },
+      {
+        "scene_index": 2,
+        "start_frame": 420,
+        "duration_frames": 540,
+        "intro_hold_frames": 30,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "A naive single-server booking system",
+            "start_frame": 30,
+            "duration_frames": 120
+          },
+          {
+            "text": "will inevitably crash under high load",
+            "start_frame": 150,
+            "duration_frames": 120
+          },
+          {
+            "text": "due to the fundamental limitations of sequential processing",
+            "start_frame": 270,
+            "duration_frames": 120
+          }
+        ]
+      },
+      {
+        "scene_index": 3,
+        "start_frame": 960,
+        "duration_frames": 630,
+        "intro_hold_frames": 45,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "To ensure atomicity in seat allocation",
+            "start_frame": 45,
+            "duration_frames": 120
+          },
+          {
+            "text": "distributed locks can be employed to prevent",
+            "start_frame": 165,
+            "duration_frames": 120
+          },
+          {
+            "text": "concurrent modifications to the same resource",
+            "start_frame": 285,
+            "duration_frames": 120
+          }
+        ]
+      },
+      {
+        "scene_index": 4,
+        "start_frame": 1590,
+        "duration_frames": 450,
+        "intro_hold_frames": 20,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Optimistic concurrency control is a strategy",
+            "start_frame": 20,
+            "duration_frames": 120
+          },
+          {
+            "text": "for managing inventory where multiple nodes",
+            "start_frame": 140,
+            "duration_frames": 120
+          },
+          {
+            "text": "can read the current state of the inventory",
+            "start_frame": 260,
+            "duration_frames": 120
+          }
+        ]
+      },
+      {
+        "scene_index": 5,
+        "start_frame": 2040,
+        "duration_frames": 540,
+        "intro_hold_frames": 20,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Eventual consistency and strong consistency",
+            "start_frame": 20,
+            "duration_frames": 120
+          },
+          {
+            "text": "are two fundamentally different approaches",
+            "start_frame": 140,
+            "duration_frames": 120
+          },
+          {
+            "text": "to ensuring data consistency in a distributed system",
+            "start_frame": 260,
+            "duration_frames": 120
+          }
+        ]
+      },
+      {
+        "scene_index": 6,
+        "start_frame": 2580,
+        "duration_frames": 630,
+        "intro_hold_frames": 30,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "A queue-based reservation pipeline is a design",
+            "start_frame": 30,
+            "duration_frames": 120
+          },
+          {
+            "text": "pattern that allows for the decoupling of request",
+            "start_frame": 150,
+            "duration_frames": 120
+          },
+          {
+            "text": "processing from response generation",
+            "start_frame": 270,
+            "duration_frames": 120
+          }
+        ]
+      },
+      {
+        "scene_index": 7,
+        "start_frame": 3210,
+        "duration_frames": 450,
+        "intro_hold_frames": 20,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "An idempotent reservation API is one that can",
+            "start_frame": 20,
+            "duration_frames": 120
+          },
+          {
+            "text": "be safely retried without causing unintended",
+            "start_frame": 140,
+            "duration_frames": 120
+          },
+          {
+            "text": "side effects through the use of idempotency keys",
+            "start_frame": 260,
+            "duration_frames": 120
+          }
+        ]
+      },
+      {
+        "scene_index": 8,
+        "start_frame": 3660,
+        "duration_frames": 540,
+        "intro_hold_frames": 20,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Caching is a technique used to improve the",
+            "start_frame": 20,
+            "duration_frames": 120
+          },
+          {
+            "text": "performance of read-heavy systems by storing",
+            "start_frame": 140,
+            "duration_frames": 120
+          },
+          {
+            "text": "frequently accessed data in a fast, in-memory cache",
+            "start_frame": 260,
+            "duration_frames": 120
+          }
+        ]
+      },
+      {
+        "scene_index": 9,
+        "start_frame": 4200,
+        "duration_frames": 630,
+        "intro_hold_frames": 30,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "When designing a distributed system, trade-offs",
+            "start_frame": 30,
+            "duration_frames": 120
+          },
+          {
+            "text": "must be made between latency, consistency,",
+            "start_frame": 150,
+            "duration_frames": 120
+          },
+          {
+            "text": "availability, and cost",
+            "start_frame": 270,
+            "duration_frames": 120
+          }
+        ]
+      },
+      {
+        "scene_index": 10,
+        "start_frame": 4830,
+        "duration_frames": 450,
+        "intro_hold_frames": 20,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Real-world systems such as Netflix, Ticketmaster,",
+            "start_frame": 20,
+            "duration_frames": 120
+          },
+          {
+            "text": "and Eventbrite have implemented various design",
+            "start_frame": 140,
+            "duration_frames": 120
+          },
+          {
+            "text": "patterns and trade-offs to achieve high performance",
+            "start_frame": 260,
+            "duration_frames": 120
+          }
+        ]
+      }
+    ]
+  }
+}

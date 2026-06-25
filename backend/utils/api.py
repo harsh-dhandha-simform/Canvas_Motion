@@ -53,12 +53,12 @@ def chat_completion(
     # Fallback chain of Groq models
     chain = [
         "openai/gpt-oss-120b",
+        "groq/compound",
+        "qwen/qwen3-32b",
         "llama-3.3-70b-versatile",
         "llama-3.1-8b-instant",
         "qwen/qwen3.6-27b",
-        "qwen/qwen3-32b",
         "openai/gpt-oss-20b",
-        "groq/compound"
     ]
     if model in chain:
         idx = chain.index(model)
@@ -67,7 +67,7 @@ def chat_completion(
         models_to_try = [model] + chain
 
     last_error: Exception | None = None
-    
+
     for current_model in models_to_try:
         # Fallback models have tighter context/limits, cap max_tokens accordingly
         if current_model == "llama-3.1-8b-instant":
@@ -97,7 +97,9 @@ def chat_completion(
                 )
                 content: str = response.choices[0].message.content or ""
                 # Strip reasoning/thinking tags (e.g. from Qwen/DeepSeek models)
-                content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
+                content = re.sub(
+                    r"<think>.*?</think>", "", content, flags=re.DOTALL
+                ).strip()
 
                 if not content.strip():
                     logger.warning(
@@ -108,7 +110,9 @@ def chat_completion(
                         response.choices[0].message,
                         response.usage,
                     )
-                    last_error = RuntimeError(f"Model returned empty content (finish_reason: {response.choices[0].finish_reason})")
+                    last_error = RuntimeError(
+                        f"Model returned empty content (finish_reason: {response.choices[0].finish_reason})"
+                    )
                     time.sleep(backoff + random.uniform(0, 2))
                     backoff *= 2
                     continue
@@ -131,7 +135,7 @@ def chat_completion(
                         agent_name,
                         current_model,
                     )
-                    break # Break out of attempt loop to try next model in fallback chain
+                    break  # Break out of attempt loop to try next model in fallback chain
 
                 # Otherwise treat as standard rate limit / retryable status error (e.g. 429)
                 retry_after: float | None = _parse_retry_after(exc)
@@ -145,7 +149,7 @@ def chat_completion(
                         wait,
                         current_model,
                     )
-                    break # Break out of attempt loop to try next model in fallback chain
+                    break  # Break out of attempt loop to try next model in fallback chain
 
                 if attempt < MAX_RETRIES:
                     logger.warning(
@@ -194,6 +198,7 @@ def _parse_retry_after(exc: RateLimitError) -> float | None:
 def extract_json(text: str) -> str:
     """Extract a JSON substring from a text block, handling markdown codeblocks and extra prose."""
     import re
+
     # Try to find a markdown block first
     markdown_json = re.search(r"```(?:json)?\s*([{\[].*?[}\]])\s*```", text, re.DOTALL)
     if markdown_json:
@@ -201,15 +206,76 @@ def extract_json(text: str) -> str:
 
     # If not, find the first occurrence of { or [ and last occurrence of } or ]
     first_brace = min(
-        [pos for pos in [text.find("{"), text.find("[")] if pos != -1],
-        default=-1
+        [pos for pos in [text.find("{"), text.find("[")] if pos != -1], default=-1
     )
     last_brace = max(
-        [pos for pos in [text.rfind("}"), text.rfind("]")] if pos != -1],
-        default=-1
+        [pos for pos in [text.rfind("}"), text.rfind("]")] if pos != -1], default=-1
     )
 
     if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
         return text[first_brace : last_brace + 1].strip()
 
     return text.strip()
+
+
+_PRIMARY_MODEL = "openai/gpt-oss-120b"
+_FALLBACK_MODEL = "compound-beta"
+
+_MODEL_CHAIN = [
+    _PRIMARY_MODEL,
+    _FALLBACK_MODEL,
+    "llama-3.3-70b-versatile",
+]
+
+
+def call_llm(prompt: str, system_prompt: str) -> tuple[str, str, bool]:
+    """
+    Send a chat completion request, trying the primary model first and falling
+    back to the fallback model on any exception.
+
+    Returns:
+        (content, model_used, fallback_triggered)
+    """
+    import re
+    from fastapi import HTTPException
+
+    client = get_client()
+    last_error = None
+    fallback_triggered = False
+
+    for i, model in enumerate(_MODEL_CHAIN):
+        if i > 0:
+            fallback_triggered = True
+
+        try:
+            logger.info("[call_llm] Trying model: %s", model)
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.7,
+                max_tokens=4096,
+            )
+            content = response.choices[0].message.content or ""
+            content = re.sub(
+                r"<think>.*?</think>", "", content, flags=re.DOTALL
+            ).strip()
+
+            if not content.strip():
+                last_error = RuntimeError(f"Empty response from {model}")
+                continue
+
+            logger.info("[call_llm] ✅ Success with model: %s", model)
+            return content, model, fallback_triggered
+
+        except Exception as exc:
+            last_error = exc
+            logger.warning("[call_llm] ⚠️ Model %s failed: %s", model, exc)
+            continue
+
+    raise HTTPException(
+        status_code=503,
+        detail=f"All LLM models failed. Last error: {last_error}",
+    )

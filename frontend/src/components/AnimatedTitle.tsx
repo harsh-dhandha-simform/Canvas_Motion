@@ -1,5 +1,13 @@
 import React from "react";
 import { interpolate, Easing, useCurrentFrame } from "remotion";
+import { z } from "zod";
+
+export const AnimatedTitleSchema = z.object({
+  title: z.string(),
+  subtitle: z.string().optional(),
+  accentColor: z.string().optional(),
+  align: z.enum(["center", "left"]).optional(),
+});
 
 interface AnimatedTitleProps {
   title: string;

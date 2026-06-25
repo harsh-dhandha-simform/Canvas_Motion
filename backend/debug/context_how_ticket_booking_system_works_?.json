@@ -1,0 +1,980 @@
+{
+  "topic": "How ticket booking system works ?",
+  "director_brief": {
+    "topic": "Ticket Booking System Architecture",
+    "target_audience": "senior engineers",
+    "depth_level": "advanced",
+    "tone": "technical",
+    "palette": {
+      "background": "#0a0e1a",
+      "primary": "#7c3aed",
+      "secondary": "#34d399",
+      "text": "#e5e7eb",
+      "muted": "#6b7280",
+      "code_bg": "#1e293b",
+      "highlight": "#fbbf24",
+      "success": "#10b981",
+      "danger": "#ef4444"
+    },
+    "typography": {
+      "heading_font": "Space Grotesk",
+      "body_font": "Inter",
+      "code_font": "Fira Code"
+    },
+    "total_seconds": 120,
+    "scene_count": 11,
+    "scene_titles": [
+      "The Nightmare of Double Booking: A Real Failure",
+      "The Na\u00efve Single\u2011Server Booking System",
+      "High\u2011Level Architecture of Scalable Ticketing",
+      "Managing Ticket Inventory and Seat Maps",
+      "Concurrency Control: Locks, Optimistic Concurrency, and Idempotency",
+      "Reservation Lifecycle: From Hold to Confirmation",
+      "Payment Processing and Idempotent Transactions",
+      "User Notification, Ticket Delivery, and Idempotent Messaging",
+      "Scaling the Service: Partitioning, Sharding, and Caching",
+      "Trade\u2011offs: Consistency vs. Availability, Latency, Cost",
+      "Real\u2011World Implementations: Ticketmaster, Eventbrite, Airline GDS"
+    ],
+    "key_concepts": [
+      "Double booking problem",
+      "Ticket inventory model",
+      "Concurrency control mechanisms",
+      "Reservation lifecycle with timeouts",
+      "Idempotent payment handling",
+      "Eventual consistency across shards",
+      "Sharding and partitioning strategies",
+      "Cache invalidation and consistency",
+      "Circuit breaking & fallback strategies",
+      "Real-world case studies"
+    ],
+    "visual_metaphors": [
+      "Seat map grid as a chessboard",
+      "Ticket token pipeline as a conveyor belt",
+      "Lock token chain as a linked chain",
+      "Reservation timer countdown as a sandglass",
+      "Sharding rings as planetary orbits",
+      "Network latency map as ripple waves",
+      "Airline seat map as a theater layout"
+    ],
+    "technical_depth": {
+      "cover_internals": true,
+      "show_trade_offs": true,
+      "include_failure_modes": true,
+      "show_real_world_examples": true
+    }
+  },
+  "script": {
+    "scenes": [
+      {
+        "scene_index": 1,
+        "title": "The Nightmare of Double Booking: A Real Failure",
+        "narration": "The double booking problem occurs when two or more concurrent requests attempt to book the same seat, resulting in inconsistent state. This can happen due to lack of concurrency control, inadequate locking mechanisms, or insufficient transactional isolation. A real-world example is when multiple users try to book the last available seat on a flight, and the system fails to prevent double booking. To mitigate this, systems like Airline GDS use pessimistic locking, where a lock is acquired before checking availability, to prevent concurrent modifications.",
+        "key_points": [
+          "Double booking",
+          "Concurrency control",
+          "Locking mechanisms",
+          "Transactional isolation"
+        ],
+        "technical_terms": [
+          "Double booking",
+          "Concurrency control",
+          "Locking mechanisms",
+          "Transactional isolation"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 2,
+        "title": "The Na\u00efve Single\u2013Server Booking System",
+        "narration": "A single-server booking system is straightforward to implement, with a simple database storing seat availability. However, this approach has significant scalability limitations, as it can become a bottleneck under high traffic. Moreover, a single point of failure can lead to system downtime, resulting in lost bookings and revenue. To improve this, we can use distributed databases like Cassandra, which provides high availability and scalability through replication and partitioning.",
+        "key_points": [
+          "Single server",
+          "Scalability limitations",
+          "Single point of failure",
+          "Distributed databases"
+        ],
+        "technical_terms": [
+          "Scalability",
+          "Availability",
+          "Replication",
+          "Partitioning"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 3,
+        "title": "High\u2013Level Architecture of Scalable Ticketing",
+        "narration": "A scalable ticketing system consists of multiple components, including a load balancer, application servers, a database cluster, and a caching layer. The load balancer distributes incoming requests across application servers, which handle booking requests and interact with the database cluster. The caching layer reduces database load by storing frequently accessed data, such as seat availability. This architecture provides high availability, scalability, and performance, similar to systems like Ticketmaster.",
+        "key_points": [
+          "Load balancer",
+          "Application servers",
+          "Database cluster",
+          "Caching layer"
+        ],
+        "technical_terms": [
+          "Load balancing",
+          "Scalability",
+          "Caching",
+          "Database clustering"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 4,
+        "title": "Managing Ticket Inventory and Seat Maps",
+        "narration": "Ticket inventory management involves tracking seat availability, prices, and restrictions. A seat map data structure, such as a graph or matrix, represents the physical layout of seats. To efficiently manage inventory, we can use a combination of relational databases, like MySQL, for storing seat metadata and NoSQL databases, like MongoDB, for storing seat maps. This approach provides flexible data modeling and high performance.",
+        "key_points": [
+          "Ticket inventory",
+          "Seat maps",
+          "Relational databases",
+          "NoSQL databases"
+        ],
+        "technical_terms": [
+          "Data modeling",
+          "Relational databases",
+          "NoSQL databases",
+          "Graph data structures"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 5,
+        "title": "Concurrency Control: Locks, Optimistic Concurrency, and Idempotency",
+        "narration": "Concurrency control mechanisms prevent multiple requests from accessing shared resources simultaneously. Locks provide pessimistic concurrency control, while optimistic concurrency control uses version numbers or timestamps to detect conflicts. Idempotent operations, like payment processing, ensure that duplicate requests have the same effect as a single request. To implement these mechanisms, we can use libraries like Apache ZooKeeper for distributed locking and etcd for distributed key-value storage.",
+        "key_points": [
+          "Locks",
+          "Optimistic concurrency",
+          "Idempotency",
+          "Distributed locking"
+        ],
+        "technical_terms": [
+          "Concurrency control",
+          "Locking mechanisms",
+          "Optimistic concurrency",
+          "Idempotency"
+        ],
+        "code_snippet": "lock = zookeeper.acquire_lock('seat_lock')\nif lock:\n    # book seat\n    zookeeper.release_lock(lock)"
+      },
+      {
+        "scene_index": 6,
+        "title": "Reservation Lifecycle: From Hold to Confirmation",
+        "narration": "The reservation lifecycle consists of multiple stages, including seat hold, payment processing, and confirmation. During the hold stage, a lock is acquired to prevent concurrent bookings. Payment processing involves idempotent transactions to ensure that duplicate requests have the same effect. Confirmation involves releasing the lock and updating seat availability. To manage this lifecycle, we can use finite state machines, like those implemented in Apache Kafka, to track the state of each reservation.",
+        "key_points": [
+          "Reservation lifecycle",
+          "Seat hold",
+          "Payment processing",
+          "Confirmation"
+        ],
+        "technical_terms": [
+          "Finite state machines",
+          "Idempotent transactions",
+          "Locking mechanisms",
+          "Reservation management"
+        ],
+        "code_snippet": "reservation_state = 'hold'\nif payment_processed:\n    reservation_state = 'confirmed'\n    release_lock(reservation_lock)"
+      },
+      {
+        "scene_index": 7,
+        "title": "Payment Processing and Idempotent Transactions",
+        "narration": "Payment processing involves multiple steps, including authorization, capture, and settlement. To ensure idempotency, we can use techniques like tokenization, where a unique token represents the payment request. This token can be used to retry failed payments without creating duplicate transactions. Systems like Stripe and PayPal provide idempotent payment processing through their APIs.",
+        "key_points": [
+          "Payment processing",
+          "Idempotent transactions",
+          "Tokenization",
+          "Payment APIs"
+        ],
+        "technical_terms": [
+          "Idempotency",
+          "Tokenization",
+          "Payment processing",
+          "API design"
+        ],
+        "code_snippet": "payment_token = stripe.create_payment_token(card_info)\nstripe.charge(payment_token, amount)"
+      },
+      {
+        "scene_index": 8,
+        "title": "User Notification, Ticket Delivery, and Idempotent Messaging",
+        "narration": "User notification involves sending emails or SMS messages to confirm bookings or provide ticket information. To ensure idempotency, we can use message queues, like Apache Kafka or RabbitMQ, to handle message delivery. This approach provides guaranteed delivery, ordering, and deduplication, ensuring that users receive notifications only once.",
+        "key_points": [
+          "User notification",
+          "Ticket delivery",
+          "Idempotent messaging",
+          "Message queues"
+        ],
+        "technical_terms": [
+          "Idempotency",
+          "Message queues",
+          "Guaranteed delivery",
+          "Deduplication"
+        ],
+        "code_snippet": "message_queue = kafka.producer('notifications')\nmessage_queue.send('booking_confirmation', user_id)"
+      },
+      {
+        "scene_index": 9,
+        "title": "Scaling the Service: Partitioning, Sharding, and Caching",
+        "narration": "To scale the service, we can use partitioning, sharding, and caching techniques. Partitioning involves dividing data into smaller chunks, while sharding involves dividing data across multiple servers. Caching involves storing frequently accessed data in memory to reduce database load. Systems like Redis and Memcached provide in-memory caching, while databases like Cassandra provide distributed sharding and partitioning.",
+        "key_points": [
+          "Partitioning",
+          "Sharding",
+          "Caching",
+          "Distributed databases"
+        ],
+        "technical_terms": [
+          "Scalability",
+          "Partitioning",
+          "Sharding",
+          "Caching"
+        ],
+        "code_snippet": "redis_client = redis.Redis(host='localhost', port=6379)\nredis_client.set('seat_availability', seat_data)"
+      },
+      {
+        "scene_index": 10,
+        "title": "Trade\u2013offs: Consistency vs. Availability, Latency, Cost",
+        "narration": "When designing a distributed system, trade-offs must be made between consistency, availability, latency, and cost. The CAP theorem states that it is impossible to achieve all three simultaneously. To balance these trade-offs, we can use techniques like eventual consistency, where data is updated asynchronously, or strong consistency, where data is updated synchronously. Systems like Google's Bigtable provide strong consistency, while systems like Amazon's Dynamo provide eventual consistency.",
+        "key_points": [
+          "Consistency",
+          "Availability",
+          "Latency",
+          "Cost"
+        ],
+        "technical_terms": [
+          "CAP theorem",
+          "Eventual consistency",
+          "Strong consistency",
+          "Distributed systems"
+        ],
+        "code_snippet": null
+      },
+      {
+        "scene_index": 11,
+        "title": "Real\u2013World Implementations: Ticketmaster, Eventbrite, Airline GDS",
+        "narration": "Real-world systems like Ticketmaster, Eventbrite, and Airline GDS have implemented scalable and reliable ticket booking systems. These systems use a combination of techniques, including distributed databases, caching, and message queues, to provide high availability and performance. To build similar systems, we can learn from their architectures and design principles, such as using microservices, service-oriented architecture, and cloud-native design.",
+        "key_points": [
+          "Ticketmaster",
+          "Eventbrite",
+          "Airline GDS",
+          "Distributed databases"
+        ],
+        "technical_terms": [
+          "Microservices",
+          "Service-oriented architecture",
+          "Cloud-native design",
+          "Distributed systems"
+        ],
+        "code_snippet": null
+      }
+    ]
+  },
+  "audio_design": {},
+  "storyboard": {
+    "scenes": [
+      {
+        "scene_index": 1,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "grid",
+        "visual_concept": "double booking problem as a collision of two trains",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: The Nightmare of Double Booking: A Real Failure",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: The double booking problem occurs when two or more concurrent requests attempt to book the same seat, resulting in inconsistent state.",
+            "position": "left",
+            "animation": "slide-right",
+            "z_layer": 2
+          },
+          {
+            "type": "svg_diagram",
+            "label": "double_booking_diagram",
+            "description": "A diagram showing two trains (concurrent requests) colliding, with a seat map in the background, and a red X symbol indicating the double booking problem.",
+            "position": "right",
+            "animation": "draw-path",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "fade",
+          "exit": "slide-left"
+        }
+      },
+      {
+        "scene_index": 2,
+        "layout": "centered-diagram",
+        "background_variant": "dark_blueprint",
+        "visual_concept": "single-server booking system as a single point of failure",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: The Na\u00efve Single\u2013Server Booking System",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "single_server_diagram",
+            "description": "A diagram showing a single server (circle) with a database (rectangle) connected to it, and a single point of failure (red X symbol) indicating the scalability limitations.",
+            "position": "center",
+            "animation": "draw-path",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: A single-server booking system is straightforward to implement, but has significant scalability limitations.",
+            "position": "bottom-center",
+            "animation": "slide-up",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "slide-up",
+          "exit": "wipe-right"
+        }
+      },
+      {
+        "scene_index": 3,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "grid",
+        "visual_concept": "scalable ticketing system as a distributed architecture",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: High\u2013Level Architecture of Scalable Ticketing",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: A scalable ticketing system consists of multiple components, including a load balancer, application servers, a database cluster, and a caching layer.",
+            "position": "left",
+            "animation": "slide-right",
+            "z_layer": 2
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scalable_ticketing_diagram",
+            "description": "A diagram showing a load balancer (circle) distributing requests to multiple application servers (rectangles), which interact with a database cluster (multiple connected rectangles) and a caching layer (cloud symbol).",
+            "position": "right",
+            "animation": "draw-path",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "slide-right",
+          "exit": "wipe-left"
+        }
+      },
+      {
+        "scene_index": 4,
+        "layout": "centered-diagram",
+        "background_variant": "dark_blueprint",
+        "visual_concept": "ticket inventory management as a seat map grid",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: Managing Ticket Inventory and Seat Maps",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "seat_map_diagram",
+            "description": "A diagram showing a seat map grid (multiple connected rectangles) representing the physical layout of seats, with a relational database (rectangle) storing seat metadata and a NoSQL database (cloud symbol) storing seat maps.",
+            "position": "center",
+            "animation": "draw-path",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: Ticket inventory management involves tracking seat availability, prices, and restrictions using a combination of relational and NoSQL databases.",
+            "position": "bottom-center",
+            "animation": "slide-up",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "zoom-out"
+        }
+      },
+      {
+        "scene_index": 5,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "grid",
+        "visual_concept": "concurrency control mechanisms as a lock token chain",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: Concurrency Control: Locks, Optimistic Concurrency, and Idempotency",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: Concurrency control mechanisms prevent multiple requests from accessing shared resources simultaneously.",
+            "position": "left",
+            "animation": "slide-right",
+            "z_layer": 2
+          },
+          {
+            "type": "svg_diagram",
+            "label": "concurrency_control_diagram",
+            "description": "A diagram showing a lock token chain (connected circles) representing pessimistic concurrency control, with an optimistic concurrency control mechanism (version numbers or timestamps) and idempotent operations (duplicate requests having the same effect).",
+            "position": "right",
+            "animation": "draw-path",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "concurrency_control_code",
+            "description": "Code snippet: lock = zookeeper.acquire_lock('seat_lock')\nif lock:\n    # book seat\n    zookeeper.release_lock(lock)",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 4
+          }
+        ],
+        "transitions": {
+          "enter": "slide-left",
+          "exit": "wipe-right"
+        }
+      },
+      {
+        "scene_index": 6,
+        "layout": "centered-diagram",
+        "background_variant": "dark_blueprint",
+        "visual_concept": "reservation lifecycle as a state machine",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: Reservation Lifecycle: From Hold to Confirmation",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "reservation_lifecycle_diagram",
+            "description": "A diagram showing a state machine (multiple connected rectangles) representing the reservation lifecycle, with seat hold, payment processing, and confirmation stages.",
+            "position": "center",
+            "animation": "draw-path",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: The reservation lifecycle consists of multiple stages, including seat hold, payment processing, and confirmation.",
+            "position": "bottom-center",
+            "animation": "slide-up",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "reservation_lifecycle_code",
+            "description": "Code snippet: reservation_state = 'hold'\nif payment_processed:\n    reservation_state = 'confirmed'\n    release_lock(reservation_lock)",
+            "position": "bottom-right",
+            "animation": "slide-up",
+            "z_layer": 4
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "zoom-out"
+        }
+      },
+      {
+        "scene_index": 7,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "grid",
+        "visual_concept": "payment processing as a token pipeline",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: Payment Processing and Idempotent Transactions",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: Payment processing involves multiple steps, including authorization, capture, and settlement, with idempotent transactions ensuring duplicate requests have the same effect.",
+            "position": "left",
+            "animation": "slide-right",
+            "z_layer": 2
+          },
+          {
+            "type": "svg_diagram",
+            "label": "payment_processing_diagram",
+            "description": "A diagram showing a token pipeline (conveyor belt) representing payment processing, with authorization, capture, and settlement stages, and a tokenization mechanism (unique token) ensuring idempotency.",
+            "position": "right",
+            "animation": "draw-path",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "payment_processing_code",
+            "description": "Code snippet: payment_token = stripe.create_payment_token(card_info)\nstripe.charge(payment_token, amount)",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 4
+          }
+        ],
+        "transitions": {
+          "enter": "slide-right",
+          "exit": "wipe-left"
+        }
+      },
+      {
+        "scene_index": 8,
+        "layout": "centered-diagram",
+        "background_variant": "dark_blueprint",
+        "visual_concept": "user notification as a message queue",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: User Notification, Ticket Delivery, and Idempotent Messaging",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "user_notification_diagram",
+            "description": "A diagram showing a message queue (multiple connected rectangles) representing user notification, with a guaranteed delivery mechanism (arrow) ensuring messages are delivered only once.",
+            "position": "center",
+            "animation": "draw-path",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: User notification involves sending emails or SMS messages to confirm bookings or provide ticket information, with idempotent messaging ensuring duplicate requests have the same effect.",
+            "position": "bottom-center",
+            "animation": "slide-up",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "user_notification_code",
+            "description": "Code snippet: message_queue = kafka.producer('notifications')\nmessage_queue.send('booking_confirmation', user_id)",
+            "position": "bottom-right",
+            "animation": "slide-up",
+            "z_layer": 4
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "zoom-out"
+        }
+      },
+      {
+        "scene_index": 9,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "grid",
+        "visual_concept": "scaling the service as a distributed architecture",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: Scaling the Service: Partitioning, Sharding, and Caching",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: To scale the service, we can use partitioning, sharding, and caching techniques, with distributed databases and in-memory caching providing high availability and performance.",
+            "position": "left",
+            "animation": "slide-right",
+            "z_layer": 2
+          },
+          {
+            "type": "svg_diagram",
+            "label": "scaling_diagram",
+            "description": "A diagram showing a distributed architecture (multiple connected rectangles) representing scaling, with partitioning, sharding, and caching mechanisms (arrows) ensuring high availability and performance.",
+            "position": "right",
+            "animation": "draw-path",
+            "z_layer": 3
+          },
+          {
+            "type": "code_block",
+            "label": "scaling_code",
+            "description": "Code snippet: redis_client = redis.Redis(host='localhost', port=6379)\nredis_client.set('seat_availability', seat_data)",
+            "position": "bottom-left",
+            "animation": "slide-up",
+            "z_layer": 4
+          }
+        ],
+        "transitions": {
+          "enter": "slide-left",
+          "exit": "wipe-right"
+        }
+      },
+      {
+        "scene_index": 10,
+        "layout": "centered-diagram",
+        "background_variant": "dark_blueprint",
+        "visual_concept": "trade-offs as a balance scale",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: Trade\u2013offs: Consistency vs. Availability, Latency, Cost",
+            "position": "top-center",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "svg_diagram",
+            "label": "trade_offs_diagram",
+            "description": "A diagram showing a balance scale (two connected rectangles) representing trade-offs, with consistency, availability, latency, and cost (arrows) indicating the balance between these factors.",
+            "position": "center",
+            "animation": "draw-path",
+            "z_layer": 2
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: When designing a distributed system, trade-offs must be made between consistency, availability, latency, and cost, with the CAP theorem stating that it is impossible to achieve all three simultaneously.",
+            "position": "bottom-center",
+            "animation": "slide-up",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "zoom-in",
+          "exit": "zoom-out"
+        }
+      },
+      {
+        "scene_index": 11,
+        "layout": "left-panel-text-right-panel-diagram",
+        "background_variant": "grid",
+        "visual_concept": "real-world implementations as a comparison chart",
+        "elements": [
+          {
+            "type": "text_block",
+            "label": "title",
+            "description": "Scene title: Real\u2013World Implementations: Ticketmaster, Eventbrite, Airline GDS",
+            "position": "top-left",
+            "animation": "fade-in",
+            "z_layer": 1
+          },
+          {
+            "type": "text_block",
+            "label": "narration",
+            "description": "Narration text: Real-world systems like Ticketmaster, Eventbrite, and Airline GDS have implemented scalable and reliable ticket booking systems, using a combination of techniques such as distributed databases, caching, and message queues.",
+            "position": "left",
+            "animation": "slide-right",
+            "z_layer": 2
+          },
+          {
+            "type": "svg_diagram",
+            "label": "real_world_implementations_diagram",
+            "description": "A diagram showing a comparison chart (multiple connected rectangles) representing real-world implementations, with Ticketmaster, Eventbrite, and Airline GDS (arrows) indicating their respective architectures and design principles.",
+            "position": "right",
+            "animation": "draw-path",
+            "z_layer": 3
+          }
+        ],
+        "transitions": {
+          "enter": "slide-right",
+          "exit": "wipe-left"
+        }
+      }
+    ]
+  },
+  "timing": {
+    "fps": 30,
+    "total_frames": 3600,
+    "scenes": [
+      {
+        "scene_index": 1,
+        "start_frame": 0,
+        "duration_frames": 270,
+        "intro_hold_frames": 30,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Double booking problem",
+            "start_frame": 30,
+            "duration_frames": 60
+          },
+          {
+            "text": "Lack of concurrency control",
+            "start_frame": 90,
+            "duration_frames": 60
+          },
+          {
+            "text": "Pessimistic locking solution",
+            "start_frame": 150,
+            "duration_frames": 60
+          }
+        ]
+      },
+      {
+        "scene_index": 2,
+        "start_frame": 270,
+        "duration_frames": 240,
+        "intro_hold_frames": 20,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Single-server booking system",
+            "start_frame": 20,
+            "duration_frames": 60
+          },
+          {
+            "text": "Scalability limitations and",
+            "start_frame": 80,
+            "duration_frames": 60
+          },
+          {
+            "text": "Distributed databases solution",
+            "start_frame": 140,
+            "duration_frames": 60
+          }
+        ]
+      },
+      {
+        "scene_index": 3,
+        "start_frame": 510,
+        "duration_frames": 330,
+        "intro_hold_frames": 40,
+        "outro_hold_frames": 25,
+        "subtitle_chunks": [
+          {
+            "text": "Scalable ticketing system",
+            "start_frame": 40,
+            "duration_frames": 60
+          },
+          {
+            "text": "Load balancer and application",
+            "start_frame": 100,
+            "duration_frames": 60
+          },
+          {
+            "text": "Database cluster and caching",
+            "start_frame": 160,
+            "duration_frames": 60
+          }
+        ]
+      },
+      {
+        "scene_index": 4,
+        "start_frame": 840,
+        "duration_frames": 270,
+        "intro_hold_frames": 25,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Ticket inventory management",
+            "start_frame": 25,
+            "duration_frames": 60
+          },
+          {
+            "text": "Seat map data structure and",
+            "start_frame": 85,
+            "duration_frames": 60
+          },
+          {
+            "text": "Relational and NoSQL databases",
+            "start_frame": 145,
+            "duration_frames": 60
+          }
+        ]
+      },
+      {
+        "scene_index": 5,
+        "start_frame": 1110,
+        "duration_frames": 300,
+        "intro_hold_frames": 35,
+        "outro_hold_frames": 25,
+        "subtitle_chunks": [
+          {
+            "text": "Concurrency control mechanisms",
+            "start_frame": 35,
+            "duration_frames": 60
+          },
+          {
+            "text": "Locks and optimistic concurrency",
+            "start_frame": 95,
+            "duration_frames": 60
+          },
+          {
+            "text": "Idempotent operations and",
+            "start_frame": 155,
+            "duration_frames": 60
+          }
+        ]
+      },
+      {
+        "scene_index": 6,
+        "start_frame": 1410,
+        "duration_frames": 300,
+        "intro_hold_frames": 40,
+        "outro_hold_frames": 25,
+        "subtitle_chunks": [
+          {
+            "text": "Reservation lifecycle stages",
+            "start_frame": 40,
+            "duration_frames": 60
+          },
+          {
+            "text": "Seat hold and payment processing",
+            "start_frame": 100,
+            "duration_frames": 60
+          },
+          {
+            "text": "Confirmation and lock release",
+            "start_frame": 160,
+            "duration_frames": 60
+          }
+        ]
+      },
+      {
+        "scene_index": 7,
+        "start_frame": 1710,
+        "duration_frames": 240,
+        "intro_hold_frames": 25,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Payment processing steps and",
+            "start_frame": 25,
+            "duration_frames": 60
+          },
+          {
+            "text": "Idempotent transactions and",
+            "start_frame": 85,
+            "duration_frames": 60
+          },
+          {
+            "text": "Tokenization technique and",
+            "start_frame": 145,
+            "duration_frames": 60
+          }
+        ]
+      },
+      {
+        "scene_index": 8,
+        "start_frame": 1950,
+        "duration_frames": 240,
+        "intro_hold_frames": 20,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "User notification and ticket",
+            "start_frame": 20,
+            "duration_frames": 60
+          },
+          {
+            "text": "Idempotent messaging and",
+            "start_frame": 80,
+            "duration_frames": 60
+          },
+          {
+            "text": "Message queues and guaranteed",
+            "start_frame": 140,
+            "duration_frames": 60
+          }
+        ]
+      },
+      {
+        "scene_index": 9,
+        "start_frame": 2190,
+        "duration_frames": 300,
+        "intro_hold_frames": 35,
+        "outro_hold_frames": 25,
+        "subtitle_chunks": [
+          {
+            "text": "Scaling the service and",
+            "start_frame": 35,
+            "duration_frames": 60
+          },
+          {
+            "text": "Partitioning and sharding",
+            "start_frame": 95,
+            "duration_frames": 60
+          },
+          {
+            "text": "Caching and in-memory storage",
+            "start_frame": 155,
+            "duration_frames": 60
+          }
+        ]
+      },
+      {
+        "scene_index": 10,
+        "start_frame": 2490,
+        "duration_frames": 270,
+        "intro_hold_frames": 30,
+        "outro_hold_frames": 20,
+        "subtitle_chunks": [
+          {
+            "text": "Trade-offs in distributed systems",
+            "start_frame": 30,
+            "duration_frames": 60
+          },
+          {
+            "text": "Consistency and availability",
+            "start_frame": 90,
+            "duration_frames": 60
+          },
+          {
+            "text": "Latency and cost considerations",
+            "start_frame": 150,
+            "duration_frames": 60
+          }
+        ]
+      },
+      {
+        "scene_index": 11,
+        "start_frame": 2760,
+        "duration_frames": 840,
+        "intro_hold_frames": 40,
+        "outro_hold_frames": 30,
+        "subtitle_chunks": [
+          {
+            "text": "Real-world implementations and",
+            "start_frame": 40,
+            "duration_frames": 60
+          },
+          {
+            "text": "Ticketmaster and Eventbrite",
+            "start_frame": 100,
+            "duration_frames": 60
+          },
+          {
+            "text": "Airline GDS and distributed",
+            "start_frame": 160,
+            "duration_frames": 60
+          }
+        ]
+      }
+    ]
+  }
+}
