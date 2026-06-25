@@ -2,15 +2,9 @@ import json
 import logging
 from typing import Any
 from graph.state import PipelineState
-from graph.tools import get_component_catalog, get_remotion_skill
 from agents import director, scriptwriter, storyboard, sync
-from utils.api import call_llm
-from utils.topic_classifier import (
-    detect_arc_type,
-    is_comparison_topic,
-    recommend_component_for_scene,
-    COMPARISON_SCENE_SEQUENCE,
-)
+from utils.api import extract_json
+from utils.topic_classifier import detect_arc_type
 
 logger = logging.getLogger(__name__)
 
@@ -19,21 +13,31 @@ def director_node(state: PipelineState) -> dict[str, Any]:
     logger.info("Running director node")
     brief = director.run_agent(state["topic"])
 
-    # Override arc_type with our deterministic classifier (faster + more reliable than LLM guess)
+    # Override total_seconds with the caller's explicit duration
+    duration_seconds = state.get("duration_seconds", 60)
+    brief["total_seconds"] = duration_seconds
+
+    # Override arc_type with our deterministic classifier
     arc_type = detect_arc_type(state["topic"])
     brief["arc_type"] = arc_type
 
-    # For diagram-driven topics, clamp scene_count to 5–7
-    if arc_type == "diagram-driven":
-        scene_count = brief.get("scene_count", 6)
-        brief["scene_count"] = max(5, min(7, scene_count))
-        # Also align scene_titles length
-        titles = brief.get("scene_titles", [])
-        target_count = brief["scene_count"]
-        if len(titles) > target_count:
-            brief["scene_titles"] = titles[:target_count]
+    # Derive scene_count from duration: ~1 scene per 10s, clamped 4-12
+    brief["scene_count"] = max(4, min(12, duration_seconds // 10))
 
-    logger.info("[director_node] arc_type=%s scene_count=%s", arc_type, brief.get("scene_count"))
+    # For diagram-driven topics, clamp scene_count to 5-7
+    if arc_type == "diagram-driven":
+        brief["scene_count"] = max(5, min(7, brief["scene_count"]))
+
+    # Trim scene_titles and scene_types to match scene_count
+    for key in ("scene_titles", "scene_types"):
+        items = brief.get(key, [])
+        if len(items) > brief["scene_count"]:
+            brief[key] = items[:brief["scene_count"]]
+
+    logger.info(
+        "[director_node] arc_type=%s scene_count=%d total_seconds=%d",
+        arc_type, brief.get("scene_count"), brief.get("total_seconds"),
+    )
     return {"brief": brief}
 
 
@@ -56,237 +60,141 @@ def sync_node(state: PipelineState) -> dict[str, Any]:
 
 
 def assembler_node(state: PipelineState) -> dict[str, Any]:
-    logger.info("Running assembler node")
-    brief = state["brief"]
-    script = state["script"]
-    story = state.get("story") or {}
-    timing = state["timing"]
-    topic = state["topic"]
-
-    catalog_json = get_component_catalog.invoke({})
-    remotion_knowledge = get_remotion_skill.invoke({"topic": topic})
-
-    palette = brief.get("palette", {})
-    typo = brief.get("typography", {})
-    arc_type = brief.get("arc_type", detect_arc_type(topic))
-    is_comparison = is_comparison_topic(topic)
-
-    # Build per-scene storyboard component hints
-    story_by_index: dict[int, dict] = {
-        s.get("scene_index", i): s
-        for i, s in enumerate(story.get("scenes", []))
-    }
-
-    # Build scene rows with storyboard hints injected
-    scene_rows: list[str] = []
-    for i, (s_script, s_timing) in enumerate(
-        zip(script.get("scenes", []), timing.get("scenes", []))
-    ):
-        story_scene = story_by_index.get(i, story_by_index.get(s_script.get("scene_index", i), {}))
-        rec_components = recommend_component_for_scene(story_scene)
-        visual_concept = story_scene.get("visual_concept", "")
-        enter_transition = story_scene.get("transitions", {}).get("enter", "fade")
-
-        # Map storyboard transition to our transition vocabulary
-        transition_map = {
-            "wipe-right": "slideLeft",
-            "slide-up": "slideUp",
-            "zoom-in": "zoom",
-            "fade": "fade",
-            "slide-left": "slideLeft",
-        }
-        suggested_transition = transition_map.get(enter_transition, "fade")
-        # Last scene always gets "none"
-        if i == len(script.get("scenes", [])) - 1:
-            suggested_transition = "none"
-
-        scene_rows.append(
-            f"  [{i+1}] title={s_script.get('title')!r} | "
-            f"duration_frames={s_timing.get('duration_frames')} (FIXED, do NOT change) | "
-            f"key_points={s_script.get('key_points', [])} | "
-            f"visual_concept={visual_concept!r} | "
-            f"recommended_components={rec_components} | "
-            f"suggested_transition={suggested_transition!r}"
-        )
-
-    total_frames = sum(s.get("duration_frames", 0) for s in timing.get("scenes", []))
-
-    # -----------------------------------------------------------------------
-    # Build the comparison arc template block (only for X vs Y topics)
-    # -----------------------------------------------------------------------
-    comparison_block = ""
-    if is_comparison and arc_type == "diagram-driven":
-        seq = COMPARISON_SCENE_SEQUENCE
-        comparison_block = f"""
-## DIAGRAM-DRIVEN COMPARISON ARC — MANDATORY SCENE SEQUENCE
-This topic is a comparison of two approaches. You MUST use EXACTLY this scene-type sequence:
-  Scene 1: {seq[0]}  ← intro title card
-  Scene 2: {seq[1]}  ← problem / context (the dilemma, use bullet points + optional code)
-  Scene 3: {seq[2]}  ← Approach A topology (nodes[] + connections[] required)
-  Scene 4: {seq[3]}  ← Approach B topology (nodes[] + connections[] required)
-  Scene 5: {seq[4]}  ← trade-off analysis (pros/cons, 3–5 items per side)
-  Scene 6: {seq[5]}  ← takeaway / outro
-
-For ArchitectureDiagram scenes, you MUST populate:
-  - nodes[]: at least 3 entries, each with {{ id, type, x, y, label }}
-    types: "client" | "server" | "loadBalancer" | "database"
-    x/y: percentage 0–100 (relative to 1920×1080 canvas)
-  - connections[]: map nodes with {{ fromId, toId, type }}
-    type: "stream" | "arrow"
-DO NOT use ArchitectureDiagram with empty nodes[].
-"""
-
-    assembler_prompt = (
-        f"Convert this multi-agent pipeline output to a VideoScript JSON.\n"
-        f"Topic: {topic!r}\n"
-        f"arc_type: {arc_type!r}\n\n"
-        f"SCENE PLAN — duration_frames values are EXACT, copy them unchanged:\n"
-        + "\n".join(scene_rows)
-        + f"\n\nTheme — use these EXACT hex values:\n"
-        f'  background="{palette.get("background", "#0b0f1e")}"  '
-        f'primary="{palette.get("primary", "#7c3aed")}"  '
-        f'secondary="{palette.get("secondary", "#f59e0b")}"  '
-        f'accent="{palette.get("highlight", "#34d399")}"  '
-        f'font="{typo.get("heading_font", "Inter")}"\n\n'
-        f"Total frames = {total_frames} (sum of all duration_frames must equal this exactly).\n"
-        + comparison_block
-    )
-
-    system_prompt = f"""You are an expert video assembler.
-Available components and their exact JSON schemas:
-{catalog_json}
-
-Remotion Knowledge:
-{remotion_knowledge}
-
-Your ONLY output is a raw JSON object. No markdown, no backticks, no explanations.
-Return a single JSON object with this exact structure:
-{{
-  "title": "string",
-  "fps": 30,
-  "width": 1920,
-  "height": 1080,
-  "theme": {{ "primary": "#hex", "secondary": "#hex", "accent": "#hex", "background": "#hex", "font": "Inter" }},
-  "scenes": [
-    {{
-      "id": "scene-1",
-      "type": "ExactComponentName",
-      "duration_frames": 90,
-      "transition": "fade | slideLeft | slideUp | zoom | none",
-      "data": {{ ... exact props matching the component schema ... }}
-    }}
-  ]
-}}
-
-## COMPONENT SELECTION GUIDE
-Pick the component that BEST matches the scene content + storyboard hints:
-- AnimatedTitle: title cards, intro/outro, section transitions. NEVER for content scenes with 3+ key_points.
-- ComparisonCard: pros/cons, before/after, A vs B. Each side 2–5 items, ≤10 words each.
-- ArchitectureDiagram: system topology, servers, load balancers, databases, connections. MUST populate nodes[] + connections[].
-- SplitScreen: 3–5 bullets AND/OR a code snippet — left panel text, right panel content.
-- BulletList: 3–7 short key points without pros/cons structure.
-- StepFlow: sequential stages or steps (first… then… finally).
-- StatCallout: a striking number ("10K req/s", "99.99% uptime").
-- CodeBlock: code reveal line-by-line.
-- TimelineFlow: historical or chronological events.
-- QuoteCard: quotes a person, paper, or principle.
-- TwoColumnLayout: side-by-side feature comparison with headings and bullet lists.
-- BarChart: comparing numeric values across categories.
-- TypewriterText: dramatic single-line or multi-line text reveal.
-
-## TRANSITION SELECTION GUIDE
-- "fade": calm, neutral — intro and reflective scenes
-- "slideLeft": forward motion — between sequential content scenes
-- "slideUp": upward energy — after a comparison
-- "zoom": emphasis — use sparingly (1–2 per video) for a key reveal
-- "none": ONLY for the very last scene
-
-CRITICAL: Use the recommended_components and suggested_transition from each scene row above.
-CRITICAL: The "data" field MUST exactly match the component's JSON schema from the catalog.
-CRITICAL: Do NOT invent field names. Do NOT leave nodes[] empty for ArchitectureDiagram.
-"""
-
-    from utils.api import get_client, extract_json
+    """
+    Merge Scriptwriter + Storyboard + Sync outputs into VideoScript JSON.
+    Pure Python merge + Pydantic validation. No heavy LLM call.
+    LLM fallback only if Pydantic validation fails.
+    """
+    logger.info("Running assembler node (merge mode)")
     from models.video_script import VideoScript
     from pydantic import ValidationError
 
-    # Models that support json_object response_format on Groq
-    STRUCTURED_MODELS = [
-        "openai/gpt-oss-120b",
-        "llama-3.3-70b-versatile",
-        "compound-beta",
-    ]
+    brief   = state["brief"]
+    script  = state["script"]
+    story   = state.get("story") or {}
+    timing  = state["timing"]
+    topic   = state["topic"]
 
-    raw_text = None
-    model_used = None
-    fallback_triggered = False
-    client = get_client()
+    palette = brief.get("palette", {})
+    typo    = brief.get("typography", {})
 
-    for i, model in enumerate(STRUCTURED_MODELS):
-        if i > 0:
-            fallback_triggered = True
-        try:
-            logger.info("[assembler] Trying structured output with model: %s", model)
-            response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": assembler_prompt},
-                ],
-                temperature=0.3,
-                max_tokens=8192,
-                response_format={"type": "json_object"},
-            )
-            raw_text = response.choices[0].message.content or ""
-            model_used = model
-            logger.info("[assembler] ✅ Got structured response from %s", model)
-            break
-        except Exception as exc:
-            logger.warning("[assembler] ⚠️ Model %s failed: %s", model, exc)
-            continue
+    # Index storyboard and timing by scene_index for O(1) lookup
+    story_by_idx  = {s.get("scene_index", i): s for i, s in enumerate(story.get("scenes", []))}
+    timing_by_idx = {s.get("scene_index", i): s for i, s in enumerate(timing.get("scenes", []))}
 
-    if not raw_text:
-        logger.warning("[assembler] Falling back to unstructured call_llm")
-        try:
-            raw_text, model_used, fallback_triggered = call_llm(assembler_prompt, system_prompt)
-        except Exception as e:
-            logger.error(f"Assembler call_llm fallback failed: {e}")
-            return {"errors": [str(e)]}
+    script_scenes = script.get("scenes", [])
+    scenes_out: list[dict] = []
 
-    # Parse JSON
+    for i, s_script in enumerate(script_scenes):
+        idx       = s_script.get("scene_index", i)
+        s_story   = story_by_idx.get(idx, story_by_idx.get(i, {}))
+        s_timing  = timing_by_idx.get(idx, timing_by_idx.get(i, {}))
+
+        component_type = s_script.get("component_type", "BulletList")
+
+        # Merge: Scriptwriter text fields + Storyboard visual fields
+        text_data   = dict(s_script.get("data") or {})
+        visual_data = dict(s_story.get("visual_data") or {})
+        merged_data = {**text_data, **visual_data}
+
+        # Ensure title always present
+        if "title" not in merged_data:
+            merged_data["title"] = s_script.get("title", f"Scene {i + 1}")
+
+        # Transition: storyboard decides; last scene always "none"
+        transition = s_story.get("transition", "fade")
+        if i == len(script_scenes) - 1:
+            transition = "none"
+
+        scenes_out.append({
+            "id": f"scene-{i + 1}",
+            "type": component_type,
+            "duration_frames": s_timing.get("duration_frames", 150),
+            "transition": transition,
+            "data": merged_data,
+        })
+
+    # Fix frame sum (last-resort correction)
+    total_frames = brief.get("total_seconds", 60) * 30
+    actual_total = sum(s["duration_frames"] for s in scenes_out)
+    if actual_total != total_frames and scenes_out:
+        diff = total_frames - actual_total
+        scenes_out[-1]["duration_frames"] = max(90, scenes_out[-1]["duration_frames"] + diff)
+        logger.info("[assembler] Frame sum corrected by %d frames on last scene", diff)
+
+    raw_script = {
+        "title":  brief.get("topic", topic),
+        "fps":    30,
+        "width":  1920,
+        "height": 1080,
+        "theme": {
+            "primary":    palette.get("primary",    "#7c3aed"),
+            "secondary":  palette.get("secondary",  "#f59e0b"),
+            "accent":     palette.get("highlight",  palette.get("accent", "#34d399")),
+            "background": palette.get("background", "#0b0f1e"),
+            "font":       typo.get("heading_font",  "Inter"),
+        },
+        "scenes": scenes_out,
+    }
+
     try:
-        text = extract_json(raw_text)
-        raw_dict = json.loads(text)
-    except json.JSONDecodeError as e:
-        logger.error(f"[assembler] JSON parse failed: {e}\nRaw:\n{raw_text[:500]}")
-        return {"errors": [f"JSON parse error: {e}"]}
-
-    # Validate with Pydantic
-    try:
-        video_script = VideoScript.model_validate(raw_dict)
-        validated_dict = video_script.model_dump(mode="json")
+        vs        = VideoScript.model_validate(raw_script)
+        validated = vs.model_dump(mode="json")
         logger.info(
-            "[assembler] ✅ Pydantic validation passed — %d scenes, %d total frames",
-            len(video_script.scenes),
-            video_script.total_frames(),
+            "[assembler] ✅ Merge OK — %d scenes, %d frames",
+            len(vs.scenes), vs.total_frames(),
         )
-        return {
-            "video_script": validated_dict,
-            "model_used": model_used,
-            "fallback_triggered": fallback_triggered,
-        }
-    except ValidationError as e:
-        errors = e.errors()
-        logger.error("[assembler] ❌ Pydantic validation failed (%d errors):", len(errors))
-        for err in errors:
-            logger.error("  field=%s  msg=%s", err.get("loc"), err.get("msg"))
+        return {"video_script": validated, "model_used": "merge", "fallback_triggered": False}
+    except ValidationError as exc:
+        logger.warning("[assembler] ⚠️ Pydantic failed (%d errors) — LLM fix pass", len(exc.errors()))
+        return _assembler_llm_fix(raw_script, exc, topic)
+    except Exception as exc:
+        logger.error("[assembler] ❌ Unexpected error: %s", exc)
+        return {"errors": [str(exc)]}
 
+
+def _assembler_llm_fix(raw_script: dict, exc: Exception, topic: str) -> dict[str, Any]:
+    """Minimal LLM call to patch a structurally-broken script after merge."""
+    from utils.api import chat_completion as _cc
+    from models.video_script import VideoScript
+    from pydantic import ValidationError
+    from graph.tools import COMPACT_CATALOG
+
+    errors_summary = str(exc)[:800]
+
+    fix_prompt = (
+        f"Fix this VideoScript JSON so it passes Pydantic validation.\n"
+        f"Errors:\n{errors_summary}\n\n"
+        f"Current JSON:\n{json.dumps(raw_script, indent=2)[:4000]}\n\n"
+        "Return ONLY the corrected JSON object. No markdown, no prose."
+    )
+    system = (
+        f"You fix broken VideoScript JSON. {COMPACT_CATALOG}\n"
+        "Return ONLY valid JSON matching the VideoScript schema."
+    )
+
+    try:
+        raw = _cc(
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user",   "content": fix_prompt},
+            ],
+            temperature=0.1,
+            max_tokens=8192,
+            agent_name="AssemblerFix",
+        )
+        fixed = VideoScript.model_validate(json.loads(extract_json(raw)))
+        logger.info("[assembler-fix] ✅ LLM fix passed")
         return {
-            "video_script": raw_dict,
-            "model_used": model_used,
-            "fallback_triggered": fallback_triggered,
-            "validation_errors": [str(err) for err in errors],
+            "video_script": fixed.model_dump(mode="json"),
+            "model_used": "llm-fix",
+            "fallback_triggered": True,
         }
     except Exception as e:
-        logger.error(f"[assembler] Unexpected error: {e}")
-        return {"errors": [str(e)]}
+        logger.error("[assembler-fix] ❌ LLM fix also failed: %s", e)
+        return {
+            "video_script": raw_script,
+            "model_used": "raw",
+            "fallback_triggered": True,
+            "errors": [str(e)],
+        }

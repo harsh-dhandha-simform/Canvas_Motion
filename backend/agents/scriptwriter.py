@@ -1,112 +1,135 @@
 """
 backend/agents/scriptwriter.py — Agent 2: Scriptwriter
 
-Responsibilities:
-  - Take the Director's Brief and write a deep, technically rich, scene-by-scene
-    voiceover script explaining system design concepts from first principles.
-  - Each scene gets narration that a senior engineer would find genuinely insightful.
-  - Produces a structured JSON object consumed by the Sync and Code-Generator agents.
+Component-aware: reads scene_types[] from the director brief and generates
+narration + component-specific data fields per scene.
 
-Output contract (JSON object):
-  {
-    "scenes": [
-      {
-        "scene_index":   int,
-        "title":         str,
-        "narration":     str,       // 3–5 spoken sentences, deeply technical
-        "key_points":    list[str], // 3–5 bullet points for on-screen display
-        "technical_terms": list[str], // terms to highlight visually
-        "code_snippet":  str | null   // optional pseudocode or config to display
-      },
-      ...
-    ]
-  }
+Text-heavy components (BulletList, StepFlow, SplitScreen, etc.) get their
+full data from this agent. Visual components (ArchitectureDiagram, BarChart,
+TimelineFlow) get only a title here — their nodes/bars/events come from Storyboard.
 """
 
 import json
 import logging
 
+from graph.tools import build_agent_context
 from utils.api import chat_completion, extract_json
 
 logger = logging.getLogger(__name__)
-
 AGENT_NAME = "Scriptwriter"
 
-SYSTEM_PROMPT = """
-You are a Principal Engineer and world-class technical educator who writes scripts for
-deep-dive system design videos targeted at senior software engineers and architects.
+_CTX = build_agent_context()
 
-You receive a Director's Brief (JSON) and must write a scene-by-scene narration that
-explains the topic with true technical depth — not surface-level summaries.
+SYSTEM_PROMPT = f"""
+You are a Principal Engineer writing a component-aware script for a technical education video.
 
-Your narration should:
-  - Explain the WHY before the HOW (motivation-first teaching).
-  - Use precise engineering language: latency, throughput, consensus, replication, sharding, etc.
-  - Describe concrete failure scenarios and how the system handles them.
-  - Reference real systems (Kafka, Cassandra, ZooKeeper, etcd, Redis, Kubernetes, etc.)
-    when illustrating a concept.
-  - Build progressive complexity — each scene assumes the viewer understood the previous.
+{_CTX["compact_catalog"]}
 
-Output ONLY a JSON object (no markdown, no prose) with this exact structure:
+## YOUR JOB
+For each scene, you receive the component type chosen by the Director.
+Write narration AND the component's data fields.
 
-{
+## OUTPUT SCHEMA (return ONLY this JSON, no markdown):
+{{
   "scenes": [
-    {
-      "scene_index":     <int>,
-      "title":           "<scene title>",
-      "narration":       "<3–5 spoken sentences of deep technical narration>",
-      "key_points":      ["<concise on-screen bullet 1>", "...", "<up to 5 bullets>"],
-      "technical_terms": ["<term to highlight>", "..."],
-      "code_snippet":    "<optional 3–8 line pseudocode or config, or null>"
-    }
+    {{
+      "scene_index": <int>,
+      "component_type": "<ExactComponentName>",
+      "narration": "<3-5 spoken sentences, deeply technical>",
+      "data": {{ ... component-specific fields, see rules below ... }}
+    }}
   ]
-}
+}}
 
-=== NARRATION RULES ===
-1. Narration must be 3–5 complete spoken sentences per scene.
-2. Every narration must teach something a viewer couldn't find in a 30-second summary.
-3. For conceptual scenes, explain the internal mechanics (e.g. "The consistent hash ring
-   maps keys to a circular key space from 0 to 2^32 - 1. Virtual nodes are inserted at
-   multiple positions per physical server to ensure uniform key distribution.")
-4. For trade-off scenes, explicitly compare alternatives (latency vs. consistency, etc.)
-5. For real-world scenes, name the actual product and why it made this design choice.
+## DATA FIELD RULES PER COMPONENT TYPE
 
-=== KEY POINTS RULES ===
-1. 3–5 concise bullets per scene, max 10 words each.
-2. Written as display text — short, precise, visual-friendly.
-3. Start with action verbs or key nouns, not full sentences.
+### AnimatedTitle
+data: {{"title": "<punchy title>", "subtitle": "<one compelling line or null>"}}
 
-=== CODE SNIPPET RULES ===
-1. Include a short (3–8 line) pseudocode or real-world config snippet for conceptual scenes.
-2. Use null if the scene is purely conceptual/visual.
-3. Format as a single string with \\n for newlines.
+### BulletList
+data: {{"title": "<section heading>", "items": ["<point 1>", "<point 2>", "<point 3>"]}}
+  - 3 to 7 items, each at most 12 words
+  - No full sentences — concise phrases
 
-scenes array length must exactly match director_brief.scene_count.
-Return ONLY valid JSON.
+### StepFlow
+data: {{"title": "<process name>", "steps": ["<step 1>", "<step 2>", "<step 3>"]}}
+  - 3 to 6 steps, each at most 10 words
+  - Start with a verb: "Hash the key", "Route to node", "Replicate to followers"
+
+### ComparisonCard
+data: {{"title": "<what is being compared>", "pros": ["<advantage>"], "cons": ["<disadvantage>"]}}
+  - 3 to 5 items per side, each at most 10 words
+
+### SplitScreen
+data: {{"title": "<heading>", "bullets": ["<point>", "<point>", "<point>"], "codeSnippet": {{"code": "<code>", "language": "<lang>"}} }}
+  - 2 to 5 bullets
+  - Include codeSnippet only if there is genuine code to show; otherwise omit it
+
+### StatCallout
+data: {{"title": "<what the stat measures>", "value": <float>, "suffix": "<unit e.g. ms, req/s, %>", "description": "<one line explanation>"}}
+
+### TypewriterText
+data: {{"lines": ["<dramatic line 1>", "<dramatic line 2>"]}}
+  - 1 to 3 short punchy lines, each at most 8 words
+
+### QuoteCard
+data: {{"quote": "<the quote text>", "author": "<name or null>", "role": "<title or null>"}}
+
+### CodeBlock
+data: {{"title": "<what the code shows>", "code": "<code with \\n for newlines>", "language": "<python|go|yaml|etc>"}}
+
+### TwoColumnLayout
+data: {{"title": "<optional heading>", "left": {{"heading": "<left col name>", "points": ["<point>"]}}, "right": {{"heading": "<right col name>", "points": ["<point>"]}} }}
+  - 3 to 5 points per column
+
+### BarChart
+data: {{"title": "<chart title>", "bars": [{{"label": "<name>", "value": <float>}}]}}
+  - 3 to 6 bars with realistic comparative values
+
+### ArchitectureDiagram
+data: {{"title": "<diagram title>"}}
+  <- ONLY the title. Nodes and connections will be added by the Storyboard agent.
+
+### TimelineFlow
+data: {{"title": "<optional timeline title>"}}
+  <- ONLY the title. Events will be added by the Storyboard agent.
+
+## NARRATION RULES
+- 3-5 complete technical sentences per scene
+- Explain the WHY before the HOW
+- Reference real systems (Kafka, Cassandra, Redis, Kubernetes, etcd) when relevant
+- Progressive complexity — each scene builds on the previous
+
+## CRITICAL
+- scenes array length MUST equal the number of scene_types in the director brief
+- component_type in each scene MUST exactly match the director's scene_types[i]
+- data fields must match the schema for that component type exactly
+- Return ONLY valid JSON
 """.strip()
 
 
 def run_agent(director_brief: dict) -> dict:
-    """
-    Run the Scriptwriter agent.
+    topic = director_brief.get("topic", "")
+    scene_types = director_brief.get("scene_types", [])
+    scene_titles = director_brief.get("scene_titles", [])
 
-    Args:
-        director_brief: The parsed output from the Director agent.
-
-    Returns:
-        Script dict with per-scene narration, key points, technical terms, and code snippets.
-    """
     logger.info(
-        "[%s] Writing deep-dive script for topic: %r",
-        AGENT_NAME,
-        director_brief.get("topic"),
+        "[%s] Writing component-aware script: %d scenes, types=%s",
+        AGENT_NAME, len(scene_types), scene_types,
+    )
+
+    scene_plan = "\n".join(
+        f"  Scene {i+1}: title={title!r}  component_type={ctype!r}"
+        for i, (title, ctype) in enumerate(zip(scene_titles, scene_types))
     )
 
     user_message = (
-        f"Director's Brief:\n{json.dumps(director_brief, indent=2)}\n\n"
-        "Write a technically deep, scene-by-scene narration script. "
-        "Each scene should explain concepts from first principles with engineering precision. "
-        "Include concrete examples, failure modes, and real-world system references."
+        f"Topic: {topic!r}\n"
+        f"arc_type: {director_brief.get('arc_type')!r}\n"
+        f"total_seconds: {director_brief.get('total_seconds')}\n\n"
+        f"Scene plan (you MUST follow these component types exactly):\n{scene_plan}\n\n"
+        "Write narration + component data for each scene. "
+        "Return only JSON matching the output schema."
     )
 
     raw = chat_completion(
@@ -115,17 +138,20 @@ def run_agent(director_brief: dict) -> dict:
             {"role": "user", "content": user_message},
         ],
         temperature=0.7,
-        max_tokens=12000,
+        max_tokens=8192,
         agent_name=AGENT_NAME,
     )
 
-    cleaned = extract_json(raw)
+    script: dict = json.loads(extract_json(raw))
 
-    try:
-        script: dict = json.loads(cleaned)
-        scene_count = len(script.get("scenes", []))
-        logger.info("[%s] ✅ Script written: %d scenes", AGENT_NAME, scene_count)
-        return script
-    except json.JSONDecodeError as exc:
-        logger.error("[%s] ❌ Failed to parse JSON: %s\nRaw:\n%s", AGENT_NAME, exc, raw)
-        raise ValueError(f"Scriptwriter agent returned invalid JSON: {exc}") from exc
+    # Backfill component_type from director if LLM forgot or got it wrong
+    for i, scene in enumerate(script.get("scenes", [])):
+        if i < len(scene_types):
+            scene["component_type"] = scene_types[i]
+        if "data" not in scene or not isinstance(scene.get("data"), dict):
+            scene["data"] = {}
+        if "title" not in scene["data"] and i < len(scene_titles):
+            scene["data"]["title"] = scene_titles[i]
+
+    logger.info("[%s] ✅ Script: %d scenes", AGENT_NAME, len(script.get("scenes", [])))
+    return script
