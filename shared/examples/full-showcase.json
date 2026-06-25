@@ -1,0 +1,596 @@
+{
+  "title": "Canvas Motion — Full Component Showcase",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#6366f1",
+    "secondary": "#22d3ee",
+    "accent": "#f59e0b",
+    "background": "#030711",
+    "font": "Inter"
+  },
+  "scenes": [
+    {
+      "id": "intro",
+      "type": "AnimatedTitle",
+      "duration_frames": 120,
+      "transition": "fade",
+      "data": {
+        "title": "Canvas Motion",
+        "subtitle": "Every component in the library",
+        "align": "center"
+      }
+    },
+    {
+      "id": "stats",
+      "type": "StatCallout",
+      "duration_frames": 120,
+      "transition": "slideUp",
+      "data": {
+        "title": "Components shipped",
+        "value": 26,
+        "suffix": "+",
+        "description": "Each one JSON-driven, no animation code per video."
+      }
+    },
+    {
+      "id": "why-bullets",
+      "type": "BulletList",
+      "duration_frames": 180,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Why a component library?",
+        "items": [
+          "Faster iteration on scripts",
+          "Consistent visual language across topics",
+          "LLM picks the right diagram automatically",
+          "Reused layouts beat bespoke animations"
+        ],
+        "numbered": false,
+        "align": "left"
+      }
+    },
+    {
+      "id": "principles",
+      "type": "NumberedList",
+      "duration_frames": 240,
+      "transition": "fade",
+      "data": {
+        "title": "Library design principles",
+        "items": [
+          { "heading": "Composition over creation", "description": "Combine primitives; never author one-off SVG per scene." },
+          { "heading": "JSON-serialisable", "description": "Every prop must be valid JSON — no functions, no Date objects." },
+          { "heading": "Deterministic motion", "description": "useCurrentFrame() only. No Math.random() during render." },
+          { "heading": "Topic-aware", "description": "Components cover the most common CS / systems visuals." }
+        ],
+        "layout": "grid"
+      }
+    },
+    {
+      "id": "glossary",
+      "type": "GlossaryCards",
+      "duration_frames": 240,
+      "transition": "slideUp",
+      "data": {
+        "title": "Vocabulary you'll see in this library",
+        "terms": [
+          { "term": "Scene", "definition": "One timed segment of a video — has a type, data, and duration.", "icon": "🎬" },
+          { "term": "Panel", "definition": "A component placed in one area of a scene's grid.", "icon": "▦" },
+          { "term": "Transition", "definition": "A 15-frame overlay effect between two scenes.", "icon": "↔" },
+          { "term": "Token", "definition": "A typed unit of a math formula — var, frac, sup, etc.", "icon": "Σ" },
+          { "term": "Lifeline", "definition": "A vertical timeline for one actor in a sequence diagram.", "icon": "│" },
+          { "term": "Frame budget", "definition": "Total frames at 30 fps. Sum of scene durations must match exactly.", "icon": "⊟" }
+        ],
+        "grid": "3x2"
+      }
+    },
+    {
+      "id": "big-o",
+      "type": "MathFormula",
+      "duration_frames": 180,
+      "transition": "zoom",
+      "data": {
+        "title": "The workhorse of algorithm analysis",
+        "tokens": [
+          { "type": "var", "value": "T" },
+          { "type": "op", "value": "(" },
+          { "type": "var", "value": "n" },
+          { "type": "op", "value": ")" },
+          { "type": "op", "value": "=" },
+          { "type": "var", "value": "O" },
+          { "type": "op", "value": "(" },
+          { "type": "var", "value": "n" },
+          {
+            "type": "frac",
+            "numerator": [{ "type": "var", "value": "n" }, { "type": "op", "value": "·" }, { "type": "op", "value": "(" }, { "type": "var", "value": "n" }, { "type": "op", "value": "+" }, { "type": "num", "value": "1" }, { "type": "op", "value": ")" }],
+            "denominator": [{ "type": "num", "value": "2" }]
+          },
+          { "type": "op", "value": ")" }
+        ],
+        "description": "Merge sort's T(n) recurrence solves to O(n log n)."
+      }
+    },
+    {
+      "id": "big-o-derivation",
+      "type": "EquationDerivation",
+      "duration_frames": 360,
+      "transition": "slideUp",
+      "data": {
+        "title": "Solving the merge-sort recurrence",
+        "steps": [
+          {
+            "label": "start",
+            "tokens": [
+              { "type": "var", "value": "T" },
+              { "type": "op", "value": "(" },
+              { "type": "var", "value": "n" },
+              { "type": "op", "value": ")" },
+              { "type": "op", "value": "=" },
+              { "type": "num", "value": "2" },
+              { "type": "var", "value": "T" },
+              { "type": "op", "value": "(" },
+              {
+                "type": "frac",
+                "numerator": [{ "type": "var", "value": "n" }],
+                "denominator": [{ "type": "num", "value": "2" }]
+              },
+              { "type": "op", "value": ")" },
+              { "type": "op", "value": "+" },
+              { "type": "var", "value": "O" },
+              { "type": "op", "value": "(" },
+              { "type": "var", "value": "n" },
+              { "type": "op", "value": ")" }
+            ]
+          },
+          {
+            "label": "unroll",
+            "tokens": [
+              { "type": "var", "value": "T" },
+              { "type": "op", "value": "(" },
+              { "type": "var", "value": "n" },
+              { "type": "op", "value": ")" },
+              { "type": "op", "value": "=" },
+              { "type": "num", "value": "2" },
+              { "type": "var", "value": "T" },
+              { "type": "op", "value": "(" },
+              {
+                "type": "frac",
+                "numerator": [{ "type": "var", "value": "n" }],
+                "denominator": [{ "type": "num", "value": "4" }]
+              },
+              { "type": "op", "value": ")" },
+              { "type": "op", "value": "+" },
+              { "type": "num", "value": "2" },
+              { "type": "var", "value": "O" },
+              {
+                "type": "frac",
+                "numerator": [{ "type": "var", "value": "n" }],
+                "denominator": [{ "type": "num", "value": "2" }]
+              },
+              { "type": "op", "value": "+" },
+              { "type": "var", "value": "O" },
+              { "type": "op", "value": "(" },
+              { "type": "var", "value": "n" },
+              { "type": "op", "value": ")" }
+            ],
+            "note": "unroll once"
+          },
+          {
+            "label": "generalise",
+            "tokens": [
+              { "type": "var", "value": "T" },
+              { "type": "op", "value": "(" },
+              { "type": "var", "value": "n" },
+              { "type": "op", "value": ")" },
+              { "type": "op", "value": "=" },
+              { "type": "num", "value": "2" },
+              { "type": "sup", "base": [{ "type": "var", "value": "k" }], "exponent": [{ "type": "var", "value": "T" }] },
+              { "type": "op", "value": "(" },
+              {
+                "type": "frac",
+                "numerator": [{ "type": "var", "value": "n" }],
+                "denominator": [{ "type": "sup", "base": [{ "type": "num", "value": "2" }], "exponent": [{ "type": "var", "value": "k" }] }]
+              },
+              { "type": "op", "value": ")" },
+              { "type": "op", "value": "+" },
+              { "type": "var", "value": "k" },
+              { "type": "var", "value": "O" },
+              { "type": "op", "value": "(" },
+              { "type": "var", "value": "n" },
+              { "type": "op", "value": ")" }
+            ],
+            "note": "after k unrolls"
+          },
+          {
+            "label": "result",
+            "tokens": [
+              { "type": "var", "value": "T" },
+              { "type": "op", "value": "(" },
+              { "type": "var", "value": "n" },
+              { "type": "op", "value": ")" },
+              { "type": "op", "value": "=" },
+              { "type": "var", "value": "O" },
+              { "type": "op", "value": "(" },
+              { "type": "var", "value": "n" },
+              {
+                "type": "sum",
+                "lower": [{ "type": "var", "value": "i" }, { "type": "op", "value": "=" }, { "type": "num", "value": "0" }],
+                "upper": [{ "type": "var", "value": "k" }],
+                "body": [{ "type": "num", "value": "1" }]
+              },
+              { "type": "op", "value": ")" }
+            ],
+            "note": "geometric series"
+          },
+          {
+            "label": "final",
+            "final": true,
+            "tokens": [
+              { "type": "var", "value": "T" },
+              { "type": "op", "value": "(" },
+              { "type": "var", "value": "n" },
+              { "type": "op", "value": ")" },
+              { "type": "op", "value": "=" },
+              { "type": "var", "value": "O" },
+              { "type": "op", "value": "(" },
+              { "type": "var", "value": "n" },
+              {
+                "type": "sup",
+                "base": [{ "type": "var", "value": "log" }],
+                "exponent": [{ "type": "num", "value": "2" }, { "type": "var", "value": "n" }]
+              },
+              { "type": "op", "value": ")" }
+            ],
+            "note": "since k = log₂ n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hash-ring",
+      "type": "HashRing",
+      "duration_frames": 300,
+      "transition": "fade",
+      "data": {
+        "title": "Consistent hashing",
+        "servers": ["Cache-A", "Cache-B", "Cache-C", "Cache-D"],
+        "virtualNodesPerServer": 4,
+        "lookupKeys": ["user:42", "post:99", "page:1"],
+        "ticks": 96,
+        "accentColor": "#22d3ee"
+      }
+    },
+    {
+      "id": "raft",
+      "type": "StateMachine",
+      "duration_frames": 300,
+      "transition": "slideUp",
+      "data": {
+        "title": "Raft consensus — leader state transitions",
+        "states": [
+          { "id": "follower", "label": "FOLLOWER", "description": "issues AppendEntries", "color": "#38BDF8" },
+          { "id": "candidate", "label": "CANDIDATE", "description": "election in progress", "color": "#f59e0b" },
+          { "id": "leader", "label": "LEADER", "description": "replicates logs", "color": "#34d399" }
+        ],
+        "transitions": [
+          { "fromId": "follower", "toId": "candidate", "label": "election timeout" },
+          { "fromId": "candidate", "toId": "candidate", "label": "split vote" },
+          { "fromId": "candidate", "toId": "leader", "label": "majority votes", "highlight": true },
+          { "fromId": "candidate", "toId": "follower", "label": "higher term seen" },
+          { "fromId": "leader", "toId": "follower", "label": "higher term seen" }
+        ],
+        "activeStateId": "leader"
+      }
+    },
+    {
+      "id": "tree",
+      "type": "TreeHierarchy",
+      "duration_frames": 300,
+      "transition": "slideLeft",
+      "data": {
+        "title": "DNS resolution hierarchy",
+        "root": {
+          "label": "Root (.)",
+          "description": "13 root servers",
+          "color": "#a78bfa",
+          "children": [
+            {
+              "label": ".com TLD",
+              "description": "Verisign",
+              "color": "#38BDF8",
+              "children": [
+                { "label": "google.com", "description": "authoritative NS" },
+                { "label": "amazon.com", "description": "authoritative NS" },
+                { "label": "github.com", "description": "authoritative NS" }
+              ]
+            },
+            {
+              "label": ".org TLD",
+              "description": "Public Interest Registry",
+              "color": "#34d399",
+              "children": [
+                { "label": "wikipedia.org" },
+                { "label": "mozilla.org" }
+              ]
+            },
+            {
+              "label": ".io TLD",
+              "description": "Internet Computer Bureau",
+              "color": "#f59e0b",
+              "children": [
+                { "label": "gitlab.io" },
+                { "label": "herokuapp.com" }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "seq-login",
+      "type": "SequenceDiagram",
+      "duration_frames": 300,
+      "transition": "slideUp",
+      "data": {
+        "title": "OAuth 2.0 — Authorization Code Flow",
+        "actors": ["User", "App", "Auth Server", "Resource API"],
+        "messages": [
+          { "fromIdx": 0, "toIdx": 1, "label": "1. click login" },
+          { "fromIdx": 1, "toIdx": 2, "label": "2. /authorize?client_id=..." },
+          { "fromIdx": 2, "toIdx": 0, "label": "3. login + consent" },
+          { "fromIdx": 0, "toIdx": 2, "label": "4. grant permission" },
+          { "fromIdx": 2, "toIdx": 1, "label": "5. redirect w/ code", "kind": "return" },
+          { "fromIdx": 1, "toIdx": 2, "label": "6. /token (code + secret)", "active": true },
+          { "fromIdx": 2, "toIdx": 1, "label": "7. access_token", "kind": "return" },
+          { "fromIdx": 1, "toIdx": 3, "label": "8. GET /me (Bearer …)" },
+          { "fromIdx": 3, "toIdx": 1, "label": "9. 200 OK user JSON", "kind": "return" }
+        ],
+        "activations": [
+          { "actorIdx": 2, "startMessage": 1, "endMessage": 4, "label": "consent UI" }
+        ]
+      }
+    },
+    {
+      "id": "flow",
+      "type": "FlowDiagram",
+      "duration_frames": 300,
+      "transition": "fade",
+      "data": {
+        "title": "Cache-aside read path",
+        "nodes": [
+          { "id": "start", "label": "Request", "kind": "start" },
+          { "id": "check", "label": "cache hit?", "kind": "decision" },
+          { "id": "read_cache", "label": "Read from cache", "kind": "process" },
+          { "id": "read_db", "label": "Read from DB", "kind": "process" },
+          { "id": "fill", "label": "Fill cache", "kind": "process" },
+          { "id": "return", "label": "Return data", "kind": "process" },
+          { "id": "end", "label": "Respond", "kind": "end" }
+        ],
+        "edges": [
+          { "fromId": "start", "toId": "check" },
+          { "fromId": "check", "toId": "read_cache", "label": "yes", "active": true },
+          { "fromId": "check", "toId": "read_db", "label": "no" },
+          { "fromId": "read_db", "toId": "fill" },
+          { "fromId": "fill", "toId": "return" },
+          { "fromId": "read_cache", "toId": "return" },
+          { "fromId": "return", "toId": "end" }
+        ]
+      }
+    },
+    {
+      "id": "cli",
+      "type": "TerminalCLI",
+      "duration_frames": 300,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Inspecting a Kubernetes pod",
+        "command": "kubectl describe pod nginx-7c5d4f9b8-x2k4q",
+        "output": [
+          "Name:         nginx-7c5d4f9b8-x2k4q",
+          "Namespace:    default",
+          "Node:         ip-10-0-1-23/192.168.1.10",
+          "Status:       Running",
+          "IP:           10.244.2.18",
+          "Containers:",
+          "  nginx:",
+          "    Image:       nginx:1.25",
+          "    Port:        80/TCP",
+          "    State:       Running",
+          "    Ready:       True",
+          "    Restarts:    0"
+        ],
+        "typingSpeed": 1.2,
+        "outputLineDelay": 6,
+        "caption": "kubectl describe — the first command to run when something is wrong",
+        "highlightLines": [4, 11],
+        "theme": "dark"
+      }
+    },
+    {
+      "id": "bars",
+      "type": "BarChart",
+      "duration_frames": 240,
+      "transition": "zoom",
+      "data": {
+        "title": "Median API latency by region (ms)",
+        "bars": [
+          { "label": "us-east-1", "value": 42, "color": "#38BDF8" },
+          { "label": "us-west-2", "value": 88, "color": "#a78bfa" },
+          { "label": "eu-west-1", "value": 96, "color": "#f59e0b" },
+          { "label": "ap-south-1", "value": 184, "color": "#f472b6" },
+          { "label": "sa-east-1", "value": 221, "color": "#fb923c" }
+        ],
+        "layout": "vertical"
+      }
+    },
+    {
+      "id": "line",
+      "type": "LineChart",
+      "duration_frames": 300,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Requests per second — Black Friday 2024",
+        "xLabels": ["00:00", "04:00", "08:00", "12:00", "16:00", "20:00", "23:59"],
+        "series": [
+          {
+            "name": "2024",
+            "color": "#22d3ee",
+            "values": [1200, 1800, 4500, 9800, 14200, 22100, 31500],
+            "fill": true
+          },
+          {
+            "name": "2023",
+            "color": "#f59e0b",
+            "values": [1100, 1500, 3800, 7400, 11200, 16800, 22400]
+          }
+        ],
+        "yLabel": "req/sec",
+        "xLabel": "time",
+        "highlightIndex": 5
+      }
+    },
+    {
+      "id": "pie",
+      "type": "PieChart",
+      "duration_frames": 240,
+      "transition": "fade",
+      "data": {
+        "title": "Where does CPU time go?",
+        "slices": [
+          { "label": "GC pauses", "value": 38, "color": "#a78bfa" },
+          { "label": "Lock contention", "value": 27, "color": "#f59e0b" },
+          { "label": "Serialization", "value": 18, "color": "#38BDF8" },
+          { "label": "Useful work", "value": 12, "color": "#34d399" },
+          { "label": "Other", "value": 5, "color": "#64748b" }
+        ],
+        "variant": "donut",
+        "centerLabel": "WASTED",
+        "centerValue": "83%",
+        "highlightIndex": 0
+      }
+    },
+    {
+      "id": "comparison",
+      "type": "ComparisonCard",
+      "duration_frames": 240,
+      "transition": "slideUp",
+      "data": {
+        "title": "Static vs Dynamic scenes",
+        "pros": [
+          "Static: zero per-video animation work",
+          "Static: components handle the polish",
+          "Dynamic: LLM picks the right component",
+          "Dynamic: easy A/B testing"
+        ],
+        "cons": [
+          "Static: limited visual variety",
+          "Static: can't adapt to topic nuance",
+          "Dynamic: harder to debug",
+          "Dynamic: requires a component library"
+        ]
+      }
+    },
+    {
+      "id": "two-col",
+      "type": "TwoColumnLayout",
+      "duration_frames": 240,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Push vs Pull messaging",
+        "left": {
+          "heading": "Push (Kafka)",
+          "color": "#22d3ee",
+          "icon": "→",
+          "points": [
+            "Broker forwards each event",
+            "Low consumer-side latency",
+            "Consumers can be slow without backpressure"
+          ]
+        },
+        "right": {
+          "heading": "Pull (SQS, Kinesis GetRecords)",
+          "color": "#f59e0b",
+          "icon": "←",
+          "points": [
+            "Consumer polls on its own pace",
+            "Natural backpressure",
+            "Higher end-to-end latency"
+          ]
+        },
+        "dividerLabel": "vs"
+      }
+    },
+    {
+      "id": "steps",
+      "type": "StepFlow",
+      "duration_frames": 240,
+      "transition": "fade",
+      "data": {
+        "title": "How an LLM picks a component",
+        "steps": [
+          "Plan scenes",
+          "Choose layout",
+          "Pick panel types",
+          "Render video"
+        ]
+      }
+    },
+    {
+      "id": "timeline",
+      "type": "TimelineFlow",
+      "duration_frames": 240,
+      "transition": "slideUp",
+      "data": {
+        "title": "Database evolution",
+        "events": [
+          { "year": "1970", "label": "Relational model", "description": "Codd's paper" },
+          { "year": "1991", "label": "PostgreSQL", "description": "Berkeley" },
+          { "year": "2007", "label": "Cassandra", "description": "Dynamo + Bigtable" },
+          { "year": "2009", "label": "Redis", "description": "in-memory KV" },
+          { "year": "2014", "label": "FoundationDB", "description": "ACID on KV", "highlight": true },
+          { "year": "2023", "label": "DuckDB", "description": "OLAP in process" }
+        ]
+      }
+    },
+    {
+      "id": "quote",
+      "type": "QuoteCard",
+      "duration_frames": 180,
+      "transition": "fade",
+      "data": {
+        "quote": "A component library is the compiler's intermediate representation of visual ideas.",
+        "author": "Linus Torvalds (paraphrased)",
+        "role": "on reuse",
+        "highlightWords": ["compiler", "intermediate", "reuse"]
+      }
+    },
+    {
+      "id": "callout",
+      "type": "CalloutAnnotation",
+      "duration_frames": 180,
+      "transition": "zoom",
+      "data": {
+        "title": "The key insight",
+        "body": "JSON-driven scenes shift the work from authoring animation code to authoring vocabulary. The LLM picks the right word; the component renders it.",
+        "bullets": [
+          "Animation code is written once per component, not per video",
+          "Vocabulary is the only thing that scales with topic breadth",
+          "Coverage of common CS visuals becomes a one-time investment"
+        ],
+        "position": "right"
+      }
+    },
+    {
+      "id": "outro",
+      "type": "AnimatedTitle",
+      "duration_frames": 120,
+      "transition": "none",
+      "data": {
+        "title": "Ship more videos.",
+        "subtitle": "Canvas Motion",
+        "align": "center"
+      }
+    }
+  ]
+}

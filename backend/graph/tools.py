@@ -24,7 +24,7 @@ HEADER: auto-rendered from scene.title + scene.subtitle for any title-* layout.
 RULE: panels[].area values MUST exactly match the area strings above for the chosen layout.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## COMPONENTS — 15 available (use EXACT type names)
+## COMPONENTS — 28 available (use EXACT type names)
 
 Type               Best areas          Data shape (required fields bold)
 ─────────────────────────────────────────────────────────────────────────────────
@@ -85,6 +85,63 @@ HttpExchange       main·panel          {title?, method?, **path**, host?, reque
                    requestHeaders/responseHeaders: {key: value} objects (real HTTP headers).
                    responseBody: JSON or text string (escape newlines as \\n).
                    Best for: API explanations, REST deep-dives, protocol scenes.
+
+HashRing           panel·main          {title?, **servers**:str[2-6], virtualNodesPerServer?:int, lookupKeys?:str[], ticks?:int}
+                   Consistent hashing ring with virtual nodes + animated key lookups.
+                   Use for: distributed caches (Memcached, DynamoDB), sharding, CDN routing.
+                   Each server gets a color automatically. lookupKeys sweep clockwise.
+
+StateMachine       panel·main          {title?, **states**:[{id,label,color?,description?}], **transitions**:[{fromId,toId,label,highlight?}], activeStateId?:str}
+                   States laid out in a circle. Self-loops supported.
+                   highlight: bool on transition → glowing color (latest/active).
+                   Use for: protocol diagrams (Raft, TCP handshake), cache coherence, FSMs.
+
+TreeHierarchy      panel·main          {title?, **root**:{label,description?,color?,**children**:[{label,description?,color?,**children**:[{label,description?,color?}]}]}}
+                   Auto-laid-out top-down tree. Up to 3 levels of nesting.
+                   Use for: B-trees, DNS hierarchy, recursion trees, file systems, org charts.
+
+SequenceDiagram    panel·main          {title?, **actors**:str[2-6], **messages**:[{fromIdx:int,toIdx:int,label,kind?:"sync"|"return"|"async",active?:bool}], activations?:[{actorIdx,startMessage,endMessage,label?}]}
+                   UML-style sequence diagram. Lifelines drawn dashed.
+                   Use for: API request flows, microservice communication, auth sequences.
+
+LineChart          main·right          {title?, **xLabels**:str[], **series**:[{name,color?,values:number[],fill?:bool}], yLabel?:str, xLabel?:str, highlightIndex?:int}
+                   Multi-series animated line chart. Lines draw in over time.
+                   highlightIndex draws a vertical guide + emphasized point.
+                   Use for: growth curves, latency vs load, time-series comparisons.
+
+MathFormula        panel·main          {title?, **tokens**:[{type,value?,numerator?,denominator?,base?,exponent?,subscript?,body?,lower?,upper?,color?}], description?:str}
+                   Single centered formula. Token types: text|var|num|op|frac|sup|sub|sqrt|sum|space.
+                   Use for: Big-O notation, key equations, formula callouts.
+
+EquationDerivation panel·main          {title?, **steps**:[{label?,tokens,highlight?:bool,final?:bool,note?}]}
+                   Vertical stack of formulas connected by ↓ arrows. Final step rendered larger.
+                   Use for: proof walks, algebraic transformations, multi-step derivations.
+
+TerminalCLI        panel·main          {title?, **command**:str, **output**:str[], typingCommand?:bool, outputLineDelay?:int, typingSpeed?:number, caption?:str, theme?:"dark"|"matrix"|"amber", highlightLines?:int[]}
+                   Animated terminal — types the command then streams output line by line.
+                   highlightLines: 1-indexed line numbers that get a colored bar.
+                   Use for: tutorials, debugging flows, command demonstrations.
+
+PieChart           panel·main          {title?, **slices**:[{label,value,color?}], centerLabel?:str, centerValue?:str, variant?:"pie"|"donut", highlightIndex?:int}
+                   Animated pie/donut with sweeping reveal. Side legend with percentages.
+                   highlightIndex: slice "explodes" outward.
+                   Use for: proportional breakdowns, market share, traffic split.
+
+NumberedList       panel·main          {title?, **items**:[{heading,description?,color?,icon?}][3-6], layout?:"stack"|"grid"}
+                   Big numbered badge cards. Stack (vertical) or grid (2-column).
+                   Use for: ranked principles, ordered steps, top-N lists.
+
+GlossaryCards      panel·main          {title?, **terms**:[{term,definition,icon?,color?}][4-9], grid?:"auto"|"2x2"|"2x3"|"3x2"|"3x3"}
+                   Grid of term/definition cards with colored icon tiles.
+                   Use for: vocabulary, acronym glossaries, concept maps.
+
+FlowDiagram        panel·main          {title?, **nodes**:[{id,label,kind?:"process"|"decision"|"start"|"end",description?,color?}], **edges**:[{fromId,toId,label?,active?:bool}]}
+                   Branching flow with auto-layered layout. Decision = diamond, start/end = pill.
+                   Use for: workflows with branching, conditional logic, algorithms with if/else.
+
+CalloutAnnotation  panel·main          {title?, **body**:str, bullets?:str[], position?:"left"|"right"|"top"|"bottom"}
+                   Highlighted callout box with corner brackets + side arrow.
+                   Use for: key insights, definitions, "the key takeaway" beats.
 ─────────────────────────────────────────────────────────────────────────────────
 """
 
@@ -106,6 +163,21 @@ Per-component frame budget (use middle of range by default):
   QuoteCard:            120-180 frames  (4-6 s)
   TwoColumnLayout:      180-270 frames  (6-9 s)
   BarChart:             150-240 frames  (5-8 s)
+  PacketFlow:           180-300 frames  (6-10 s)
+  HttpExchange:         180-300 frames  (6-10 s)
+  HashRing:             240-360 frames  (8-12 s)
+  StateMachine:         180-300 frames  (6-10 s)
+  TreeHierarchy:        180-300 frames  (6-10 s)
+  SequenceDiagram:      180-300 frames  (6-10 s)
+  LineChart:            180-300 frames  (6-10 s)
+  MathFormula:          120-240 frames  (4-8 s)
+  EquationDerivation:   240-420 frames  (8-14 s, longer for many steps)
+  TerminalCLI:          180-360 frames  (6-12 s)
+  PieChart:             150-240 frames  (5-8 s)
+  NumberedList:         180-300 frames  (6-10 s)
+  GlossaryCards:        180-300 frames  (6-10 s)
+  FlowDiagram:          240-360 frames  (8-12 s)
+  CalloutAnnotation:    120-240 frames  (4-8 s)
 
 Rules:
   - Transition overlay = 15 frames, INCLUDED in scene duration (not additive)

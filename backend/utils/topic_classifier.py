@@ -2,11 +2,10 @@
 backend/utils/topic_classifier.py
 
 Lightweight, deterministic topic classification — no LLM calls.
-Used by the assembler_node to force the right arc type and scene sequence.
+Used to detect comparison topics and recommend frontend components.
 """
 from __future__ import annotations
 import re
-from typing import Literal
 
 # ---------------------------------------------------------------------------
 # "vs" / comparison patterns
@@ -39,68 +38,6 @@ _COMPARISON_KEYWORDS = [
     "consistency vs",
     "latency vs",
 ]
-
-# ---------------------------------------------------------------------------
-# Architecture / diagram-driven patterns
-# ---------------------------------------------------------------------------
-_DIAGRAM_KEYWORDS = [
-    "scaling",
-    "architecture",
-    "infrastructure",
-    "distributed",
-    "load balancer",
-    "load balancing",
-    "sharding",
-    "replication",
-    "consensus",
-    "raft",
-    "paxos",
-    "consistent hashing",
-    "kafka",
-    "zookeeper",
-    "kubernetes",
-    "service mesh",
-    "database",
-    "caching",
-    "cdn",
-    "microservices",
-    "api gateway",
-    "message queue",
-    "event streaming",
-    "nosql",
-    "cassandra",
-    "redis",
-    "elasticsearch",
-    "data pipeline",
-    "etl",
-    "system design",
-]
-
-
-def is_comparison_topic(topic: str) -> bool:
-    """Return True if the topic is a comparison of two approaches."""
-    t = topic.lower()
-    for pat in _VS_PATTERNS:
-        if re.search(pat, t):
-            return True
-    for kw in _COMPARISON_KEYWORDS:
-        if kw in t:
-            return True
-    return False
-
-
-def detect_arc_type(topic: str) -> Literal["diagram-driven", "narrative"]:
-    """
-    Return 'diagram-driven' for architecture/scaling/infrastructure topics,
-    'narrative' for everything else.
-    """
-    t = topic.lower()
-    for kw in _DIAGRAM_KEYWORDS:
-        if kw in t:
-            return "diagram-driven"
-    if is_comparison_topic(topic):
-        return "diagram-driven"
-    return "narrative"
 
 
 # Forced scene-type sequence for comparison topics (A vs B)

@@ -22,6 +22,19 @@ import { TwoColumnLayout, TwoColumnLayoutSchema } from "./components/TwoColumnLa
 import { BarChart, BarChartSchema } from "./components/BarChart";
 import { PacketFlow, PacketFlowSchema } from "./components/PacketFlow";
 import { HttpExchange, HttpExchangeSchema } from "./components/HttpExchange";
+import { HashRing, HashRingSchema } from "./components/HashRing";
+import { StateMachine, StateMachineSchema } from "./components/StateMachine";
+import { TreeHierarchy, TreeHierarchySchema } from "./components/TreeHierarchy";
+import { SequenceDiagram, SequenceDiagramSchema } from "./components/SequenceDiagram";
+import { LineChart, LineChartSchema } from "./components/LineChart";
+import { MathFormula, MathFormulaSchema } from "./components/MathFormula";
+import { EquationDerivation, EquationDerivationSchema } from "./components/EquationDerivation";
+import { TerminalCLI, TerminalCLISchema } from "./components/TerminalCLI";
+import { PieChart, PieChartSchema } from "./components/PieChart";
+import { NumberedList, NumberedListSchema } from "./components/NumberedList";
+import { GlossaryCards, GlossaryCardsSchema } from "./components/GlossaryCards";
+import { FlowDiagram, FlowDiagramSchema } from "./components/FlowDiagram";
+import { CalloutAnnotation, CalloutAnnotationSchema } from "./components/CalloutAnnotation";
 
 export const COMPONENT_REGISTRY = {
   AnimatedTitle,
@@ -39,6 +52,19 @@ export const COMPONENT_REGISTRY = {
   BarChart,
   PacketFlow,
   HttpExchange,
+  HashRing,
+  StateMachine,
+  TreeHierarchy,
+  SequenceDiagram,
+  LineChart,
+  MathFormula,
+  EquationDerivation,
+  TerminalCLI,
+  PieChart,
+  NumberedList,
+  GlossaryCards,
+  FlowDiagram,
+  CalloutAnnotation,
 } as const;
 
 export const COMPONENT_SCHEMAS = {
@@ -57,6 +83,19 @@ export const COMPONENT_SCHEMAS = {
   BarChart: BarChartSchema,
   PacketFlow: PacketFlowSchema,
   HttpExchange: HttpExchangeSchema,
+  HashRing: HashRingSchema,
+  StateMachine: StateMachineSchema,
+  TreeHierarchy: TreeHierarchySchema,
+  SequenceDiagram: SequenceDiagramSchema,
+  LineChart: LineChartSchema,
+  MathFormula: MathFormulaSchema,
+  EquationDerivation: EquationDerivationSchema,
+  TerminalCLI: TerminalCLISchema,
+  PieChart: PieChartSchema,
+  NumberedList: NumberedListSchema,
+  GlossaryCards: GlossaryCardsSchema,
+  FlowDiagram: FlowDiagramSchema,
+  CalloutAnnotation: CalloutAnnotationSchema,
 } as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,6 +161,58 @@ export const COMPONENT_CATALOG = {
   HttpExchange: {
     description: "A side-by-side HTTP request and response viewer with line-by-line animated reveal. Shows method, path, headers, and body for both request and response. Great for explaining APIs, REST calls, and HTTP protocol details.",
     schema: toJsonSchema(HttpExchangeSchema, "HttpExchangeProps"),
+  },
+  HashRing: {
+    description: "A consistent hashing ring with virtual nodes, server placement, and animated key lookups. Use for distributed caches, sharded databases, CDNs, and any consistent-hashing explanation.",
+    schema: toJsonSchema(HashRingSchema, "HashRingProps"),
+  },
+  StateMachine: {
+    description: "An animated finite-state machine with state boxes, labeled transition arrows, and a pulsing active state. Use for protocol diagrams (TCP handshake, Raft consensus), cache coherence, and workflow states.",
+    schema: toJsonSchema(StateMachineSchema, "StateMachineProps"),
+  },
+  TreeHierarchy: {
+    description: "A top-down tree diagram with auto-laid-out nodes and curved connectors. Use for B-trees, DNS hierarchy, recursion trees, file systems, org charts, and classification.",
+    schema: toJsonSchema(TreeHierarchySchema, "TreeHierarchyProps"),
+  },
+  SequenceDiagram: {
+    description: "A UML-style sequence diagram with actor lifelines and time-ordered request/response arrows. Use for API flows, microservice communication, and authentication sequences.",
+    schema: toJsonSchema(SequenceDiagramSchema, "SequenceDiagramProps"),
+  },
+  LineChart: {
+    description: "An animated multi-series line chart with optional area fill, grid lines, and legend. Lines draw in over time. Use for trends, growth curves, latency vs load, and any time-series comparison.",
+    schema: toJsonSchema(LineChartSchema, "LineChartProps"),
+  },
+  MathFormula: {
+    description: "A centered formula display with token-based rendering for variables, numbers, fractions, exponents, subscripts, square roots, and sums. Use for Big-O notation, equations, and math derivations.",
+    schema: toJsonSchema(MathFormulaSchema, "MathFormulaProps"),
+  },
+  EquationDerivation: {
+    description: "A vertical stack of formula steps connected by arrows, with optional justifications. Each step is a complete formula that can highlight independently. Use for proof walks and algebraic transformations.",
+    schema: toJsonSchema(EquationDerivationSchema, "EquationDerivationProps"),
+  },
+  TerminalCLI: {
+    description: "An animated terminal/CLI window that types a command then streams output line by line. Themes: dark, matrix, amber. Use for tutorials, debugging flows, and showing command output.",
+    schema: toJsonSchema(TerminalCLISchema, "TerminalCLIProps"),
+  },
+  PieChart: {
+    description: "An animated pie or donut chart with a sweeping reveal, percentage labels, an optional center label, and a side legend with values. Use for proportional breakdowns.",
+    schema: toJsonSchema(PieChartSchema, "PieChartProps"),
+  },
+  NumberedList: {
+    description: "A list of numbered cards with large colored badges, headings, and descriptions. Stack (vertical) or grid (2-column) layout. Use for ranked steps, principles, and ordered concepts.",
+    schema: toJsonSchema(NumberedListSchema, "NumberedListProps"),
+  },
+  GlossaryCards: {
+    description: "A grid of term/definition cards with colored icon tiles. Auto-detects 2- or 3-column layout. Use for vocabulary sections, acronym glossaries, and concept maps.",
+    schema: toJsonSchema(GlossaryCardsSchema, "GlossaryCardsProps"),
+  },
+  FlowDiagram: {
+    description: "A branching flow diagram with process (rectangle), decision (diamond), and start/end (pill) shapes connected by labeled arrows. Use for workflows, conditional logic, and algorithms with branching.",
+    schema: toJsonSchema(FlowDiagramSchema, "FlowDiagramProps"),
+  },
+  CalloutAnnotation: {
+    description: "A highlighted callout box with corner brackets, a side arrow, and optional bullet points. Use to emphasize a key insight or definition against a darker background.",
+    schema: toJsonSchema(CalloutAnnotationSchema, "CalloutAnnotationProps"),
   },
 };
 

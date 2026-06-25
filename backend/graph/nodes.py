@@ -4,7 +4,6 @@ from typing import Any
 from graph.state import PipelineState
 from agents import director, scriptwriter, storyboard, sync
 from utils.api import extract_json
-from utils.topic_classifier import detect_arc_type
 
 logger = logging.getLogger(__name__)
 
@@ -17,15 +16,8 @@ def director_node(state: PipelineState) -> dict[str, Any]:
     duration_seconds = state.get("duration_seconds", 60)
     brief["total_seconds"] = duration_seconds
 
-    # Override arc_type with our deterministic classifier
-    arc_type = detect_arc_type(state["topic"])
-    brief["arc_type"] = arc_type
-
     # Derive scene_count from duration: ~1 scene per 10s, clamped 4-12
     brief["scene_count"] = max(4, min(12, duration_seconds // 10))
-
-    if arc_type == "diagram-driven":
-        brief["scene_count"] = max(5, min(7, brief["scene_count"]))
 
     # Trim all scene arrays to scene_count
     n = brief["scene_count"]
@@ -34,8 +26,8 @@ def director_node(state: PipelineState) -> dict[str, Any]:
         brief[key] = items[:n]
 
     logger.info(
-        "[director_node] arc_type=%s scene_count=%d total_seconds=%d",
-        arc_type, brief.get("scene_count"), brief.get("total_seconds"),
+        "[director_node] scene_count=%d total_seconds=%d",
+        brief.get("scene_count"), brief.get("total_seconds"),
     )
     return {"brief": brief}
 

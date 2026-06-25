@@ -1,7 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 9012
+/***/ 3301
 (__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -60,7 +60,6 @@ var update = injectStylesIntoStyleTag_default()(index_js_src/* default */.A, opt
 // EXTERNAL MODULE: ./node_modules/react/index.js
 var react = __webpack_require__(6540);
 ;// ./src/ThemeContext.tsx
-/* unused harmony import specifier */ var useContext;
 
 
 
@@ -72,7 +71,7 @@ const DEFAULT_THEME = {
   font: "Inter"
 };
 const ThemeContext = (0,react.createContext)(DEFAULT_THEME);
-const useTheme = () => useContext(ThemeContext);
+const useTheme = () => (0,react.useContext)(ThemeContext);
 const ThemeProvider = ({ theme, children }) => {
   const merged = { ...DEFAULT_THEME, ...theme };
   return /* @__PURE__ */ (0,jsx_runtime.jsx)(ThemeContext.Provider, { value: merged, children });
@@ -2302,62 +2301,95 @@ function hexToRgb(hex) {
 
 
 
+const LW = 1920;
+const LH = 1080;
 const DataStream = ({
   fromX,
   fromY,
   toX,
   toY,
   color = PALETTE.secondary,
-  particleCount = 3
+  particleCount = 4
 }) => {
   const frame = (0,esm.useCurrentFrame)();
-  const pxFromX = fromX / 100 * 1920;
-  const pxFromY = fromY / 100 * 1080;
-  const pxToX = toX / 100 * 1920;
-  const pxToY = toY / 100 * 1080;
-  const dx = pxToX - pxFromX;
-  const dy = pxToY - pxFromY;
-  const length = Math.sqrt(dx * dx + dy * dy);
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: {
-    position: "absolute",
-    left: pxFromX,
-    top: pxFromY,
-    width: length,
-    height: 2,
-    transformOrigin: "0% 50%",
-    transform: `rotate(${angle}deg)`,
-    pointerEvents: "none"
-  }, children: [
-    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
-      position: "absolute",
-      inset: 0,
-      backgroundColor: color,
-      opacity: 0.2
-    } }),
-    Array.from({ length: particleCount }).map((_, i) => {
-      const phaseOffset = i / particleCount * 100;
-      const xPos = (frame + phaseOffset) % 100 / 100 * length;
-      const opacity = (0,esm.interpolate)((frame + phaseOffset) % 100, [0, 20, 80, 100], [0, 1, 1, 0]);
-      return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: {
+  const lFromX = fromX / 100 * LW;
+  const lFromY = fromY / 100 * LH;
+  const lToX = toX / 100 * LW;
+  const lToY = toY / 100 * LH;
+  const dx = lToX - lFromX;
+  const dy = lToY - lFromY;
+  const particles = Array.from({ length: particleCount }).map((_, i) => {
+    const phaseOffset = i / particleCount * 100;
+    const t = (frame + phaseOffset) % 100 / 100;
+    const opacity = (0,esm.interpolate)(
+      (frame + phaseOffset) % 100,
+      [0, 20, 80, 100],
+      [0, 1, 1, 0],
+      { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+    );
+    return {
+      x: lFromX + dx * t,
+      y: lFromY + dy * t,
+      opacity
+    };
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "svg",
+    {
+      style: {
         position: "absolute",
-        left: xPos,
-        top: -3,
-        width: 8,
-        height: 8,
-        borderRadius: "50%",
-        backgroundColor: color,
-        boxShadow: `0 0 10px ${color}, 0 0 20px ${color}`,
-        opacity
-      } }, i);
-    })
-  ] });
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        overflow: "visible"
+      },
+      viewBox: `0 0 ${LW} ${LH}`,
+      preserveAspectRatio: "none",
+      children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: `stream-glow-${color.replace("#", "")}`, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "5", result: "blur" }),
+          /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "blur" }),
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+          ] })
+        ] }) }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "line",
+          {
+            x1: lFromX,
+            y1: lFromY,
+            x2: lToX,
+            y2: lToY,
+            stroke: color,
+            strokeWidth: "3",
+            strokeLinecap: "round",
+            opacity: 0.2
+          }
+        ),
+        particles.map((p, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "circle",
+          {
+            cx: p.x,
+            cy: p.y,
+            r: "8",
+            fill: color,
+            opacity: p.opacity,
+            style: { filter: `url(#stream-glow-${color.replace("#", "")})` }
+          },
+          i
+        ))
+      ]
+    }
+  );
 };
 
 ;// ./src/components/ScalingArrow.tsx
 
 
 
+const ScalingArrow_LW = 1920;
+const ScalingArrow_LH = 1080;
 const ScalingArrow = ({
   fromX,
   fromY,
@@ -2367,118 +2399,111 @@ const ScalingArrow = ({
   progress = 1,
   animateFlow = false,
   flowSpeed = 2,
-  arrowHeadSize = 8
+  arrowHeadSize = 10
 }) => {
   const frame = (0,esm.useCurrentFrame)();
-  const pxFromX = fromX / 100 * 1920;
-  const pxFromY = fromY / 100 * 1080;
-  const pxToX = toX / 100 * 1920;
-  const pxToY = toY / 100 * 1080;
-  const minX = Math.min(pxFromX, pxToX) - 40;
-  const minY = Math.min(pxFromY, pxToY) - 40;
-  const maxX = Math.max(pxFromX, pxToX) + 40;
-  const maxY = Math.max(pxFromY, pxToY) + 40;
-  const width = maxX - minX;
-  const height = maxY - minY;
-  const relFrom = { x: pxFromX - minX, y: pxFromY - minY };
-  const relTo = { x: pxToX - minX, y: pxToY - minY };
-  const dx = relTo.x - relFrom.x;
-  const dy = relTo.y - relFrom.y;
+  const lFromX = fromX / 100 * ScalingArrow_LW;
+  const lFromY = fromY / 100 * ScalingArrow_LH;
+  const lToX = toX / 100 * ScalingArrow_LW;
+  const lToY = toY / 100 * ScalingArrow_LH;
+  const dx = lToX - lFromX;
+  const dy = lToY - lFromY;
   const distance = Math.sqrt(dx * dx + dy * dy);
   const strokeDasharray = distance;
   const strokeDashoffset = distance * (1 - progress);
-  const angle = Math.atan2(dy, dx);
-  const angleDeg = angle * 180 / Math.PI;
-  const currentX = relFrom.x + dx * progress;
-  const currentY = relFrom.y + dy * progress;
+  const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+  const tipX = lFromX + dx * progress;
+  const tipY = lFromY + dy * progress;
   const packetCount = 3;
   const packets = Array.from({ length: packetCount }).map((_, i) => {
     const offset = i / packetCount * distance;
     const currentDistance = (frame * flowSpeed + offset) % distance;
-    const packetProgress = currentDistance / distance;
+    const t = currentDistance / distance;
     return {
-      x: relFrom.x + dx * packetProgress,
-      y: relFrom.y + dy * packetProgress,
-      opacity: packetProgress > 0.05 && packetProgress < 0.95 ? 1 : 0
-      // fade at boundaries
+      x: lFromX + dx * t,
+      y: lFromY + dy * t,
+      opacity: t > 0.05 && t < 0.95 ? 1 : 0
     };
   });
-  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
-    "svg",
-    {
-      style: {
-        position: "absolute",
-        left: minX,
-        top: minY,
-        width,
-        height,
-        pointerEvents: "none"
-      },
-      viewBox: `0 0 ${width} ${height}`,
-      children: [
-        /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: `glow-${color.replace("#", "")}`, x: "-20%", y: "-20%", width: "140%", height: "140%", children: [
-          /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "3", result: "blur" }),
-          /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
-            /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "blur" }),
-            /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
-          ] })
-        ] }) }),
-        /* @__PURE__ */ (0,jsx_runtime.jsx)(
-          "path",
-          {
-            d: `M ${relFrom.x} ${relFrom.y} L ${relTo.x} ${relTo.y}`,
-            fill: "none",
-            stroke: color,
-            strokeWidth: "3",
-            strokeLinecap: "round",
-            opacity: 0.4,
-            strokeDasharray,
-            strokeDashoffset,
-            style: {
-              filter: `url(#glow-${color.replace("#", "")})`
+  return (
+    // Full-cover SVG — fills the parent PanelCell exactly.
+    // viewBox="0 0 1920 1080" + preserveAspectRatio="none" means every point at
+    // (x/100*1920, y/100*1080) lands at the same visual position as CSS left:x% top:y%.
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+      "svg",
+      {
+        style: {
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          pointerEvents: "none",
+          overflow: "visible"
+        },
+        viewBox: `0 0 ${ScalingArrow_LW} ${ScalingArrow_LH}`,
+        preserveAspectRatio: "none",
+        children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: `arrow-glow-${color.replace("#", "")}`, children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "4", result: "blur" }),
+            /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "blur" }),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+            ] })
+          ] }) }),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "line",
+            {
+              x1: lFromX,
+              y1: lFromY,
+              x2: lToX,
+              y2: lToY,
+              stroke: color,
+              strokeWidth: "3",
+              strokeLinecap: "round",
+              opacity: 0.3,
+              strokeDasharray,
+              strokeDashoffset,
+              style: { filter: `url(#arrow-glow-${color.replace("#", "")})` }
             }
-          }
-        ),
-        /* @__PURE__ */ (0,jsx_runtime.jsx)(
-          "path",
-          {
-            d: `M ${relFrom.x} ${relFrom.y} L ${currentX} ${currentY}`,
-            fill: "none",
-            stroke: color,
-            strokeWidth: "3.5",
-            strokeLinecap: "round",
-            opacity: 0.85,
-            strokeDasharray,
-            strokeDashoffset
-          }
-        ),
-        progress > 0.02 && /* @__PURE__ */ (0,jsx_runtime.jsx)(
-          "polygon",
-          {
-            points: `0,0 -${arrowHeadSize * 1.8},-${arrowHeadSize} -${arrowHeadSize * 1.8},${arrowHeadSize}`,
-            fill: color,
-            transform: `translate(${currentX}, ${currentY}) rotate(${angleDeg})`,
-            style: {
-              filter: `url(#glow-${color.replace("#", "")})`
+          ),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "line",
+            {
+              x1: lFromX,
+              y1: lFromY,
+              x2: tipX,
+              y2: tipY,
+              stroke: color,
+              strokeWidth: "4",
+              strokeLinecap: "round",
+              opacity: 0.9
             }
-          }
-        ),
-        animateFlow && progress > 0.95 && /* @__PURE__ */ (0,jsx_runtime.jsx)(jsx_runtime.Fragment, { children: packets.map((packet, index) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
-          "circle",
-          {
-            cx: packet.x,
-            cy: packet.y,
-            r: "5",
-            fill: color,
-            opacity: packet.opacity * 0.9,
-            style: {
-              filter: `url(#glow-${color.replace("#", "")})`
+          ),
+          progress > 0.02 && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "polygon",
+            {
+              points: `0,0 ${-arrowHeadSize * 2},-${arrowHeadSize} ${-arrowHeadSize * 2},${arrowHeadSize}`,
+              fill: color,
+              opacity: 0.95,
+              transform: `translate(${tipX},${tipY}) rotate(${angleDeg})`,
+              style: { filter: `url(#arrow-glow-${color.replace("#", "")})` }
             }
-          },
-          index
-        )) })
-      ]
-    }
+          ),
+          animateFlow && progress > 0.95 && packets.map((p, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "circle",
+            {
+              cx: p.x,
+              cy: p.y,
+              r: "7",
+              fill: color,
+              opacity: p.opacity * 0.9,
+              style: { filter: `url(#arrow-glow-${color.replace("#", "")})` }
+            },
+            i
+          ))
+        ]
+      }
+    )
   );
 };
 
@@ -2519,7 +2544,7 @@ const ArchitectureDiagramSchema = external.object({
   accentColor: external.string().optional()
 });
 const ArchitectureDiagram = ({
-  title,
+  title: _title,
   nodes = [],
   connections = [],
   accentColor = "#38BDF8"
@@ -2539,85 +2564,82 @@ const ArchitectureDiagram = ({
     durationInFrames: 45
   });
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
-  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm.AbsoluteFill, { style: { backgroundColor: "transparent" }, children: [
-    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { className: "absolute top-16 left-16 z-10", children: /* @__PURE__ */ (0,jsx_runtime.jsx)("h2", { className: "text-5xl font-black text-white tracking-tight drop-shadow-lg", children: title }) }),
-    /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm.AbsoluteFill, { children: [
-      connections.map((conn, idx) => {
-        const fromNode = nodeMap.get(conn.fromId);
-        const toNode = nodeMap.get(conn.toId);
-        if (!fromNode || !toNode) return null;
-        if (conn.type === "stream") {
-          return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { opacity: Math.min(1, connectionRevealProgress * 2) }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
-            DataStream,
-            {
-              fromX: fromNode.x,
-              fromY: fromNode.y,
-              toX: toNode.x,
-              toY: toNode.y,
-              color: accentColor,
-              particleCount: 4
-            }
-          ) }, `conn-${idx}`);
-        } else {
-          return /* @__PURE__ */ (0,jsx_runtime.jsx)(
-            ScalingArrow,
-            {
-              fromX: fromNode.x,
-              fromY: fromNode.y,
-              toX: toNode.x,
-              toY: toNode.y,
-              color: accentColor,
-              progress: connectionRevealProgress,
-              animateFlow: true
-            },
-            `conn-${idx}`
-          );
-        }
-      }),
-      nodes.map((node, idx) => {
-        var _a, _b;
-        const scale = (0,esm.interpolate)(nodeRevealProgress(idx), [0, 1], [0.5, 1], {
-          extrapolateRight: "clamp",
-          extrapolateLeft: "clamp"
-        });
-        const opacity = (0,esm.interpolate)(nodeRevealProgress(idx), [0, 1], [0, 1], {
-          extrapolateRight: "clamp",
-          extrapolateLeft: "clamp"
-        });
-        if (node.type === "server" || node.type === "loadBalancer") {
-          return /* @__PURE__ */ (0,jsx_runtime.jsx)(
-            ServerRack,
-            {
-              x: node.x,
-              y: node.y,
-              scale,
-              opacity,
-              label: node.label,
-              isLoadBalancer: node.type === "loadBalancer",
-              cpu: (_a = node.metrics) == null ? void 0 : _a.cpu,
-              ram: (_b = node.metrics) == null ? void 0 : _b.ram,
-              color: node.type === "loadBalancer" ? "#EAB308" : accentColor
-            },
-            node.id
-          );
-        }
-        const icon = node.type === "database" ? "\u{1F4BE}" : "\u{1F4BB}";
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.AbsoluteFill, { style: { backgroundColor: "transparent" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm.AbsoluteFill, { children: [
+    connections.map((conn, idx) => {
+      const fromNode = nodeMap.get(conn.fromId);
+      const toNode = nodeMap.get(conn.toId);
+      if (!fromNode || !toNode) return null;
+      if (conn.type === "stream") {
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { opacity: Math.min(1, connectionRevealProgress * 2) }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          DataStream,
+          {
+            fromX: fromNode.x,
+            fromY: fromNode.y,
+            toX: toNode.x,
+            toY: toNode.y,
+            color: accentColor,
+            particleCount: 4
+          }
+        ) }, `conn-${idx}`);
+      } else {
         return /* @__PURE__ */ (0,jsx_runtime.jsx)(
-          GlowingNode,
+          ScalingArrow,
+          {
+            fromX: fromNode.x,
+            fromY: fromNode.y,
+            toX: toNode.x,
+            toY: toNode.y,
+            color: accentColor,
+            progress: connectionRevealProgress,
+            animateFlow: true
+          },
+          `conn-${idx}`
+        );
+      }
+    }),
+    nodes.map((node, idx) => {
+      var _a, _b;
+      const scale = (0,esm.interpolate)(nodeRevealProgress(idx), [0, 1], [0.5, 1], {
+        extrapolateRight: "clamp",
+        extrapolateLeft: "clamp"
+      });
+      const opacity = (0,esm.interpolate)(nodeRevealProgress(idx), [0, 1], [0, 1], {
+        extrapolateRight: "clamp",
+        extrapolateLeft: "clamp"
+      });
+      if (node.type === "server" || node.type === "loadBalancer") {
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          ServerRack,
           {
             x: node.x,
             y: node.y,
             scale,
             opacity,
             label: node.label,
-            icon,
-            color: node.type === "database" ? "#10b981" : "#8b5cf6"
+            isLoadBalancer: node.type === "loadBalancer",
+            cpu: (_a = node.metrics) == null ? void 0 : _a.cpu,
+            ram: (_b = node.metrics) == null ? void 0 : _b.ram,
+            color: node.type === "loadBalancer" ? "#EAB308" : accentColor
           },
           node.id
         );
-      })
-    ] })
-  ] });
+      }
+      const icon = node.type === "database" ? "\u{1F4BE}" : "\u{1F4BB}";
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        GlowingNode,
+        {
+          x: node.x,
+          y: node.y,
+          scale,
+          opacity,
+          label: node.label,
+          icon,
+          color: node.type === "database" ? "#10b981" : "#8b5cf6"
+        },
+        node.id
+      );
+    })
+  ] }) });
 };
 
 ;// ./src/components/SplitScreen.tsx
@@ -4050,7 +4072,4731 @@ const BarChart = ({
   );
 };
 
+;// ./src/components/PacketFlow.tsx
+
+
+
+
+const PacketNodeSchema = external.object({
+  id: external.string(),
+  label: external.string(),
+  x: external.number(),
+  y: external.number(),
+  type: external["enum"](["client", "server", "database", "router", "cdn"]).optional(),
+  sublabel: external.string().optional()
+});
+const PacketEdgeSchema = external.object({
+  from: external.string(),
+  to: external.string(),
+  label: external.string().optional(),
+  color: external.string().optional()
+});
+const PacketFlowSchema = external.object({
+  title: external.string().optional(),
+  nodes: external.array(PacketNodeSchema),
+  edges: external.array(PacketEdgeSchema),
+  accentColor: external.string().optional(),
+  packetInterval: external.number().optional()
+});
+const PacketFlow_LW = 1920;
+const PacketFlow_LH = 1080;
+const PACKET_DURATION = 52;
+const PACKETS_PER_EDGE = 4;
+const TYPE_COLOR = {
+  client: "#6366f1",
+  server: "#10b981",
+  database: "#f59e0b",
+  router: "#22d3ee",
+  cdn: "#8b5cf6"
+};
+const TYPE_SYMBOL = {
+  client: "\u25C9",
+  server: "\u25A3",
+  database: "\u2B1F",
+  router: "\u25C8",
+  cdn: "\u25CE"
+};
+const PacketFlow = ({
+  title,
+  nodes,
+  edges,
+  accentColor = "#22d3ee",
+  packetInterval = 18
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 20], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", width: "100%", height: "100%", overflow: "hidden" }, children: [
+    title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      "div",
+      {
+        style: {
+          position: "absolute",
+          top: 36,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          zIndex: 2,
+          opacity: titleOpacity
+        },
+        children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              color: "#f1f5f9",
+              fontSize: 52,
+              fontWeight: 800,
+              margin: 0,
+              letterSpacing: "-0.02em"
+            },
+            children: title
+          }
+        )
+      }
+    ),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+      "svg",
+      {
+        style: {
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          overflow: "visible"
+        },
+        viewBox: `0 0 ${PacketFlow_LW} ${PacketFlow_LH}`,
+        preserveAspectRatio: "none",
+        children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsxs)("defs", { children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "pf-glow", x: "-60%", y: "-60%", width: "220%", height: "220%", children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "12", result: "coloredBlur" }),
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "coloredBlur" }),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "pf-node-shadow", x: "-40%", y: "-40%", width: "180%", height: "180%", children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "7", result: "coloredBlur" }),
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "coloredBlur" }),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+              ] })
+            ] })
+          ] }),
+          edges.map((edge, ei) => {
+            const from = nodeMap.get(edge.from);
+            const to = nodeMap.get(edge.to);
+            if (!from || !to) return null;
+            const x1 = from.x / 100 * PacketFlow_LW;
+            const y1 = from.y / 100 * PacketFlow_LH;
+            const x2 = to.x / 100 * PacketFlow_LW;
+            const y2 = to.y / 100 * PacketFlow_LH;
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            const edgeColor = edge.color || accentColor;
+            const edgeDelay = ei * 10;
+            const lineProgress = (0,esm.interpolate)(frame, [edgeDelay, edgeDelay + 28], [0, 1], {
+              easing: esm.Easing.out(esm.Easing.cubic),
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp"
+            });
+            const packets = Array.from({ length: PACKETS_PER_EDGE }, (_, pi) => {
+              const pStart = edgeDelay + 35 + pi * packetInterval;
+              const t = (0,esm.interpolate)(frame, [pStart, pStart + PACKET_DURATION], [0, 1], {
+                easing: esm.Easing.inOut(esm.Easing.quad),
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp"
+              });
+              if (t <= 0 || t >= 1) return null;
+              return { t, key: pi, color: edgeColor };
+            });
+            const labelReveal = (0,esm.interpolate)(frame, [edgeDelay + 15, edgeDelay + 30], [0, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp"
+            });
+            return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "line",
+                {
+                  x1,
+                  y1,
+                  x2,
+                  y2,
+                  stroke: "#1e293b",
+                  strokeWidth: 6,
+                  strokeLinecap: "round"
+                }
+              ),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "line",
+                {
+                  x1,
+                  y1,
+                  x2,
+                  y2,
+                  stroke: edgeColor,
+                  strokeWidth: 3,
+                  strokeLinecap: "round",
+                  strokeDasharray: len,
+                  strokeDashoffset: len * (1 - lineProgress),
+                  opacity: 0.55
+                }
+              ),
+              packets.map((p) => {
+                if (!p) return null;
+                const px = x1 + dx * p.t;
+                const py = y1 + dy * p.t;
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { filter: "url(#pf-glow)", children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 16, fill: p.color, opacity: 0.3 }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 9, fill: p.color }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 4, fill: "white", opacity: 0.9 })
+                ] }, `pkt-${ei}-${p.key}`);
+              }),
+              edge.label && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "text",
+                {
+                  x: (x1 + x2) / 2,
+                  y: (y1 + y2) / 2 - 22,
+                  fill: edgeColor,
+                  fontSize: 28,
+                  fontWeight: "600",
+                  textAnchor: "middle",
+                  opacity: labelReveal,
+                  style: { fontFamily: "Inter, sans-serif" },
+                  children: edge.label
+                }
+              )
+            ] }, `edge-${ei}`);
+          }),
+          nodes.map((node, ni) => {
+            const cx = node.x / 100 * PacketFlow_LW;
+            const cy = node.y / 100 * PacketFlow_LH;
+            const delay = ni * 12;
+            const color = TYPE_COLOR[node.type || "server"] || accentColor;
+            const symbol = TYPE_SYMBOL[node.type || "server"] || "\u25C9";
+            const scale = (0,esm.interpolate)(frame, [delay, delay + 20], [0, 1], {
+              easing: esm.Easing.bezier(0.34, 1.56, 0.64, 1),
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp"
+            });
+            const labelOpacity = (0,esm.interpolate)(frame, [delay + 10, delay + 25], [0, 1], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp"
+            });
+            return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${cx},${cy}) scale(${scale})`, children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { r: 66, fill: "none", stroke: color, strokeWidth: 1.5, opacity: 0.2 }),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "circle",
+                  {
+                    r: 50,
+                    fill: "#0f172a",
+                    stroke: color,
+                    strokeWidth: 3,
+                    filter: "url(#pf-node-shadow)"
+                  }
+                ),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { r: 46, fill: `${color}14` }),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "text",
+                  {
+                    y: 14,
+                    textAnchor: "middle",
+                    fill: color,
+                    fontSize: 38,
+                    fontWeight: "900",
+                    style: { fontFamily: "Inter, sans-serif" },
+                    children: symbol
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "text",
+                {
+                  x: cx,
+                  y: cy + 70,
+                  textAnchor: "middle",
+                  fill: "white",
+                  fontSize: 30,
+                  fontWeight: "700",
+                  opacity: labelOpacity,
+                  style: { fontFamily: "Inter, sans-serif" },
+                  children: node.label
+                }
+              ),
+              node.sublabel && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "text",
+                {
+                  x: cx,
+                  y: cy + 102,
+                  textAnchor: "middle",
+                  fill: "#64748b",
+                  fontSize: 22,
+                  fontWeight: "500",
+                  opacity: labelOpacity,
+                  style: { fontFamily: "Inter, sans-serif" },
+                  children: node.sublabel
+                }
+              )
+            ] }, `node-${ni}`);
+          })
+        ]
+      }
+    )
+  ] });
+};
+
+;// ./src/components/HttpExchange.tsx
+
+
+
+
+const HttpExchangeSchema = external.object({
+  title: external.string().optional(),
+  method: external["enum"](["GET", "POST", "PUT", "DELETE", "PATCH"]).optional(),
+  path: external.string(),
+  host: external.string().optional(),
+  requestHeaders: external.record(external.string(), external.string()).optional(),
+  requestBody: external.string().optional(),
+  statusCode: external.number().optional(),
+  statusText: external.string().optional(),
+  responseHeaders: external.record(external.string(), external.string()).optional(),
+  responseBody: external.string().optional()
+});
+const METHOD_COLOR = {
+  GET: "#10b981",
+  POST: "#6366f1",
+  PUT: "#f59e0b",
+  DELETE: "#ef4444",
+  PATCH: "#8b5cf6"
+};
+function statusColor(code) {
+  if (code >= 200 && code < 300) return "#10b981";
+  if (code >= 300 && code < 400) return "#f59e0b";
+  if (code >= 400 && code < 500) return "#ef4444";
+  return "#dc2626";
+}
+function HttpExchange_tokenizeLine(line, isFirst, isResponse) {
+  if (isFirst) return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontWeight: 800 }, children: line });
+  if (line.trim() === "") return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: "\xA0" });
+  const colonIdx = line.indexOf(": ");
+  if (colonIdx > 0 && !line.startsWith("{") && !line.startsWith("[") && !line.startsWith(" ")) {
+    const key = line.slice(0, colonIdx + 1);
+    const val = line.slice(colonIdx + 1);
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: "#94a3b8" }, children: key }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: "#e2e8f0" }, children: val })
+    ] });
+  }
+  if (line.startsWith(" ") || line.startsWith("{") || line.startsWith("[") || line.startsWith("}") || line.startsWith("]")) {
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: "#7dd3fc" }, children: line });
+  }
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: line });
+}
+const Panel = ({ lines, reveal, badgeLabel, badgeColor, glowColor, isResponse }) => /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+  "div",
+  {
+    style: {
+      flex: 1,
+      background: "#0a0f1e",
+      border: `2px solid ${glowColor}40`,
+      borderRadius: 18,
+      padding: "28px 32px",
+      boxShadow: `0 0 50px ${glowColor}18, inset 0 1px 0 ${glowColor}20`,
+      opacity: reveal,
+      transform: `translateY(${(0,esm.interpolate)(reveal, [0, 1], [24, 0])}px)`,
+      display: "flex",
+      flexDirection: "column",
+      gap: 0,
+      overflow: "hidden"
+    },
+    children: [
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "span",
+        {
+          style: {
+            background: `${badgeColor}20`,
+            color: badgeColor,
+            padding: "5px 18px",
+            borderRadius: 8,
+            fontSize: 18,
+            fontWeight: 800,
+            border: `1.5px solid ${badgeColor}50`,
+            fontFamily: "'Fira Code', monospace",
+            letterSpacing: "0.05em"
+          },
+          children: badgeLabel
+        }
+      ) }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { height: 1, background: `${glowColor}20`, marginBottom: 20 } }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { fontFamily: "'Fira Code', 'Courier New', monospace", fontSize: 21, lineHeight: 1.75 }, children: lines.map((line, idx) => {
+        const lineDelay = idx * 0.06;
+        const lineReveal = (0,esm.interpolate)(reveal, [lineDelay, lineDelay + 0.18], [0, 1], {
+          easing: esm.Easing.out(esm.Easing.cubic),
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp"
+        });
+        return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "div",
+          {
+            style: {
+              opacity: lineReveal,
+              transform: `translateX(${(0,esm.interpolate)(lineReveal, [0, 1], [18, 0])}px)`,
+              whiteSpace: "pre",
+              color: "#e2e8f0",
+              minHeight: line.trim() === "" ? 12 : void 0
+            },
+            children: HttpExchange_tokenizeLine(line, idx === 0, isResponse)
+          },
+          idx
+        );
+      }) })
+    ]
+  }
+);
+const HttpExchange = ({
+  title,
+  method: methodProp,
+  path,
+  host = "api.example.com",
+  requestHeaders = {},
+  requestBody,
+  statusCode: statusCodeProp,
+  statusText,
+  responseHeaders = {},
+  responseBody
+}) => {
+  const method = methodProp ?? "GET";
+  const statusCode = statusCodeProp ?? 200;
+  const frame = (0,esm.useCurrentFrame)();
+  const mc = METHOD_COLOR[method] || "#6366f1";
+  const sc = statusColor(statusCode);
+  const resolvedStatusText = statusText ?? (statusCode === 200 ? "OK" : statusCode === 201 ? "Created" : statusCode === 404 ? "Not Found" : "Error");
+  const requestReveal = (0,esm.interpolate)(frame, [8, 45], [0, 1], {
+    easing: esm.Easing.out(esm.Easing.cubic),
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const arrowReveal = (0,esm.interpolate)(frame, [42, 58], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const responseReveal = (0,esm.interpolate)(frame, [55, 92], [0, 1], {
+    easing: esm.Easing.out(esm.Easing.cubic),
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const reqLines = [
+    `${method} ${path} HTTP/1.1`,
+    `Host: ${host}`,
+    ...Object.entries(requestHeaders).map(([k, v]) => `${k}: ${v}`),
+    ...requestBody ? ["", ...requestBody.split("\n")] : []
+  ];
+  const resLines = [
+    `HTTP/1.1 ${statusCode} ${resolvedStatusText}`,
+    ...Object.entries(responseHeaders).map(([k, v]) => `${k}: ${v}`),
+    ...responseBody ? ["", ...responseBody.split("\n")] : []
+  ];
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "48px 60px",
+        boxSizing: "border-box",
+        gap: 32
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              color: "#f1f5f9",
+              fontSize: 52,
+              fontWeight: 800,
+              margin: 0,
+              textAlign: "center",
+              letterSpacing: "-0.02em",
+              opacity: titleOpacity
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { flex: 1, display: "flex", gap: 28, alignItems: "stretch", minHeight: 0 }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            Panel,
+            {
+              lines: reqLines,
+              reveal: requestReveal,
+              badgeLabel: method,
+              badgeColor: mc,
+              glowColor: mc,
+              isResponse: false
+            }
+          ),
+          /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+            "div",
+            {
+              style: {
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                opacity: arrowReveal,
+                flexShrink: 0,
+                width: 56
+              },
+              children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: "#22d3ee", fontSize: 40, lineHeight: 1 }, children: "\u2192" }),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { width: 2, height: 32, background: "#1e293b" } }),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: "#22d3ee", fontSize: 40, lineHeight: 1, transform: "scaleX(-1)" }, children: "\u2192" })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            Panel,
+            {
+              lines: resLines,
+              reveal: responseReveal,
+              badgeLabel: `${statusCode} ${resolvedStatusText}`,
+              badgeColor: sc,
+              glowColor: sc,
+              isResponse: true
+            }
+          )
+        ] })
+      ]
+    }
+  );
+};
+
+;// ./src/components/HashRing.tsx
+
+
+
+
+const HashRingSchema = external.object({
+  title: external.string().optional(),
+  /** Physical server names — each gets a color from the palette. */
+  servers: external.array(external.string()).min(2).max(6),
+  /** Virtual-node count per server (controls how evenly keys distribute). */
+  virtualNodesPerServer: external.number().min(2).max(64).optional(),
+  /** Optional lookup keys to highlight — they sweep around the ring to the next server clockwise. */
+  lookupKeys: external.array(external.string()).optional(),
+  /** Total tick marks around the ring (key-space granularity). */
+  ticks: external.number().min(24).max(360).optional(),
+  accentColor: external.string().optional(),
+  showLegend: external.boolean().optional()
+});
+const SERVER_PALETTE = [
+  "#38BDF8",
+  // sky
+  "#f59e0b",
+  // amber
+  "#a78bfa",
+  // violet
+  "#34d399",
+  // emerald
+  "#f472b6",
+  // pink
+  "#fb923c"
+  // orange
+];
+const HashRing = ({
+  title,
+  servers,
+  virtualNodesPerServer = 3,
+  lookupKeys = [],
+  ticks = 96,
+  accentColor = "#38BDF8",
+  showLegend = true
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const cx = 1180;
+  const cy = 540;
+  const radius = 360;
+  const ringStroke = 2;
+  const rng = (seed) => {
+    let s = seed;
+    return () => {
+      s = (s * 9301 + 49297) % 233280;
+      return s / 233280;
+    };
+  };
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 20], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const rand = rng(42);
+  const vnodes = [];
+  servers.forEach((_, sIdx) => {
+    for (let v = 0; v < virtualNodesPerServer; v++) {
+      vnodes.push({
+        serverIdx: sIdx,
+        angle: rand() * Math.PI * 2,
+        // Offset slightly inside/outside ring for visual stacking
+        r: radius + (v % 2 === 0 ? -22 : 22)
+      });
+    }
+  });
+  const serverSprings = servers.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (10 + i * 10),
+      fps,
+      config: { damping: 14, stiffness: 120 },
+      durationInFrames: 30
+    })
+  );
+  const lookupStart = 20 + servers.length * 10 + 10;
+  const lookupDuration = 60;
+  const lookupProgress = (keyIdx) => (0,esm.interpolate)(
+    frame,
+    [lookupStart + keyIdx * 30, lookupStart + keyIdx * 30 + lookupDuration],
+    [0, 1],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: esm.Easing.bezier(0.65, 0, 0.35, 1)
+    }
+  );
+  const keyAngles = lookupKeys.map((_, i) => {
+    const r = rng(7 + i * 13);
+    return r() * Math.PI * 2;
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 48,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 12,
+              opacity: titleOpacity
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "p",
+          {
+            style: {
+              color: "#94a3b8",
+              fontSize: 18,
+              margin: 0,
+              opacity: titleOpacity
+            },
+            children: "Keys and servers are hashed onto the ring; each key walks clockwise to the next server."
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { flex: 1, position: "relative" }, children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+            "svg",
+            {
+              width: "100%",
+              height: "100%",
+              viewBox: "0 0 1920 1080",
+              style: { position: "absolute", inset: 0 },
+              children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "hash-ring-glow", x: "-20%", y: "-20%", width: "140%", height: "140%", children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "4" }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", {}),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+                  ] })
+                ] }) }),
+                Array.from({ length: ticks }).map((_, i) => {
+                  const a = i / ticks * Math.PI * 2 - Math.PI / 2;
+                  const x1 = cx + Math.cos(a) * (radius - 10);
+                  const y1 = cy + Math.sin(a) * (radius - 10);
+                  const x2 = cx + Math.cos(a) * radius;
+                  const y2 = cy + Math.sin(a) * radius;
+                  return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "line",
+                    {
+                      x1,
+                      y1,
+                      x2,
+                      y2,
+                      stroke: "#334155",
+                      strokeWidth: 1,
+                      opacity: 0.35
+                    },
+                    `tick-${i}`
+                  );
+                }),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "circle",
+                  {
+                    cx,
+                    cy,
+                    r: radius,
+                    fill: "none",
+                    stroke: accentColor,
+                    strokeWidth: ringStroke,
+                    opacity: 0.55,
+                    filter: "url(#hash-ring-glow)"
+                  }
+                ),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "circle",
+                  {
+                    cx,
+                    cy,
+                    r: radius - 1,
+                    fill: "none",
+                    stroke: "#1e293b",
+                    strokeWidth: ringStroke,
+                    opacity: 0.9
+                  }
+                ),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "text",
+                  {
+                    x: cx,
+                    y: cy - 12,
+                    textAnchor: "middle",
+                    fill: "#64748b",
+                    fontSize: 16,
+                    fontFamily: "Fira Code, monospace",
+                    opacity: titleOpacity,
+                    children: "HASH RING"
+                  }
+                ),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "text",
+                  {
+                    x: cx,
+                    y: cy + 18,
+                    textAnchor: "middle",
+                    fill: "#475569",
+                    fontSize: 14,
+                    fontFamily: "Fira Code, monospace",
+                    opacity: titleOpacity,
+                    children: "0 ... 2\xB3\xB2 \u2212 1"
+                  }
+                ),
+                vnodes.map((v, i) => {
+                  const x = cx + Math.cos(v.angle) * v.r;
+                  const y = cy + Math.sin(v.angle) * v.r;
+                  const color = SERVER_PALETTE[v.serverIdx % SERVER_PALETTE.length];
+                  const opacity = serverSprings[v.serverIdx];
+                  return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "circle",
+                    {
+                      cx: x,
+                      cy: y,
+                      r: 7,
+                      fill: color,
+                      opacity,
+                      style: { filter: `drop-shadow(0 0 6px ${color})` }
+                    },
+                    `vnode-${i}`
+                  );
+                }),
+                servers.map((name, sIdx) => {
+                  const myVnodes = vnodes.filter((v) => v.serverIdx === sIdx);
+                  let sx = 0, sy = 0;
+                  myVnodes.forEach((v) => {
+                    sx += Math.cos(v.angle);
+                    sy += Math.sin(v.angle);
+                  });
+                  const avgA = Math.atan2(sy / myVnodes.length, sx / myVnodes.length);
+                  const labelR = radius + 80;
+                  const x = cx + Math.cos(avgA) * labelR;
+                  const y = cy + Math.sin(avgA) * labelR;
+                  const color = SERVER_PALETTE[sIdx % SERVER_PALETTE.length];
+                  const sp = serverSprings[sIdx];
+                  const labelOpacity = sp;
+                  const scale = (0,esm.interpolate)(sp, [0, 1], [0.7, 1]);
+                  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                    "g",
+                    {
+                      transform: `translate(${x}, ${y}) scale(${scale})`,
+                      style: { opacity: labelOpacity, transformOrigin: `${x}px ${y}px` },
+                      children: [
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "line",
+                          {
+                            x1: cx + Math.cos(avgA) * radius - x,
+                            y1: cy + Math.sin(avgA) * radius - y,
+                            x2: 0,
+                            y2: 0,
+                            stroke: color,
+                            strokeWidth: 2,
+                            opacity: 0.4
+                          }
+                        ),
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "rect",
+                          {
+                            x: -60,
+                            y: -22,
+                            width: 120,
+                            height: 44,
+                            rx: 10,
+                            fill: "#0f1729",
+                            stroke: color,
+                            strokeWidth: 2,
+                            style: { filter: `drop-shadow(0 0 8px ${color}80)` }
+                          }
+                        ),
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "text",
+                          {
+                            x: 0,
+                            y: 6,
+                            textAnchor: "middle",
+                            fill: color,
+                            fontSize: 18,
+                            fontWeight: 800,
+                            fontFamily: "Inter, sans-serif",
+                            children: name
+                          }
+                        )
+                      ]
+                    },
+                    `srv-${sIdx}`
+                  );
+                }),
+                lookupKeys.map((keyName, keyIdx) => {
+                  const startA = keyAngles[keyIdx];
+                  const progress = lookupProgress(keyIdx);
+                  const sweepA = startA + progress * Math.PI;
+                  const x = cx + Math.cos(sweepA) * radius;
+                  const y = cy + Math.sin(sweepA) * radius;
+                  let targetServerIdx = 0;
+                  let smallestGap = Math.PI * 2;
+                  servers.forEach((_, sIdx) => {
+                    const myVnodes = vnodes.filter((v) => v.serverIdx === sIdx);
+                    let sx = 0, sy = 0;
+                    myVnodes.forEach((v) => {
+                      sx += Math.cos(v.angle);
+                      sy += Math.sin(v.angle);
+                    });
+                    const avgA = Math.atan2(sy / myVnodes.length, sx / myVnodes.length);
+                    let gap = avgA - startA;
+                    while (gap < 0) gap += Math.PI * 2;
+                    if (gap < smallestGap) {
+                      smallestGap = gap;
+                      targetServerIdx = sIdx;
+                    }
+                  });
+                  const color = SERVER_PALETTE[targetServerIdx % SERVER_PALETTE.length];
+                  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity: progress > 0 ? 1 : 0, children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "g",
+                      {
+                        style: {
+                          transformOrigin: `${cx}px ${cy}px`,
+                          transform: `rotate(${startA * 180 / Math.PI}deg)`
+                        },
+                        children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "line",
+                          {
+                            x1: cx + radius,
+                            y1: cy,
+                            x2: cx + radius + 40 * progress,
+                            y2: cy,
+                            stroke: color,
+                            strokeWidth: 4,
+                            style: { filter: `drop-shadow(0 0 8px ${color})` }
+                          }
+                        )
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "circle",
+                      {
+                        cx: x,
+                        cy: y,
+                        r: 9,
+                        fill: color,
+                        style: { filter: `drop-shadow(0 0 12px ${color})` }
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                      "g",
+                      {
+                        transform: `translate(${x + 16}, ${y - 28})`,
+                        style: { opacity: progress > 0.1 ? 1 : 0 },
+                        children: [
+                          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "rect",
+                            {
+                              x: 0,
+                              y: -14,
+                              width: Math.max(60, keyName.length * 9 + 12),
+                              height: 28,
+                              rx: 6,
+                              fill: "#0f1729",
+                              stroke: color,
+                              strokeWidth: 1.5
+                            }
+                          ),
+                          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "text",
+                            {
+                              x: 6,
+                              y: 5,
+                              fill: color,
+                              fontSize: 14,
+                              fontFamily: "Fira Code, monospace",
+                              fontWeight: 700,
+                              children: keyName
+                            }
+                          )
+                        ]
+                      }
+                    )
+                  ] }, `lookup-${keyIdx}`);
+                })
+              ]
+            }
+          ),
+          showLegend && /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+            "div",
+            {
+              style: {
+                position: "absolute",
+                left: 80,
+                top: 160,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                opacity: titleOpacity
+              },
+              children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 13,
+                      color: "#64748b",
+                      fontWeight: 800,
+                      letterSpacing: "0.15em",
+                      textTransform: "uppercase",
+                      fontFamily: "Inter, sans-serif"
+                    },
+                    children: "Servers"
+                  }
+                ),
+                servers.map((name, i) => /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      fontFamily: "Inter, sans-serif",
+                      opacity: serverSprings[i]
+                    },
+                    children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "div",
+                        {
+                          style: {
+                            width: 14,
+                            height: 14,
+                            borderRadius: "50%",
+                            backgroundColor: SERVER_PALETTE[i % SERVER_PALETTE.length],
+                            boxShadow: `0 0 10px ${SERVER_PALETTE[i % SERVER_PALETTE.length]}`
+                          }
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: "#cbd5e1", fontSize: 16, fontWeight: 600 }, children: name }),
+                      /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                        "span",
+                        {
+                          style: {
+                            color: "#475569",
+                            fontSize: 13,
+                            fontFamily: "Fira Code, monospace"
+                          },
+                          children: [
+                            "\xB7 ",
+                            virtualNodesPerServer,
+                            " vnodes"
+                          ]
+                        }
+                      )
+                    ]
+                  },
+                  name
+                ))
+              ]
+            }
+          )
+        ] })
+      ]
+    }
+  );
+};
+
+;// ./src/components/StateMachine.tsx
+
+
+
+
+const StateMachineSchema = external.object({
+  title: external.string().optional(),
+  /** State nodes. */
+  states: external.array(
+    external.object({
+      id: external.string(),
+      label: external.string(),
+      color: external.string().optional(),
+      /** Optional description that appears under the label. */
+      description: external.string().optional()
+    })
+  ),
+  /** Directed transitions between states. */
+  transitions: external.array(
+    external.object({
+      fromId: external.string(),
+      toId: external.string(),
+      label: external.string(),
+      /** Optional: highlight this transition (color pulses, others fade). */
+      highlight: external.boolean().optional()
+    })
+  ),
+  /** Optional id of the state to start "active" — pulses in primary color. */
+  activeStateId: external.string().optional(),
+  accentColor: external.string().optional()
+});
+const STATE_PALETTE = [
+  "#38BDF8",
+  "#f59e0b",
+  "#a78bfa",
+  "#34d399",
+  "#f472b6",
+  "#fb923c"
+];
+function layoutStates(count) {
+  const cx = 960;
+  const cy = 540;
+  const r = 260;
+  return Array.from({ length: count }, (_, i) => {
+    const angle = i / count * Math.PI * 2 - Math.PI / 2;
+    return {
+      x: cx + Math.cos(angle) * r,
+      y: cy + Math.sin(angle) * r
+    };
+  });
+}
+const StateMachine = ({
+  title,
+  states,
+  transitions,
+  activeStateId,
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const positions = layoutStates(states.length);
+  const stateById = new Map(states.map((s, i) => [s.id, { ...s, ...positions[i] }]));
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 20], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const stateSprings = states.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (15 + i * 8),
+      fps,
+      config: { damping: 14, stiffness: 140 },
+      durationInFrames: 30
+    })
+  );
+  const transitionStart = 15 + states.length * 8 + 10;
+  const transitionSprings = transitions.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (transitionStart + i * 8),
+      fps,
+      config: { damping: 14, stiffness: 120 },
+      durationInFrames: 35
+    })
+  );
+  const pulse = (0,esm.interpolate)(Math.sin(frame / 8), [-1, 1], [0.4, 1]);
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 48,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 12,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "p",
+          {
+            style: {
+              color: "#94a3b8",
+              fontSize: 18,
+              margin: 0,
+              marginBottom: 24,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: "Finite-state machine \u2014 events trigger transitions between states."
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { flex: 1, position: "relative" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "svg",
+          {
+            width: "100%",
+            height: "100%",
+            viewBox: "0 0 1920 1080",
+            style: { position: "absolute", inset: 0 },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)("defs", { children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "marker",
+                  {
+                    id: "sm-arrow",
+                    viewBox: "0 0 10 10",
+                    refX: "9",
+                    refY: "5",
+                    markerWidth: "8",
+                    markerHeight: "8",
+                    orient: "auto-start-reverse",
+                    children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: "#94a3b8" })
+                  }
+                ),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "marker",
+                  {
+                    id: "sm-arrow-active",
+                    viewBox: "0 0 10 10",
+                    refX: "9",
+                    refY: "5",
+                    markerWidth: "9",
+                    markerHeight: "9",
+                    orient: "auto-start-reverse",
+                    children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: accentColor })
+                  }
+                ),
+                /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "sm-glow", x: "-50%", y: "-50%", width: "200%", height: "200%", children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "6" }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", {}),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+                  ] })
+                ] })
+              ] }),
+              transitions.map((t, i) => {
+                const from = stateById.get(t.fromId);
+                const to = stateById.get(t.toId);
+                if (!from || !to) return null;
+                const sp = transitionSprings[i];
+                const isSelf = t.fromId === t.toId;
+                const isActive = !!t.highlight;
+                const BOX = 130;
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const ux = dx / dist;
+                const uy = dy / dist;
+                const x1 = from.x + ux * BOX;
+                const y1 = from.y + uy * BOX;
+                const x2 = to.x - ux * BOX;
+                const y2 = to.y - uy * BOX;
+                const color = isActive ? accentColor : "#94a3b8";
+                const opacity = sp * (isActive ? 1 : 0.6);
+                if (isSelf) {
+                  const loopR = 70;
+                  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity, children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "path",
+                      {
+                        d: `M ${from.x} ${from.y - BOX} A ${loopR} ${loopR} 0 1 1 ${from.x - 4} ${from.y - BOX}`,
+                        fill: "none",
+                        stroke: color,
+                        strokeWidth: 3,
+                        markerEnd: "url(#sm-arrow)",
+                        style: { filter: isActive ? `drop-shadow(0 0 6px ${color})` : void 0 }
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x: from.x,
+                        y: from.y - BOX - loopR - 6,
+                        textAnchor: "middle",
+                        fill: color,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        fontFamily: "Fira Code, monospace",
+                        children: t.label
+                      }
+                    )
+                  ] }, `t-${i}`);
+                }
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                const perpX = -uy * 30;
+                const perpY = ux * 30;
+                const cx = midX + perpX;
+                const cy = midY + perpY;
+                const pathLen = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) + 60;
+                const dashOffset = pathLen * (1 - sp);
+                const labelX = midX + perpX * 0.6;
+                const labelY = midY + perpY * 0.6;
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity, children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "path",
+                    {
+                      d: `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`,
+                      fill: "none",
+                      stroke: color,
+                      strokeWidth: isActive ? 4 : 3,
+                      strokeLinecap: "round",
+                      strokeDasharray: pathLen,
+                      strokeDashoffset: dashOffset,
+                      markerEnd: isActive ? "url(#sm-arrow-active)" : "url(#sm-arrow)",
+                      style: { filter: isActive ? `drop-shadow(0 0 6px ${color})` : void 0 }
+                    }
+                  ),
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${labelX}, ${labelY})`, children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "rect",
+                      {
+                        x: -Math.max(36, t.label.length * 5.5),
+                        y: -12,
+                        width: Math.max(72, t.label.length * 11),
+                        height: 24,
+                        rx: 6,
+                        fill: "#0f1729",
+                        stroke: isActive ? color : "#334155",
+                        strokeWidth: 1.5
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x: 0,
+                        y: 4,
+                        textAnchor: "middle",
+                        fill: isActive ? color : "#cbd5e1",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        fontFamily: "Fira Code, monospace",
+                        children: t.label
+                      }
+                    )
+                  ] })
+                ] }, `t-${i}`);
+              }),
+              states.map((s, i) => {
+                const pos = positions[i];
+                const sp = stateSprings[i];
+                const isActive = s.id === activeStateId;
+                const baseColor = s.color || STATE_PALETTE[i % STATE_PALETTE.length];
+                const scale = (0,esm.interpolate)(sp, [0, 1], [0.6, 1]);
+                const opacity = sp;
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                  "g",
+                  {
+                    transform: `translate(${pos.x}, ${pos.y}) scale(${scale})`,
+                    style: { opacity, transformOrigin: `${pos.x}px ${pos.y}px` },
+                    children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "rect",
+                        {
+                          x: -90,
+                          y: -50,
+                          width: 180,
+                          height: 100,
+                          rx: 16,
+                          fill: "#0f1729",
+                          stroke: isActive ? accentColor : baseColor,
+                          strokeWidth: isActive ? 4 : 2.5,
+                          style: {
+                            filter: isActive ? `drop-shadow(0 0 ${12 * pulse}px ${accentColor})` : `drop-shadow(0 0 6px ${baseColor}60)`
+                          }
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "text",
+                        {
+                          x: 0,
+                          y: s.description ? -8 : 8,
+                          textAnchor: "middle",
+                          fill: isActive ? accentColor : "#f1f5f9",
+                          fontSize: 20,
+                          fontWeight: 900,
+                          fontFamily: "Inter, sans-serif",
+                          children: s.label
+                        }
+                      ),
+                      s.description && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "text",
+                        {
+                          x: 0,
+                          y: 18,
+                          textAnchor: "middle",
+                          fill: "#94a3b8",
+                          fontSize: 12,
+                          fontFamily: "Fira Code, monospace",
+                          children: s.description
+                        }
+                      )
+                    ]
+                  },
+                  s.id
+                );
+              })
+            ]
+          }
+        ) })
+      ]
+    }
+  );
+};
+
+;// ./src/components/TreeHierarchy.tsx
+
+
+
+
+const TreeHierarchySchema = external.object({
+  title: external.string().optional(),
+  /** Root node. */
+  root: external.object({
+    label: external.string(),
+    description: external.string().optional(),
+    color: external.string().optional(),
+    children: external.array(
+      external.object({
+        label: external.string(),
+        description: external.string().optional(),
+        color: external.string().optional(),
+        children: external.array(
+          external.object({
+            label: external.string(),
+            description: external.string().optional(),
+            color: external.string().optional()
+          })
+        )
+      })
+    )
+  }),
+  accentColor: external.string().optional(),
+  direction: external["enum"](["down", "right"]).optional()
+});
+const CHILD_GAP_X = 200;
+const CHILD_GAP_Y = 140;
+const NODE_W = 170;
+const NODE_H = 70;
+function flatten(root) {
+  const nodes = [];
+  let nextId = 0;
+  const walk = (node, depth, parentId) => {
+    const id = `n${nextId++}`;
+    nodes.push({
+      id,
+      label: node.label,
+      description: node.description,
+      color: node.color,
+      depth,
+      x: 0,
+      y: 0,
+      parentId,
+      childrenIds: []
+    });
+    const children = node.children || [];
+    children.forEach((c) => {
+      const cid = walk(c, depth + 1, id);
+      const nodeRef = nodes.find((n) => n.id === id);
+      nodeRef.childrenIds.push(cid);
+    });
+    return id;
+  };
+  walk(root, 0);
+  const subtreeWidth = /* @__PURE__ */ new Map();
+  const computeWidth = (id) => {
+    const n = nodes.find((x) => x.id === id);
+    if (n.childrenIds.length === 0) {
+      subtreeWidth.set(id, 1);
+      return 1;
+    }
+    const w = n.childrenIds.reduce((acc, c) => acc + computeWidth(c), 0);
+    subtreeWidth.set(id, Math.max(1, w));
+    return subtreeWidth.get(id);
+  };
+  computeWidth(nodes[0].id);
+  const assignX = (id, leftEdge) => {
+    const w = subtreeWidth.get(id);
+    const n = nodes.find((x) => x.id === id);
+    n.x = leftEdge + w * CHILD_GAP_X / 2;
+    n.y = n.depth * CHILD_GAP_Y + 60;
+    let cursor = leftEdge;
+    n.childrenIds.forEach((cid) => {
+      assignX(cid, cursor);
+      cursor += subtreeWidth.get(cid) * CHILD_GAP_X;
+    });
+  };
+  assignX(nodes[0].id, 80);
+  return nodes;
+}
+const TreeHierarchy = ({
+  title,
+  root,
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const nodes = flatten(root);
+  const minX = Math.min(...nodes.map((n) => n.x)) - 120;
+  const maxX = Math.max(...nodes.map((n) => n.x)) + 120;
+  const minY = Math.min(...nodes.map((n) => n.y)) - 60;
+  const maxY = Math.max(...nodes.map((n) => n.y)) + 80;
+  const vbW = Math.max(1920, maxX - minX);
+  const vbH = Math.max(1080, maxY - minY);
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 20], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const orderedByDepth = [...nodes].sort((a, b) => a.depth - b.depth);
+  const springs = /* @__PURE__ */ new Map();
+  let cursor = 15;
+  orderedByDepth.forEach((n) => {
+    springs.set(
+      n.id,
+      (0,esm.spring)({
+        frame: frame - cursor,
+        fps,
+        config: { damping: 14, stiffness: 140 },
+        durationInFrames: 30
+      })
+    );
+    cursor += 7;
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "40px 60px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 44,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 8,
+              opacity: titleOpacity
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              position: "relative",
+              overflow: "hidden"
+            },
+            children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+              "svg",
+              {
+                width: "100%",
+                height: "100%",
+                viewBox: `${minX} ${minY} ${vbW} ${vbH}`,
+                style: { position: "absolute", inset: 0 },
+                children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "tree-glow", x: "-20%", y: "-20%", width: "140%", height: "140%", children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "3" }),
+                    /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", {}),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+                    ] })
+                  ] }) }),
+                  nodes.map(
+                    (n) => n.childrenIds.map((cid) => {
+                      const child = nodes.find((x) => x.id === cid);
+                      const sp = Math.min(springs.get(n.id), springs.get(cid));
+                      const x1 = n.x;
+                      const y1 = n.y + NODE_H / 2;
+                      const x2 = child.x;
+                      const y2 = child.y - NODE_H / 2;
+                      const midY = (y1 + y2) / 2;
+                      const pathLen = Math.abs(y2 - y1) + Math.abs(x2 - x1) + 100;
+                      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "path",
+                        {
+                          d: `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`,
+                          fill: "none",
+                          stroke: accentColor,
+                          strokeWidth: 2,
+                          opacity: sp * 0.7,
+                          strokeDasharray: pathLen,
+                          strokeDashoffset: pathLen * (1 - sp)
+                        },
+                        `e-${cid}`
+                      );
+                    })
+                  ),
+                  nodes.map((n) => {
+                    const sp = springs.get(n.id);
+                    const opacity = sp;
+                    const scale = (0,esm.interpolate)(sp, [0, 1], [0.85, 1]);
+                    const color = n.color || accentColor;
+                    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                      "g",
+                      {
+                        transform: `translate(${n.x}, ${n.y}) scale(${scale})`,
+                        style: {
+                          opacity,
+                          transformOrigin: `${n.x}px ${n.y}px`
+                        },
+                        children: [
+                          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "rect",
+                            {
+                              x: -NODE_W / 2,
+                              y: -NODE_H / 2,
+                              width: NODE_W,
+                              height: NODE_H,
+                              rx: 12,
+                              fill: "#0f1729",
+                              stroke: color,
+                              strokeWidth: 2.5,
+                              style: { filter: `drop-shadow(0 0 8px ${color}80)` }
+                            }
+                          ),
+                          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "text",
+                            {
+                              x: 0,
+                              y: n.description ? -4 : 6,
+                              textAnchor: "middle",
+                              fill: "#f1f5f9",
+                              fontSize: 16,
+                              fontWeight: 800,
+                              fontFamily: "Inter, sans-serif",
+                              children: n.label
+                            }
+                          ),
+                          n.description && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "text",
+                            {
+                              x: 0,
+                              y: 16,
+                              textAnchor: "middle",
+                              fill: "#94a3b8",
+                              fontSize: 11,
+                              fontFamily: "Fira Code, monospace",
+                              children: n.description
+                            }
+                          )
+                        ]
+                      },
+                      n.id
+                    );
+                  })
+                ]
+              }
+            )
+          }
+        )
+      ]
+    }
+  );
+};
+
+;// ./src/components/SequenceDiagram.tsx
+
+
+
+
+const SequenceDiagramSchema = external.object({
+  title: external.string().optional(),
+  /** Actors (lifelines) shown at the top, evenly distributed across the canvas. */
+  actors: external.array(external.string()).min(2).max(6),
+  /** Time-ordered messages. Each goes from one actor to another. */
+  messages: external.array(
+    external.object({
+      fromIdx: external.number().int().min(0),
+      toIdx: external.number().int().min(0),
+      label: external.string(),
+      /** Sync = solid arrow, return = dashed arrow. */
+      kind: external["enum"](["sync", "return", "async"]).optional(),
+      /** If true, the message gets a special highlight color (latest event). */
+      active: external.boolean().optional()
+    })
+  ),
+  /** Optional activation notes — start/end index of message that "activates" each actor. */
+  activations: external.array(
+    external.object({
+      actorIdx: external.number().int().min(0),
+      startMessage: external.number().int().min(0),
+      endMessage: external.number().int().min(0),
+      label: external.string().optional()
+    })
+  ).optional(),
+  accentColor: external.string().optional()
+});
+const ACTOR_PALETTE = [
+  "#38BDF8",
+  "#f59e0b",
+  "#a78bfa",
+  "#34d399",
+  "#f472b6",
+  "#fb923c"
+];
+const SequenceDiagram = ({
+  title,
+  actors,
+  messages,
+  activations = [],
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const STAGE_LEFT = 140;
+  const STAGE_RIGHT = 1820;
+  const ACTOR_Y = 110;
+  const MSG_START_Y = 200;
+  const MSG_GAP = 56;
+  const bottom = MSG_START_Y + messages.length * MSG_GAP + 40;
+  const actorX = (i) => STAGE_LEFT + (STAGE_RIGHT - STAGE_LEFT) * i / (actors.length - 1);
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const actorSprings = actors.map(
+    (_actor, i) => (
+      // eslint-disable-line @typescript-eslint/no-unused-vars
+      (0,esm.spring)({
+        frame,
+        fps,
+        config: { damping: 14, stiffness: 140 },
+        durationInFrames: 30
+      })
+    )
+  );
+  const messageSprings = messages.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (15 + i * 12),
+      fps,
+      config: { damping: 14, stiffness: 140 },
+      durationInFrames: 30
+    })
+  );
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "40px 60px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 42,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 8,
+              opacity: titleOpacity
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { flex: 1, position: "relative" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "svg",
+          {
+            width: "100%",
+            height: "100%",
+            viewBox: `0 0 1920 ${bottom}`,
+            preserveAspectRatio: "xMidYMid meet",
+            style: { position: "absolute", inset: 0 },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)("defs", { children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "marker",
+                  {
+                    id: "seq-arrow-sync",
+                    viewBox: "0 0 10 10",
+                    refX: "9",
+                    refY: "5",
+                    markerWidth: "8",
+                    markerHeight: "8",
+                    orient: "auto-start-reverse",
+                    children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: "#cbd5e1" })
+                  }
+                ),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "marker",
+                  {
+                    id: "seq-arrow-active",
+                    viewBox: "0 0 10 10",
+                    refX: "9",
+                    refY: "5",
+                    markerWidth: "9",
+                    markerHeight: "9",
+                    orient: "auto-start-reverse",
+                    children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: accentColor })
+                  }
+                ),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "marker",
+                  {
+                    id: "seq-arrow-async",
+                    viewBox: "0 0 10 10",
+                    refX: "9",
+                    refY: "5",
+                    markerWidth: "9",
+                    markerHeight: "9",
+                    orient: "auto-start-reverse",
+                    children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: "#a78bfa" })
+                  }
+                )
+              ] }),
+              actors.map((name, i) => {
+                const x = actorX(i);
+                const sp = actorSprings[i];
+                return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "line",
+                  {
+                    x1: x,
+                    y1: ACTOR_Y + 30,
+                    x2: x,
+                    y2: bottom - 20,
+                    stroke: "#475569",
+                    strokeWidth: 2,
+                    strokeDasharray: "6 8",
+                    opacity: sp * 0.6
+                  },
+                  `life-${i}`
+                );
+              }),
+              actors.map((name, i) => {
+                const x = actorX(i);
+                const sp = actorSprings[i];
+                const color = ACTOR_PALETTE[i % ACTOR_PALETTE.length];
+                const scale = (0,esm.interpolate)(sp, [0, 1], [0.7, 1]);
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                  "g",
+                  {
+                    transform: `translate(${x}, ${ACTOR_Y}) scale(${scale})`,
+                    style: { opacity: sp, transformOrigin: `${x}px ${ACTOR_Y}px` },
+                    children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "rect",
+                        {
+                          x: -90,
+                          y: -26,
+                          width: 180,
+                          height: 52,
+                          rx: 12,
+                          fill: "#0f1729",
+                          stroke: color,
+                          strokeWidth: 2.5,
+                          style: { filter: `drop-shadow(0 0 8px ${color}80)` }
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "text",
+                        {
+                          x: 0,
+                          y: 6,
+                          textAnchor: "middle",
+                          fill: color,
+                          fontSize: 16,
+                          fontWeight: 800,
+                          fontFamily: "Inter, sans-serif",
+                          children: name
+                        }
+                      )
+                    ]
+                  },
+                  `actor-${i}`
+                );
+              }),
+              activations.map((act, i) => {
+                const x = actorX(act.actorIdx);
+                const y1 = MSG_START_Y + act.startMessage * MSG_GAP - 12;
+                const y2 = MSG_START_Y + act.endMessage * MSG_GAP + 12;
+                const sp = Math.min(
+                  messageSprings[act.startMessage] ?? 0,
+                  messageSprings[act.endMessage] ?? 0
+                );
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity: sp * 0.95, children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "rect",
+                    {
+                      x: x - 7,
+                      y: y1,
+                      width: 14,
+                      height: y2 - y1,
+                      fill: accentColor,
+                      opacity: 0.85,
+                      rx: 3,
+                      style: { filter: `drop-shadow(0 0 6px ${accentColor})` }
+                    }
+                  ),
+                  act.label && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "text",
+                    {
+                      x: x + 14,
+                      y: y1 + 14,
+                      fill: "#cbd5e1",
+                      fontSize: 11,
+                      fontFamily: "Fira Code, monospace",
+                      children: act.label
+                    }
+                  )
+                ] }, `act-${i}`);
+              }),
+              messages.map((msg, i) => {
+                const y = MSG_START_Y + i * MSG_GAP;
+                const fromX = actorX(msg.fromIdx);
+                const toX = actorX(msg.toIdx);
+                const sp = messageSprings[i];
+                const isActive = !!msg.active;
+                const kind = msg.kind || "sync";
+                const isReturn = kind === "return";
+                const isAsync = kind === "async";
+                const color = isActive ? accentColor : isAsync ? "#a78bfa" : isReturn ? "#94a3b8" : "#cbd5e1";
+                const stroke = isReturn ? "6 6" : void 0;
+                const marker = isActive ? "url(#seq-arrow-active)" : isAsync ? "url(#seq-arrow-async)" : "url(#seq-arrow-sync)";
+                const x1 = fromX;
+                const x2 = toX;
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity: sp, children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "line",
+                    {
+                      x1,
+                      y1: y,
+                      x2,
+                      y2: y,
+                      stroke: color,
+                      strokeWidth: isActive ? 4 : 3,
+                      strokeDasharray: stroke,
+                      markerEnd: marker,
+                      opacity: isReturn ? 0.75 : 1,
+                      style: {
+                        filter: isActive ? `drop-shadow(0 0 6px ${color})` : void 0
+                      }
+                    }
+                  ),
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                    "g",
+                    {
+                      transform: `translate(${(x1 + x2) / 2}, ${y - 18})`,
+                      style: {
+                        opacity: sp
+                      },
+                      children: [
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "rect",
+                          {
+                            x: -Math.max(40, msg.label.length * 5.5),
+                            y: -12,
+                            width: Math.max(80, msg.label.length * 11),
+                            height: 22,
+                            rx: 6,
+                            fill: "#0f1729",
+                            stroke: color,
+                            strokeWidth: 1.5
+                          }
+                        ),
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "text",
+                          {
+                            x: 0,
+                            y: 4,
+                            textAnchor: "middle",
+                            fill: color,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            fontFamily: "Fira Code, monospace",
+                            children: msg.label
+                          }
+                        )
+                      ]
+                    }
+                  )
+                ] }, `msg-${i}`);
+              })
+            ]
+          }
+        ) })
+      ]
+    }
+  );
+};
+
+;// ./src/components/LineChart.tsx
+
+
+
+
+const LineChartSchema = external.object({
+  title: external.string().optional(),
+  /** X-axis tick labels (e.g. years, request rates). */
+  xLabels: external.array(external.string()),
+  /** Each series is one line. */
+  series: external.array(
+    external.object({
+      name: external.string(),
+      color: external.string().optional(),
+      /** Y values, one per xLabel. */
+      values: external.array(external.number()),
+      /** If true, draw area fill under the line. */
+      fill: external.boolean().optional()
+    })
+  ),
+  /** Optional Y-axis label. */
+  yLabel: external.string().optional(),
+  /** Optional X-axis label. */
+  xLabel: external.string().optional(),
+  accentColor: external.string().optional(),
+  showLegend: external.boolean().optional(),
+  /** Optional highlight index — that xLabel point gets a special marker. */
+  highlightIndex: external.number().int().min(0).optional()
+});
+const SERIES_PALETTE = [
+  "#38BDF8",
+  "#f59e0b",
+  "#a78bfa",
+  "#34d399",
+  "#f472b6",
+  "#fb923c"
+];
+const LineChart = ({
+  title,
+  xLabels,
+  series,
+  yLabel,
+  xLabel,
+  accentColor = "#38BDF8",
+  showLegend = true,
+  highlightIndex
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const PAD_L = 140;
+  const PAD_R = 80;
+  const PAD_T = 130;
+  const PAD_B = 110;
+  const PLOT_W = 1920 - PAD_L - PAD_R;
+  const PLOT_H = 1080 - PAD_T - PAD_B;
+  const allValues = series.flatMap((s) => s.values);
+  const yMin = Math.min(0, ...allValues);
+  const yMax = Math.max(...allValues) * 1.1 || 1;
+  const yRange = yMax - yMin || 1;
+  const xAt = (i) => PAD_L + PLOT_W * i / Math.max(1, xLabels.length - 1);
+  const yAt = (v) => PAD_T + PLOT_H - (v - yMin) / yRange * PLOT_H;
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const axisSpring = (0,esm.spring)({
+    frame,
+    fps,
+    config: { damping: 14, stiffness: 140 },
+    durationInFrames: 30
+  });
+  const seriesDrawProgress = series.map(
+    (_, i) => (0,esm.interpolate)(frame, [20 + i * 10, 70 + i * 10], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: esm.Easing.bezier(0.65, 0, 0.35, 1)
+    })
+  );
+  const yTickCount = 5;
+  const yTicks = Array.from({ length: yTickCount + 1 }, (_, i) => {
+    const v = yMin + yRange * i / yTickCount;
+    return { v, y: yAt(v) };
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "50px 60px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 44,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 8,
+              opacity: titleOpacity
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              position: "relative",
+              opacity: axisSpring
+            },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "svg",
+                {
+                  width: "100%",
+                  height: "100%",
+                  viewBox: "0 0 1920 1080",
+                  style: { position: "absolute", inset: 0 },
+                  children: [
+                    yTicks.map((tick, i) => /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "line",
+                        {
+                          x1: PAD_L,
+                          y1: tick.y,
+                          x2: 1920 - PAD_R,
+                          y2: tick.y,
+                          stroke: "#334155",
+                          strokeWidth: 1,
+                          strokeDasharray: "4 6",
+                          opacity: 0.6
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "text",
+                        {
+                          x: PAD_L - 14,
+                          y: tick.y + 5,
+                          textAnchor: "end",
+                          fill: "#64748b",
+                          fontSize: 14,
+                          fontFamily: "Fira Code, monospace",
+                          children: Math.round(tick.v).toLocaleString()
+                        }
+                      )
+                    ] }, `yt-${i}`)),
+                    xLabels.map((label, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x: xAt(i),
+                        y: PAD_T + PLOT_H + 32,
+                        textAnchor: "middle",
+                        fill: "#64748b",
+                        fontSize: 14,
+                        fontFamily: "Fira Code, monospace",
+                        children: label
+                      },
+                      `xl-${i}`
+                    )),
+                    yLabel && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x: -540,
+                        y: 50,
+                        transform: "rotate(-90)",
+                        textAnchor: "middle",
+                        fill: "#94a3b8",
+                        fontSize: 16,
+                        fontFamily: "Inter, sans-serif",
+                        fontWeight: 700,
+                        children: yLabel
+                      }
+                    ),
+                    xLabel && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x: 1920 / 2,
+                        y: PAD_T + PLOT_H + 75,
+                        textAnchor: "middle",
+                        fill: "#94a3b8",
+                        fontSize: 16,
+                        fontFamily: "Inter, sans-serif",
+                        fontWeight: 700,
+                        children: xLabel
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "line",
+                      {
+                        x1: PAD_L,
+                        y1: PAD_T,
+                        x2: PAD_L,
+                        y2: PAD_T + PLOT_H,
+                        stroke: "#94a3b8",
+                        strokeWidth: 2
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "line",
+                      {
+                        x1: PAD_L,
+                        y1: PAD_T + PLOT_H,
+                        x2: 1920 - PAD_R,
+                        y2: PAD_T + PLOT_H,
+                        stroke: "#94a3b8",
+                        strokeWidth: 2
+                      }
+                    ),
+                    series.map((s, sIdx) => {
+                      const color = s.color || SERIES_PALETTE[sIdx % SERIES_PALETTE.length];
+                      const progress = seriesDrawProgress[sIdx];
+                      const visiblePoints = s.values.length;
+                      const visibleCount = Math.max(
+                        2,
+                        Math.floor(visiblePoints * progress)
+                      );
+                      const pathPoints = s.values.slice(0, visibleCount).map((v, i) => ({
+                        x: xAt(i),
+                        y: yAt(v)
+                      }));
+                      if (pathPoints.length < 2) return null;
+                      const linePath = pathPoints.map(
+                        (p, i) => i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`
+                      ).join(" ");
+                      const fillPath = s.fill && pathPoints.length >= 2 ? `${linePath} L ${pathPoints[pathPoints.length - 1].x} ${PAD_T + PLOT_H} L ${pathPoints[0].x} ${PAD_T + PLOT_H} Z` : null;
+                      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+                        fillPath && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "path",
+                          {
+                            d: fillPath,
+                            fill: color,
+                            opacity: 0.18
+                          }
+                        ),
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "path",
+                          {
+                            d: linePath,
+                            fill: "none",
+                            stroke: color,
+                            strokeWidth: 3.5,
+                            strokeLinecap: "round",
+                            strokeLinejoin: "round",
+                            style: { filter: `drop-shadow(0 0 6px ${color}80)` }
+                          }
+                        ),
+                        pathPoints.map((p, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "circle",
+                          {
+                            cx: p.x,
+                            cy: p.y,
+                            r: i === highlightIndex ? 9 : 5,
+                            fill: i === highlightIndex ? accentColor : color,
+                            stroke: "#0f1729",
+                            strokeWidth: i === highlightIndex ? 3 : 2,
+                            style: i === highlightIndex ? { filter: `drop-shadow(0 0 10px ${accentColor})` } : void 0
+                          },
+                          `p-${i}`
+                        ))
+                      ] }, `s-${sIdx}`);
+                    }),
+                    highlightIndex !== void 0 && highlightIndex < xLabels.length && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "line",
+                        {
+                          x1: xAt(highlightIndex),
+                          y1: PAD_T,
+                          x2: xAt(highlightIndex),
+                          y2: PAD_T + PLOT_H,
+                          stroke: accentColor,
+                          strokeWidth: 1.5,
+                          strokeDasharray: "4 4",
+                          opacity: 0.6
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "text",
+                        {
+                          x: xAt(highlightIndex),
+                          y: PAD_T - 12,
+                          textAnchor: "middle",
+                          fill: accentColor,
+                          fontSize: 14,
+                          fontWeight: 700,
+                          fontFamily: "Fira Code, monospace",
+                          children: xLabels[highlightIndex]
+                        }
+                      )
+                    ] })
+                  ]
+                }
+              ),
+              showLegend && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "div",
+                {
+                  style: {
+                    position: "absolute",
+                    top: 12,
+                    right: 80,
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: 20,
+                    opacity: titleOpacity
+                  },
+                  children: series.map((s, i) => {
+                    const color = s.color || SERIES_PALETTE[i % SERIES_PALETTE.length];
+                    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                      "div",
+                      {
+                        style: {
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8
+                        },
+                        children: [
+                          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "div",
+                            {
+                              style: {
+                                width: 16,
+                                height: 4,
+                                borderRadius: 2,
+                                backgroundColor: color,
+                                boxShadow: `0 0 8px ${color}`
+                              }
+                            }
+                          ),
+                          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "span",
+                            {
+                              style: {
+                                color: "#cbd5e1",
+                                fontSize: 15,
+                                fontWeight: 600
+                              },
+                              children: s.name
+                            }
+                          )
+                        ]
+                      },
+                      s.name
+                    );
+                  })
+                }
+              )
+            ]
+          }
+        )
+      ]
+    }
+  );
+};
+
+;// ./src/components/MathFormula.tsx
+
+
+
+
+const MathFormulaSchema = external.object({
+  title: external.string().optional(),
+  /** Formula tokens. Each token has a type that determines its style.
+   *  - "text"  → identifier/word
+   *  - "var"   → italic variable letter
+   *  - "num"   → number
+   *  - "op"    → operator (+ − × ÷ =)
+   *  - "frac"  → { numerator: string, denominator: string }
+   *  - "sup"   → { base: string, exponent: string }
+   *  - "sub"   → { base: string, subscript: string }
+   *  - "sum"   → { lower: string, upper: string, body: string }
+   *  - "sqrt"  → { body: string }
+   */
+  tokens: external.array(
+    external.union([
+      external.object({
+        type: external.literal("text"),
+        value: external.string(),
+        color: external.string().optional()
+      }),
+      external.object({
+        type: external.literal("var"),
+        value: external.string(),
+        color: external.string().optional()
+      }),
+      external.object({
+        type: external.literal("num"),
+        value: external.string(),
+        color: external.string().optional()
+      }),
+      external.object({
+        type: external.literal("op"),
+        value: external.string(),
+        color: external.string().optional()
+      }),
+      external.object({
+        type: external.literal("frac"),
+        numerator: external.array(external.any()),
+        denominator: external.array(external.any()),
+        color: external.string().optional()
+      }),
+      external.object({
+        type: external.literal("sup"),
+        base: external.array(external.any()),
+        exponent: external.array(external.any()),
+        color: external.string().optional()
+      }),
+      external.object({
+        type: external.literal("sub"),
+        base: external.array(external.any()),
+        subscript: external.array(external.any()),
+        color: external.string().optional()
+      }),
+      external.object({
+        type: external.literal("sqrt"),
+        body: external.array(external.any()),
+        color: external.string().optional()
+      }),
+      external.object({
+        type: external.literal("sum"),
+        lower: external.array(external.any()),
+        upper: external.array(external.any()),
+        body: external.array(external.any()),
+        color: external.string().optional()
+      }),
+      external.object({
+        type: external.literal("space")
+      })
+    ])
+  ),
+  /** Optional short description shown under the formula. */
+  description: external.string().optional(),
+  accentColor: external.string().optional()
+});
+function colorize(token, fallback) {
+  if ("color" in token && token.color) return token.color;
+  if (token.type === "var") return fallback;
+  if (token.type === "num") return "#fb923c";
+  if (token.type === "op") return "#94a3b8";
+  return "#f1f5f9";
+}
+const RenderTokens = ({
+  tokens,
+  fallbackColor
+}) => {
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(jsx_runtime.Fragment, { children: tokens.map((t, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)(TokenSpan, { token: t, fallbackColor }, i)) });
+};
+const TokenSpan = ({
+  token,
+  fallbackColor
+}) => {
+  if (!token) return null;
+  switch (token.type) {
+    case "text":
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: colorize(token, fallbackColor) }, children: token.value });
+    case "var":
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "span",
+        {
+          style: {
+            color: colorize(token, fallbackColor),
+            fontStyle: "italic",
+            fontFamily: "'Times New Roman', serif"
+          },
+          children: token.value
+        }
+      );
+    case "num":
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "span",
+        {
+          style: {
+            color: colorize(token, fallbackColor),
+            fontFamily: "'Times New Roman', serif"
+          },
+          children: token.value
+        }
+      );
+    case "op":
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "span",
+        {
+          style: {
+            color: colorize(token, fallbackColor),
+            fontFamily: "'Times New Roman', serif",
+            padding: "0 6px"
+          },
+          children: token.value
+        }
+      );
+    case "space":
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { display: "inline-block", width: 14 } });
+    case "frac":
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+        "span",
+        {
+          style: {
+            display: "inline-flex",
+            flexDirection: "column",
+            alignItems: "center",
+            verticalAlign: "middle",
+            margin: "0 4px",
+            fontSize: "0.85em"
+          },
+          children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "span",
+              {
+                style: {
+                  display: "flex",
+                  alignItems: "center",
+                  paddingBottom: 4,
+                  borderBottom: `2px solid ${token.color || fallbackColor}`
+                },
+                children: /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens: token.numerator, fallbackColor })
+              }
+            ),
+            /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "span",
+              {
+                style: {
+                  display: "flex",
+                  alignItems: "center",
+                  paddingTop: 4
+                },
+                children: /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens: token.denominator, fallbackColor })
+              }
+            )
+          ]
+        }
+      );
+    case "sup":
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { display: "inline-block" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens: token.base, fallbackColor }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "span",
+          {
+            style: {
+              display: "inline-block",
+              verticalAlign: "super",
+              fontSize: "0.65em",
+              marginLeft: 2
+            },
+            children: /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens: token.exponent, fallbackColor })
+          }
+        )
+      ] });
+    case "sub":
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { display: "inline-block" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens: token.base, fallbackColor }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "span",
+          {
+            style: {
+              display: "inline-block",
+              verticalAlign: "sub",
+              fontSize: "0.65em",
+              marginLeft: 2
+            },
+            children: /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens: token.subscript, fallbackColor })
+          }
+        )
+      ] });
+    case "sqrt":
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { display: "inline-block", position: "relative" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "span",
+          {
+            style: {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              fontSize: "1.6em",
+              color: token.color || fallbackColor,
+              lineHeight: 1,
+              fontFamily: "'Times New Roman', serif"
+            },
+            children: "\u221A"
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "span",
+          {
+            style: {
+              display: "inline-block",
+              paddingLeft: "0.7em",
+              borderTop: `2px solid ${token.color || fallbackColor}`,
+              paddingTop: 2
+            },
+            children: /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens: token.body, fallbackColor })
+          }
+        )
+      ] });
+    case "sum": {
+      const lower = token.lower || [];
+      const upper = token.upper || [];
+      const body = token.body || [];
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+        "span",
+        {
+          style: {
+            display: "inline-flex",
+            alignItems: "center",
+            margin: "0 4px"
+          },
+          children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "span",
+              {
+                style: {
+                  fontFamily: "'Times New Roman', serif",
+                  fontSize: "1.8em",
+                  color: token.color || fallbackColor,
+                  lineHeight: 1
+                },
+                children: "\u03A3"
+              }
+            ),
+            /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+              "span",
+              {
+                style: {
+                  display: "inline-flex",
+                  flexDirection: "column",
+                  fontSize: "0.55em",
+                  lineHeight: 1.2,
+                  marginLeft: 2,
+                  marginRight: 4
+                },
+                children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens: upper, fallbackColor }) }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens: lower, fallbackColor }) })
+                ]
+              }
+            ),
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { children: /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens: body, fallbackColor }) })
+          ]
+        }
+      );
+    }
+    default:
+      return null;
+  }
+};
+const MathFormula = ({
+  title,
+  tokens,
+  description,
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const formulaSpring = (0,esm.spring)({
+    frame: frame - 10,
+    fps,
+    config: { damping: 16, stiffness: 120 },
+    durationInFrames: 35
+  });
+  const formulaScale = (0,esm.interpolate)(formulaSpring, [0, 1], [0.94, 1]);
+  const formulaOpacity = formulaSpring;
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 38,
+              fontWeight: 800,
+              color: "#cbd5e1",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              margin: 0,
+              marginBottom: 32,
+              opacity: titleOpacity
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "div",
+          {
+            style: {
+              backgroundColor: "rgba(15, 23, 41, 0.85)",
+              border: `2px solid ${accentColor}55`,
+              borderRadius: 24,
+              padding: "50px 80px",
+              boxShadow: `0 30px 80px -20px rgba(0,0,0,0.7), 0 0 40px -10px ${accentColor}40`,
+              opacity: formulaOpacity,
+              transform: `scale(${formulaScale})`
+            },
+            children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "div",
+              {
+                style: {
+                  fontSize: 96,
+                  lineHeight: 1.3,
+                  fontFamily: "'Times New Roman', serif",
+                  color: "#f1f5f9",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexWrap: "wrap"
+                },
+                children: /* @__PURE__ */ (0,jsx_runtime.jsx)(RenderTokens, { tokens, fallbackColor: accentColor })
+              }
+            )
+          }
+        ),
+        description && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "p",
+          {
+            style: {
+              fontSize: 22,
+              color: "#94a3b8",
+              marginTop: 36,
+              textAlign: "center",
+              maxWidth: 1200,
+              opacity: titleOpacity,
+              fontFamily: "Inter, sans-serif",
+              lineHeight: 1.5
+            },
+            children: description
+          }
+        )
+      ]
+    }
+  );
+};
+
+;// ./src/components/EquationDerivation.tsx
+
+
+
+
+
+const EquationDerivationSchema = external.object({
+  title: external.string().optional(),
+  /** Each step in the derivation. The tokens field uses the same token shape as MathFormula. */
+  steps: external.array(
+    external.object({
+      label: external.string().optional(),
+      tokens: external.array(external.any()),
+      /** If true, the arrow leading INTO this step is highlighted. */
+      highlight: external.boolean().optional(),
+      /** If true, this step is rendered as the final result (larger). */
+      final: external.boolean().optional(),
+      /** Optional short justification shown to the right of the arrow. */
+      note: external.string().optional()
+    })
+  ),
+  accentColor: external.string().optional()
+});
+const EquationDerivation = ({
+  title,
+  steps,
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const STEP_GAP = 24;
+  const springs = steps.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (10 + i * STEP_GAP),
+      fps,
+      config: { damping: 14, stiffness: 140 },
+      durationInFrames: 35
+    })
+  );
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "50px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 42,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 30,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8
+            },
+            children: steps.map((step, i) => {
+              const sp = springs[i];
+              const isFinal = !!step.final;
+              const isHighlight = !!step.highlight;
+              const fontSize = isFinal ? 78 : 64;
+              const arrowSp = i > 0 ? springs[i - 1] : 0;
+              const arrowOpacity = arrowSp;
+              return /* @__PURE__ */ (0,jsx_runtime.jsxs)(react.Fragment, { children: [
+                i > 0 && /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 16,
+                      opacity: arrowOpacity
+                    },
+                    children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 60, height: 30, viewBox: "0 0 60 30", children: [
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "marker",
+                          {
+                            id: `eq-arrow-${i}`,
+                            viewBox: "0 0 10 10",
+                            refX: "9",
+                            refY: "5",
+                            markerWidth: "8",
+                            markerHeight: "8",
+                            orient: "auto-start-reverse",
+                            children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: accentColor })
+                          }
+                        ) }),
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "line",
+                          {
+                            x1: 30,
+                            y1: 2,
+                            x2: 30,
+                            y2: 20,
+                            stroke: accentColor,
+                            strokeWidth: 3,
+                            markerEnd: `url(#eq-arrow-${i})`,
+                            style: {
+                              filter: isHighlight ? `drop-shadow(0 0 6px ${accentColor})` : void 0
+                            }
+                          }
+                        )
+                      ] }),
+                      step.note && /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                        "span",
+                        {
+                          style: {
+                            color: isHighlight ? accentColor : "#94a3b8",
+                            fontSize: 16,
+                            fontFamily: "Fira Code, monospace",
+                            fontStyle: "italic"
+                          },
+                          children: [
+                            "\u2190 ",
+                            step.note
+                          ]
+                        }
+                      )
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 20,
+                      opacity: sp,
+                      transform: `translateY(${(0,esm.interpolate)(sp, [0, 1], [16, 0])}px)`
+                    },
+                    children: [
+                      step.label && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "span",
+                        {
+                          style: {
+                            fontSize: 18,
+                            color: "#64748b",
+                            fontFamily: "Fira Code, monospace",
+                            fontWeight: 700,
+                            letterSpacing: "0.08em",
+                            width: 80,
+                            textAlign: "right"
+                          },
+                          children: step.label
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "div",
+                        {
+                          style: {
+                            backgroundColor: isFinal ? `${accentColor}1A` : "rgba(15, 23, 41, 0.7)",
+                            border: `2px solid ${isHighlight || isFinal ? accentColor : "#334155"}`,
+                            borderRadius: 14,
+                            padding: isFinal ? "20px 48px" : "12px 32px",
+                            boxShadow: isHighlight ? `0 0 30px -5px ${accentColor}80` : isFinal ? `0 0 40px -8px ${accentColor}66` : "0 8px 24px rgba(0,0,0,0.4)"
+                          },
+                          children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "div",
+                            {
+                              style: {
+                                fontSize,
+                                fontFamily: "'Times New Roman', serif",
+                                color: "#f1f5f9",
+                                display: "flex",
+                                alignItems: "center"
+                              },
+                              children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                                InlineTokens,
+                                {
+                                  tokens: step.tokens,
+                                  fallbackColor: accentColor
+                                }
+                              )
+                            }
+                          )
+                        }
+                      )
+                    ]
+                  }
+                )
+              ] }, i);
+            })
+          }
+        )
+      ]
+    }
+  );
+};
+const InlineTokens = ({
+  tokens,
+  fallbackColor
+}) => /* @__PURE__ */ (0,jsx_runtime.jsx)(jsx_runtime.Fragment, { children: tokens.map((t, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)(InlineToken, { token: t, fallbackColor }, i)) });
+const InlineToken = ({
+  token,
+  fallbackColor
+}) => {
+  if (!token) return null;
+  switch (token.type) {
+    case "text":
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: token.color || "#f1f5f9" }, children: token.value });
+    case "var":
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "span",
+        {
+          style: {
+            color: token.color || fallbackColor,
+            fontStyle: "italic",
+            fontFamily: "'Times New Roman', serif"
+          },
+          children: token.value
+        }
+      );
+    case "num":
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "span",
+        {
+          style: {
+            color: token.color || "#fb923c",
+            fontFamily: "'Times New Roman', serif"
+          },
+          children: token.value
+        }
+      );
+    case "op":
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "span",
+        {
+          style: {
+            color: token.color || "#94a3b8",
+            fontFamily: "'Times New Roman', serif",
+            padding: "0 4px"
+          },
+          children: token.value
+        }
+      );
+    case "space":
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { display: "inline-block", width: 12 } });
+    case "frac":
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+        "span",
+        {
+          style: {
+            display: "inline-flex",
+            flexDirection: "column",
+            alignItems: "center",
+            verticalAlign: "middle",
+            margin: "0 4px",
+            fontSize: "0.8em"
+          },
+          children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "span",
+              {
+                style: {
+                  display: "flex",
+                  alignItems: "center",
+                  paddingBottom: 3,
+                  borderBottom: `2px solid ${token.color || fallbackColor}`
+                },
+                children: /* @__PURE__ */ (0,jsx_runtime.jsx)(InlineTokens, { tokens: token.numerator, fallbackColor })
+              }
+            ),
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { display: "flex", alignItems: "center", paddingTop: 3 }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(InlineTokens, { tokens: token.denominator, fallbackColor }) })
+          ]
+        }
+      );
+    case "sup":
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { display: "inline-block" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(InlineTokens, { tokens: token.base, fallbackColor }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "span",
+          {
+            style: {
+              display: "inline-block",
+              verticalAlign: "super",
+              fontSize: "0.6em",
+              marginLeft: 2
+            },
+            children: /* @__PURE__ */ (0,jsx_runtime.jsx)(InlineTokens, { tokens: token.exponent, fallbackColor })
+          }
+        )
+      ] });
+    case "sub":
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { display: "inline-block" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(InlineTokens, { tokens: token.base, fallbackColor }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "span",
+          {
+            style: {
+              display: "inline-block",
+              verticalAlign: "sub",
+              fontSize: "0.6em",
+              marginLeft: 2
+            },
+            children: /* @__PURE__ */ (0,jsx_runtime.jsx)(InlineTokens, { tokens: token.subscript, fallbackColor })
+          }
+        )
+      ] });
+    case "sqrt":
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { display: "inline-block", position: "relative" }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "span",
+          {
+            style: {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              fontSize: "1.5em",
+              color: token.color || fallbackColor,
+              lineHeight: 1,
+              fontFamily: "'Times New Roman', serif"
+            },
+            children: "\u221A"
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "span",
+          {
+            style: {
+              display: "inline-block",
+              paddingLeft: "0.7em",
+              borderTop: `2px solid ${token.color || fallbackColor}`,
+              paddingTop: 2
+            },
+            children: /* @__PURE__ */ (0,jsx_runtime.jsx)(InlineTokens, { tokens: token.body, fallbackColor })
+          }
+        )
+      ] });
+    default:
+      return null;
+  }
+};
+
+;// ./src/components/TerminalCLI.tsx
+
+
+
+
+const TerminalCLISchema = external.object({
+  title: external.string().optional(),
+  /** First line is the prompt + command. Subsequent lines are output. */
+  command: external.string(),
+  /** Output lines printed below the command, one per element. */
+  output: external.array(external.string()),
+  /** Show a typing animation for the command itself. */
+  typingCommand: external.boolean().optional(),
+  /** Frames between output lines. */
+  outputLineDelay: external.number().optional(),
+  /** Frames per character when typing the command. */
+  typingSpeed: external.number().optional(),
+  /** Optional caption/explanation shown above the terminal. */
+  caption: external.string().optional(),
+  accentColor: external.string().optional(),
+  /** Optional highlight lines (1-indexed within `output`) — colored differently. */
+  highlightLines: external.array(external.number().int().min(1)).optional(),
+  /** Optional theme override — "dark" | "matrix" | "amber". */
+  theme: external["enum"](["dark", "matrix", "amber"]).optional()
+});
+const THEMES = {
+  dark: {
+    bg: "#0a0e1a",
+    chrome: "#1e293b",
+    text: "#e2e8f0",
+    prompt: "#34d399",
+    comment: "#64748b",
+    highlight: "#fbbf24"
+  },
+  matrix: {
+    bg: "#000000",
+    chrome: "#0a1f0a",
+    text: "#00ff66",
+    prompt: "#00ff66",
+    comment: "#006622",
+    highlight: "#ffffff"
+  },
+  amber: {
+    bg: "#1a0f00",
+    chrome: "#3f2a14",
+    text: "#fbbf24",
+    prompt: "#f59e0b",
+    comment: "#92400e",
+    highlight: "#fef3c7"
+  }
+};
+const TerminalCLI = ({
+  title,
+  command,
+  output,
+  typingCommand = true,
+  outputLineDelay = 8,
+  typingSpeed = 0.6,
+  caption,
+  accentColor = "#34d399",
+  highlightLines = [],
+  theme = "dark"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const palette = THEMES[theme];
+  const containerSpring = (0,esm.spring)({
+    frame,
+    fps,
+    config: { damping: 14, stiffness: 120 },
+    durationInFrames: 30
+  });
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const typedChars = typingCommand ? Math.min(command.length, Math.floor((frame - 10) * typingSpeed)) : command.length;
+  const typedCommand = command.slice(0, Math.max(0, typedChars));
+  const commandDone = typedChars >= command.length;
+  const outputStart = typingCommand ? 10 + Math.ceil(command.length / typingSpeed) + 4 : 14;
+  const isHighlightLine = (idx) => highlightLines.includes(idx + 1);
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 42,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 12,
+              opacity: titleOpacity
+            },
+            children: title
+          }
+        ),
+        caption && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "p",
+          {
+            style: {
+              color: "#94a3b8",
+              fontSize: 20,
+              margin: 0,
+              marginBottom: 28,
+              opacity: titleOpacity
+            },
+            children: caption
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              minHeight: 400,
+              backgroundColor: palette.bg,
+              borderRadius: 14,
+              border: `1px solid ${palette.chrome}`,
+              overflow: "hidden",
+              boxShadow: `0 30px 80px -20px rgba(0,0,0,0.8), 0 0 40px -10px ${accentColor}40`,
+              opacity: containerSpring,
+              transform: `translateY(${(0,esm.interpolate)(containerSpring, [0, 1], [30, 0])}px)`
+            },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "div",
+                {
+                  style: {
+                    height: 42,
+                    backgroundColor: palette.chrome,
+                    display: "flex",
+                    alignItems: "center",
+                    paddingLeft: 18,
+                    gap: 8,
+                    borderBottom: `1px solid ${palette.chrome}`
+                  },
+                  children: [
+                    ["#f87171", "#facc15", "#4ade80"].map((c, i) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "div",
+                      {
+                        style: {
+                          width: 14,
+                          height: 14,
+                          borderRadius: "50%",
+                          backgroundColor: c,
+                          opacity: 0.85
+                        }
+                      },
+                      i
+                    )),
+                    /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                      "span",
+                      {
+                        style: {
+                          marginLeft: 16,
+                          color: palette.comment,
+                          fontSize: 12,
+                          fontFamily: "Fira Code, monospace",
+                          letterSpacing: "0.05em"
+                        },
+                        children: [
+                          "~/projects/",
+                          command.split(" ")[0] || "bash"
+                        ]
+                      }
+                    )
+                  ]
+                }
+              ),
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "div",
+                {
+                  style: {
+                    padding: "20px 28px",
+                    fontFamily: "Fira Code, 'Courier New', monospace",
+                    fontSize: 22,
+                    lineHeight: 1.55,
+                    color: palette.text
+                  },
+                  children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "baseline" }, children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "span",
+                        {
+                          style: {
+                            color: palette.prompt,
+                            fontWeight: 700,
+                            marginRight: 10,
+                            textShadow: `0 0 8px ${palette.prompt}80`
+                          },
+                          children: "$"
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { whiteSpace: "pre" }, children: typedCommand }),
+                      !commandDone && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "span",
+                        {
+                          style: {
+                            display: "inline-block",
+                            width: 12,
+                            height: 22,
+                            backgroundColor: palette.prompt,
+                            marginLeft: 2,
+                            verticalAlign: "middle",
+                            opacity: Math.floor(frame / 10) % 2 === 0 ? 1 : 0,
+                            boxShadow: `0 0 8px ${palette.prompt}`
+                          }
+                        }
+                      )
+                    ] }),
+                    commandDone && output.map((line, i) => {
+                      const lineFrame = frame - outputStart - i * outputLineDelay;
+                      const opacity = (0,esm.interpolate)(lineFrame, [0, 8], [0, 1], {
+                        extrapolateLeft: "clamp",
+                        extrapolateRight: "clamp",
+                        easing: esm.Easing.out(esm.Easing.cubic)
+                      });
+                      const isHighlight = isHighlightLine(i);
+                      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "div",
+                        {
+                          style: {
+                            opacity,
+                            color: isHighlight ? palette.highlight : palette.text,
+                            backgroundColor: isHighlight ? `${palette.highlight}15` : "transparent",
+                            padding: isHighlight ? "2px 6px" : 0,
+                            marginLeft: isHighlight ? -6 : 0,
+                            borderLeft: isHighlight ? `3px solid ${palette.highlight}` : "3px solid transparent",
+                            whiteSpace: "pre-wrap"
+                          },
+                          children: line || "\xA0"
+                        },
+                        i
+                      );
+                    }),
+                    commandDone && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "span",
+                      {
+                        style: {
+                          display: "inline-block",
+                          width: 10,
+                          height: 20,
+                          backgroundColor: palette.text,
+                          marginTop: 4,
+                          opacity: frame < outputStart + output.length * outputLineDelay + 30 ? Math.floor(frame / 10) % 2 === 0 ? 1 : 0 : 0
+                        }
+                      }
+                    )
+                  ]
+                }
+              )
+            ]
+          }
+        )
+      ]
+    }
+  );
+};
+
+;// ./src/components/PieChart.tsx
+
+
+
+
+const PieChartSchema = external.object({
+  title: external.string().optional(),
+  /** Each slice. Values are normalized to sum to 100%. */
+  slices: external.array(
+    external.object({
+      label: external.string(),
+      value: external.number(),
+      color: external.string().optional()
+    })
+  ),
+  /** Optional center label (for a donut). */
+  centerLabel: external.string().optional(),
+  centerValue: external.string().optional(),
+  /** Layout variant. */
+  variant: external["enum"](["pie", "donut"]).optional(),
+  accentColor: external.string().optional(),
+  showLegend: external.boolean().optional(),
+  /** Optional slice index to highlight (gets a "explode" offset). */
+  highlightIndex: external.number().int().min(0).optional()
+});
+const SLICE_PALETTE = [
+  "#38BDF8",
+  "#f59e0b",
+  "#a78bfa",
+  "#34d399",
+  "#f472b6",
+  "#fb923c",
+  "#22d3ee",
+  "#a3e635"
+];
+const PieChart = ({
+  title,
+  slices,
+  centerLabel,
+  centerValue,
+  variant = "donut",
+  accentColor = "#38BDF8",
+  showLegend = true,
+  highlightIndex
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const total = slices.reduce((s, x) => s + x.value, 0) || 1;
+  const cx = 800;
+  const cy = 540;
+  const radius = 280;
+  const innerR = variant === "donut" ? radius * 0.55 : 0;
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const sweepTotal = Math.PI * 2;
+  let cursor = 0;
+  const sliceProgress = slices.map((s, i) => {
+    const frac = s.value / total;
+    const start = cursor;
+    const end = cursor + frac * sweepTotal;
+    cursor = end;
+    return { slice: s, start, end, idx: i };
+  });
+  const reveal = (0,esm.interpolate)(frame, [15, 100], [0, sweepTotal], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.bezier(0.65, 0, 0.35, 1)
+  });
+  const isHighlight = (i) => i === highlightIndex;
+  const explode = (i) => isHighlight(i) ? 16 * (0,esm.interpolate)(Math.sin(frame / 8), [-1, 1], [0.5, 1]) : 0;
+  const annularSector = (a1, a2) => {
+    const x1 = cx + Math.cos(a1) * radius;
+    const y1 = cy + Math.sin(a1) * radius;
+    const x2 = cx + Math.cos(a2) * radius;
+    const y2 = cy + Math.sin(a2) * radius;
+    const largeArc = a2 - a1 > Math.PI ? 1 : 0;
+    if (innerR === 0) {
+      return `M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+    }
+    const ix1 = cx + Math.cos(a1) * innerR;
+    const iy1 = cy + Math.sin(a1) * innerR;
+    const ix2 = cx + Math.cos(a2) * innerR;
+    const iy2 = cy + Math.sin(a2) * innerR;
+    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${innerR} ${innerR} 0 ${largeArc} 0 ${ix1} ${iy1} Z`;
+  };
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "row",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { flex: 1.4, position: "relative" }, children: [
+          title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "h2",
+            {
+              style: {
+                fontSize: 44,
+                fontWeight: 900,
+                color: "#f1f5f9",
+                letterSpacing: "-0.02em",
+                margin: 0,
+                marginBottom: 8,
+                opacity: titleOpacity
+              },
+              children: title
+            }
+          ),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100% - 60px)" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 700, height: 700, viewBox: "0 0 1600 1080", children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "pie-glow", x: "-20%", y: "-20%", width: "140%", height: "140%", children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "3" }),
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", {}),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+              ] })
+            ] }) }),
+            sliceProgress.map(({ slice, start, end, idx }) => {
+              const color = slice.color || SLICE_PALETTE[idx % SLICE_PALETTE.length];
+              const sliceReveal = Math.max(0, Math.min(reveal - start, end - start));
+              if (sliceReveal <= 0) return null;
+              const a2 = start + sliceReveal;
+              const ex = explode(idx);
+              const midA = (start + a2) / 2 - Math.PI / 2;
+              const dx = Math.cos(midA) * ex;
+              const dy = Math.sin(midA) * ex;
+              return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "g",
+                {
+                  transform: `translate(${dx}, ${dy})`,
+                  style: { filter: `drop-shadow(0 0 8px ${color}66)` },
+                  children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "path",
+                      {
+                        d: annularSector(start - Math.PI / 2, a2 - Math.PI / 2),
+                        fill: color,
+                        stroke: "#0f1729",
+                        strokeWidth: 2
+                      }
+                    ),
+                    sliceReveal / (end - start) > 0.6 && end - start > 0.35 && /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                      "text",
+                      {
+                        x: cx + Math.cos(midA) * (radius * 0.7) + dx,
+                        y: cy + Math.sin(midA) * (radius * 0.7) + dy + 6,
+                        textAnchor: "middle",
+                        fill: "#0f1729",
+                        fontSize: 20,
+                        fontWeight: 900,
+                        fontFamily: "Inter, sans-serif",
+                        children: [
+                          Math.round(slice.value / total * 100),
+                          "%"
+                        ]
+                      }
+                    )
+                  ]
+                },
+                idx
+              );
+            }),
+            variant === "donut" && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "text",
+                {
+                  x: cx,
+                  y: cy - 12,
+                  textAnchor: "middle",
+                  fill: "#94a3b8",
+                  fontSize: 16,
+                  fontFamily: "Inter, sans-serif",
+                  fontWeight: 700,
+                  letterSpacing: "0.15em",
+                  textLength: centerLabel ? void 0 : 0,
+                  children: centerLabel || ""
+                }
+              ),
+              centerValue && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "text",
+                {
+                  x: cx,
+                  y: cy + 22,
+                  textAnchor: "middle",
+                  fill: accentColor,
+                  fontSize: 42,
+                  fontFamily: "Inter, sans-serif",
+                  fontWeight: 900,
+                  style: { filter: `drop-shadow(0 0 8px ${accentColor})` },
+                  children: centerValue
+                }
+              )
+            ] })
+          ] }) })
+        ] }),
+        showLegend && /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              gap: 16,
+              paddingLeft: 40
+            },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "div",
+                {
+                  style: {
+                    fontSize: 14,
+                    color: "#64748b",
+                    fontWeight: 800,
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    marginBottom: 8,
+                    opacity: titleOpacity
+                  },
+                  children: "Breakdown"
+                }
+              ),
+              slices.map((s, i) => {
+                const color = s.color || SLICE_PALETTE[i % SLICE_PALETTE.length];
+                const sp = (0,esm.spring)({
+                  frame: frame - (15 + i * 6),
+                  fps,
+                  config: { damping: 14, stiffness: 120 },
+                  durationInFrames: 30
+                });
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14,
+                      opacity: sp,
+                      transform: `translateX(${(0,esm.interpolate)(sp, [0, 1], [20, 0])}px)`
+                    },
+                    children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "div",
+                        {
+                          style: {
+                            width: 18,
+                            height: 18,
+                            borderRadius: 4,
+                            backgroundColor: color,
+                            boxShadow: `0 0 12px ${color}`,
+                            flexShrink: 0
+                          }
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "div",
+                        {
+                          style: {
+                            display: "flex",
+                            flexDirection: "column",
+                            flex: 1
+                          },
+                          children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "span",
+                            {
+                              style: {
+                                color: "#f1f5f9",
+                                fontSize: 20,
+                                fontWeight: 700
+                              },
+                              children: s.label
+                            }
+                          )
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                        "span",
+                        {
+                          style: {
+                            color,
+                            fontSize: 22,
+                            fontWeight: 900,
+                            fontFamily: "Fira Code, monospace",
+                            minWidth: 80,
+                            textAlign: "right"
+                          },
+                          children: [
+                            Math.round(s.value / total * 100),
+                            "%"
+                          ]
+                        }
+                      )
+                    ]
+                  },
+                  i
+                );
+              })
+            ]
+          }
+        )
+      ]
+    }
+  );
+};
+
+;// ./src/components/NumberedList.tsx
+
+
+
+
+const NumberedListSchema = external.object({
+  title: external.string().optional(),
+  items: external.array(
+    external.object({
+      heading: external.string(),
+      description: external.string().optional(),
+      color: external.string().optional(),
+      icon: external.string().optional()
+    })
+  ),
+  accentColor: external.string().optional(),
+  /** Layout — "stack" (vertical) or "grid" (2 columns). */
+  layout: external["enum"](["stack", "grid"]).optional()
+});
+const ITEM_PALETTE = [
+  "#38BDF8",
+  "#f59e0b",
+  "#a78bfa",
+  "#34d399",
+  "#f472b6",
+  "#fb923c"
+];
+const NumberedList = ({
+  title,
+  items,
+  layout = "stack"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const springs = items.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (10 + i * 10),
+      fps,
+      config: { damping: 14, stiffness: 140 },
+      durationInFrames: 35
+    })
+  );
+  const isGrid = layout === "grid";
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 48,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 36,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              display: "grid",
+              gridTemplateColumns: isGrid ? "1fr 1fr" : "1fr",
+              gap: isGrid ? 24 : 20,
+              alignContent: isGrid ? "center" : "start"
+            },
+            children: items.map((item, i) => {
+              const sp = springs[i];
+              const color = item.color || ITEM_PALETTE[i % ITEM_PALETTE.length];
+              const scale = (0,esm.interpolate)(sp, [0, 1], [0.85, 1]);
+              const x = (0,esm.interpolate)(sp, [0, 1], [40, 0]);
+              return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "div",
+                {
+                  style: {
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 24,
+                    backgroundColor: "rgba(15, 23, 41, 0.7)",
+                    border: `1px solid ${color}55`,
+                    borderLeft: `6px solid ${color}`,
+                    borderRadius: 16,
+                    padding: "24px 28px",
+                    opacity: sp,
+                    transform: `translateX(${x}px) scale(${scale})`,
+                    boxShadow: `0 10px 30px -10px rgba(0,0,0,0.5), 0 0 24px -10px ${color}40`
+                  },
+                  children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "div",
+                      {
+                        style: {
+                          width: 64,
+                          height: 64,
+                          flexShrink: 0,
+                          borderRadius: 14,
+                          backgroundColor: `${color}22`,
+                          border: `2px solid ${color}`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: `0 0 18px ${color}80`,
+                          position: "relative"
+                        },
+                        children: item.icon ? /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { fontSize: 28 }, children: item.icon }) : /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "span",
+                          {
+                            style: {
+                              fontSize: 28,
+                              fontWeight: 900,
+                              color,
+                              fontFamily: "Inter, sans-serif"
+                            },
+                            children: i + 1
+                          }
+                        )
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", flexDirection: "column", gap: 6 }, children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "span",
+                        {
+                          style: {
+                            fontSize: 24,
+                            fontWeight: 800,
+                            color: "#f1f5f9",
+                            fontFamily: "Inter, sans-serif",
+                            letterSpacing: "-0.01em"
+                          },
+                          children: item.heading
+                        }
+                      ),
+                      item.description && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "span",
+                        {
+                          style: {
+                            fontSize: 17,
+                            color: "#94a3b8",
+                            lineHeight: 1.5,
+                            fontFamily: "Inter, sans-serif"
+                          },
+                          children: item.description
+                        }
+                      )
+                    ] })
+                  ]
+                },
+                i
+              );
+            })
+          }
+        )
+      ]
+    }
+  );
+};
+
+;// ./src/components/GlossaryCards.tsx
+
+
+
+
+const GlossaryCardsSchema = external.object({
+  title: external.string().optional(),
+  /** Term cards. Each gets an entry in a grid. */
+  terms: external.array(
+    external.object({
+      term: external.string(),
+      definition: external.string(),
+      /** Optional 1-2 character symbol/icon. */
+      icon: external.string().optional(),
+      color: external.string().optional()
+    })
+  ),
+  /** "2x2", "2x3", "3x2", "3x3" — controls grid. Default auto. */
+  grid: external["enum"](["auto", "2x2", "2x3", "3x2", "3x3"]).optional(),
+  accentColor: external.string().optional()
+});
+const CARD_PALETTE = [
+  "#38BDF8",
+  "#f59e0b",
+  "#a78bfa",
+  "#34d399",
+  "#f472b6",
+  "#fb923c"
+];
+const GlossaryCards = ({
+  title,
+  terms,
+  grid = "auto"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  let cols = 2;
+  if (grid === "auto") {
+    if (terms.length <= 4) cols = 2;
+    else if (terms.length <= 6) cols = 3;
+    else cols = 3;
+  } else {
+    cols = parseInt(grid[0], 10);
+  }
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const springs = terms.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (12 + i * 7),
+      fps,
+      config: { damping: 14, stiffness: 140 },
+      durationInFrames: 35
+    })
+  );
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "50px 70px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 44,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 32,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              display: "grid",
+              gridTemplateColumns: `repeat(${cols}, 1fr)`,
+              gap: 24,
+              alignContent: "center"
+            },
+            children: terms.map((t, i) => {
+              const sp = springs[i];
+              const color = t.color || CARD_PALETTE[i % CARD_PALETTE.length];
+              const scale = (0,esm.interpolate)(sp, [0, 1], [0.88, 1]);
+              const y = (0,esm.interpolate)(sp, [0, 1], [24, 0]);
+              return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "div",
+                {
+                  style: {
+                    backgroundColor: "rgba(15, 23, 41, 0.85)",
+                    border: `1.5px solid ${color}66`,
+                    borderRadius: 18,
+                    padding: "24px 28px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    opacity: sp,
+                    transform: `translateY(${y}px) scale(${scale})`,
+                    boxShadow: `0 16px 40px -10px rgba(0,0,0,0.5), 0 0 30px -10px ${color}50`
+                  },
+                  children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                      "div",
+                      {
+                        style: {
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 14,
+                          paddingBottom: 12,
+                          borderBottom: `1px solid ${color}33`
+                        },
+                        children: [
+                          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "div",
+                            {
+                              style: {
+                                width: 52,
+                                height: 52,
+                                borderRadius: 12,
+                                backgroundColor: `${color}22`,
+                                border: `2px solid ${color}`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                                boxShadow: `0 0 12px ${color}66`,
+                                fontSize: 26
+                              },
+                              children: t.icon || ""
+                            }
+                          ),
+                          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "span",
+                            {
+                              style: {
+                                fontSize: 22,
+                                fontWeight: 900,
+                                color,
+                                letterSpacing: "-0.01em",
+                                fontFamily: "Inter, sans-serif"
+                              },
+                              children: t.term
+                            }
+                          )
+                        ]
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "span",
+                      {
+                        style: {
+                          fontSize: 16,
+                          color: "#cbd5e1",
+                          lineHeight: 1.55,
+                          fontFamily: "Inter, sans-serif"
+                        },
+                        children: t.definition
+                      }
+                    )
+                  ]
+                },
+                i
+              );
+            })
+          }
+        )
+      ]
+    }
+  );
+};
+
+;// ./src/components/FlowDiagram.tsx
+
+
+
+
+
+const FlowDiagramSchema = external.object({
+  title: external.string().optional(),
+  /** Nodes in the flow. */
+  nodes: external.array(
+    external.object({
+      id: external.string(),
+      label: external.string(),
+      /** "process" | "decision" | "start" | "end" */
+      kind: external["enum"](["process", "decision", "start", "end"]).optional(),
+      description: external.string().optional(),
+      color: external.string().optional()
+    })
+  ),
+  /** Directed connections between nodes. */
+  edges: external.array(
+    external.object({
+      fromId: external.string(),
+      toId: external.string(),
+      label: external.string().optional(),
+      /** If true, the edge is highlighted (latest/active flow). */
+      active: external.boolean().optional()
+    })
+  ),
+  accentColor: external.string().optional()
+});
+const KIND_COLORS = {
+  process: "#38BDF8",
+  decision: "#f59e0b",
+  start: "#34d399",
+  end: "#f472b6"
+};
+const KIND_SHAPES = {
+  process: "rect",
+  decision: "diamond",
+  start: "pill",
+  end: "pill"
+};
+function layout(nodes, edges) {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const indeg = /* @__PURE__ */ new Map();
+  const fwd = /* @__PURE__ */ new Map();
+  nodes.forEach((n) => {
+    indeg.set(n.id, 0);
+    fwd.set(n.id, []);
+  });
+  edges.forEach((e) => {
+    if (byId.has(e.fromId) && byId.has(e.toId)) {
+      fwd.get(e.fromId).push(e.toId);
+      indeg.set(e.toId, (indeg.get(e.toId) || 0) + 1);
+    }
+  });
+  const order = nodes.map((n) => n.id);
+  const depth = /* @__PURE__ */ new Map();
+  order.forEach((id) => depth.set(id, 0));
+  for (let pass = 0; pass < nodes.length; pass++) {
+    let changed = false;
+    edges.forEach((e) => {
+      const d = depth.get(e.toId) || 0;
+      const cand = (depth.get(e.fromId) || 0) + 1;
+      if (cand > d) {
+        depth.set(e.toId, cand);
+        changed = true;
+      }
+    });
+    if (!changed) break;
+  }
+  const layers = /* @__PURE__ */ new Map();
+  let maxDepth = 0;
+  nodes.forEach((n) => {
+    const d = depth.get(n.id) || 0;
+    maxDepth = Math.max(maxDepth, d);
+    if (!layers.has(d)) layers.set(d, []);
+    layers.get(d).push(n.id);
+  });
+  const PAD_X = 140;
+  const PAD_Y = 130;
+  const CANVAS_W = 1920 - 2 * PAD_X;
+  const CANVAS_H = 1080 - 2 * PAD_Y;
+  const positions = /* @__PURE__ */ new Map();
+  layers.forEach((ids, layerIdx) => {
+    const layerCount = layers.size;
+    const y = PAD_Y + CANVAS_H * layerIdx / Math.max(1, layerCount - 1);
+    const slotW = CANVAS_W / (ids.length + 1);
+    ids.forEach((id, i) => {
+      positions.set(id, { x: PAD_X + slotW * (i + 1), y });
+    });
+  });
+  return { positions, depth, maxDepth };
+}
+const FlowDiagram = ({
+  title,
+  nodes,
+  edges,
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const { positions } = layout(nodes, edges);
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const nodeSprings = /* @__PURE__ */ new Map();
+  nodes.forEach((n) => {
+    const idx = nodes.findIndex((x) => x.id === n.id);
+    nodeSprings.set(
+      n.id,
+      (0,esm.spring)({
+        frame: frame - (10 + idx * 8),
+        fps,
+        config: { damping: 14, stiffness: 140 },
+        durationInFrames: 30
+      })
+    );
+  });
+  const edgeSprings = edges.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (10 + nodes.length * 8 + i * 6),
+      fps,
+      config: { damping: 14, stiffness: 140 },
+      durationInFrames: 30
+    })
+  );
+  const renderShape = (n, x, y) => {
+    const sp = nodeSprings.get(n.id) || 0;
+    const color = n.color || KIND_COLORS[n.kind || "process"];
+    const scale = (0,esm.interpolate)(sp, [0, 1], [0.6, 1]);
+    const shape = KIND_SHAPES[n.kind || "process"];
+    if (shape === "diamond") {
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+        "g",
+        {
+          transform: `translate(${x}, ${y}) scale(${scale})`,
+          style: { opacity: sp, transformOrigin: `${x}px ${y}px` },
+          children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "polygon",
+              {
+                points: `0,-60 90,0 0,60 -90,0`,
+                fill: "#0f1729",
+                stroke: color,
+                strokeWidth: 3,
+                style: { filter: `drop-shadow(0 0 10px ${color}66)` }
+              }
+            ),
+            /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "text",
+              {
+                x: 0,
+                y: 6,
+                textAnchor: "middle",
+                fill: color,
+                fontSize: 18,
+                fontWeight: 800,
+                fontFamily: "Inter, sans-serif",
+                children: n.label
+              }
+            )
+          ]
+        }
+      );
+    }
+    if (shape === "pill") {
+      const w2 = Math.max(120, n.label.length * 12 + 40);
+      return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+        "g",
+        {
+          transform: `translate(${x}, ${y}) scale(${scale})`,
+          style: { opacity: sp, transformOrigin: `${x}px ${y}px` },
+          children: [
+            /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "rect",
+              {
+                x: -w2 / 2,
+                y: -28,
+                width: w2,
+                height: 56,
+                rx: 28,
+                fill: "#0f1729",
+                stroke: color,
+                strokeWidth: 3,
+                style: { filter: `drop-shadow(0 0 10px ${color}66)` }
+              }
+            ),
+            /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "text",
+              {
+                x: 0,
+                y: 6,
+                textAnchor: "middle",
+                fill: color,
+                fontSize: 20,
+                fontWeight: 800,
+                fontFamily: "Inter, sans-serif",
+                children: n.label
+              }
+            )
+          ]
+        }
+      );
+    }
+    const w = 180;
+    const h = 70;
+    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+      "g",
+      {
+        transform: `translate(${x}, ${y}) scale(${scale})`,
+        style: { opacity: sp, transformOrigin: `${x}px ${y}px` },
+        children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "rect",
+            {
+              x: -w / 2,
+              y: -h / 2,
+              width: w,
+              height: h,
+              rx: 12,
+              fill: "#0f1729",
+              stroke: color,
+              strokeWidth: 2.5,
+              style: { filter: `drop-shadow(0 0 8px ${color}66)` }
+            }
+          ),
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "text",
+            {
+              x: 0,
+              y: n.description ? -4 : 6,
+              textAnchor: "middle",
+              fill: "#f1f5f9",
+              fontSize: 18,
+              fontWeight: 800,
+              fontFamily: "Inter, sans-serif",
+              children: n.label
+            }
+          ),
+          n.description && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "text",
+            {
+              x: 0,
+              y: 16,
+              textAnchor: "middle",
+              fill: "#94a3b8",
+              fontSize: 11,
+              fontFamily: "Fira Code, monospace",
+              children: n.description
+            }
+          )
+        ]
+      }
+    );
+  };
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "40px 60px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 44,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 8,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "p",
+          {
+            style: {
+              color: "#94a3b8",
+              fontSize: 17,
+              margin: 0,
+              marginBottom: 12,
+              textAlign: "center",
+              opacity: titleOpacity
+            },
+            children: "Branching flow \u2014 diamonds are decisions, pills are start/end points."
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { flex: 1, position: "relative" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "svg",
+          {
+            width: "100%",
+            height: "100%",
+            viewBox: "0 0 1920 1080",
+            style: { position: "absolute", inset: 0 },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)("defs", { children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "marker",
+                  {
+                    id: "flow-arrow",
+                    viewBox: "0 0 10 10",
+                    refX: "9",
+                    refY: "5",
+                    markerWidth: "8",
+                    markerHeight: "8",
+                    orient: "auto-start-reverse",
+                    children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: "#94a3b8" })
+                  }
+                ),
+                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "marker",
+                  {
+                    id: "flow-arrow-active",
+                    viewBox: "0 0 10 10",
+                    refX: "9",
+                    refY: "5",
+                    markerWidth: "9",
+                    markerHeight: "9",
+                    orient: "auto-start-reverse",
+                    children: /* @__PURE__ */ (0,jsx_runtime.jsx)("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: accentColor })
+                  }
+                )
+              ] }),
+              edges.map((e, i) => {
+                const from = positions.get(e.fromId);
+                const to = positions.get(e.toId);
+                if (!from || !to) return null;
+                const sp = edgeSprings[i];
+                const isActive = !!e.active;
+                const color = isActive ? accentColor : "#94a3b8";
+                const opacity = sp * (isActive ? 1 : 0.7);
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const ux = dx / dist;
+                const uy = dy / dist;
+                const PAD = 60;
+                const x1 = from.x + ux * PAD;
+                const y1 = from.y + uy * PAD;
+                const x2 = to.x - ux * PAD;
+                const y2 = to.y - uy * PAD;
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                const pathLen = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) + 80;
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity, children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "path",
+                    {
+                      d: `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`,
+                      fill: "none",
+                      stroke: color,
+                      strokeWidth: isActive ? 4 : 2.5,
+                      strokeDasharray: pathLen,
+                      strokeDashoffset: pathLen * (1 - sp),
+                      markerEnd: isActive ? "url(#flow-arrow-active)" : "url(#flow-arrow)",
+                      style: {
+                        filter: isActive ? `drop-shadow(0 0 6px ${color})` : void 0
+                      }
+                    }
+                  ),
+                  e.label && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${midX}, ${midY - 8})`, children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "rect",
+                      {
+                        x: -Math.max(28, e.label.length * 5),
+                        y: -11,
+                        width: Math.max(56, e.label.length * 10),
+                        height: 22,
+                        rx: 5,
+                        fill: "#0f1729",
+                        stroke: isActive ? color : "#334155",
+                        strokeWidth: 1.5
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x: 0,
+                        y: 4,
+                        textAnchor: "middle",
+                        fill: isActive ? color : "#cbd5e1",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        fontFamily: "Fira Code, monospace",
+                        children: e.label
+                      }
+                    )
+                  ] })
+                ] }, `e-${i}`);
+              }),
+              nodes.map((n) => {
+                const pos = positions.get(n.id);
+                if (!pos) return null;
+                return /* @__PURE__ */ (0,jsx_runtime.jsx)(react.Fragment, { children: renderShape(n, pos.x, pos.y) }, n.id);
+              })
+            ]
+          }
+        ) })
+      ]
+    }
+  );
+};
+
+;// ./src/components/CalloutAnnotation.tsx
+
+
+
+
+const CalloutAnnotationSchema = external.object({
+  title: external.string().optional(),
+  /** The main content area text (centered, large). */
+  body: external.string(),
+  /** Optional supporting bullet points below the body. */
+  bullets: external.array(external.string()).optional(),
+  /** Where the callout sits on screen — "left" | "right" | "top" | "bottom". */
+  position: external["enum"](["left", "right", "top", "bottom"]).optional(),
+  accentColor: external.string().optional()
+});
+const CalloutAnnotation = ({
+  title,
+  body,
+  bullets = [],
+  position = "right",
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const containerSpring = (0,esm.spring)({
+    frame: frame - 8,
+    fps,
+    config: { damping: 16, stiffness: 110 },
+    durationInFrames: 35
+  });
+  const pulse = (0,esm.interpolate)(Math.sin(frame / 8), [-1, 1], [0.6, 1]);
+  const isLeading = position === "left" || position === "top";
+  const arrowStyle = {};
+  if (position === "left") arrowStyle.right = -28;
+  if (position === "right") arrowStyle.left = -28;
+  if (position === "top") arrowStyle.bottom = -28;
+  if (position === "bottom") arrowStyle.top = -28;
+  const bulletSprings = bullets.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (35 + i * 8),
+      fps,
+      config: { damping: 14, stiffness: 140 },
+      durationInFrames: 25
+    })
+  );
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 36,
+              fontWeight: 800,
+              color: "#cbd5e1",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              margin: 0,
+              marginBottom: 32,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative"
+            },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "div",
+                {
+                  style: {
+                    position: "absolute",
+                    top: 0,
+                    left: 80,
+                    fontSize: 320,
+                    lineHeight: 1,
+                    color: accentColor,
+                    opacity: 0.08,
+                    fontFamily: "Georgia, serif",
+                    pointerEvents: "none"
+                  },
+                  children: "\u201C"
+                }
+              ),
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "div",
+                {
+                  style: {
+                    position: "relative",
+                    maxWidth: 1200,
+                    backgroundColor: "rgba(15, 23, 41, 0.92)",
+                    border: `2px solid ${accentColor}`,
+                    borderRadius: 22,
+                    padding: "44px 56px",
+                    boxShadow: `0 30px 80px -20px rgba(0,0,0,0.7), 0 0 40px -8px ${accentColor}80`,
+                    opacity: containerSpring,
+                    transform: `scale(${(0,esm.interpolate)(containerSpring, [0, 1], [0.92, 1])})`
+                  },
+                  children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "div",
+                      {
+                        style: {
+                          position: "absolute",
+                          top: -1,
+                          left: -1,
+                          width: 36,
+                          height: 36,
+                          borderTop: `4px solid ${accentColor}`,
+                          borderLeft: `4px solid ${accentColor}`,
+                          borderTopLeftRadius: 22,
+                          opacity: pulse
+                        }
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "div",
+                      {
+                        style: {
+                          position: "absolute",
+                          top: -1,
+                          right: -1,
+                          width: 36,
+                          height: 36,
+                          borderTop: `4px solid ${accentColor}`,
+                          borderRight: `4px solid ${accentColor}`,
+                          borderTopRightRadius: 22,
+                          opacity: pulse
+                        }
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "div",
+                      {
+                        style: {
+                          position: "absolute",
+                          bottom: -1,
+                          left: -1,
+                          width: 36,
+                          height: 36,
+                          borderBottom: `4px solid ${accentColor}`,
+                          borderLeft: `4px solid ${accentColor}`,
+                          borderBottomLeftRadius: 22,
+                          opacity: pulse
+                        }
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "div",
+                      {
+                        style: {
+                          position: "absolute",
+                          bottom: -1,
+                          right: -1,
+                          width: 36,
+                          height: 36,
+                          borderBottom: `4px solid ${accentColor}`,
+                          borderRight: `4px solid ${accentColor}`,
+                          borderBottomRightRadius: 22,
+                          opacity: pulse
+                        }
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "p",
+                      {
+                        style: {
+                          margin: 0,
+                          fontSize: 32,
+                          fontWeight: 600,
+                          color: "#f1f5f9",
+                          lineHeight: 1.45,
+                          fontFamily: "Inter, sans-serif",
+                          letterSpacing: "-0.01em"
+                        },
+                        children: body
+                      }
+                    ),
+                    bullets.length > 0 && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "div",
+                      {
+                        style: {
+                          marginTop: 24,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 12,
+                          paddingTop: 20,
+                          borderTop: `1px solid ${accentColor}33`
+                        },
+                        children: bullets.map((b, i) => /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                          "div",
+                          {
+                            style: {
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: 12,
+                              opacity: bulletSprings[i],
+                              transform: `translateX(${(0,esm.interpolate)(
+                                bulletSprings[i],
+                                [0, 1],
+                                [isLeading ? -16 : 16, 0]
+                              )}px)`
+                            },
+                            children: [
+                              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                                "div",
+                                {
+                                  style: {
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: "50%",
+                                    backgroundColor: accentColor,
+                                    marginTop: 12,
+                                    flexShrink: 0,
+                                    boxShadow: `0 0 10px ${accentColor}`
+                                  }
+                                }
+                              ),
+                              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                                "span",
+                                {
+                                  style: {
+                                    fontSize: 20,
+                                    color: "#cbd5e1",
+                                    fontFamily: "Inter, sans-serif",
+                                    lineHeight: 1.5
+                                  },
+                                  children: b
+                                }
+                              )
+                            ]
+                          },
+                          i
+                        ))
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                      "div",
+                      {
+                        style: {
+                          position: "absolute",
+                          ...arrowStyle,
+                          width: 28,
+                          height: 28,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: accentColor,
+                          fontSize: 36,
+                          fontWeight: 900,
+                          lineHeight: 1,
+                          textShadow: `0 0 12px ${accentColor}`
+                        },
+                        children: [
+                          position === "left" && "\u2192",
+                          position === "right" && "\u2190",
+                          position === "top" && "\u2193",
+                          position === "bottom" && "\u2191"
+                        ]
+                      }
+                    )
+                  ]
+                }
+              )
+            ]
+          }
+        )
+      ]
+    }
+  );
+};
+
 ;// ./src/registry.ts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4079,7 +8825,22 @@ const COMPONENT_REGISTRY = {
   QuoteCard: QuoteCard,
   CodeBlock: CodeBlock,
   TwoColumnLayout: TwoColumnLayout,
-  BarChart: BarChart
+  BarChart: BarChart,
+  PacketFlow: PacketFlow,
+  HttpExchange: HttpExchange,
+  HashRing: HashRing,
+  StateMachine: StateMachine,
+  TreeHierarchy: TreeHierarchy,
+  SequenceDiagram: SequenceDiagram,
+  LineChart: LineChart,
+  MathFormula: MathFormula,
+  EquationDerivation: EquationDerivation,
+  TerminalCLI: TerminalCLI,
+  PieChart: PieChart,
+  NumberedList: NumberedList,
+  GlossaryCards: GlossaryCards,
+  FlowDiagram: FlowDiagram,
+  CalloutAnnotation: CalloutAnnotation
 };
 const COMPONENT_SCHEMAS = {
   AnimatedTitle: AnimatedTitleSchema,
@@ -4094,7 +8855,22 @@ const COMPONENT_SCHEMAS = {
   QuoteCard: QuoteCardSchema,
   CodeBlock: CodeBlockSchema,
   TwoColumnLayout: TwoColumnLayoutSchema,
-  BarChart: BarChartSchema
+  BarChart: BarChartSchema,
+  PacketFlow: PacketFlowSchema,
+  HttpExchange: HttpExchangeSchema,
+  HashRing: HashRingSchema,
+  StateMachine: StateMachineSchema,
+  TreeHierarchy: TreeHierarchySchema,
+  SequenceDiagram: SequenceDiagramSchema,
+  LineChart: LineChartSchema,
+  MathFormula: MathFormulaSchema,
+  EquationDerivation: EquationDerivationSchema,
+  TerminalCLI: TerminalCLISchema,
+  PieChart: PieChartSchema,
+  NumberedList: NumberedListSchema,
+  GlossaryCards: GlossaryCardsSchema,
+  FlowDiagram: FlowDiagramSchema,
+  CalloutAnnotation: CalloutAnnotationSchema
 };
 const toJsonSchema = (schema, name) => zodToJsonSchema(schema, name);
 const COMPONENT_CATALOG = {
@@ -4149,6 +8925,66 @@ const COMPONENT_CATALOG = {
   BarChart: {
     description: "An animated bar chart with vertical or horizontal layout. Bars grow in with spring physics and values count up from 0. Use for data comparisons.",
     schema: toJsonSchema(BarChartSchema, "BarChartProps")
+  },
+  PacketFlow: {
+    description: "An animated network topology where data packets travel along edges between nodes. Nodes are positioned by x/y percentage coordinates. Ideal for showing network protocols, request routing, TCP handshakes, and distributed system data flows.",
+    schema: toJsonSchema(PacketFlowSchema, "PacketFlowProps")
+  },
+  HttpExchange: {
+    description: "A side-by-side HTTP request and response viewer with line-by-line animated reveal. Shows method, path, headers, and body for both request and response. Great for explaining APIs, REST calls, and HTTP protocol details.",
+    schema: toJsonSchema(HttpExchangeSchema, "HttpExchangeProps")
+  },
+  HashRing: {
+    description: "A consistent hashing ring with virtual nodes, server placement, and animated key lookups. Use for distributed caches, sharded databases, CDNs, and any consistent-hashing explanation.",
+    schema: toJsonSchema(HashRingSchema, "HashRingProps")
+  },
+  StateMachine: {
+    description: "An animated finite-state machine with state boxes, labeled transition arrows, and a pulsing active state. Use for protocol diagrams (TCP handshake, Raft consensus), cache coherence, and workflow states.",
+    schema: toJsonSchema(StateMachineSchema, "StateMachineProps")
+  },
+  TreeHierarchy: {
+    description: "A top-down tree diagram with auto-laid-out nodes and curved connectors. Use for B-trees, DNS hierarchy, recursion trees, file systems, org charts, and classification.",
+    schema: toJsonSchema(TreeHierarchySchema, "TreeHierarchyProps")
+  },
+  SequenceDiagram: {
+    description: "A UML-style sequence diagram with actor lifelines and time-ordered request/response arrows. Use for API flows, microservice communication, and authentication sequences.",
+    schema: toJsonSchema(SequenceDiagramSchema, "SequenceDiagramProps")
+  },
+  LineChart: {
+    description: "An animated multi-series line chart with optional area fill, grid lines, and legend. Lines draw in over time. Use for trends, growth curves, latency vs load, and any time-series comparison.",
+    schema: toJsonSchema(LineChartSchema, "LineChartProps")
+  },
+  MathFormula: {
+    description: "A centered formula display with token-based rendering for variables, numbers, fractions, exponents, subscripts, square roots, and sums. Use for Big-O notation, equations, and math derivations.",
+    schema: toJsonSchema(MathFormulaSchema, "MathFormulaProps")
+  },
+  EquationDerivation: {
+    description: "A vertical stack of formula steps connected by arrows, with optional justifications. Each step is a complete formula that can highlight independently. Use for proof walks and algebraic transformations.",
+    schema: toJsonSchema(EquationDerivationSchema, "EquationDerivationProps")
+  },
+  TerminalCLI: {
+    description: "An animated terminal/CLI window that types a command then streams output line by line. Themes: dark, matrix, amber. Use for tutorials, debugging flows, and showing command output.",
+    schema: toJsonSchema(TerminalCLISchema, "TerminalCLIProps")
+  },
+  PieChart: {
+    description: "An animated pie or donut chart with a sweeping reveal, percentage labels, an optional center label, and a side legend with values. Use for proportional breakdowns.",
+    schema: toJsonSchema(PieChartSchema, "PieChartProps")
+  },
+  NumberedList: {
+    description: "A list of numbered cards with large colored badges, headings, and descriptions. Stack (vertical) or grid (2-column) layout. Use for ranked steps, principles, and ordered concepts.",
+    schema: toJsonSchema(NumberedListSchema, "NumberedListProps")
+  },
+  GlossaryCards: {
+    description: "A grid of term/definition cards with colored icon tiles. Auto-detects 2- or 3-column layout. Use for vocabulary sections, acronym glossaries, and concept maps.",
+    schema: toJsonSchema(GlossaryCardsSchema, "GlossaryCardsProps")
+  },
+  FlowDiagram: {
+    description: "A branching flow diagram with process (rectangle), decision (diamond), and start/end (pill) shapes connected by labeled arrows. Use for workflows, conditional logic, and algorithms with branching.",
+    schema: toJsonSchema(FlowDiagramSchema, "FlowDiagramProps")
+  },
+  CalloutAnnotation: {
+    description: "A highlighted callout box with corner brackets, a side arrow, and optional bullet points. Use to emphasize a key insight or definition against a darker background.",
+    schema: toJsonSchema(CalloutAnnotationSchema, "CalloutAnnotationProps")
   }
 };
 
@@ -4158,141 +8994,288 @@ const COMPONENT_CATALOG = {
 
 
 
-const TransitionOverlay = ({ transition, durationFrames }) => {
+function normaliseScene(scene) {
+  if (scene.panels && scene.panels.length > 0) {
+    return {
+      layout: scene.layout ?? "full",
+      title: scene.title ?? "",
+      panels: scene.panels
+    };
+  }
+  return {
+    layout: "full",
+    title: scene.title ?? "",
+    panels: [
+      {
+        area: "panel",
+        type: scene.type ?? "BulletList",
+        data: scene.data ?? {}
+      }
+    ]
+  };
+}
+const HEADER_H = 148;
+const CONTENT_H = 1080 - HEADER_H;
+const LAYOUTS = {
+  full: {
+    hasHeader: false,
+    gridTemplateAreas: '"panel"',
+    gridTemplateColumns: "1fr",
+    gridTemplateRows: "1fr"
+  },
+  "left-right": {
+    hasHeader: false,
+    gridTemplateAreas: '"left right"',
+    gridTemplateColumns: "1fr 1fr",
+    gridTemplateRows: "1fr"
+  },
+  "title-content": {
+    hasHeader: true,
+    gridTemplateAreas: '"main"',
+    gridTemplateColumns: "1fr",
+    gridTemplateRows: "1fr"
+  },
+  "title-left-right": {
+    hasHeader: true,
+    gridTemplateAreas: '"left right"',
+    gridTemplateColumns: "1fr 1fr",
+    gridTemplateRows: "1fr"
+  },
+  "title-main-sidebar": {
+    hasHeader: true,
+    gridTemplateAreas: '"main sidebar"',
+    gridTemplateColumns: "1.85fr 1fr",
+    gridTemplateRows: "1fr"
+  }
+};
+const SceneHeader = ({
+  title,
+  subtitle
+}) => {
   const frame = (0,esm.useCurrentFrame)();
-  if (transition === "none") return null;
-  const progress = (0,esm.interpolate)(frame, [0, durationFrames], [0, 1], {
+  const theme = useTheme();
+  const opacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp"
   });
-  if (transition === "fade") {
-    const opacity = (0,esm.interpolate)(
-      frame,
-      [0, durationFrames / 2, durationFrames],
-      [0, 1, 0],
-      {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp"
-      }
-    );
+  const translateY = (0,esm.interpolate)(frame, [0, 18], [-20, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const lineScaleX = (0,esm.interpolate)(frame, [8, 28], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+    "div",
+    {
+      style: {
+        height: HEADER_H,
+        padding: "0 72px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        opacity,
+        transform: `translateY(${translateY}px)`,
+        borderBottom: `1px solid rgba(255,255,255,0.08)`,
+        background: `linear-gradient(135deg, ${theme.background} 60%, ${theme.primary}18 100%)`,
+        flexShrink: 0
+      },
+      children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 20 }, children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "div",
+          {
+            style: {
+              width: 5,
+              height: 44,
+              borderRadius: 3,
+              background: `linear-gradient(180deg, ${theme.primary}, ${theme.accent})`,
+              flexShrink: 0,
+              transformOrigin: "top",
+              transform: `scaleY(${lineScaleX})`
+            }
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { children: [
+          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "h2",
+            {
+              style: {
+                margin: 0,
+                fontSize: 46,
+                fontWeight: 800,
+                color: "#ffffff",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.1,
+                fontFamily: "inherit"
+              },
+              children: title
+            }
+          ),
+          subtitle && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "p",
+            {
+              style: {
+                margin: "4px 0 0",
+                fontSize: 22,
+                color: "rgba(255,255,255,0.55)",
+                fontWeight: 400,
+                letterSpacing: "0.01em"
+              },
+              children: subtitle
+            }
+          )
+        ] })
+      ] })
+    }
+  );
+};
+const PanelCell = ({
+  panel,
+  gridArea
+}) => {
+  const Component = COMPONENT_REGISTRY[panel.type];
+  const safeProps = Object.fromEntries(
+    Object.entries(panel.data).map(([k, v]) => [
+      k,
+      v === null ? void 0 : v
+    ])
+  );
+  if (!Component) {
     return /* @__PURE__ */ (0,jsx_runtime.jsx)(
-      esm.AbsoluteFill,
+      "div",
       {
-        style: { backgroundColor: "#000000", opacity, pointerEvents: "none" }
+        style: {
+          gridArea,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "2px dashed #ef4444"
+        },
+        children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { color: "#ef4444", fontSize: 20 }, children: [
+          "Unknown: ",
+          panel.type
+        ] })
       }
     );
   }
-  if (transition === "slideLeft") {
-    const translateX = (0,esm.interpolate)(progress, [0, 1], [0, -100], {
+  const AnyComponent = Component;
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { gridArea, position: "relative", overflow: "hidden" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(AnyComponent, { ...safeProps }) });
+};
+const TRANSITION_FRAMES = 15;
+const SceneWrapper = ({
+  scene,
+  background
+}) => {
+  const { layout, title, panels } = normaliseScene(scene);
+  const config = LAYOUTS[layout] ?? LAYOUTS["full"];
+  const contentH = config.hasHeader ? CONTENT_H : 1080;
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    esm.AbsoluteFill,
+    {
+      style: { backgroundColor: background, flexDirection: "column" },
+      children: [
+        config.hasHeader && /* @__PURE__ */ (0,jsx_runtime.jsx)(SceneHeader, { title, subtitle: scene.subtitle }),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              height: contentH,
+              display: "grid",
+              gridTemplateAreas: config.gridTemplateAreas,
+              gridTemplateColumns: config.gridTemplateColumns,
+              gridTemplateRows: config.gridTemplateRows,
+              gap: 0
+            },
+            children: panels.map((panel) => /* @__PURE__ */ (0,jsx_runtime.jsx)(PanelCell, { panel, gridArea: panel.area }, panel.area))
+          }
+        ),
+        scene.transition !== "none" && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          esm.Sequence,
+          {
+            from: scene.duration_frames - TRANSITION_FRAMES,
+            durationInFrames: TRANSITION_FRAMES,
+            layout: "none",
+            children: /* @__PURE__ */ (0,jsx_runtime.jsx)(TransitionOverlay, { transition: scene.transition })
+          }
+        )
+      ]
+    }
+  );
+};
+const TransitionOverlay = ({
+  transition
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const progress = (0,esm.spring)({
+    frame,
+    fps,
+    config: { damping: 20, stiffness: 300 },
+    durationInFrames: TRANSITION_FRAMES
+  });
+  const fadeOpacity = (0,esm.interpolate)(
+    frame,
+    [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES],
+    [0, 1, 0],
+    {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp"
-    });
+    }
+  );
+  if (transition === "fade") {
     return /* @__PURE__ */ (0,jsx_runtime.jsx)(
       esm.AbsoluteFill,
       {
         style: {
-          backgroundColor: "#000000",
-          opacity: 0.6,
-          transform: `translateX(${translateX}%)`,
+          backgroundColor: "#000",
+          opacity: fadeOpacity,
+          pointerEvents: "none"
+        }
+      }
+    );
+  }
+  if (transition === "slideLeft") {
+    return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      esm.AbsoluteFill,
+      {
+        style: {
+          backgroundColor: "#000",
+          opacity: 0.7,
+          transform: `translateX(${(0,esm.interpolate)(progress, [0, 1], [0, -100])}%)`,
           pointerEvents: "none"
         }
       }
     );
   }
   if (transition === "slideUp") {
-    const translateY = (0,esm.interpolate)(progress, [0, 1], [0, -100], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp"
-    });
     return /* @__PURE__ */ (0,jsx_runtime.jsx)(
       esm.AbsoluteFill,
       {
         style: {
-          backgroundColor: "#000000",
-          opacity: 0.6,
-          transform: `translateY(${translateY}%)`,
+          backgroundColor: "#000",
+          opacity: 0.7,
+          transform: `translateY(${(0,esm.interpolate)(progress, [0, 1], [0, -100])}%)`,
           pointerEvents: "none"
         }
       }
     );
   }
   if (transition === "zoom") {
-    const scale = (0,esm.interpolate)(progress, [0, 1], [1, 1.08], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp"
-    });
-    const opacity = (0,esm.interpolate)(
-      frame,
-      [0, durationFrames / 2, durationFrames],
-      [0, 0.5, 0],
-      {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp"
-      }
-    );
     return /* @__PURE__ */ (0,jsx_runtime.jsx)(
       esm.AbsoluteFill,
       {
         style: {
-          backgroundColor: "#000000",
-          opacity,
-          transform: `scale(${scale})`,
+          backgroundColor: "#000",
+          opacity: fadeOpacity * 0.6,
+          transform: `scale(${(0,esm.interpolate)(progress, [0, 1], [1, 1.08])})`,
           pointerEvents: "none"
         }
       }
     );
   }
   return null;
-};
-const TRANSITION_FRAMES = 15;
-const SceneWrapper = ({ scene, background }) => {
-  const Component = COMPONENT_REGISTRY[scene.type];
-  if (!Component) {
-    return /* @__PURE__ */ (0,jsx_runtime.jsx)(
-      esm.AbsoluteFill,
-      {
-        style: {
-          backgroundColor: background,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        },
-        children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("span", { style: { color: "#ef4444", fontSize: 24 }, children: [
-          "Unknown scene type: ",
-          scene.type
-        ] })
-      }
-    );
-  }
-  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm.AbsoluteFill, { style: { backgroundColor: background }, children: [
-    /* @__PURE__ */ (0,jsx_runtime.jsx)(
-      esm.AbsoluteFill,
-      {
-        style: {
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 80
-        },
-        children: /* @__PURE__ */ (0,jsx_runtime.jsx)(Component, { ...scene.data })
-      }
-    ),
-    scene.transition !== "none" && /* @__PURE__ */ (0,jsx_runtime.jsx)(
-      esm.Sequence,
-      {
-        from: scene.duration_frames - TRANSITION_FRAMES,
-        durationInFrames: TRANSITION_FRAMES,
-        layout: "none",
-        children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
-          TransitionOverlay,
-          {
-            transition: scene.transition,
-            durationFrames: TRANSITION_FRAMES
-          }
-        )
-      }
-    )
-  ] });
 };
 const DynamicVideo = ({ theme, scenes }) => {
   let cursor = 0;
@@ -4308,7 +9291,7 @@ const DynamicVideo = ({ theme, scenes }) => {
       durationInFrames: scene.duration_frames,
       premountFor: 30,
       style: {
-        translate: "-16.6px 15.4px"
+        translate: "-19px 3.6px"
       },
       children: /* @__PURE__ */ (0,jsx_runtime.jsx)(SceneWrapper, { scene, background: theme.background })
     },
@@ -4319,8 +9302,14 @@ const DynamicVideo = ({ theme, scenes }) => {
 ;// ./src/generated/examples.generated.ts
 
 const EXAMPLE_SCRIPTS = {
-  "mock_all": __webpack_require__(2330),
-  "scaling": __webpack_require__(8209)
+  "client-server-architecture": __webpack_require__(1503),
+  "create-an-interactive-presentation-on-client-server-communication-with-3-slides": __webpack_require__(1443),
+  "full-showcase": __webpack_require__(5433),
+  "horizontal-vs-vertical-scaling": __webpack_require__(7909),
+  "kubernetes": __webpack_require__(6684),
+  "mock-all": __webpack_require__(1928),
+  "scaling": __webpack_require__(8209),
+  "web-request-lifecycle": __webpack_require__(8859)
 };
 const EXAMPLE_SLUGS = Object.keys(EXAMPLE_SCRIPTS);
 
@@ -4332,25 +9321,39 @@ const EXAMPLE_SLUGS = Object.keys(EXAMPLE_SCRIPTS);
 
 
 const RemotionRoot = () => {
-  return /* @__PURE__ */ (0,jsx_runtime.jsx)(jsx_runtime.Fragment, { children: Object.entries(EXAMPLE_SCRIPTS).map(([slug, script]) => {
-    const totalFrames = script.scenes.reduce(
-      (sum, s) => sum + s.duration_frames,
-      0
-    );
-    return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(jsx_runtime.Fragment, { children: [
+    Object.entries(EXAMPLE_SCRIPTS).map(([slug, script]) => {
+      const totalFrames = script.scenes.reduce(
+        (sum, s) => sum + s.duration_frames,
+        0
+      );
+      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        esm.Composition,
+        {
+          id: slug,
+          component: DynamicVideo,
+          durationInFrames: totalFrames,
+          fps: script.fps,
+          width: script.width,
+          height: script.height,
+          defaultProps: script
+        },
+        slug
+      );
+    }),
+    EXAMPLE_SCRIPTS["scaling"] && /* @__PURE__ */ (0,jsx_runtime.jsx)(
       esm.Composition,
       {
-        id: slug,
+        id: "DynamicVideo",
         component: DynamicVideo,
-        durationInFrames: totalFrames,
-        fps: script.fps,
-        width: script.width,
-        height: script.height,
-        defaultProps: script
-      },
-      slug
-    );
-  }) });
+        durationInFrames: EXAMPLE_SCRIPTS["scaling"].scenes.reduce((sum, s) => sum + s.duration_frames, 0),
+        fps: EXAMPLE_SCRIPTS["scaling"].fps,
+        width: EXAMPLE_SCRIPTS["scaling"].width,
+        height: EXAMPLE_SCRIPTS["scaling"].height,
+        defaultProps: EXAMPLE_SCRIPTS["scaling"]
+      }
+    )
+  ] });
 };
 
 ;// ./src/index.ts
@@ -4654,7 +9657,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
     --radius-lg: 0.5rem;
     --radius-2xl: 1rem;
     --radius-3xl: 1.5rem;
-    --drop-shadow-lg: 0 4px 4px rgb(0 0 0 / 0.15);
     --drop-shadow-2xl: 0 25px 25px rgb(0 0 0 / 0.15);
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
     --blur-lg: 16px;
@@ -4834,11 +9836,11 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .start {
     inset-inline-start: var(--spacing);
   }
+  .end {
+    inset-inline-end: var(--spacing);
+  }
   .top-1\\/2 {
     top: calc(1 / 2 * 100%);
-  }
-  .top-16 {
-    top: calc(var(--spacing) * 16);
   }
   .right-0 {
     right: calc(var(--spacing) * 0);
@@ -4846,14 +9848,8 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .left-0 {
     left: calc(var(--spacing) * 0);
   }
-  .left-16 {
-    left: calc(var(--spacing) * 16);
-  }
   .-z-10 {
     z-index: calc(10 * -1);
-  }
-  .z-10 {
-    z-index: 10;
   }
   .container {
     width: 100%;
@@ -4920,6 +9916,9 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   }
   .inline-block {
     display: inline-block;
+  }
+  .inline-flex {
+    display: inline-flex;
   }
   .h-1 {
     height: calc(var(--spacing) * 1);
@@ -5303,6 +10302,10 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .underline {
     text-decoration-line: underline;
   }
+  .ring {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
   .blur {
     --tw-blur: blur(8px);
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
@@ -5315,11 +10318,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .drop-shadow-\\[0_0_10px_rgba\\(56\\,189\\,248\\,0\\.2\\)\\] {
     --tw-drop-shadow-size: drop-shadow(0 0 10px var(--tw-drop-shadow-color, rgba(56,189,248,0.2)));
     --tw-drop-shadow: var(--tw-drop-shadow-size);
-    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-  }
-  .drop-shadow-lg {
-    --tw-drop-shadow-size: drop-shadow(0 4px 4px var(--tw-drop-shadow-color, rgb(0 0 0 / 0.15)));
-    --tw-drop-shadow: drop-shadow(var(--drop-shadow-lg));
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
   .filter {
@@ -5451,6 +10449,71 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   syntax: "*";
   inherits: false;
 }
+@property --tw-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-inset-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-inset-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-inset-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-ring-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-ring-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-inset-ring-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-inset-ring-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-ring-inset {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-ring-offset-width {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --tw-ring-offset-color {
+  syntax: "*";
+  inherits: false;
+  initial-value: #fff;
+}
+@property --tw-ring-offset-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
 @property --tw-blur {
   syntax: "*";
   inherits: false;
@@ -5568,6 +10631,20 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
       --tw-numeric-figure: initial;
       --tw-numeric-spacing: initial;
       --tw-numeric-fraction: initial;
+      --tw-shadow: 0 0 #0000;
+      --tw-shadow-color: initial;
+      --tw-shadow-alpha: 100%;
+      --tw-inset-shadow: 0 0 #0000;
+      --tw-inset-shadow-color: initial;
+      --tw-inset-shadow-alpha: 100%;
+      --tw-ring-color: initial;
+      --tw-ring-shadow: 0 0 #0000;
+      --tw-inset-ring-color: initial;
+      --tw-inset-ring-shadow: 0 0 #0000;
+      --tw-ring-inset: initial;
+      --tw-ring-offset-width: 0px;
+      --tw-ring-offset-color: #fff;
+      --tw-ring-offset-shadow: 0 0 #0000;
       --tw-blur: initial;
       --tw-brightness: initial;
       --tw-contrast: initial;
@@ -5595,7 +10672,7 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
     }
   }
 }
-`, "",{"version":3,"sources":["webpack://./src/index.css"],"names":[],"mappings":"AAAA,gEAAgE;AAChE,iBAAiB;AACjB,yCAAyC;AACzC;EACE;IACE;6DACyD;IACzD;iDAC6C;IAC7C,6CAA6C;IAC7C,+CAA+C;IAC/C,2CAA2C;IAC3C,6CAA6C;IAC7C,6CAA6C;IAC7C,4CAA4C;IAC5C,6CAA6C;IAC7C,6CAA6C;IAC7C,6CAA6C;IAC7C,6CAA6C;IAC7C,mBAAmB;IACnB,kBAAkB;IAClB,sBAAsB;IACtB,sBAAsB;IACtB,sBAAsB;IACtB,kBAAkB;IAClB,sCAAsC;IACtC,mBAAmB;IACnB,0CAA0C;IAC1C,mBAAmB;IACnB,0CAA0C;IAC1C,kBAAkB;IAClB,yCAAyC;IACzC,kBAAkB;IAClB,sCAAsC;IACtC,oBAAoB;IACpB,2CAA2C;IAC3C,mBAAmB;IACnB,yCAAyC;IACzC,gBAAgB;IAChB,0BAA0B;IAC1B,mBAAmB;IACnB,0BAA0B;IAC1B,gBAAgB;IAChB,0BAA0B;IAC1B,gBAAgB;IAChB,0BAA0B;IAC1B,uBAAuB;IACvB,wBAAwB;IACxB,0BAA0B;IAC1B,sBAAsB;IACtB,wBAAwB;IACxB,wBAAwB;IACxB,qBAAqB;IACrB,wBAAwB;IACxB,oBAAoB;IACpB,mBAAmB;IACnB,kBAAkB;IAClB,oBAAoB;IACpB,6CAA6C;IAC7C,gDAAgD;IAChD,sCAAsC;IACtC,eAAe;IACf,oCAAoC;IACpC,kEAAkE;IAClE,uCAAuC;IACvC,wEAAwE;IACxE;;KAEC;IACD,4CAA4C;IAC5C;;KAEC;IACD;;KAEC;EACH;AACF;AACA;EACE;IACE,sBAAsB;IACtB,SAAS;IACT,UAAU;IACV,eAAe;EACjB;EACA;IACE,gBAAgB;IAChB,8BAA8B;IAC9B,WAAW;IACX,6JAA6J;IAC7J,mEAAmE;IACnE,yEAAyE;IACzE,wCAAwC;EAC1C;EACA;IACE,oBAAoB;EACtB;EACA;IACE,SAAS;IACT,cAAc;IACd,qBAAqB;EACvB;EACA;IACE,yCAAyC;IACzC,iCAAiC;EACnC;EACA;IACE,kBAAkB;IAClB,oBAAoB;EACtB;EACA;IACE,cAAc;IACd,gCAAgC;IAChC,wBAAwB;EAC1B;EACA;IACE,mBAAmB;EACrB;EACA;IACE,kJAAkJ;IAClJ,0EAA0E;IAC1E,8EAA8E;IAC9E,cAAc;EAChB;EACA;IACE,cAAc;EAChB;EACA;IACE,cAAc;IACd,cAAc;IACd,kBAAkB;IAClB,wBAAwB;EAC1B;EACA;IACE,eAAe;EACjB;EACA;IACE,WAAW;EACb;EACA;IACE,cAAc;IACd,qBAAqB;IACrB,yBAAyB;EAC3B;EACA;IACE,aAAa;EACf;EACA;IACE,wBAAwB;EAC1B;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,cAAc;IACd,sBAAsB;EACxB;EACA;IACE,eAAe;IACf,YAAY;EACd;EACA;IACE,aAAa;IACb,8BAA8B;IAC9B,gCAAgC;IAChC,uBAAuB;IACvB,cAAc;IACd,gBAAgB;IAChB,6BAA6B;IAC7B,UAAU;EACZ;EACA;IACE,mBAAmB;EACrB;EACA;IACE,0BAA0B;EAC5B;EACA;IACE,sBAAsB;EACxB;EACA;IACE,UAAU;IACV,mBAAmB;IACnB;MACE,yDAAyD;IAC3D;EACF;EACA;IACE,gBAAgB;EAClB;EACA;IACE,wBAAwB;EAC1B;EACA;IACE,eAAe;IACf,mBAAmB;EACrB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,UAAU;EACZ;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,YAAY;EACd;EACA;IACE,wBAAwB;EAC1B;AACF;AACA;EACE;IACE,mBAAmB;EACrB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,kCAAkC;EACpC;EACA;IACE,uBAAuB;EACzB;EACA;IACE,8BAA8B;EAChC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,8BAA8B;EAChC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,sBAAsB;EACxB;EACA;IACE,WAAW;EACb;EACA;IACE,WAAW;IACX;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;EACF;EACA;IACE,sCAAsC;EACxC;EACA;IACE,oCAAoC;EACtC;EACA;IACE,sCAAsC;EACxC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,cAAc;EAChB;EACA;IACE,aAAa;EACf;EACA;IACE,aAAa;EACf;EACA;IACE,aAAa;EACf;EACA;IACE,eAAe;EACjB;EACA;IACE,qBAAqB;EACvB;EACA;IACE,gCAAgC;EAClC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,aAAa;EACf;EACA;IACE,YAAY;EACd;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,YAAY;EACd;EACA;IACE,WAAW;EACb;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,OAAO;EACT;EACA;IACE,cAAc;EAChB;EACA;IACE,YAAY;EACd;EACA;IACE,+CAA+C;IAC/C,sDAAsD;EACxD;EACA;IACE,0GAA0G;EAC5G;EACA;IACE,gDAAgD;EAClD;EACA;IACE,sBAAsB;EACxB;EACA;IACE,mBAAmB;EACrB;EACA;IACE,mBAAmB;EACrB;EACA;IACE,uBAAuB;EACzB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,8BAA8B;EAChC;EACA;IACE,uBAAuB;EACzB;EACA;IACE,2BAA2B;EAC7B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,mCAAmC;EACrC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,wCAAwC;IACxC,qBAAqB;EACvB;EACA;IACE,2CAA2C;IAC3C,wBAAwB;EAC1B;EACA;IACE,2CAA2C;IAC3C,wBAAwB;EAC1B;EACA;IACE,oCAAoC;EACtC;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,oCAAoC;EACtC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,iFAAiF;IACjF;MACE,8EAA8E;IAChF;EACF;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,iFAAiF;IACjF;MACE,8EAA8E;IAChF;EACF;EACA;IACE,oCAAoC;EACtC;EACA;IACE,mCAAmC;EACrC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,qCAAqC;EACvC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,eAAe;EACjB;EACA;IACE,eAAe;EACjB;EACA;IACE,eAAe;EACjB;EACA;IACE,oCAAoC;IACpC,mCAAmC;EACrC;EACA;IACE,kCAAkC;IAClC,iCAAiC;EACnC;EACA;IACE,0CAA0C;IAC1C,qCAAqC;EACvC;EACA;IACE,yCAAyC;IACzC,oCAAoC;EACtC;EACA;IACE,qCAAqC;IACrC,sCAAsC;EACxC;EACA;IACE,oCAAoC;IACpC,qCAAqC;EACvC;EACA;IACE,oCAAoC;IACpC,qCAAqC;EACvC;EACA;IACE,qCAAqC;IACrC,sCAAsC;EACxC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,4BAA4B;EAC9B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,yBAAyB;EAC3B;EACA;IACE,8BAA8B;EAChC;EACA;IACE,yBAAyB;EAC3B;EACA;IACE,kBAAkB;EACpB;EACA;IACE,kCAAkC;IAClC,iJAAiJ;EACnJ;EACA;IACE,+BAA+B;EACjC;EACA;IACE,oBAAoB;IACpB,0LAA0L;EAC5L;EACA;IACE,8FAA8F;IAC9F,qDAAqD;IACrD,0LAA0L;EAC5L;EACA;IACE,8FAA8F;IAC9F,4CAA4C;IAC5C,0LAA0L;EAC5L;EACA;IACE,4FAA4F;IAC5F,oDAAoD;IACpD,0LAA0L;EAC5L;EACA;IACE,0LAA0L;EAC5L;EACA;IACE,wCAAwC;IACxC,wRAAwR;IACxR,gRAAgR;EAClR;EACA;IACE,yUAAyU;IACzU,qFAAqF;IACrF,2EAA2E;EAC7E;EACA;IACE,wBAAwB;IACxB,qFAAqF;IACrF,2EAA2E;EAC7E;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,0BAA0B;IAC1B,2CAA2C;EAC7C;EACA;IACE,yBAAyB;IACzB,iBAAiB;EACnB;EACA;IACE;MACE,0BAA0B;MAC1B,4DAA4D;IAC9D;EACF;EACA;IACE;MACE,0BAA0B;MAC1B,4DAA4D;IAC9D;EACF;EACA;IACE;MACE,yBAAyB;MACzB,2DAA2D;IAC7D;EACF;AACF;AACA;EACE,WAAW;EACX,eAAe;EACf,gBAAgB;AAClB;AACA;EACE,WAAW;EACX,eAAe;EACf,gBAAgB;AAClB;AACA;EACE,WAAW;EACX,eAAe;EACf,gBAAgB;AAClB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,oBAAoB;AACtB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,sBAAsB;EACtB,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE;IACE;MACE,mBAAmB;MACnB,mBAAmB;MACnB,mBAAmB;MACnB,sBAAsB;MACtB,sBAAsB;MACtB,sBAAsB;MACtB,oBAAoB;MACpB,oBAAoB;MACpB,wBAAwB;MACxB,qBAAqB;MACrB,yBAAyB;MACzB,sBAAsB;MACtB,qBAAqB;MACrB,0BAA0B;MAC1B,4BAA4B;MAC5B,6BAA6B;MAC7B,8BAA8B;MAC9B,kBAAkB;MAClB,wBAAwB;MACxB,sBAAsB;MACtB,uBAAuB;MACvB,wBAAwB;MACxB,oBAAoB;MACpB,qBAAqB;MACrB,sBAAsB;MACtB,mBAAmB;MACnB,yBAAyB;MACzB,+BAA+B;MAC/B,4BAA4B;MAC5B,8BAA8B;MAC9B,2BAA2B;MAC3B,iCAAiC;MACjC,+BAA+B;MAC/B,gCAAgC;MAChC,iCAAiC;MACjC,6BAA6B;MAC7B,8BAA8B;MAC9B,+BAA+B;MAC/B,4BAA4B;MAC5B,sBAAsB;MACtB,kBAAkB;IACpB;EACF;AACF","sourcesContent":["/*! tailwindcss v4.2.0 | MIT License | https://tailwindcss.com */\n@layer properties;\n@layer theme, base, components, utilities;\n@layer theme {\n  :root, :host {\n    --font-sans: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\",\n      \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";\n    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,\n      \"Liberation Mono\", \"Courier New\", monospace;\n    --color-yellow-500: oklch(0.795 0.184 86.047);\n    --color-emerald-400: oklch(0.765 0.177 163.223);\n    --color-rose-400: oklch(0.712 0.194 13.428);\n    --color-slate-200: oklch(0.929 0.013 255.508);\n    --color-slate-300: oklch(0.869 0.022 252.894);\n    --color-slate-400: oklch(0.704 0.04 256.788);\n    --color-slate-500: oklch(0.554 0.046 257.417);\n    --color-slate-800: oklch(0.279 0.041 260.031);\n    --color-slate-900: oklch(0.208 0.042 265.755);\n    --color-slate-950: oklch(0.129 0.042 264.695);\n    --color-white: #fff;\n    --spacing: 0.25rem;\n    --container-2xl: 42rem;\n    --container-4xl: 56rem;\n    --container-5xl: 64rem;\n    --text-xs: 0.75rem;\n    --text-xs--line-height: calc(1 / 0.75);\n    --text-sm: 0.875rem;\n    --text-sm--line-height: calc(1.25 / 0.875);\n    --text-lg: 1.125rem;\n    --text-lg--line-height: calc(1.75 / 1.125);\n    --text-xl: 1.25rem;\n    --text-xl--line-height: calc(1.75 / 1.25);\n    --text-2xl: 1.5rem;\n    --text-2xl--line-height: calc(2 / 1.5);\n    --text-3xl: 1.875rem;\n    --text-3xl--line-height: calc(2.25 / 1.875);\n    --text-4xl: 2.25rem;\n    --text-4xl--line-height: calc(2.5 / 2.25);\n    --text-5xl: 3rem;\n    --text-5xl--line-height: 1;\n    --text-6xl: 3.75rem;\n    --text-6xl--line-height: 1;\n    --text-8xl: 6rem;\n    --text-8xl--line-height: 1;\n    --text-9xl: 8rem;\n    --text-9xl--line-height: 1;\n    --font-weight-bold: 700;\n    --font-weight-black: 900;\n    --tracking-tight: -0.025em;\n    --tracking-normal: 0em;\n    --tracking-wider: 0.05em;\n    --tracking-widest: 0.1em;\n    --leading-tight: 1.25;\n    --leading-relaxed: 1.625;\n    --radius-sm: 0.25rem;\n    --radius-lg: 0.5rem;\n    --radius-2xl: 1rem;\n    --radius-3xl: 1.5rem;\n    --drop-shadow-lg: 0 4px 4px rgb(0 0 0 / 0.15);\n    --drop-shadow-2xl: 0 25px 25px rgb(0 0 0 / 0.15);\n    --ease-out: cubic-bezier(0, 0, 0.2, 1);\n    --blur-lg: 16px;\n    --default-transition-duration: 150ms;\n    --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n    --default-font-family: var(--font-sans);\n    --default-font-feature-settings: var(--font-sans--font-feature-settings);\n    --default-font-variation-settings: var(\n      --font-sans--font-variation-settings\n    );\n    --default-mono-font-family: var(--font-mono);\n    --default-mono-font-feature-settings: var(\n      --font-mono--font-feature-settings\n    );\n    --default-mono-font-variation-settings: var(\n      --font-mono--font-variation-settings\n    );\n  }\n}\n@layer base {\n  *, ::after, ::before, ::backdrop, ::file-selector-button {\n    box-sizing: border-box;\n    margin: 0;\n    padding: 0;\n    border: 0 solid;\n  }\n  html, :host {\n    line-height: 1.5;\n    -webkit-text-size-adjust: 100%;\n    tab-size: 4;\n    font-family: var( --default-font-family, ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\" );\n    font-feature-settings: var(--default-font-feature-settings, normal);\n    font-variation-settings: var( --default-font-variation-settings, normal );\n    -webkit-tap-highlight-color: transparent;\n  }\n  body {\n    line-height: inherit;\n  }\n  hr {\n    height: 0;\n    color: inherit;\n    border-top-width: 1px;\n  }\n  abbr:where([title]) {\n    -webkit-text-decoration: underline dotted;\n    text-decoration: underline dotted;\n  }\n  h1, h2, h3, h4, h5, h6 {\n    font-size: inherit;\n    font-weight: inherit;\n  }\n  a {\n    color: inherit;\n    -webkit-text-decoration: inherit;\n    text-decoration: inherit;\n  }\n  b, strong {\n    font-weight: bolder;\n  }\n  code, kbd, samp, pre {\n    font-family: var( --default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace );\n    font-feature-settings: var( --default-mono-font-feature-settings, normal );\n    font-variation-settings: var( --default-mono-font-variation-settings, normal );\n    font-size: 1em;\n  }\n  small {\n    font-size: 80%;\n  }\n  sub, sup {\n    font-size: 75%;\n    line-height: 0;\n    position: relative;\n    vertical-align: baseline;\n  }\n  sub {\n    bottom: -0.25em;\n  }\n  sup {\n    top: -0.5em;\n  }\n  table {\n    text-indent: 0;\n    border-color: inherit;\n    border-collapse: collapse;\n  }\n  :-moz-focusring {\n    outline: auto;\n  }\n  progress {\n    vertical-align: baseline;\n  }\n  summary {\n    display: list-item;\n  }\n  ol, ul, menu {\n    list-style: none;\n  }\n  img, svg, video, canvas, audio, iframe, embed, object {\n    display: block;\n    vertical-align: middle;\n  }\n  img, video {\n    max-width: 100%;\n    height: auto;\n  }\n  button, input, select, optgroup, textarea, ::file-selector-button {\n    font: inherit;\n    font-feature-settings: inherit;\n    font-variation-settings: inherit;\n    letter-spacing: inherit;\n    color: inherit;\n    border-radius: 0;\n    background-color: transparent;\n    opacity: 1;\n  }\n  :where(select:is([multiple], [size])) optgroup {\n    font-weight: bolder;\n  }\n  :where(select:is([multiple], [size])) optgroup option {\n    padding-inline-start: 20px;\n  }\n  ::file-selector-button {\n    margin-inline-end: 4px;\n  }\n  ::placeholder {\n    opacity: 1;\n    color: currentColor;\n    @supports (color: color-mix(in lab, red, red)) {\n      color: color-mix(in oklab, currentColor 50%, transparent);\n    }\n  }\n  textarea {\n    resize: vertical;\n  }\n  ::-webkit-search-decoration {\n    -webkit-appearance: none;\n  }\n  ::-webkit-date-and-time-value {\n    min-height: 1lh;\n    text-align: inherit;\n  }\n  ::-webkit-datetime-edit {\n    display: inline-flex;\n  }\n  ::-webkit-datetime-edit-fields-wrapper {\n    padding: 0;\n  }\n  ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {\n    padding-block: 0;\n  }\n  :-moz-ui-invalid {\n    box-shadow: none;\n  }\n  button, input:where([type=\"button\"], [type=\"reset\"], [type=\"submit\"]), ::file-selector-button {\n    appearance: button;\n  }\n  ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {\n    height: auto;\n  }\n  [hidden]:where(:not([hidden=\"until-found\"])) {\n    display: none !important;\n  }\n}\n@layer utilities {\n  .visible {\n    visibility: visible;\n  }\n  .absolute {\n    position: absolute;\n  }\n  .relative {\n    position: relative;\n  }\n  .static {\n    position: static;\n  }\n  .start {\n    inset-inline-start: var(--spacing);\n  }\n  .top-1\\/2 {\n    top: calc(1 / 2 * 100%);\n  }\n  .top-16 {\n    top: calc(var(--spacing) * 16);\n  }\n  .right-0 {\n    right: calc(var(--spacing) * 0);\n  }\n  .left-0 {\n    left: calc(var(--spacing) * 0);\n  }\n  .left-16 {\n    left: calc(var(--spacing) * 16);\n  }\n  .-z-10 {\n    z-index: calc(10 * -1);\n  }\n  .z-10 {\n    z-index: 10;\n  }\n  .container {\n    width: 100%;\n    @media (width >= 40rem) {\n      max-width: 40rem;\n    }\n    @media (width >= 48rem) {\n      max-width: 48rem;\n    }\n    @media (width >= 64rem) {\n      max-width: 64rem;\n    }\n    @media (width >= 80rem) {\n      max-width: 80rem;\n    }\n    @media (width >= 96rem) {\n      max-width: 96rem;\n    }\n  }\n  .mt-0\\.5 {\n    margin-top: calc(var(--spacing) * 0.5);\n  }\n  .mt-1 {\n    margin-top: calc(var(--spacing) * 1);\n  }\n  .mt-1\\.5 {\n    margin-top: calc(var(--spacing) * 1.5);\n  }\n  .mb-1 {\n    margin-bottom: calc(var(--spacing) * 1);\n  }\n  .mb-2 {\n    margin-bottom: calc(var(--spacing) * 2);\n  }\n  .mb-4 {\n    margin-bottom: calc(var(--spacing) * 4);\n  }\n  .mb-6 {\n    margin-bottom: calc(var(--spacing) * 6);\n  }\n  .mb-8 {\n    margin-bottom: calc(var(--spacing) * 8);\n  }\n  .mb-12 {\n    margin-bottom: calc(var(--spacing) * 12);\n  }\n  .mb-16 {\n    margin-bottom: calc(var(--spacing) * 16);\n  }\n  .block {\n    display: block;\n  }\n  .flex {\n    display: flex;\n  }\n  .grid {\n    display: grid;\n  }\n  .hidden {\n    display: none;\n  }\n  .inline {\n    display: inline;\n  }\n  .inline-block {\n    display: inline-block;\n  }\n  .h-1 {\n    height: calc(var(--spacing) * 1);\n  }\n  .h-1\\.5 {\n    height: calc(var(--spacing) * 1.5);\n  }\n  .h-2\\.5 {\n    height: calc(var(--spacing) * 2.5);\n  }\n  .h-3\\.5 {\n    height: calc(var(--spacing) * 3.5);\n  }\n  .h-5 {\n    height: calc(var(--spacing) * 5);\n  }\n  .h-8 {\n    height: calc(var(--spacing) * 8);\n  }\n  .h-16 {\n    height: calc(var(--spacing) * 16);\n  }\n  .h-\\[550px\\] {\n    height: 550px;\n  }\n  .h-full {\n    height: 100%;\n  }\n  .w-2\\.5 {\n    width: calc(var(--spacing) * 2.5);\n  }\n  .w-3\\.5 {\n    width: calc(var(--spacing) * 3.5);\n  }\n  .w-5 {\n    width: calc(var(--spacing) * 5);\n  }\n  .w-8 {\n    width: calc(var(--spacing) * 8);\n  }\n  .w-16 {\n    width: calc(var(--spacing) * 16);\n  }\n  .w-48 {\n    width: calc(var(--spacing) * 48);\n  }\n  .w-72 {\n    width: calc(var(--spacing) * 72);\n  }\n  .w-\\[500px\\] {\n    width: 500px;\n  }\n  .w-full {\n    width: 100%;\n  }\n  .max-w-2xl {\n    max-width: var(--container-2xl);\n  }\n  .max-w-4xl {\n    max-width: var(--container-4xl);\n  }\n  .max-w-5xl {\n    max-width: var(--container-5xl);\n  }\n  .flex-1 {\n    flex: 1;\n  }\n  .shrink-0 {\n    flex-shrink: 0;\n  }\n  .grow {\n    flex-grow: 1;\n  }\n  .-translate-y-1\\/2 {\n    --tw-translate-y: calc(calc(1 / 2 * 100%) * -1);\n    translate: var(--tw-translate-x) var(--tw-translate-y);\n  }\n  .transform {\n    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);\n  }\n  .grid-cols-2 {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n  .flex-col {\n    flex-direction: column;\n  }\n  .flex-row {\n    flex-direction: row;\n  }\n  .items-center {\n    align-items: center;\n  }\n  .items-start {\n    align-items: flex-start;\n  }\n  .items-stretch {\n    align-items: stretch;\n  }\n  .justify-between {\n    justify-content: space-between;\n  }\n  .justify-center {\n    justify-content: center;\n  }\n  .justify-start {\n    justify-content: flex-start;\n  }\n  .gap-1 {\n    gap: calc(var(--spacing) * 1);\n  }\n  .gap-1\\.5 {\n    gap: calc(var(--spacing) * 1.5);\n  }\n  .gap-2 {\n    gap: calc(var(--spacing) * 2);\n  }\n  .gap-2\\.5 {\n    gap: calc(var(--spacing) * 2.5);\n  }\n  .gap-3 {\n    gap: calc(var(--spacing) * 3);\n  }\n  .gap-3\\.5 {\n    gap: calc(var(--spacing) * 3.5);\n  }\n  .gap-4 {\n    gap: calc(var(--spacing) * 4);\n  }\n  .gap-6 {\n    gap: calc(var(--spacing) * 6);\n  }\n  .overflow-hidden {\n    overflow: hidden;\n  }\n  .overflow-y-auto {\n    overflow-y: auto;\n  }\n  .rounded-2xl {\n    border-radius: var(--radius-2xl);\n  }\n  .rounded-3xl {\n    border-radius: var(--radius-3xl);\n  }\n  .rounded-full {\n    border-radius: calc(infinity * 1px);\n  }\n  .rounded-lg {\n    border-radius: var(--radius-lg);\n  }\n  .rounded-sm {\n    border-radius: var(--radius-sm);\n  }\n  .border {\n    border-style: var(--tw-border-style);\n    border-width: 1px;\n  }\n  .border-2 {\n    border-style: var(--tw-border-style);\n    border-width: 2px;\n  }\n  .border-4 {\n    border-style: var(--tw-border-style);\n    border-width: 4px;\n  }\n  .border-t {\n    border-top-style: var(--tw-border-style);\n    border-top-width: 1px;\n  }\n  .border-b {\n    border-bottom-style: var(--tw-border-style);\n    border-bottom-width: 1px;\n  }\n  .border-b-2 {\n    border-bottom-style: var(--tw-border-style);\n    border-bottom-width: 2px;\n  }\n  .border-slate-800 {\n    border-color: var(--color-slate-800);\n  }\n  .border-slate-800\\/40 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 40%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 40%, transparent);\n    }\n  }\n  .border-slate-800\\/50 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 50%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 50%, transparent);\n    }\n  }\n  .border-slate-800\\/60 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 60%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 60%, transparent);\n    }\n  }\n  .border-slate-900 {\n    border-color: var(--color-slate-900);\n  }\n  .bg-slate-800 {\n    background-color: var(--color-slate-800);\n  }\n  .bg-slate-900\\/90 {\n    background-color: color-mix(in srgb, oklch(0.208 0.042 265.755) 90%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      background-color: color-mix(in oklab, var(--color-slate-900) 90%, transparent);\n    }\n  }\n  .bg-slate-950 {\n    background-color: var(--color-slate-950);\n  }\n  .bg-slate-950\\/80 {\n    background-color: color-mix(in srgb, oklch(0.129 0.042 264.695) 80%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      background-color: color-mix(in oklab, var(--color-slate-950) 80%, transparent);\n    }\n  }\n  .bg-white {\n    background-color: var(--color-white);\n  }\n  .p-2\\.5 {\n    padding: calc(var(--spacing) * 2.5);\n  }\n  .p-3 {\n    padding: calc(var(--spacing) * 3);\n  }\n  .p-5 {\n    padding: calc(var(--spacing) * 5);\n  }\n  .p-8 {\n    padding: calc(var(--spacing) * 8);\n  }\n  .p-16 {\n    padding: calc(var(--spacing) * 16);\n  }\n  .py-1 {\n    padding-block: calc(var(--spacing) * 1);\n  }\n  .py-2 {\n    padding-block: calc(var(--spacing) * 2);\n  }\n  .pt-2\\.5 {\n    padding-top: calc(var(--spacing) * 2.5);\n  }\n  .pt-5 {\n    padding-top: calc(var(--spacing) * 5);\n  }\n  .pr-1 {\n    padding-right: calc(var(--spacing) * 1);\n  }\n  .pb-3 {\n    padding-bottom: calc(var(--spacing) * 3);\n  }\n  .pb-4 {\n    padding-bottom: calc(var(--spacing) * 4);\n  }\n  .text-center {\n    text-align: center;\n  }\n  .text-left {\n    text-align: left;\n  }\n  .font-mono {\n    font-family: var(--font-mono);\n  }\n  .text-2xl {\n    font-size: var(--text-2xl);\n    line-height: var(--tw-leading, var(--text-2xl--line-height));\n  }\n  .text-3xl {\n    font-size: var(--text-3xl);\n    line-height: var(--tw-leading, var(--text-3xl--line-height));\n  }\n  .text-4xl {\n    font-size: var(--text-4xl);\n    line-height: var(--tw-leading, var(--text-4xl--line-height));\n  }\n  .text-5xl {\n    font-size: var(--text-5xl);\n    line-height: var(--tw-leading, var(--text-5xl--line-height));\n  }\n  .text-8xl {\n    font-size: var(--text-8xl);\n    line-height: var(--tw-leading, var(--text-8xl--line-height));\n  }\n  .text-lg {\n    font-size: var(--text-lg);\n    line-height: var(--tw-leading, var(--text-lg--line-height));\n  }\n  .text-sm {\n    font-size: var(--text-sm);\n    line-height: var(--tw-leading, var(--text-sm--line-height));\n  }\n  .text-xl {\n    font-size: var(--text-xl);\n    line-height: var(--tw-leading, var(--text-xl--line-height));\n  }\n  .text-xs {\n    font-size: var(--text-xs);\n    line-height: var(--tw-leading, var(--text-xs--line-height));\n  }\n  .text-\\[10px\\] {\n    font-size: 10px;\n  }\n  .text-\\[11px\\] {\n    font-size: 11px;\n  }\n  .text-\\[15px\\] {\n    font-size: 15px;\n  }\n  .leading-relaxed {\n    --tw-leading: var(--leading-relaxed);\n    line-height: var(--leading-relaxed);\n  }\n  .leading-tight {\n    --tw-leading: var(--leading-tight);\n    line-height: var(--leading-tight);\n  }\n  .font-black {\n    --tw-font-weight: var(--font-weight-black);\n    font-weight: var(--font-weight-black);\n  }\n  .font-bold {\n    --tw-font-weight: var(--font-weight-bold);\n    font-weight: var(--font-weight-bold);\n  }\n  .tracking-normal {\n    --tw-tracking: var(--tracking-normal);\n    letter-spacing: var(--tracking-normal);\n  }\n  .tracking-tight {\n    --tw-tracking: var(--tracking-tight);\n    letter-spacing: var(--tracking-tight);\n  }\n  .tracking-wider {\n    --tw-tracking: var(--tracking-wider);\n    letter-spacing: var(--tracking-wider);\n  }\n  .tracking-widest {\n    --tw-tracking: var(--tracking-widest);\n    letter-spacing: var(--tracking-widest);\n  }\n  .text-emerald-400 {\n    color: var(--color-emerald-400);\n  }\n  .text-rose-400 {\n    color: var(--color-rose-400);\n  }\n  .text-slate-200 {\n    color: var(--color-slate-200);\n  }\n  .text-slate-300 {\n    color: var(--color-slate-300);\n  }\n  .text-slate-400 {\n    color: var(--color-slate-400);\n  }\n  .text-slate-500 {\n    color: var(--color-slate-500);\n  }\n  .text-slate-900 {\n    color: var(--color-slate-900);\n  }\n  .text-white {\n    color: var(--color-white);\n  }\n  .text-yellow-500 {\n    color: var(--color-yellow-500);\n  }\n  .uppercase {\n    text-transform: uppercase;\n  }\n  .italic {\n    font-style: italic;\n  }\n  .tabular-nums {\n    --tw-numeric-spacing: tabular-nums;\n    font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);\n  }\n  .underline {\n    text-decoration-line: underline;\n  }\n  .blur {\n    --tw-blur: blur(8px);\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .drop-shadow-2xl {\n    --tw-drop-shadow-size: drop-shadow(0 25px 25px var(--tw-drop-shadow-color, rgb(0 0 0 / 0.15)));\n    --tw-drop-shadow: drop-shadow(var(--drop-shadow-2xl));\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .drop-shadow-\\[0_0_10px_rgba\\(56\\,189\\,248\\,0\\.2\\)\\] {\n    --tw-drop-shadow-size: drop-shadow(0 0 10px var(--tw-drop-shadow-color, rgba(56,189,248,0.2)));\n    --tw-drop-shadow: var(--tw-drop-shadow-size);\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .drop-shadow-lg {\n    --tw-drop-shadow-size: drop-shadow(0 4px 4px var(--tw-drop-shadow-color, rgb(0 0 0 / 0.15)));\n    --tw-drop-shadow: drop-shadow(var(--drop-shadow-lg));\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .filter {\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .backdrop-blur-lg {\n    --tw-backdrop-blur: blur(var(--blur-lg));\n    -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);\n    backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);\n  }\n  .transition {\n    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;\n    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));\n    transition-duration: var(--tw-duration, var(--default-transition-duration));\n  }\n  .transition-all {\n    transition-property: all;\n    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));\n    transition-duration: var(--tw-duration, var(--default-transition-duration));\n  }\n  .duration-150 {\n    --tw-duration: 150ms;\n    transition-duration: 150ms;\n  }\n  .duration-300 {\n    --tw-duration: 300ms;\n    transition-duration: 300ms;\n  }\n  .duration-500 {\n    --tw-duration: 500ms;\n    transition-duration: 500ms;\n  }\n  .ease-out {\n    --tw-ease: var(--ease-out);\n    transition-timing-function: var(--ease-out);\n  }\n  .select-none {\n    -webkit-user-select: none;\n    user-select: none;\n  }\n  .md\\:text-6xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-6xl);\n      line-height: var(--tw-leading, var(--text-6xl--line-height));\n    }\n  }\n  .md\\:text-9xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-9xl);\n      line-height: var(--tw-leading, var(--text-9xl--line-height));\n    }\n  }\n  .md\\:text-xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-xl);\n      line-height: var(--tw-leading, var(--text-xl--line-height));\n    }\n  }\n}\n@property --tw-translate-x {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n@property --tw-translate-y {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n@property --tw-translate-z {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n@property --tw-rotate-x {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-rotate-y {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-rotate-z {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-skew-x {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-skew-y {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-border-style {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: solid;\n}\n@property --tw-leading {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-font-weight {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-tracking {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ordinal {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-slashed-zero {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-figure {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-spacing {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-fraction {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-blur {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-brightness {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-contrast {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-grayscale {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-hue-rotate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-invert {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-opacity {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-saturate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-sepia {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n@property --tw-drop-shadow-size {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-blur {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-brightness {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-contrast {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-grayscale {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-hue-rotate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-invert {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-opacity {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-saturate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-sepia {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-duration {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ease {\n  syntax: \"*\";\n  inherits: false;\n}\n@layer properties {\n  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {\n    *, ::before, ::after, ::backdrop {\n      --tw-translate-x: 0;\n      --tw-translate-y: 0;\n      --tw-translate-z: 0;\n      --tw-rotate-x: initial;\n      --tw-rotate-y: initial;\n      --tw-rotate-z: initial;\n      --tw-skew-x: initial;\n      --tw-skew-y: initial;\n      --tw-border-style: solid;\n      --tw-leading: initial;\n      --tw-font-weight: initial;\n      --tw-tracking: initial;\n      --tw-ordinal: initial;\n      --tw-slashed-zero: initial;\n      --tw-numeric-figure: initial;\n      --tw-numeric-spacing: initial;\n      --tw-numeric-fraction: initial;\n      --tw-blur: initial;\n      --tw-brightness: initial;\n      --tw-contrast: initial;\n      --tw-grayscale: initial;\n      --tw-hue-rotate: initial;\n      --tw-invert: initial;\n      --tw-opacity: initial;\n      --tw-saturate: initial;\n      --tw-sepia: initial;\n      --tw-drop-shadow: initial;\n      --tw-drop-shadow-color: initial;\n      --tw-drop-shadow-alpha: 100%;\n      --tw-drop-shadow-size: initial;\n      --tw-backdrop-blur: initial;\n      --tw-backdrop-brightness: initial;\n      --tw-backdrop-contrast: initial;\n      --tw-backdrop-grayscale: initial;\n      --tw-backdrop-hue-rotate: initial;\n      --tw-backdrop-invert: initial;\n      --tw-backdrop-opacity: initial;\n      --tw-backdrop-saturate: initial;\n      --tw-backdrop-sepia: initial;\n      --tw-duration: initial;\n      --tw-ease: initial;\n    }\n  }\n}\n"],"sourceRoot":""}]);
+`, "",{"version":3,"sources":["webpack://./src/index.css"],"names":[],"mappings":"AAAA,gEAAgE;AAChE,iBAAiB;AACjB,yCAAyC;AACzC;EACE;IACE;6DACyD;IACzD;iDAC6C;IAC7C,6CAA6C;IAC7C,+CAA+C;IAC/C,2CAA2C;IAC3C,6CAA6C;IAC7C,6CAA6C;IAC7C,4CAA4C;IAC5C,6CAA6C;IAC7C,6CAA6C;IAC7C,6CAA6C;IAC7C,6CAA6C;IAC7C,mBAAmB;IACnB,kBAAkB;IAClB,sBAAsB;IACtB,sBAAsB;IACtB,sBAAsB;IACtB,kBAAkB;IAClB,sCAAsC;IACtC,mBAAmB;IACnB,0CAA0C;IAC1C,mBAAmB;IACnB,0CAA0C;IAC1C,kBAAkB;IAClB,yCAAyC;IACzC,kBAAkB;IAClB,sCAAsC;IACtC,oBAAoB;IACpB,2CAA2C;IAC3C,mBAAmB;IACnB,yCAAyC;IACzC,gBAAgB;IAChB,0BAA0B;IAC1B,mBAAmB;IACnB,0BAA0B;IAC1B,gBAAgB;IAChB,0BAA0B;IAC1B,gBAAgB;IAChB,0BAA0B;IAC1B,uBAAuB;IACvB,wBAAwB;IACxB,0BAA0B;IAC1B,sBAAsB;IACtB,wBAAwB;IACxB,wBAAwB;IACxB,qBAAqB;IACrB,wBAAwB;IACxB,oBAAoB;IACpB,mBAAmB;IACnB,kBAAkB;IAClB,oBAAoB;IACpB,gDAAgD;IAChD,sCAAsC;IACtC,eAAe;IACf,oCAAoC;IACpC,kEAAkE;IAClE,uCAAuC;IACvC,wEAAwE;IACxE;;KAEC;IACD,4CAA4C;IAC5C;;KAEC;IACD;;KAEC;EACH;AACF;AACA;EACE;IACE,sBAAsB;IACtB,SAAS;IACT,UAAU;IACV,eAAe;EACjB;EACA;IACE,gBAAgB;IAChB,8BAA8B;IAC9B,WAAW;IACX,6JAA6J;IAC7J,mEAAmE;IACnE,yEAAyE;IACzE,wCAAwC;EAC1C;EACA;IACE,oBAAoB;EACtB;EACA;IACE,SAAS;IACT,cAAc;IACd,qBAAqB;EACvB;EACA;IACE,yCAAyC;IACzC,iCAAiC;EACnC;EACA;IACE,kBAAkB;IAClB,oBAAoB;EACtB;EACA;IACE,cAAc;IACd,gCAAgC;IAChC,wBAAwB;EAC1B;EACA;IACE,mBAAmB;EACrB;EACA;IACE,kJAAkJ;IAClJ,0EAA0E;IAC1E,8EAA8E;IAC9E,cAAc;EAChB;EACA;IACE,cAAc;EAChB;EACA;IACE,cAAc;IACd,cAAc;IACd,kBAAkB;IAClB,wBAAwB;EAC1B;EACA;IACE,eAAe;EACjB;EACA;IACE,WAAW;EACb;EACA;IACE,cAAc;IACd,qBAAqB;IACrB,yBAAyB;EAC3B;EACA;IACE,aAAa;EACf;EACA;IACE,wBAAwB;EAC1B;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,cAAc;IACd,sBAAsB;EACxB;EACA;IACE,eAAe;IACf,YAAY;EACd;EACA;IACE,aAAa;IACb,8BAA8B;IAC9B,gCAAgC;IAChC,uBAAuB;IACvB,cAAc;IACd,gBAAgB;IAChB,6BAA6B;IAC7B,UAAU;EACZ;EACA;IACE,mBAAmB;EACrB;EACA;IACE,0BAA0B;EAC5B;EACA;IACE,sBAAsB;EACxB;EACA;IACE,UAAU;IACV,mBAAmB;IACnB;MACE,yDAAyD;IAC3D;EACF;EACA;IACE,gBAAgB;EAClB;EACA;IACE,wBAAwB;EAC1B;EACA;IACE,eAAe;IACf,mBAAmB;EACrB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,UAAU;EACZ;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,YAAY;EACd;EACA;IACE,wBAAwB;EAC1B;AACF;AACA;EACE;IACE,mBAAmB;EACrB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,kCAAkC;EACpC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,uBAAuB;EACzB;EACA;IACE,+BAA+B;EACjC;EACA;IACE,8BAA8B;EAChC;EACA;IACE,sBAAsB;EACxB;EACA;IACE,WAAW;IACX;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;EACF;EACA;IACE,sCAAsC;EACxC;EACA;IACE,oCAAoC;EACtC;EACA;IACE,sCAAsC;EACxC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,cAAc;EAChB;EACA;IACE,aAAa;EACf;EACA;IACE,aAAa;EACf;EACA;IACE,aAAa;EACf;EACA;IACE,eAAe;EACjB;EACA;IACE,qBAAqB;EACvB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,gCAAgC;EAClC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,aAAa;EACf;EACA;IACE,YAAY;EACd;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,YAAY;EACd;EACA;IACE,WAAW;EACb;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,OAAO;EACT;EACA;IACE,cAAc;EAChB;EACA;IACE,YAAY;EACd;EACA;IACE,+CAA+C;IAC/C,sDAAsD;EACxD;EACA;IACE,0GAA0G;EAC5G;EACA;IACE,gDAAgD;EAClD;EACA;IACE,sBAAsB;EACxB;EACA;IACE,mBAAmB;EACrB;EACA;IACE,mBAAmB;EACrB;EACA;IACE,uBAAuB;EACzB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,8BAA8B;EAChC;EACA;IACE,uBAAuB;EACzB;EACA;IACE,2BAA2B;EAC7B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,mCAAmC;EACrC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,wCAAwC;IACxC,qBAAqB;EACvB;EACA;IACE,2CAA2C;IAC3C,wBAAwB;EAC1B;EACA;IACE,2CAA2C;IAC3C,wBAAwB;EAC1B;EACA;IACE,oCAAoC;EACtC;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,oCAAoC;EACtC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,iFAAiF;IACjF;MACE,8EAA8E;IAChF;EACF;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,iFAAiF;IACjF;MACE,8EAA8E;IAChF;EACF;EACA;IACE,oCAAoC;EACtC;EACA;IACE,mCAAmC;EACrC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,qCAAqC;EACvC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,eAAe;EACjB;EACA;IACE,eAAe;EACjB;EACA;IACE,eAAe;EACjB;EACA;IACE,oCAAoC;IACpC,mCAAmC;EACrC;EACA;IACE,kCAAkC;IAClC,iCAAiC;EACnC;EACA;IACE,0CAA0C;IAC1C,qCAAqC;EACvC;EACA;IACE,yCAAyC;IACzC,oCAAoC;EACtC;EACA;IACE,qCAAqC;IACrC,sCAAsC;EACxC;EACA;IACE,oCAAoC;IACpC,qCAAqC;EACvC;EACA;IACE,oCAAoC;IACpC,qCAAqC;EACvC;EACA;IACE,qCAAqC;IACrC,sCAAsC;EACxC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,4BAA4B;EAC9B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,yBAAyB;EAC3B;EACA;IACE,8BAA8B;EAChC;EACA;IACE,yBAAyB;EAC3B;EACA;IACE,kBAAkB;EACpB;EACA;IACE,kCAAkC;IAClC,iJAAiJ;EACnJ;EACA;IACE,+BAA+B;EACjC;EACA;IACE,wHAAwH;IACxH,sIAAsI;EACxI;EACA;IACE,oBAAoB;IACpB,0LAA0L;EAC5L;EACA;IACE,8FAA8F;IAC9F,qDAAqD;IACrD,0LAA0L;EAC5L;EACA;IACE,8FAA8F;IAC9F,4CAA4C;IAC5C,0LAA0L;EAC5L;EACA;IACE,0LAA0L;EAC5L;EACA;IACE,wCAAwC;IACxC,wRAAwR;IACxR,gRAAgR;EAClR;EACA;IACE,yUAAyU;IACzU,qFAAqF;IACrF,2EAA2E;EAC7E;EACA;IACE,wBAAwB;IACxB,qFAAqF;IACrF,2EAA2E;EAC7E;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,0BAA0B;IAC1B,2CAA2C;EAC7C;EACA;IACE,yBAAyB;IACzB,iBAAiB;EACnB;EACA;IACE;MACE,0BAA0B;MAC1B,4DAA4D;IAC9D;EACF;EACA;IACE;MACE,0BAA0B;MAC1B,4DAA4D;IAC9D;EACF;EACA;IACE;MACE,yBAAyB;MACzB,2DAA2D;IAC7D;EACF;AACF;AACA;EACE,WAAW;EACX,eAAe;EACf,gBAAgB;AAClB;AACA;EACE,WAAW;EACX,eAAe;EACf,gBAAgB;AAClB;AACA;EACE,WAAW;EACX,eAAe;EACf,gBAAgB;AAClB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,oBAAoB;AACtB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,sBAAsB;EACtB,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,sBAAsB;EACtB,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,kBAAkB;EAClB,eAAe;EACf,kBAAkB;AACpB;AACA;EACE,WAAW;EACX,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,sBAAsB;EACtB,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE;IACE;MACE,mBAAmB;MACnB,mBAAmB;MACnB,mBAAmB;MACnB,sBAAsB;MACtB,sBAAsB;MACtB,sBAAsB;MACtB,oBAAoB;MACpB,oBAAoB;MACpB,wBAAwB;MACxB,qBAAqB;MACrB,yBAAyB;MACzB,sBAAsB;MACtB,qBAAqB;MACrB,0BAA0B;MAC1B,4BAA4B;MAC5B,6BAA6B;MAC7B,8BAA8B;MAC9B,sBAAsB;MACtB,0BAA0B;MAC1B,uBAAuB;MACvB,4BAA4B;MAC5B,gCAAgC;MAChC,6BAA6B;MAC7B,wBAAwB;MACxB,2BAA2B;MAC3B,8BAA8B;MAC9B,iCAAiC;MACjC,wBAAwB;MACxB,2BAA2B;MAC3B,4BAA4B;MAC5B,kCAAkC;MAClC,kBAAkB;MAClB,wBAAwB;MACxB,sBAAsB;MACtB,uBAAuB;MACvB,wBAAwB;MACxB,oBAAoB;MACpB,qBAAqB;MACrB,sBAAsB;MACtB,mBAAmB;MACnB,yBAAyB;MACzB,+BAA+B;MAC/B,4BAA4B;MAC5B,8BAA8B;MAC9B,2BAA2B;MAC3B,iCAAiC;MACjC,+BAA+B;MAC/B,gCAAgC;MAChC,iCAAiC;MACjC,6BAA6B;MAC7B,8BAA8B;MAC9B,+BAA+B;MAC/B,4BAA4B;MAC5B,sBAAsB;MACtB,kBAAkB;IACpB;EACF;AACF","sourcesContent":["/*! tailwindcss v4.2.0 | MIT License | https://tailwindcss.com */\n@layer properties;\n@layer theme, base, components, utilities;\n@layer theme {\n  :root, :host {\n    --font-sans: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\",\n      \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";\n    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,\n      \"Liberation Mono\", \"Courier New\", monospace;\n    --color-yellow-500: oklch(0.795 0.184 86.047);\n    --color-emerald-400: oklch(0.765 0.177 163.223);\n    --color-rose-400: oklch(0.712 0.194 13.428);\n    --color-slate-200: oklch(0.929 0.013 255.508);\n    --color-slate-300: oklch(0.869 0.022 252.894);\n    --color-slate-400: oklch(0.704 0.04 256.788);\n    --color-slate-500: oklch(0.554 0.046 257.417);\n    --color-slate-800: oklch(0.279 0.041 260.031);\n    --color-slate-900: oklch(0.208 0.042 265.755);\n    --color-slate-950: oklch(0.129 0.042 264.695);\n    --color-white: #fff;\n    --spacing: 0.25rem;\n    --container-2xl: 42rem;\n    --container-4xl: 56rem;\n    --container-5xl: 64rem;\n    --text-xs: 0.75rem;\n    --text-xs--line-height: calc(1 / 0.75);\n    --text-sm: 0.875rem;\n    --text-sm--line-height: calc(1.25 / 0.875);\n    --text-lg: 1.125rem;\n    --text-lg--line-height: calc(1.75 / 1.125);\n    --text-xl: 1.25rem;\n    --text-xl--line-height: calc(1.75 / 1.25);\n    --text-2xl: 1.5rem;\n    --text-2xl--line-height: calc(2 / 1.5);\n    --text-3xl: 1.875rem;\n    --text-3xl--line-height: calc(2.25 / 1.875);\n    --text-4xl: 2.25rem;\n    --text-4xl--line-height: calc(2.5 / 2.25);\n    --text-5xl: 3rem;\n    --text-5xl--line-height: 1;\n    --text-6xl: 3.75rem;\n    --text-6xl--line-height: 1;\n    --text-8xl: 6rem;\n    --text-8xl--line-height: 1;\n    --text-9xl: 8rem;\n    --text-9xl--line-height: 1;\n    --font-weight-bold: 700;\n    --font-weight-black: 900;\n    --tracking-tight: -0.025em;\n    --tracking-normal: 0em;\n    --tracking-wider: 0.05em;\n    --tracking-widest: 0.1em;\n    --leading-tight: 1.25;\n    --leading-relaxed: 1.625;\n    --radius-sm: 0.25rem;\n    --radius-lg: 0.5rem;\n    --radius-2xl: 1rem;\n    --radius-3xl: 1.5rem;\n    --drop-shadow-2xl: 0 25px 25px rgb(0 0 0 / 0.15);\n    --ease-out: cubic-bezier(0, 0, 0.2, 1);\n    --blur-lg: 16px;\n    --default-transition-duration: 150ms;\n    --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n    --default-font-family: var(--font-sans);\n    --default-font-feature-settings: var(--font-sans--font-feature-settings);\n    --default-font-variation-settings: var(\n      --font-sans--font-variation-settings\n    );\n    --default-mono-font-family: var(--font-mono);\n    --default-mono-font-feature-settings: var(\n      --font-mono--font-feature-settings\n    );\n    --default-mono-font-variation-settings: var(\n      --font-mono--font-variation-settings\n    );\n  }\n}\n@layer base {\n  *, ::after, ::before, ::backdrop, ::file-selector-button {\n    box-sizing: border-box;\n    margin: 0;\n    padding: 0;\n    border: 0 solid;\n  }\n  html, :host {\n    line-height: 1.5;\n    -webkit-text-size-adjust: 100%;\n    tab-size: 4;\n    font-family: var( --default-font-family, ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\" );\n    font-feature-settings: var(--default-font-feature-settings, normal);\n    font-variation-settings: var( --default-font-variation-settings, normal );\n    -webkit-tap-highlight-color: transparent;\n  }\n  body {\n    line-height: inherit;\n  }\n  hr {\n    height: 0;\n    color: inherit;\n    border-top-width: 1px;\n  }\n  abbr:where([title]) {\n    -webkit-text-decoration: underline dotted;\n    text-decoration: underline dotted;\n  }\n  h1, h2, h3, h4, h5, h6 {\n    font-size: inherit;\n    font-weight: inherit;\n  }\n  a {\n    color: inherit;\n    -webkit-text-decoration: inherit;\n    text-decoration: inherit;\n  }\n  b, strong {\n    font-weight: bolder;\n  }\n  code, kbd, samp, pre {\n    font-family: var( --default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace );\n    font-feature-settings: var( --default-mono-font-feature-settings, normal );\n    font-variation-settings: var( --default-mono-font-variation-settings, normal );\n    font-size: 1em;\n  }\n  small {\n    font-size: 80%;\n  }\n  sub, sup {\n    font-size: 75%;\n    line-height: 0;\n    position: relative;\n    vertical-align: baseline;\n  }\n  sub {\n    bottom: -0.25em;\n  }\n  sup {\n    top: -0.5em;\n  }\n  table {\n    text-indent: 0;\n    border-color: inherit;\n    border-collapse: collapse;\n  }\n  :-moz-focusring {\n    outline: auto;\n  }\n  progress {\n    vertical-align: baseline;\n  }\n  summary {\n    display: list-item;\n  }\n  ol, ul, menu {\n    list-style: none;\n  }\n  img, svg, video, canvas, audio, iframe, embed, object {\n    display: block;\n    vertical-align: middle;\n  }\n  img, video {\n    max-width: 100%;\n    height: auto;\n  }\n  button, input, select, optgroup, textarea, ::file-selector-button {\n    font: inherit;\n    font-feature-settings: inherit;\n    font-variation-settings: inherit;\n    letter-spacing: inherit;\n    color: inherit;\n    border-radius: 0;\n    background-color: transparent;\n    opacity: 1;\n  }\n  :where(select:is([multiple], [size])) optgroup {\n    font-weight: bolder;\n  }\n  :where(select:is([multiple], [size])) optgroup option {\n    padding-inline-start: 20px;\n  }\n  ::file-selector-button {\n    margin-inline-end: 4px;\n  }\n  ::placeholder {\n    opacity: 1;\n    color: currentColor;\n    @supports (color: color-mix(in lab, red, red)) {\n      color: color-mix(in oklab, currentColor 50%, transparent);\n    }\n  }\n  textarea {\n    resize: vertical;\n  }\n  ::-webkit-search-decoration {\n    -webkit-appearance: none;\n  }\n  ::-webkit-date-and-time-value {\n    min-height: 1lh;\n    text-align: inherit;\n  }\n  ::-webkit-datetime-edit {\n    display: inline-flex;\n  }\n  ::-webkit-datetime-edit-fields-wrapper {\n    padding: 0;\n  }\n  ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {\n    padding-block: 0;\n  }\n  :-moz-ui-invalid {\n    box-shadow: none;\n  }\n  button, input:where([type=\"button\"], [type=\"reset\"], [type=\"submit\"]), ::file-selector-button {\n    appearance: button;\n  }\n  ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {\n    height: auto;\n  }\n  [hidden]:where(:not([hidden=\"until-found\"])) {\n    display: none !important;\n  }\n}\n@layer utilities {\n  .visible {\n    visibility: visible;\n  }\n  .absolute {\n    position: absolute;\n  }\n  .relative {\n    position: relative;\n  }\n  .static {\n    position: static;\n  }\n  .start {\n    inset-inline-start: var(--spacing);\n  }\n  .end {\n    inset-inline-end: var(--spacing);\n  }\n  .top-1\\/2 {\n    top: calc(1 / 2 * 100%);\n  }\n  .right-0 {\n    right: calc(var(--spacing) * 0);\n  }\n  .left-0 {\n    left: calc(var(--spacing) * 0);\n  }\n  .-z-10 {\n    z-index: calc(10 * -1);\n  }\n  .container {\n    width: 100%;\n    @media (width >= 40rem) {\n      max-width: 40rem;\n    }\n    @media (width >= 48rem) {\n      max-width: 48rem;\n    }\n    @media (width >= 64rem) {\n      max-width: 64rem;\n    }\n    @media (width >= 80rem) {\n      max-width: 80rem;\n    }\n    @media (width >= 96rem) {\n      max-width: 96rem;\n    }\n  }\n  .mt-0\\.5 {\n    margin-top: calc(var(--spacing) * 0.5);\n  }\n  .mt-1 {\n    margin-top: calc(var(--spacing) * 1);\n  }\n  .mt-1\\.5 {\n    margin-top: calc(var(--spacing) * 1.5);\n  }\n  .mb-1 {\n    margin-bottom: calc(var(--spacing) * 1);\n  }\n  .mb-2 {\n    margin-bottom: calc(var(--spacing) * 2);\n  }\n  .mb-4 {\n    margin-bottom: calc(var(--spacing) * 4);\n  }\n  .mb-6 {\n    margin-bottom: calc(var(--spacing) * 6);\n  }\n  .mb-8 {\n    margin-bottom: calc(var(--spacing) * 8);\n  }\n  .mb-12 {\n    margin-bottom: calc(var(--spacing) * 12);\n  }\n  .mb-16 {\n    margin-bottom: calc(var(--spacing) * 16);\n  }\n  .block {\n    display: block;\n  }\n  .flex {\n    display: flex;\n  }\n  .grid {\n    display: grid;\n  }\n  .hidden {\n    display: none;\n  }\n  .inline {\n    display: inline;\n  }\n  .inline-block {\n    display: inline-block;\n  }\n  .inline-flex {\n    display: inline-flex;\n  }\n  .h-1 {\n    height: calc(var(--spacing) * 1);\n  }\n  .h-1\\.5 {\n    height: calc(var(--spacing) * 1.5);\n  }\n  .h-2\\.5 {\n    height: calc(var(--spacing) * 2.5);\n  }\n  .h-3\\.5 {\n    height: calc(var(--spacing) * 3.5);\n  }\n  .h-5 {\n    height: calc(var(--spacing) * 5);\n  }\n  .h-8 {\n    height: calc(var(--spacing) * 8);\n  }\n  .h-16 {\n    height: calc(var(--spacing) * 16);\n  }\n  .h-\\[550px\\] {\n    height: 550px;\n  }\n  .h-full {\n    height: 100%;\n  }\n  .w-2\\.5 {\n    width: calc(var(--spacing) * 2.5);\n  }\n  .w-3\\.5 {\n    width: calc(var(--spacing) * 3.5);\n  }\n  .w-5 {\n    width: calc(var(--spacing) * 5);\n  }\n  .w-8 {\n    width: calc(var(--spacing) * 8);\n  }\n  .w-16 {\n    width: calc(var(--spacing) * 16);\n  }\n  .w-48 {\n    width: calc(var(--spacing) * 48);\n  }\n  .w-72 {\n    width: calc(var(--spacing) * 72);\n  }\n  .w-\\[500px\\] {\n    width: 500px;\n  }\n  .w-full {\n    width: 100%;\n  }\n  .max-w-2xl {\n    max-width: var(--container-2xl);\n  }\n  .max-w-4xl {\n    max-width: var(--container-4xl);\n  }\n  .max-w-5xl {\n    max-width: var(--container-5xl);\n  }\n  .flex-1 {\n    flex: 1;\n  }\n  .shrink-0 {\n    flex-shrink: 0;\n  }\n  .grow {\n    flex-grow: 1;\n  }\n  .-translate-y-1\\/2 {\n    --tw-translate-y: calc(calc(1 / 2 * 100%) * -1);\n    translate: var(--tw-translate-x) var(--tw-translate-y);\n  }\n  .transform {\n    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);\n  }\n  .grid-cols-2 {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n  .flex-col {\n    flex-direction: column;\n  }\n  .flex-row {\n    flex-direction: row;\n  }\n  .items-center {\n    align-items: center;\n  }\n  .items-start {\n    align-items: flex-start;\n  }\n  .items-stretch {\n    align-items: stretch;\n  }\n  .justify-between {\n    justify-content: space-between;\n  }\n  .justify-center {\n    justify-content: center;\n  }\n  .justify-start {\n    justify-content: flex-start;\n  }\n  .gap-1 {\n    gap: calc(var(--spacing) * 1);\n  }\n  .gap-1\\.5 {\n    gap: calc(var(--spacing) * 1.5);\n  }\n  .gap-2 {\n    gap: calc(var(--spacing) * 2);\n  }\n  .gap-2\\.5 {\n    gap: calc(var(--spacing) * 2.5);\n  }\n  .gap-3 {\n    gap: calc(var(--spacing) * 3);\n  }\n  .gap-3\\.5 {\n    gap: calc(var(--spacing) * 3.5);\n  }\n  .gap-4 {\n    gap: calc(var(--spacing) * 4);\n  }\n  .gap-6 {\n    gap: calc(var(--spacing) * 6);\n  }\n  .overflow-hidden {\n    overflow: hidden;\n  }\n  .overflow-y-auto {\n    overflow-y: auto;\n  }\n  .rounded-2xl {\n    border-radius: var(--radius-2xl);\n  }\n  .rounded-3xl {\n    border-radius: var(--radius-3xl);\n  }\n  .rounded-full {\n    border-radius: calc(infinity * 1px);\n  }\n  .rounded-lg {\n    border-radius: var(--radius-lg);\n  }\n  .rounded-sm {\n    border-radius: var(--radius-sm);\n  }\n  .border {\n    border-style: var(--tw-border-style);\n    border-width: 1px;\n  }\n  .border-2 {\n    border-style: var(--tw-border-style);\n    border-width: 2px;\n  }\n  .border-4 {\n    border-style: var(--tw-border-style);\n    border-width: 4px;\n  }\n  .border-t {\n    border-top-style: var(--tw-border-style);\n    border-top-width: 1px;\n  }\n  .border-b {\n    border-bottom-style: var(--tw-border-style);\n    border-bottom-width: 1px;\n  }\n  .border-b-2 {\n    border-bottom-style: var(--tw-border-style);\n    border-bottom-width: 2px;\n  }\n  .border-slate-800 {\n    border-color: var(--color-slate-800);\n  }\n  .border-slate-800\\/40 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 40%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 40%, transparent);\n    }\n  }\n  .border-slate-800\\/50 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 50%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 50%, transparent);\n    }\n  }\n  .border-slate-800\\/60 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 60%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 60%, transparent);\n    }\n  }\n  .border-slate-900 {\n    border-color: var(--color-slate-900);\n  }\n  .bg-slate-800 {\n    background-color: var(--color-slate-800);\n  }\n  .bg-slate-900\\/90 {\n    background-color: color-mix(in srgb, oklch(0.208 0.042 265.755) 90%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      background-color: color-mix(in oklab, var(--color-slate-900) 90%, transparent);\n    }\n  }\n  .bg-slate-950 {\n    background-color: var(--color-slate-950);\n  }\n  .bg-slate-950\\/80 {\n    background-color: color-mix(in srgb, oklch(0.129 0.042 264.695) 80%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      background-color: color-mix(in oklab, var(--color-slate-950) 80%, transparent);\n    }\n  }\n  .bg-white {\n    background-color: var(--color-white);\n  }\n  .p-2\\.5 {\n    padding: calc(var(--spacing) * 2.5);\n  }\n  .p-3 {\n    padding: calc(var(--spacing) * 3);\n  }\n  .p-5 {\n    padding: calc(var(--spacing) * 5);\n  }\n  .p-8 {\n    padding: calc(var(--spacing) * 8);\n  }\n  .p-16 {\n    padding: calc(var(--spacing) * 16);\n  }\n  .py-1 {\n    padding-block: calc(var(--spacing) * 1);\n  }\n  .py-2 {\n    padding-block: calc(var(--spacing) * 2);\n  }\n  .pt-2\\.5 {\n    padding-top: calc(var(--spacing) * 2.5);\n  }\n  .pt-5 {\n    padding-top: calc(var(--spacing) * 5);\n  }\n  .pr-1 {\n    padding-right: calc(var(--spacing) * 1);\n  }\n  .pb-3 {\n    padding-bottom: calc(var(--spacing) * 3);\n  }\n  .pb-4 {\n    padding-bottom: calc(var(--spacing) * 4);\n  }\n  .text-center {\n    text-align: center;\n  }\n  .text-left {\n    text-align: left;\n  }\n  .font-mono {\n    font-family: var(--font-mono);\n  }\n  .text-2xl {\n    font-size: var(--text-2xl);\n    line-height: var(--tw-leading, var(--text-2xl--line-height));\n  }\n  .text-3xl {\n    font-size: var(--text-3xl);\n    line-height: var(--tw-leading, var(--text-3xl--line-height));\n  }\n  .text-4xl {\n    font-size: var(--text-4xl);\n    line-height: var(--tw-leading, var(--text-4xl--line-height));\n  }\n  .text-5xl {\n    font-size: var(--text-5xl);\n    line-height: var(--tw-leading, var(--text-5xl--line-height));\n  }\n  .text-8xl {\n    font-size: var(--text-8xl);\n    line-height: var(--tw-leading, var(--text-8xl--line-height));\n  }\n  .text-lg {\n    font-size: var(--text-lg);\n    line-height: var(--tw-leading, var(--text-lg--line-height));\n  }\n  .text-sm {\n    font-size: var(--text-sm);\n    line-height: var(--tw-leading, var(--text-sm--line-height));\n  }\n  .text-xl {\n    font-size: var(--text-xl);\n    line-height: var(--tw-leading, var(--text-xl--line-height));\n  }\n  .text-xs {\n    font-size: var(--text-xs);\n    line-height: var(--tw-leading, var(--text-xs--line-height));\n  }\n  .text-\\[10px\\] {\n    font-size: 10px;\n  }\n  .text-\\[11px\\] {\n    font-size: 11px;\n  }\n  .text-\\[15px\\] {\n    font-size: 15px;\n  }\n  .leading-relaxed {\n    --tw-leading: var(--leading-relaxed);\n    line-height: var(--leading-relaxed);\n  }\n  .leading-tight {\n    --tw-leading: var(--leading-tight);\n    line-height: var(--leading-tight);\n  }\n  .font-black {\n    --tw-font-weight: var(--font-weight-black);\n    font-weight: var(--font-weight-black);\n  }\n  .font-bold {\n    --tw-font-weight: var(--font-weight-bold);\n    font-weight: var(--font-weight-bold);\n  }\n  .tracking-normal {\n    --tw-tracking: var(--tracking-normal);\n    letter-spacing: var(--tracking-normal);\n  }\n  .tracking-tight {\n    --tw-tracking: var(--tracking-tight);\n    letter-spacing: var(--tracking-tight);\n  }\n  .tracking-wider {\n    --tw-tracking: var(--tracking-wider);\n    letter-spacing: var(--tracking-wider);\n  }\n  .tracking-widest {\n    --tw-tracking: var(--tracking-widest);\n    letter-spacing: var(--tracking-widest);\n  }\n  .text-emerald-400 {\n    color: var(--color-emerald-400);\n  }\n  .text-rose-400 {\n    color: var(--color-rose-400);\n  }\n  .text-slate-200 {\n    color: var(--color-slate-200);\n  }\n  .text-slate-300 {\n    color: var(--color-slate-300);\n  }\n  .text-slate-400 {\n    color: var(--color-slate-400);\n  }\n  .text-slate-500 {\n    color: var(--color-slate-500);\n  }\n  .text-slate-900 {\n    color: var(--color-slate-900);\n  }\n  .text-white {\n    color: var(--color-white);\n  }\n  .text-yellow-500 {\n    color: var(--color-yellow-500);\n  }\n  .uppercase {\n    text-transform: uppercase;\n  }\n  .italic {\n    font-style: italic;\n  }\n  .tabular-nums {\n    --tw-numeric-spacing: tabular-nums;\n    font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);\n  }\n  .underline {\n    text-decoration-line: underline;\n  }\n  .ring {\n    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);\n    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);\n  }\n  .blur {\n    --tw-blur: blur(8px);\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .drop-shadow-2xl {\n    --tw-drop-shadow-size: drop-shadow(0 25px 25px var(--tw-drop-shadow-color, rgb(0 0 0 / 0.15)));\n    --tw-drop-shadow: drop-shadow(var(--drop-shadow-2xl));\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .drop-shadow-\\[0_0_10px_rgba\\(56\\,189\\,248\\,0\\.2\\)\\] {\n    --tw-drop-shadow-size: drop-shadow(0 0 10px var(--tw-drop-shadow-color, rgba(56,189,248,0.2)));\n    --tw-drop-shadow: var(--tw-drop-shadow-size);\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .filter {\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .backdrop-blur-lg {\n    --tw-backdrop-blur: blur(var(--blur-lg));\n    -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);\n    backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);\n  }\n  .transition {\n    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;\n    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));\n    transition-duration: var(--tw-duration, var(--default-transition-duration));\n  }\n  .transition-all {\n    transition-property: all;\n    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));\n    transition-duration: var(--tw-duration, var(--default-transition-duration));\n  }\n  .duration-150 {\n    --tw-duration: 150ms;\n    transition-duration: 150ms;\n  }\n  .duration-300 {\n    --tw-duration: 300ms;\n    transition-duration: 300ms;\n  }\n  .duration-500 {\n    --tw-duration: 500ms;\n    transition-duration: 500ms;\n  }\n  .ease-out {\n    --tw-ease: var(--ease-out);\n    transition-timing-function: var(--ease-out);\n  }\n  .select-none {\n    -webkit-user-select: none;\n    user-select: none;\n  }\n  .md\\:text-6xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-6xl);\n      line-height: var(--tw-leading, var(--text-6xl--line-height));\n    }\n  }\n  .md\\:text-9xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-9xl);\n      line-height: var(--tw-leading, var(--text-9xl--line-height));\n    }\n  }\n  .md\\:text-xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-xl);\n      line-height: var(--tw-leading, var(--text-xl--line-height));\n    }\n  }\n}\n@property --tw-translate-x {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n@property --tw-translate-y {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n@property --tw-translate-z {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n@property --tw-rotate-x {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-rotate-y {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-rotate-z {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-skew-x {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-skew-y {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-border-style {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: solid;\n}\n@property --tw-leading {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-font-weight {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-tracking {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ordinal {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-slashed-zero {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-figure {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-spacing {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-fraction {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n@property --tw-inset-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-inset-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-inset-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n@property --tw-ring-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ring-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-inset-ring-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-inset-ring-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-ring-inset {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ring-offset-width {\n  syntax: \"<length>\";\n  inherits: false;\n  initial-value: 0px;\n}\n@property --tw-ring-offset-color {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: #fff;\n}\n@property --tw-ring-offset-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-blur {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-brightness {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-contrast {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-grayscale {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-hue-rotate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-invert {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-opacity {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-saturate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-sepia {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n@property --tw-drop-shadow-size {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-blur {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-brightness {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-contrast {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-grayscale {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-hue-rotate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-invert {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-opacity {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-saturate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-sepia {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-duration {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ease {\n  syntax: \"*\";\n  inherits: false;\n}\n@layer properties {\n  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {\n    *, ::before, ::after, ::backdrop {\n      --tw-translate-x: 0;\n      --tw-translate-y: 0;\n      --tw-translate-z: 0;\n      --tw-rotate-x: initial;\n      --tw-rotate-y: initial;\n      --tw-rotate-z: initial;\n      --tw-skew-x: initial;\n      --tw-skew-y: initial;\n      --tw-border-style: solid;\n      --tw-leading: initial;\n      --tw-font-weight: initial;\n      --tw-tracking: initial;\n      --tw-ordinal: initial;\n      --tw-slashed-zero: initial;\n      --tw-numeric-figure: initial;\n      --tw-numeric-spacing: initial;\n      --tw-numeric-fraction: initial;\n      --tw-shadow: 0 0 #0000;\n      --tw-shadow-color: initial;\n      --tw-shadow-alpha: 100%;\n      --tw-inset-shadow: 0 0 #0000;\n      --tw-inset-shadow-color: initial;\n      --tw-inset-shadow-alpha: 100%;\n      --tw-ring-color: initial;\n      --tw-ring-shadow: 0 0 #0000;\n      --tw-inset-ring-color: initial;\n      --tw-inset-ring-shadow: 0 0 #0000;\n      --tw-ring-inset: initial;\n      --tw-ring-offset-width: 0px;\n      --tw-ring-offset-color: #fff;\n      --tw-ring-offset-shadow: 0 0 #0000;\n      --tw-blur: initial;\n      --tw-brightness: initial;\n      --tw-contrast: initial;\n      --tw-grayscale: initial;\n      --tw-hue-rotate: initial;\n      --tw-invert: initial;\n      --tw-opacity: initial;\n      --tw-saturate: initial;\n      --tw-sepia: initial;\n      --tw-drop-shadow: initial;\n      --tw-drop-shadow-color: initial;\n      --tw-drop-shadow-alpha: 100%;\n      --tw-drop-shadow-size: initial;\n      --tw-backdrop-blur: initial;\n      --tw-backdrop-brightness: initial;\n      --tw-backdrop-contrast: initial;\n      --tw-backdrop-grayscale: initial;\n      --tw-backdrop-hue-rotate: initial;\n      --tw-backdrop-invert: initial;\n      --tw-backdrop-opacity: initial;\n      --tw-backdrop-saturate: initial;\n      --tw-backdrop-sepia: initial;\n      --tw-duration: initial;\n      --tw-ease: initial;\n    }\n  }\n}\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -56540,7 +61617,47 @@ config(en());
 
 /***/ },
 
-/***/ 2330
+/***/ 1503
+(module) {
+
+"use strict";
+module.exports = /*#__PURE__*/JSON.parse('{"title":"Client-Server Architecture","fps":30,"width":1920,"height":1080,"theme":{"primary":"#6366f1","secondary":"#22d3ee","accent":"#f59e0b","background":"#030711","font":"Space Grotesk"},"scenes":[{"id":"scene-1","layout":"full","title":"Client-Server Architecture: The Backbone of Modern Computing","subtitle":"Understanding the fundamentals of client-server architecture","duration_frames":120,"transition":"fade","panels":[{"area":"panel","type":"AnimatedTitle","data":{"title":"Client-Server Architecture: The Backbone of Modern Computing","subtitle":"Understanding the fundamentals of client-server architecture"}}]},{"id":"scene-2","layout":"title-left-right","title":"The Problem: Complexity and Scalability","subtitle":"Why a distributed approach is necessary","duration_frames":285,"transition":"slideLeft","panels":[{"area":"left","type":"BulletList","data":{"title":"The Problem","items":["Monolithic systems are hard to scale — adding more users or data leads to exponential complexity","Tight coupling leads to cascading failures — a single issue can bring down the entire system","Maintenance and updates are challenging — changing one part affects the entire system"]}},{"area":"right","type":"StatCallout","data":{"title":"The Cost of Complexity","value":75,"suffix":"%","description":"of system failures due to complexity — a staggering 75% of system failures can be attributed to complexity issues"}}]},{"id":"scene-3","layout":"title-main-sidebar","title":"Core Concept: Separation of Concerns","subtitle":"Separating concerns for a more scalable system","duration_frames":435,"transition":"slideLeft","panels":[{"area":"main","type":"ArchitectureDiagram","data":{"title":"Client-Server Architecture","nodes":[{"id":"client","type":"client","x":8,"y":50,"label":"Web Browser"},{"id":"lb","type":"loadBalancer","x":30,"y":50,"label":"NGINX"},{"id":"app","type":"server","x":52,"y":30,"label":"App Server"},{"id":"db","type":"database","x":78,"y":30,"label":"PostgreSQL"}],"connections":[{"fromId":"client","toId":"lb","type":"arrow"},{"fromId":"lb","toId":"app","type":"arrow"},{"fromId":"app","toId":"db","type":"stream"}]}},{"area":"sidebar","type":"BulletList","data":{"title":"Benefits","items":["Separation of concerns — clients focus on user interaction, servers on data processing","Scalability — add more servers to handle increased load","Flexibility — choose the best technology stack for each component"]}}]},{"id":"scene-4","layout":"title-main-sidebar","title":"Deep Dive: Client-Server Communication","subtitle":"How clients and servers interact","duration_frames":375,"transition":"slideLeft","panels":[{"area":"main","type":"ArchitectureDiagram","data":{"title":"Client-Server Communication","nodes":[{"id":"client","type":"client","x":8,"y":50,"label":"Mobile App"},{"id":"lb","type":"loadBalancer","x":30,"y":50,"label":"HAProxy"},{"id":"app1","type":"server","x":48,"y":20,"label":"Microservice 1"},{"id":"app2","type":"server","x":48,"y":80,"label":"Microservice 2"},{"id":"db","type":"database","x":78,"y":50,"label":"MySQL"}],"connections":[{"fromId":"client","toId":"lb","type":"arrow"},{"fromId":"lb","toId":"app1","type":"arrow"},{"fromId":"lb","toId":"app2","type":"arrow"},{"fromId":"app1","toId":"db","type":"stream"},{"fromId":"app2","toId":"db","type":"stream"}]}},{"area":"sidebar","type":"StatCallout","data":{"title":"Request-Response Cycle","value":50,"suffix":"ms","description":"Average response time — 50ms is a typical response time for a well-optimized client-server interaction"}}]},{"id":"scene-5","layout":"title-left-right","title":"Deep Dive: Load Balancing and Scaling","subtitle":"Ensuring high availability and performance","duration_frames":330,"transition":"slideLeft","panels":[{"area":"left","type":"BarChart","data":{"title":"Load Balancing","bars":[{"label":"nginx","value":50000,"color":"#3498db"},{"label":"express","value":12000,"color":"#f1c40f"},{"label":"flask","value":3000,"color":"#2ecc71"},{"label":"django","value":2500,"color":"#e74c3c"}]}},{"area":"right","type":"BulletList","data":{"title":"Scaling Strategies","items":["Horizontal scaling — add more servers to distribute the load","Vertical scaling — increase server resources to handle more load","Caching — store frequently accessed data to reduce server load"]}}]},{"id":"scene-6","layout":"title-content","title":"Synthesis: Trade-Offs and Best Practices","subtitle":"Making informed decisions for your architecture","duration_frames":270,"transition":"slideUp","panels":[{"area":"main","type":"ComparisonCard","data":{"title":"Trade-Offs","pros":["Scalability — easily add more servers to handle increased load","Flexibility — choose the best technology stack for each component","Maintainability — separate concerns make maintenance easier"],"cons":["Added complexity — multiple components require more management","Communication overhead — client-server interactions introduce latency","Security concerns — multiple components increase the attack surface"]}}]},{"id":"scene-7","layout":"full","title":"Conclusion: The Future of Client-Server Architecture","subtitle":"The evolving landscape of client-server architecture","duration_frames":885,"transition":"none","panels":[{"area":"panel","type":"AnimatedTitle","data":{"title":"The Future of Client-Server Architecture","subtitle":"Evolving to meet new demands"}}]}]}');
+
+/***/ },
+
+/***/ 1443
+(module) {
+
+"use strict";
+module.exports = /*#__PURE__*/JSON.parse('{"title":"Client → Server Communication","fps":30,"width":1920,"height":1080,"theme":{"primary":"#00d4ff","secondary":"#f59e0b","accent":"#22d3ee","background":"#0a0f1e","font":"Space Grotesk"},"scenes":[{"id":"scene-1","layout":"full","title":"Client–Server Communication","subtitle":"How browsers talk to servers — foundations of the web","duration_frames":120,"transition":"fade","panels":[{"area":"panel","type":"AnimatedTitle","data":{"title":"Client–Server Communication","subtitle":"Foundations of Networked Systems","align":"center"}}]},{"id":"scene-2","layout":"title-left-right","title":"The Request–Response Model","subtitle":"HTTP methods, stateless protocol, REST conventions","duration_frames":300,"transition":"slideLeft","panels":[{"area":"left","type":"BulletList","data":{"title":"Core Concepts","items":["Client initiates — server never pushes first (HTTP/1.x)","Stateless: each request is self-contained, no session memory","Methods: GET (read), POST (create), PUT (replace), PATCH (update), DELETE","Status codes: 2xx success · 3xx redirect · 4xx client error · 5xx server fault","Headers carry auth tokens, content type, caching directives","Body carries JSON, form data, or binary (multipart)"]}},{"area":"right","type":"CodeBlock","data":{"title":"Full HTTP Round-Trip","language":"http","code":"POST /api/v1/users HTTP/1.1\\nHost: api.example.com\\nAuthorization: Bearer eyJhbGciOiJSUzI1NiJ9...\\nContent-Type: application/json\\n\\n{\\"name\\": \\"Alice\\", \\"role\\": \\"admin\\"}\\n\\n─── Response ─────────────────────────\\nHTTP/1.1 201 Created\\nContent-Type: application/json\\nLocation: /api/v1/users/42\\nX-Request-Id: d4e8f3a1\\n\\n{\\"id\\": 42, \\"name\\": \\"Alice\\",\\n \\"role\\": \\"admin\\", \\"createdAt\\": \\"2024-01-15T09:30:00Z\\"}"}}]},{"id":"scene-3","layout":"title-main-sidebar","title":"Three-Tier Architecture","subtitle":"Client → Load Balancer → App Server → Database","duration_frames":360,"transition":"slideUp","panels":[{"area":"main","type":"ArchitectureDiagram","data":{"title":"Three-Tier Architecture","nodes":[{"id":"client","type":"client","x":8,"y":50,"label":"Browser / App"},{"id":"lb","type":"loadBalancer","x":30,"y":50,"label":"Load Balancer"},{"id":"svc1","type":"server","x":57,"y":28,"label":"API Server A"},{"id":"svc2","type":"server","x":57,"y":72,"label":"API Server B"},{"id":"db","type":"database","x":83,"y":50,"label":"PostgreSQL"}],"connections":[{"fromId":"client","toId":"lb","type":"arrow"},{"fromId":"lb","toId":"svc1","type":"arrow"},{"fromId":"lb","toId":"svc2","type":"arrow"},{"fromId":"svc1","toId":"db","type":"stream"},{"fromId":"svc2","toId":"db","type":"stream"}]}},{"area":"sidebar","type":"BulletList","data":{"title":"Why 3 Tiers?","items":["Scale each tier independently","LB distributes load — no single point of failure","App servers are stateless: add/remove any time","DB is the single source of truth"]}}]},{"id":"scene-4","layout":"title-main-sidebar","title":"Full Request Journey","subtitle":"DNS lookup → TLS handshake → API → Cache → DB","duration_frames":360,"transition":"slideLeft","panels":[{"area":"main","type":"ArchitectureDiagram","data":{"title":"Request Journey with Caching","nodes":[{"id":"client","type":"client","x":8,"y":50,"label":"Mobile App"},{"id":"cdn","type":"loadBalancer","x":27,"y":50,"label":"CDN / Edge"},{"id":"api","type":"server","x":50,"y":30,"label":"API Server"},{"id":"cache","type":"server","x":50,"y":70,"label":"Redis Cache"},{"id":"db","type":"database","x":78,"y":30,"label":"PostgreSQL"},{"id":"queue","type":"database","x":78,"y":70,"label":"Message Queue"}],"connections":[{"fromId":"client","toId":"cdn","type":"arrow"},{"fromId":"cdn","toId":"api","type":"arrow"},{"fromId":"api","toId":"cache","type":"arrow"},{"fromId":"api","toId":"db","type":"stream"},{"fromId":"cache","toId":"db","type":"stream"},{"fromId":"api","toId":"queue","type":"arrow"}]}},{"area":"sidebar","type":"BulletList","data":{"title":"Latency Budget","items":["DNS: 20–120 ms (cached: <1 ms)","TLS handshake: 50–150 ms","CDN cache hit: 5–30 ms","API processing: 10–80 ms","Redis lookup: 0.5–2 ms","DB query: 2–50 ms"]}}]},{"id":"scene-5","layout":"full","title":"Key Takeaways","subtitle":"Design for statelessness, cache aggressively, scale horizontally","duration_frames":150,"transition":"none","panels":[{"area":"panel","type":"AnimatedTitle","data":{"title":"Build for Scale from Day One","subtitle":"Stateless · Cached · Distributed","align":"center"}}]}]}');
+
+/***/ },
+
+/***/ 5433
+(module) {
+
+"use strict";
+module.exports = /*#__PURE__*/JSON.parse('{"title":"Canvas Motion — Full Component Showcase","fps":30,"width":1920,"height":1080,"theme":{"primary":"#6366f1","secondary":"#22d3ee","accent":"#f59e0b","background":"#030711","font":"Inter"},"scenes":[{"id":"intro","type":"AnimatedTitle","duration_frames":120,"transition":"fade","data":{"title":"Canvas Motion","subtitle":"Every component in the library","align":"center"}},{"id":"stats","type":"StatCallout","duration_frames":120,"transition":"slideUp","data":{"title":"Components shipped","value":26,"suffix":"+","description":"Each one JSON-driven, no animation code per video."}},{"id":"why-bullets","type":"BulletList","duration_frames":180,"transition":"slideLeft","data":{"title":"Why a component library?","items":["Faster iteration on scripts","Consistent visual language across topics","LLM picks the right diagram automatically","Reused layouts beat bespoke animations"],"numbered":false,"align":"left"}},{"id":"principles","type":"NumberedList","duration_frames":240,"transition":"fade","data":{"title":"Library design principles","items":[{"heading":"Composition over creation","description":"Combine primitives; never author one-off SVG per scene."},{"heading":"JSON-serialisable","description":"Every prop must be valid JSON — no functions, no Date objects."},{"heading":"Deterministic motion","description":"useCurrentFrame() only. No Math.random() during render."},{"heading":"Topic-aware","description":"Components cover the most common CS / systems visuals."}],"layout":"grid"}},{"id":"glossary","type":"GlossaryCards","duration_frames":240,"transition":"slideUp","data":{"title":"Vocabulary you\'ll see in this library","terms":[{"term":"Scene","definition":"One timed segment of a video — has a type, data, and duration.","icon":"🎬"},{"term":"Panel","definition":"A component placed in one area of a scene\'s grid.","icon":"▦"},{"term":"Transition","definition":"A 15-frame overlay effect between two scenes.","icon":"↔"},{"term":"Token","definition":"A typed unit of a math formula — var, frac, sup, etc.","icon":"Σ"},{"term":"Lifeline","definition":"A vertical timeline for one actor in a sequence diagram.","icon":"│"},{"term":"Frame budget","definition":"Total frames at 30 fps. Sum of scene durations must match exactly.","icon":"⊟"}],"grid":"3x2"}},{"id":"big-o","type":"MathFormula","duration_frames":180,"transition":"zoom","data":{"title":"The workhorse of algorithm analysis","tokens":[{"type":"var","value":"T"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"op","value":")"},{"type":"op","value":"="},{"type":"var","value":"O"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"frac","numerator":[{"type":"var","value":"n"},{"type":"op","value":"·"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"op","value":"+"},{"type":"num","value":"1"},{"type":"op","value":")"}],"denominator":[{"type":"num","value":"2"}]},{"type":"op","value":")"}],"description":"Merge sort\'s T(n) recurrence solves to O(n log n)."}},{"id":"big-o-derivation","type":"EquationDerivation","duration_frames":360,"transition":"slideUp","data":{"title":"Solving the merge-sort recurrence","steps":[{"label":"start","tokens":[{"type":"var","value":"T"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"op","value":")"},{"type":"op","value":"="},{"type":"num","value":"2"},{"type":"var","value":"T"},{"type":"op","value":"("},{"type":"frac","numerator":[{"type":"var","value":"n"}],"denominator":[{"type":"num","value":"2"}]},{"type":"op","value":")"},{"type":"op","value":"+"},{"type":"var","value":"O"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"op","value":")"}]},{"label":"unroll","tokens":[{"type":"var","value":"T"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"op","value":")"},{"type":"op","value":"="},{"type":"num","value":"2"},{"type":"var","value":"T"},{"type":"op","value":"("},{"type":"frac","numerator":[{"type":"var","value":"n"}],"denominator":[{"type":"num","value":"4"}]},{"type":"op","value":")"},{"type":"op","value":"+"},{"type":"num","value":"2"},{"type":"var","value":"O"},{"type":"frac","numerator":[{"type":"var","value":"n"}],"denominator":[{"type":"num","value":"2"}]},{"type":"op","value":"+"},{"type":"var","value":"O"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"op","value":")"}],"note":"unroll once"},{"label":"generalise","tokens":[{"type":"var","value":"T"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"op","value":")"},{"type":"op","value":"="},{"type":"num","value":"2"},{"type":"sup","base":[{"type":"var","value":"k"}],"exponent":[{"type":"var","value":"T"}]},{"type":"op","value":"("},{"type":"frac","numerator":[{"type":"var","value":"n"}],"denominator":[{"type":"sup","base":[{"type":"num","value":"2"}],"exponent":[{"type":"var","value":"k"}]}]},{"type":"op","value":")"},{"type":"op","value":"+"},{"type":"var","value":"k"},{"type":"var","value":"O"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"op","value":")"}],"note":"after k unrolls"},{"label":"result","tokens":[{"type":"var","value":"T"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"op","value":")"},{"type":"op","value":"="},{"type":"var","value":"O"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"sum","lower":[{"type":"var","value":"i"},{"type":"op","value":"="},{"type":"num","value":"0"}],"upper":[{"type":"var","value":"k"}],"body":[{"type":"num","value":"1"}]},{"type":"op","value":")"}],"note":"geometric series"},{"label":"final","final":true,"tokens":[{"type":"var","value":"T"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"op","value":")"},{"type":"op","value":"="},{"type":"var","value":"O"},{"type":"op","value":"("},{"type":"var","value":"n"},{"type":"sup","base":[{"type":"var","value":"log"}],"exponent":[{"type":"num","value":"2"},{"type":"var","value":"n"}]},{"type":"op","value":")"}],"note":"since k = log₂ n"}]}},{"id":"hash-ring","type":"HashRing","duration_frames":300,"transition":"fade","data":{"title":"Consistent hashing","servers":["Cache-A","Cache-B","Cache-C","Cache-D"],"virtualNodesPerServer":4,"lookupKeys":["user:42","post:99","page:1"],"ticks":96,"accentColor":"#22d3ee"}},{"id":"raft","type":"StateMachine","duration_frames":300,"transition":"slideUp","data":{"title":"Raft consensus — leader state transitions","states":[{"id":"follower","label":"FOLLOWER","description":"issues AppendEntries","color":"#38BDF8"},{"id":"candidate","label":"CANDIDATE","description":"election in progress","color":"#f59e0b"},{"id":"leader","label":"LEADER","description":"replicates logs","color":"#34d399"}],"transitions":[{"fromId":"follower","toId":"candidate","label":"election timeout"},{"fromId":"candidate","toId":"candidate","label":"split vote"},{"fromId":"candidate","toId":"leader","label":"majority votes","highlight":true},{"fromId":"candidate","toId":"follower","label":"higher term seen"},{"fromId":"leader","toId":"follower","label":"higher term seen"}],"activeStateId":"leader"}},{"id":"tree","type":"TreeHierarchy","duration_frames":300,"transition":"slideLeft","data":{"title":"DNS resolution hierarchy","root":{"label":"Root (.)","description":"13 root servers","color":"#a78bfa","children":[{"label":".com TLD","description":"Verisign","color":"#38BDF8","children":[{"label":"google.com","description":"authoritative NS"},{"label":"amazon.com","description":"authoritative NS"},{"label":"github.com","description":"authoritative NS"}]},{"label":".org TLD","description":"Public Interest Registry","color":"#34d399","children":[{"label":"wikipedia.org"},{"label":"mozilla.org"}]},{"label":".io TLD","description":"Internet Computer Bureau","color":"#f59e0b","children":[{"label":"gitlab.io"},{"label":"herokuapp.com"}]}]}}},{"id":"seq-login","type":"SequenceDiagram","duration_frames":300,"transition":"slideUp","data":{"title":"OAuth 2.0 — Authorization Code Flow","actors":["User","App","Auth Server","Resource API"],"messages":[{"fromIdx":0,"toIdx":1,"label":"1. click login"},{"fromIdx":1,"toIdx":2,"label":"2. /authorize?client_id=..."},{"fromIdx":2,"toIdx":0,"label":"3. login + consent"},{"fromIdx":0,"toIdx":2,"label":"4. grant permission"},{"fromIdx":2,"toIdx":1,"label":"5. redirect w/ code","kind":"return"},{"fromIdx":1,"toIdx":2,"label":"6. /token (code + secret)","active":true},{"fromIdx":2,"toIdx":1,"label":"7. access_token","kind":"return"},{"fromIdx":1,"toIdx":3,"label":"8. GET /me (Bearer …)"},{"fromIdx":3,"toIdx":1,"label":"9. 200 OK user JSON","kind":"return"}],"activations":[{"actorIdx":2,"startMessage":1,"endMessage":4,"label":"consent UI"}]}},{"id":"flow","type":"FlowDiagram","duration_frames":300,"transition":"fade","data":{"title":"Cache-aside read path","nodes":[{"id":"start","label":"Request","kind":"start"},{"id":"check","label":"cache hit?","kind":"decision"},{"id":"read_cache","label":"Read from cache","kind":"process"},{"id":"read_db","label":"Read from DB","kind":"process"},{"id":"fill","label":"Fill cache","kind":"process"},{"id":"return","label":"Return data","kind":"process"},{"id":"end","label":"Respond","kind":"end"}],"edges":[{"fromId":"start","toId":"check"},{"fromId":"check","toId":"read_cache","label":"yes","active":true},{"fromId":"check","toId":"read_db","label":"no"},{"fromId":"read_db","toId":"fill"},{"fromId":"fill","toId":"return"},{"fromId":"read_cache","toId":"return"},{"fromId":"return","toId":"end"}]}},{"id":"cli","type":"TerminalCLI","duration_frames":300,"transition":"slideLeft","data":{"title":"Inspecting a Kubernetes pod","command":"kubectl describe pod nginx-7c5d4f9b8-x2k4q","output":["Name:         nginx-7c5d4f9b8-x2k4q","Namespace:    default","Node:         ip-10-0-1-23/192.168.1.10","Status:       Running","IP:           10.244.2.18","Containers:","  nginx:","    Image:       nginx:1.25","    Port:        80/TCP","    State:       Running","    Ready:       True","    Restarts:    0"],"typingSpeed":1.2,"outputLineDelay":6,"caption":"kubectl describe — the first command to run when something is wrong","highlightLines":[4,11],"theme":"dark"}},{"id":"bars","type":"BarChart","duration_frames":240,"transition":"zoom","data":{"title":"Median API latency by region (ms)","bars":[{"label":"us-east-1","value":42,"color":"#38BDF8"},{"label":"us-west-2","value":88,"color":"#a78bfa"},{"label":"eu-west-1","value":96,"color":"#f59e0b"},{"label":"ap-south-1","value":184,"color":"#f472b6"},{"label":"sa-east-1","value":221,"color":"#fb923c"}],"layout":"vertical"}},{"id":"line","type":"LineChart","duration_frames":300,"transition":"slideLeft","data":{"title":"Requests per second — Black Friday 2024","xLabels":["00:00","04:00","08:00","12:00","16:00","20:00","23:59"],"series":[{"name":"2024","color":"#22d3ee","values":[1200,1800,4500,9800,14200,22100,31500],"fill":true},{"name":"2023","color":"#f59e0b","values":[1100,1500,3800,7400,11200,16800,22400]}],"yLabel":"req/sec","xLabel":"time","highlightIndex":5}},{"id":"pie","type":"PieChart","duration_frames":240,"transition":"fade","data":{"title":"Where does CPU time go?","slices":[{"label":"GC pauses","value":38,"color":"#a78bfa"},{"label":"Lock contention","value":27,"color":"#f59e0b"},{"label":"Serialization","value":18,"color":"#38BDF8"},{"label":"Useful work","value":12,"color":"#34d399"},{"label":"Other","value":5,"color":"#64748b"}],"variant":"donut","centerLabel":"WASTED","centerValue":"83%","highlightIndex":0}},{"id":"comparison","type":"ComparisonCard","duration_frames":240,"transition":"slideUp","data":{"title":"Static vs Dynamic scenes","pros":["Static: zero per-video animation work","Static: components handle the polish","Dynamic: LLM picks the right component","Dynamic: easy A/B testing"],"cons":["Static: limited visual variety","Static: can\'t adapt to topic nuance","Dynamic: harder to debug","Dynamic: requires a component library"]}},{"id":"two-col","type":"TwoColumnLayout","duration_frames":240,"transition":"slideLeft","data":{"title":"Push vs Pull messaging","left":{"heading":"Push (Kafka)","color":"#22d3ee","icon":"→","points":["Broker forwards each event","Low consumer-side latency","Consumers can be slow without backpressure"]},"right":{"heading":"Pull (SQS, Kinesis GetRecords)","color":"#f59e0b","icon":"←","points":["Consumer polls on its own pace","Natural backpressure","Higher end-to-end latency"]},"dividerLabel":"vs"}},{"id":"steps","type":"StepFlow","duration_frames":240,"transition":"fade","data":{"title":"How an LLM picks a component","steps":["Plan scenes","Choose layout","Pick panel types","Render video"]}},{"id":"timeline","type":"TimelineFlow","duration_frames":240,"transition":"slideUp","data":{"title":"Database evolution","events":[{"year":"1970","label":"Relational model","description":"Codd\'s paper"},{"year":"1991","label":"PostgreSQL","description":"Berkeley"},{"year":"2007","label":"Cassandra","description":"Dynamo + Bigtable"},{"year":"2009","label":"Redis","description":"in-memory KV"},{"year":"2014","label":"FoundationDB","description":"ACID on KV","highlight":true},{"year":"2023","label":"DuckDB","description":"OLAP in process"}]}},{"id":"quote","type":"QuoteCard","duration_frames":180,"transition":"fade","data":{"quote":"A component library is the compiler\'s intermediate representation of visual ideas.","author":"Linus Torvalds (paraphrased)","role":"on reuse","highlightWords":["compiler","intermediate","reuse"]}},{"id":"callout","type":"CalloutAnnotation","duration_frames":180,"transition":"zoom","data":{"title":"The key insight","body":"JSON-driven scenes shift the work from authoring animation code to authoring vocabulary. The LLM picks the right word; the component renders it.","bullets":["Animation code is written once per component, not per video","Vocabulary is the only thing that scales with topic breadth","Coverage of common CS visuals becomes a one-time investment"],"position":"right"}},{"id":"outro","type":"AnimatedTitle","duration_frames":120,"transition":"none","data":{"title":"Ship more videos.","subtitle":"Canvas Motion","align":"center"}}]}');
+
+/***/ },
+
+/***/ 7909
+(module) {
+
+"use strict";
+module.exports = /*#__PURE__*/JSON.parse('{"title":"Scaling Dilemmas","fps":30,"width":1920,"height":1080,"theme":{"primary":"#7c3aed","secondary":"#ff69b4","accent":"#ffd700","background":"#1a1d23","font":"Space Grotesk"},"scenes":[{"id":"scene-1","type":"AnimatedTitle","duration_frames":210,"transition":"fade","data":{"title":"Scaling Dilemmas","subtitle":"Scalability Challenges, Resource Utilization, Response Time, Load Balancing, Distributed Systems","accentColor":null,"align":null}},{"id":"scene-2","type":"SplitScreen","duration_frames":240,"transition":"slideUp","data":{"title":"The Problem: Scaling Challenges","subtitle":null,"accentColor":null,"bullets":null,"codeSnippet":null,"mediaUrl":null}},{"id":"scene-3","type":"ArchitectureDiagram","duration_frames":300,"transition":"zoom","data":{"title":"Vertical Scaling Architecture","nodes":[{"id":"client","type":"client","x":10,"y":50,"label":"Client","metrics":null},{"id":"loadBalancer","type":"loadBalancer","x":40,"y":50,"label":"Load Balancer","metrics":null},{"id":"server","type":"server","x":70,"y":50,"label":"Server","metrics":null},{"id":"database","type":"database","x":50,"y":90,"label":"Database","metrics":null}],"connections":[{"fromId":"client","toId":"loadBalancer","type":"arrow","label":null},{"fromId":"loadBalancer","toId":"server","type":"arrow","label":null},{"fromId":"server","toId":"database","type":"stream","label":null}],"accentColor":null}},{"id":"scene-4","type":"ArchitectureDiagram","duration_frames":270,"transition":"slideLeft","data":{"title":"Horizontal Scaling Architecture","nodes":[{"id":"client","type":"client","x":10,"y":50,"label":"Client","metrics":null},{"id":"loadBalancer","type":"loadBalancer","x":40,"y":50,"label":"Load Balancer","metrics":null},{"id":"server1","type":"server","x":30,"y":80,"label":"Server 1","metrics":null},{"id":"server2","type":"server","x":60,"y":80,"label":"Server 2","metrics":null},{"id":"database","type":"database","x":50,"y":110,"label":"Database","metrics":null}],"connections":[{"fromId":"client","toId":"loadBalancer","type":"arrow","label":null},{"fromId":"loadBalancer","toId":"server1","type":"arrow","label":null},{"fromId":"loadBalancer","toId":"server2","type":"arrow","label":null},{"fromId":"server1","toId":"database","type":"stream","label":null},{"fromId":"server2","toId":"database","type":"stream","label":null}],"accentColor":null}},{"id":"scene-5","type":"ComparisonCard","duration_frames":180,"transition":"none","data":{"title":"Trade-Offs and Failure Modes","pros":["Fault Tolerance","Scalability","Load Balancing"],"cons":["Load Balancing Complexity","Data Replication","Kubernetes Complexity"],"accentColor":null,"visibleCount":null}},{"id":"scene-6","type":"AnimatedTitle","duration_frames":30,"transition":"none","data":{"title":"Scaling Dilemmas: Conclusion","subtitle":"","accentColor":null,"align":null}}]}');
+
+/***/ },
+
+/***/ 6684
+(module) {
+
+"use strict";
+module.exports = /*#__PURE__*/JSON.parse('{"title":"Kubernetes","fps":30,"width":1920,"height":1080,"theme":{"primary":"#3b82f6","secondary":"#10b981","accent":"#fbbf24","background":"#1e1e2f","font":"Inter"},"scenes":[{"id":"scene-1","type":"AnimatedTitle","duration_frames":120,"transition":"fade","data":{"title":"What is Kubernetes?","subtitle":"Container Orchestration","accentColor":null,"align":"center"}},{"id":"scene-2","type":"ArchitectureDiagram","duration_frames":330,"transition":"slideLeft","data":{"title":"Kubernetes Architecture Overview","nodes":[{"id":"client","type":"client","x":10,"y":50,"label":"Client","metrics":null},{"id":"api_server","type":"server","x":35,"y":50,"label":"API Server","metrics":null},{"id":"controller_manager","type":"server","x":35,"y":30,"label":"Controller Manager","metrics":null},{"id":"scheduler","type":"server","x":35,"y":70,"label":"Scheduler","metrics":null},{"id":"etcd","type":"database","x":60,"y":50,"label":"etcd","metrics":null},{"id":"worker_node","type":"server","x":85,"y":30,"label":"Worker Node","metrics":null},{"id":"pod","type":"server","x":85,"y":70,"label":"Pod","metrics":null}],"connections":[{"fromId":"client","toId":"api_server","type":"arrow","label":null},{"fromId":"api_server","toId":"controller_manager","type":"arrow","label":null},{"fromId":"api_server","toId":"scheduler","type":"arrow","label":null},{"fromId":"controller_manager","toId":"etcd","type":"stream","label":null},{"fromId":"scheduler","toId":"etcd","type":"stream","label":null},{"fromId":"api_server","toId":"worker_node","type":"arrow","label":null},{"fromId":"worker_node","toId":"pod","type":"arrow","label":null}],"accentColor":null}},{"id":"scene-3","type":"BulletList","duration_frames":195,"transition":"slideUp","data":{"title":"Control Plane Responsibilities","items":["Managing cluster state","Handling API requests","Scheduling pods","Maintaining desired state"],"accentColor":null,"numbered":null,"align":null}},{"id":"scene-4","type":"SplitScreen","duration_frames":225,"transition":"slideLeft","data":{"title":"Pod Scheduling Workflow","subtitle":null,"accentColor":null,"bullets":["Pod creation request","Scheduler selects node","Pod assigned to node"],"codeSnippet":{"code":"kubectl create pod example-pod","language":"bash"},"mediaUrl":null}},{"id":"scene-5","type":"ComparisonCard","duration_frames":30,"transition":"none","data":{"title":"Scaling Strategies: HPA vs Manual","pros":["Automatic scaling","Efficient resource usage"],"cons":["Complexity","Potential for over-scaling"],"accentColor":null,"visibleCount":null}}]}');
+
+/***/ },
+
+/***/ 1928
 (module) {
 
 "use strict";
@@ -56553,6 +61670,14 @@ module.exports = /*#__PURE__*/JSON.parse('{"title":"Canvas Motion Full Showcase"
 
 "use strict";
 module.exports = /*#__PURE__*/JSON.parse('{"title":"Horizontal vs Vertical Scaling","fps":30,"width":1920,"height":1080,"theme":{"primary":"#7c3aed","secondary":"#f59e0b","accent":"#34d399","background":"#0b0f1e","font":"Inter"},"scenes":[{"id":"intro","type":"AnimatedTitle","duration_frames":150,"transition":"zoom","data":{"title":"System Scaling","subtitle":"Horizontal vs Vertical Approaches","align":"center"}},{"id":"concept","type":"SplitScreen","duration_frames":240,"transition":"slideLeft","data":{"title":"The Core Dilemma","bullets":["Your app is going viral","Traffic has increased 10x","Your server is struggling","How do you handle the load?"],"codeSnippet":{"language":"shell","code":"$ top\\nCPU: 99.9% us, 0.1% sy, 0.0% ni\\nMem: 8192M total, 8100M used"}}},{"id":"vertical-arch","type":"ArchitectureDiagram","duration_frames":240,"transition":"fade","data":{"title":"Vertical Scaling (Scaling Up)","nodes":[{"id":"users","type":"client","label":"100k Users","x":20,"y":50},{"id":"server-huge","type":"server","label":"Super Server","x":60,"y":50,"metrics":{"cpu":"128 Cores","ram":"512 GB"}},{"id":"db","type":"database","label":"Database","x":85,"y":50}],"connections":[{"fromId":"users","toId":"server-huge","type":"stream"},{"fromId":"server-huge","toId":"db","type":"arrow"}],"accentColor":"#f59e0b"}},{"id":"horizontal-arch","type":"ArchitectureDiagram","duration_frames":270,"transition":"slideUp","data":{"title":"Horizontal Scaling (Scaling Out)","nodes":[{"id":"users","type":"client","label":"100k Users","x":10,"y":50},{"id":"lb","type":"loadBalancer","label":"Load Balancer","x":35,"y":50},{"id":"web1","type":"server","label":"Node A","x":65,"y":25,"metrics":{"cpu":"4 Cores","ram":"8 GB"}},{"id":"web2","type":"server","label":"Node B","x":65,"y":50,"metrics":{"cpu":"4 Cores","ram":"8 GB"}},{"id":"web3","type":"server","label":"Node C","x":65,"y":75,"metrics":{"cpu":"4 Cores","ram":"8 GB"}},{"id":"db","type":"database","label":"Database Cluster","x":90,"y":50}],"connections":[{"fromId":"users","toId":"lb","type":"stream"},{"fromId":"lb","toId":"web1","type":"stream"},{"fromId":"lb","toId":"web2","type":"stream"},{"fromId":"lb","toId":"web3","type":"stream"},{"fromId":"web1","toId":"db","type":"arrow"},{"fromId":"web2","toId":"db","type":"arrow"},{"fromId":"web3","toId":"db","type":"arrow"}],"accentColor":"#34d399"}},{"id":"comparison","type":"ComparisonCard","duration_frames":240,"transition":"zoom","data":{"title":"Which is better?","pros":["Vertical: Simple setup","Vertical: No code changes","Horizontal: Infinite scale","Horizontal: High availability"],"cons":["Vertical: Hardware limits","Vertical: Single point of failure","Horizontal: Complex networking","Horizontal: Data consistency is hard"]}},{"id":"outro","type":"AnimatedTitle","duration_frames":150,"transition":"fade","data":{"title":"Scale smartly.","subtitle":"Canvas Motion","align":"center"}}]}');
+
+/***/ },
+
+/***/ 8859
+(module) {
+
+"use strict";
+module.exports = /*#__PURE__*/JSON.parse('{"title":"50 Milliseconds: The Life of a Web Request","fps":30,"width":1920,"height":1080,"theme":{"primary":"#6366f1","secondary":"#22d3ee","accent":"#f59e0b","background":"#030711","font":"Space Grotesk"},"scenes":[{"id":"scene-1","layout":"full","title":"50 Milliseconds: The Life of a Web Request","subtitle":"From Enter key to rendered page — a complete engineering journey","duration_frames":105,"transition":"fade","panels":[{"area":"panel","type":"AnimatedTitle","data":{"title":"50 Milliseconds","subtitle":"The complete life of a web request — from keystroke to pixel"}}]},{"id":"scene-2","layout":"left-right","title":"The Scale of the Web","subtitle":"Every second, millions of requests travel the globe","duration_frames":210,"transition":"slideLeft","panels":[{"area":"left","type":"TypewriterText","data":{"lines":["$ curl https://api.github.com/users/torvalds","> Resolving api.github.com...","> TCP handshake complete (12ms)","> TLS 1.3 negotiated (8ms)","> HTTP/2 GET /users/torvalds","> 200 OK — 847 bytes (4ms)","{ \\"login\\": \\"torvalds\\", \\"repos\\": 7 }"],"accentColor":"#22d3ee","fontSize":32,"charPerFrame":3,"showCursor":true}},{"area":"right","type":"StatCallout","data":{"title":"HTTP Requests Per Second","value":5400000,"suffix":"","description":"Over 5.4 million HTTP requests hit the internet every single second — each one a complete engineering symphony","accentColor":"#6366f1"}}]},{"id":"scene-3","layout":"title-left-right","title":"Step 1 — DNS: Translating Names to Addresses","subtitle":"The phone book of the internet, distributed across 13 root server clusters","duration_frames":255,"transition":"slideLeft","panels":[{"area":"left","type":"StepFlow","data":{"title":"DNS Resolution Chain","steps":["Browser Cache","OS Cache","Recursive Resolver","Root Nameserver","TLD (.com)","Auth Nameserver"],"accentColor":"#22d3ee"}},{"area":"right","type":"BulletList","data":{"title":"DNS Fast Facts","items":["First visit: 20–120ms lookup — subsequent visits hit the browser cache instantly","TTL controls caching — GitHub\'s TTL is 60s, Cloudflare\'s is 300s","Google\'s 8.8.8.8 resolver handles over 1 trillion queries per day","DNSSEC cryptographically signs records — prevents cache poisoning attacks","DNS over HTTPS (DoH) encrypts queries, hiding your browsing from ISPs"]}}]},{"id":"scene-4","layout":"title-main-sidebar","title":"Step 2 — TCP + TLS: Establishing a Secure Channel","subtitle":"Three packets to connect, two round-trips to secure — then you\'re in","duration_frames":300,"transition":"slideLeft","panels":[{"area":"main","type":"PacketFlow","data":{"nodes":[{"id":"browser","label":"Browser","x":8,"y":50,"type":"client"},{"id":"dns","label":"DNS Resolver","x":30,"y":22,"type":"router","sublabel":"8.8.8.8"},{"id":"cdn","label":"CDN Edge","x":52,"y":50,"type":"cdn","sublabel":"Cloudflare"},{"id":"lb","label":"Load Balancer","x":72,"y":30,"type":"router","sublabel":"NGINX"},{"id":"app","label":"App Server","x":88,"y":50,"type":"server","sublabel":"Node.js"},{"id":"cache","label":"Redis Cache","x":72,"y":72,"type":"database","sublabel":"0.4ms"}],"edges":[{"from":"browser","to":"dns","label":"DNS query","color":"#22d3ee"},{"from":"browser","to":"cdn","label":"TCP SYN","color":"#6366f1"},{"from":"cdn","to":"lb","label":"route","color":"#f59e0b"},{"from":"lb","to":"app","label":"request","color":"#10b981"},{"from":"app","to":"cache","label":"cache lookup","color":"#8b5cf6"}],"accentColor":"#22d3ee","packetInterval":16}},{"area":"sidebar","type":"BulletList","data":{"title":"Handshake Steps","items":["SYN → Client sends sequence number, max segment size","SYN-ACK → Server acknowledges, sends its own sequence","ACK → Connection established (1 round-trip)","ClientHello → TLS version, cipher suites, random","ServerHello → Certificate + chosen cipher","Finished → Encrypted from here on (TLS 1.3: 1-RTT)"]}}]},{"id":"scene-5","layout":"title-content","title":"Step 3 — The HTTP Request & Response","subtitle":"A structured conversation between client and server","duration_frames":270,"transition":"zoom","panels":[{"area":"main","type":"HttpExchange","data":{"method":"GET","path":"/api/v2/users/42/profile","host":"api.example.com","requestHeaders":{"Authorization":"Bearer eyJhbGciOiJSUzI1NiJ9...","Accept":"application/json","Accept-Encoding":"gzip, br","X-Request-ID":"d4e5f6a7-b8c9","Cache-Control":"no-cache"},"statusCode":200,"statusText":"OK","responseHeaders":{"Content-Type":"application/json; charset=utf-8","Content-Encoding":"gzip","Cache-Control":"private, max-age=300","X-Response-Time":"12ms","X-RateLimit-Remaining":"4987"},"responseBody":"{ \\"id\\": 42, \\"name\\": \\"Ada Lovelace\\",\\n  \\"role\\": \\"engineer\\", \\"joined\\": \\"2019-03\\" }"}}]},{"id":"scene-6","layout":"title-main-sidebar","title":"Step 4 — Load Balancing Across App Servers","subtitle":"No single server handles it all — traffic is distributed intelligently","duration_frames":315,"transition":"slideLeft","panels":[{"area":"main","type":"ArchitectureDiagram","data":{"title":"Production Request Path","nodes":[{"id":"client","type":"client","x":6,"y":50,"label":"Browser"},{"id":"cdn","type":"loadBalancer","x":22,"y":50,"label":"Cloudflare CDN"},{"id":"lb","type":"loadBalancer","x":40,"y":50,"label":"NGINX L7"},{"id":"app1","type":"server","x":60,"y":22,"label":"API Server 1"},{"id":"app2","type":"server","x":60,"y":50,"label":"API Server 2"},{"id":"app3","type":"server","x":60,"y":78,"label":"API Server 3"},{"id":"redis","type":"database","x":80,"y":30,"label":"Redis"},{"id":"pg","type":"database","x":80,"y":68,"label":"PostgreSQL"}],"connections":[{"fromId":"client","toId":"cdn","type":"arrow"},{"fromId":"cdn","toId":"lb","type":"arrow"},{"fromId":"lb","toId":"app1","type":"arrow"},{"fromId":"lb","toId":"app2","type":"arrow"},{"fromId":"lb","toId":"app3","type":"arrow"},{"fromId":"app1","toId":"redis","type":"stream"},{"fromId":"app2","toId":"redis","type":"stream"},{"fromId":"app3","toId":"pg","type":"stream"}]}},{"area":"sidebar","type":"StatCallout","data":{"title":"P99 Response Time","value":48,"suffix":"ms","description":"With caching + connection pooling + HTTP/2 multiplexing, well-optimized services hit under 50ms at the 99th percentile","accentColor":"#10b981"}}]},{"id":"scene-7","layout":"title-left-right","title":"Step 5 — The Database Query","subtitle":"Most latency lives here — indexes, query plans, and connection pools determine speed","duration_frames":285,"transition":"slideUp","panels":[{"area":"left","type":"CodeBlock","data":{"title":"Optimized SQL Query","language":"sql","code":"-- Profile fetch with EXPLAIN ANALYZE\\nSELECT\\n  u.id, u.name, u.email,\\n  u.role, u.created_at,\\n  COUNT(p.id)  AS post_count,\\n  MAX(p.created_at) AS last_post\\nFROM users u\\nLEFT JOIN posts p\\n  ON p.user_id = u.id\\n  AND p.deleted_at IS NULL\\nWHERE u.id = $1\\n  AND u.deleted_at IS NULL\\nGROUP BY u.id;\\n\\n-- Execution: 0.8ms (index scan on users_pkey)\\n-- Rows examined: 1 (covering index)","revealMode":"lines","highlightLines":[2,3,4,5,13,14],"fontSize":24}},{"area":"right","type":"TimelineFlow","data":{"title":"Request Milliseconds Breakdown","direction":"vertical","events":[{"year":"0ms","label":"Request received","description":"NGINX accepts TCP packet, parses HTTP headers, routes to upstream","highlight":false},{"year":"2ms","label":"Auth validated","description":"JWT signature verified against public key stored in Redis — no DB hit needed","highlight":false},{"year":"5ms","label":"Cache miss","description":"Redis HGETALL returns nil — user profile not cached, proceed to PostgreSQL","highlight":true},{"year":"8ms","label":"DB query starts","description":"Connection pool provides existing connection, query planner chooses index scan","highlight":false},{"year":"9ms","label":"Query returns","description":"1 row fetched via users_pkey B-tree index — 0.8ms execution time","highlight":true},{"year":"12ms","label":"Response sent","description":"JSON serialized, gzip compressed 847→312 bytes, streamed back to client","highlight":false}]}}]},{"id":"scene-8","layout":"title-left-right","title":"Step 6 — Caching: The 100× Speed Multiplier","subtitle":"A cache hit turns 50ms into 0.4ms — the most powerful optimization in distributed systems","duration_frames":270,"transition":"slideLeft","panels":[{"area":"left","type":"BarChart","data":{"title":"Read Latency Comparison (ms)","layout":"horizontal","showValues":true,"bars":[{"label":"Redis (in-memory)","value":1,"color":"#10b981","sublabel":"0.4ms avg"},{"label":"Memcached","value":2,"color":"#22d3ee","sublabel":"0.6ms avg"},{"label":"CDN Edge Cache","value":8,"color":"#6366f1","sublabel":"5ms avg"},{"label":"App + DB (cached)","value":20,"color":"#f59e0b","sublabel":"15ms avg"},{"label":"Full DB round-trip","value":60,"color":"#ef4444","sublabel":"50ms avg"},{"label":"Cold DB + no pool","value":100,"color":"#dc2626","sublabel":"200ms+ cold"}]}},{"area":"right","type":"ComparisonCard","data":{"title":"Cache Hit vs Cache Miss","accentColor":"#10b981","pros":["Cache HIT: 0.4ms Redis lookup — 125× faster than DB","No database CPU consumed — servers stay free for writes","Consistent response time regardless of DB load spikes","Survives database outages gracefully with stale-while-revalidate"],"cons":["Cache MISS: full DB query + cache write overhead adds ~5ms","Stale data risk — cache invalidation is a notoriously hard problem","Memory pressure — Redis evicts LRU keys under memory limits","Cold start penalty after deploy or crash flushes the entire cache"]}}]},{"id":"scene-9","layout":"title-content","title":"The Full Stack — Frontend vs Backend Contract","subtitle":"Two worlds, one API boundary — each side owns its complexity","duration_frames":255,"transition":"slideUp","panels":[{"area":"main","type":"TwoColumnLayout","data":{"title":"What Each Side Owns","dividerLabel":"HTTP API","left":{"heading":"Frontend (Client)","color":"#6366f1","icon":"◉","points":["Renders UI from JSON — no business logic in components","Manages local state, optimistic updates, loading skeletons","Caches API responses in memory (SWR / React Query)","Handles auth tokens — refresh before expiry, redirect on 401","Bundle splitting — only ship code the current route needs","Service Worker for offline — cache-first, network-fallback"]},"right":{"heading":"Backend (Server)","color":"#10b981","icon":"▣","points":["Validates every input — trust nothing from the client","Authorizes every request — check ownership, not just auth","Owns all database queries — ORM or raw SQL, never client-built","Rate limits per user/IP — Redis sliding window counters","Idempotency keys on mutations — safe to retry POST/PUT","Structured logs + traces — every request gets a correlation ID"]}}}]},{"id":"scene-10","layout":"full","title":"Every Click Is an Engineering Marvel","subtitle":"DNS, TCP, TLS, HTTP, load balancing, caching, SQL — all in under 50ms","duration_frames":105,"transition":"none","panels":[{"area":"panel","type":"AnimatedTitle","data":{"title":"Every Click Is an Engineering Marvel","subtitle":"The invisible infrastructure that makes the modern web feel instant"}}]}]}');
 
 /***/ }
 
@@ -56859,7 +61984,7 @@ module.exports = /*#__PURE__*/JSON.parse('{"title":"Horizontal vs Vertical Scali
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
 /******/ 	__webpack_require__(6507);
-/******/ 	__webpack_require__(9012);
+/******/ 	__webpack_require__(3301);
 /******/ 	__webpack_require__(3610);
 /******/ 	var __webpack_exports__ = __webpack_require__(3482);
 /******/ 	

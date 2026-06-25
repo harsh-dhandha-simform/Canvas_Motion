@@ -193,7 +193,6 @@ def run_agent(director_brief: dict) -> dict:
 
     user_message = (
         f"Topic: {topic!r}\n"
-        f"arc_type: {director_brief.get('arc_type')!r}\n"
         f"total_seconds: {director_brief.get('total_seconds')}\n\n"
         f"Scene plans:\n{scene_plan_text}\n\n"
         "Write deeply technical narration + panel data for each scene. "

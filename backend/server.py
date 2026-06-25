@@ -228,7 +228,7 @@ def generate_script(req: GenerateScriptRequest):
     Generate a VideoScript JSON by firing the full LangGraph pipeline.
 
     Pipeline stages:
-      1. Director     — palette, tone, scene structure, arc_type detection
+      1. Director     — palette, tone, scene structure
       2. Scriptwriter — per-scene narration, key_points, code snippets
       3. Storyboard   — visual layout hints, element types, transition suggestions
       4. Sync         — frame-accurate duration_frames per scene at 30 fps

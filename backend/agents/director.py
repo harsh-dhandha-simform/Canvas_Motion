@@ -40,20 +40,10 @@ OPTION D  (security / infra / Kubernetes / DevOps)
 Choose whichever option's colors contrast well with the topic. Never invent colors outside these palettes.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## ARC TYPE
-
-diagram-driven: architecture, distributed systems, "X vs Y", load balancing, sharding,
-  Kafka, Kubernetes, CDN, databases, API gateways, caching, consensus protocols.
-  → Use ArchitectureDiagram in ≥2 middle scenes.
-
-narrative: algorithms, history, design patterns, language features, theory, math.
-  → Use StepFlow, CodeBlock, TimelineFlow to show mechanisms, not just describe them.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## SCENE COUNT
 
-diagram-driven: 6-8 scenes.
-narrative:      7-10 scenes.
+6-8 scenes for architecture/systems topics.
+7-10 scenes for algorithm/narrative topics.
 ALL four arrays (scene_titles, scene_subtitles, scene_layouts, scene_panel_plans)
 must have EXACTLY scene_count entries.
 
@@ -127,7 +117,6 @@ scene_count = 7 EXACTLY. Fixed layout sequence:
 
 {{
   "topic": "<topic string>",
-  "arc_type": "diagram-driven" | "narrative",
   "depth_level": "introductory" | "intermediate" | "advanced",
   "palette": {{
     "background": "<hex>", "primary": "<hex>", "secondary": "<hex>",

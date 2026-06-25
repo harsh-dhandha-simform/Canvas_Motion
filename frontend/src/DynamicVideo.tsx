@@ -398,7 +398,7 @@ export const DynamicVideo: React.FC<VideoScriptProps> = ({ theme, scenes }) => {
             durationInFrames={scene.duration_frames}
             premountFor={30}
             style={{
-              translate: "-19px 3.6px",
+              translate: "-23.8px -15.1px",
             }}
           >
             <SceneWrapper scene={scene} background={theme.background} />

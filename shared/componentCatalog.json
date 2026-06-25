@@ -148,5 +148,135 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     }
+  },
+  "HashRing": {
+    "description": "A consistent hashing ring with virtual nodes, server placement, and animated key lookups. Use for distributed caches, sharded databases, CDNs, and any consistent-hashing explanation.",
+    "schema": {
+      "$ref": "#/definitions/HashRingProps",
+      "definitions": {
+        "HashRingProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "StateMachine": {
+    "description": "An animated finite-state machine with state boxes, labeled transition arrows, and a pulsing active state. Use for protocol diagrams (TCP handshake, Raft consensus), cache coherence, and workflow states.",
+    "schema": {
+      "$ref": "#/definitions/StateMachineProps",
+      "definitions": {
+        "StateMachineProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "TreeHierarchy": {
+    "description": "A top-down tree diagram with auto-laid-out nodes and curved connectors. Use for B-trees, DNS hierarchy, recursion trees, file systems, org charts, and classification.",
+    "schema": {
+      "$ref": "#/definitions/TreeHierarchyProps",
+      "definitions": {
+        "TreeHierarchyProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "SequenceDiagram": {
+    "description": "A UML-style sequence diagram with actor lifelines and time-ordered request/response arrows. Use for API flows, microservice communication, and authentication sequences.",
+    "schema": {
+      "$ref": "#/definitions/SequenceDiagramProps",
+      "definitions": {
+        "SequenceDiagramProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "LineChart": {
+    "description": "An animated multi-series line chart with optional area fill, grid lines, and legend. Lines draw in over time. Use for trends, growth curves, latency vs load, and any time-series comparison.",
+    "schema": {
+      "$ref": "#/definitions/LineChartProps",
+      "definitions": {
+        "LineChartProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "MathFormula": {
+    "description": "A centered formula display with token-based rendering for variables, numbers, fractions, exponents, subscripts, square roots, and sums. Use for Big-O notation, equations, and math derivations.",
+    "schema": {
+      "$ref": "#/definitions/MathFormulaProps",
+      "definitions": {
+        "MathFormulaProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "EquationDerivation": {
+    "description": "A vertical stack of formula steps connected by arrows, with optional justifications. Each step is a complete formula that can highlight independently. Use for proof walks and algebraic transformations.",
+    "schema": {
+      "$ref": "#/definitions/EquationDerivationProps",
+      "definitions": {
+        "EquationDerivationProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "TerminalCLI": {
+    "description": "An animated terminal/CLI window that types a command then streams output line by line. Themes: dark, matrix, amber. Use for tutorials, debugging flows, and showing command output.",
+    "schema": {
+      "$ref": "#/definitions/TerminalCLIProps",
+      "definitions": {
+        "TerminalCLIProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "PieChart": {
+    "description": "An animated pie or donut chart with a sweeping reveal, percentage labels, an optional center label, and a side legend with values. Use for proportional breakdowns.",
+    "schema": {
+      "$ref": "#/definitions/PieChartProps",
+      "definitions": {
+        "PieChartProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "NumberedList": {
+    "description": "A list of numbered cards with large colored badges, headings, and descriptions. Stack (vertical) or grid (2-column) layout. Use for ranked steps, principles, and ordered concepts.",
+    "schema": {
+      "$ref": "#/definitions/NumberedListProps",
+      "definitions": {
+        "NumberedListProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "GlossaryCards": {
+    "description": "A grid of term/definition cards with colored icon tiles. Auto-detects 2- or 3-column layout. Use for vocabulary sections, acronym glossaries, and concept maps.",
+    "schema": {
+      "$ref": "#/definitions/GlossaryCardsProps",
+      "definitions": {
+        "GlossaryCardsProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "FlowDiagram": {
+    "description": "A branching flow diagram with process (rectangle), decision (diamond), and start/end (pill) shapes connected by labeled arrows. Use for workflows, conditional logic, and algorithms with branching.",
+    "schema": {
+      "$ref": "#/definitions/FlowDiagramProps",
+      "definitions": {
+        "FlowDiagramProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "CalloutAnnotation": {
+    "description": "A highlighted callout box with corner brackets, a side arrow, and optional bullet points. Use to emphasize a key insight or definition against a darker background.",
+    "schema": {
+      "$ref": "#/definitions/CalloutAnnotationProps",
+      "definitions": {
+        "CalloutAnnotationProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
   }
 }
