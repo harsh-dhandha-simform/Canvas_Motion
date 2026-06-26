@@ -75,6 +75,7 @@ class Scene(_NullSafeBase):
     subtitle: Optional[str] = None
     duration_frames: int
     transition: TransitionType = "fade"
+    narration: str = ""               # spoken/on-screen explanation for this scene
     panels: list[Panel] = Field(default_factory=list)
 
     @model_validator(mode="before")
@@ -103,12 +104,26 @@ class Theme(_NullSafeBase):
 # VideoScript — top-level document
 # ---------------------------------------------------------------------------
 
+class Caption(_NullSafeBase):
+    text: str
+    startMs: int
+    endMs: int
+    timestampMs: Optional[int] = None
+    confidence: Optional[float] = None
+
+
+class Voiceover(_NullSafeBase):
+    provider: Optional[str] = None       # null until real TTS is wired
+    captions: list[Caption] = Field(default_factory=list)
+
+
 class VideoScript(_NullSafeBase):
     title: str
     fps: Literal[30] = 30
     width: Literal[1920] = 1920
     height: Literal[1080] = 1080
     theme: Theme
+    voiceover: Optional[Voiceover] = None
     scenes: list[Scene]
 
     def total_frames(self) -> int:

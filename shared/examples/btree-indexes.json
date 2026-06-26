@@ -1,0 +1,618 @@
+{
+  "title": "Database Indexes with B-Trees",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#10b981",
+    "secondary": "#38bdf8",
+    "accent": "#fb923c",
+    "background": "#0a0f1e",
+    "font": "Outfit"
+  },
+  "voiceover": {
+    "provider": null,
+    "captions": [
+      {
+        "text": "Welcome to the world of database indexes, where",
+        "startMs": 0,
+        "endMs": 1386,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "performance meets efficiency. In this video, we'll explore",
+        "startMs": 1386,
+        "endMs": 2772,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "the ins and outs of B-tree indexes. By",
+        "startMs": 2772,
+        "endMs": 4158,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "the end of this video, you'll understand why",
+        "startMs": 4158,
+        "endMs": 5544,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "B-tree indexes are crucial for fast data retrieval.",
+        "startMs": 5544,
+        "endMs": 6930,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Imagine querying a massive database with millions of",
+        "startMs": 6933,
+        "endMs": 8319,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "rows. Without indexes, the database would have to",
+        "startMs": 8319,
+        "endMs": 9705,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "scan every row, leading to slow performance. Indexes",
+        "startMs": 9705,
+        "endMs": 11091,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "bridge this performance gap by enabling fast lookups,",
+        "startMs": 11091,
+        "endMs": 12477,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "insertions, and deletions.",
+        "startMs": 12477,
+        "endMs": 12996,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "A B-tree node consists of key values, child",
+        "startMs": 13000,
+        "endMs": 14380,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "pointers, and a sibling pointer. These components map",
+        "startMs": 14380,
+        "endMs": 15760,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "to disk pages, ensuring efficient storage and retrieval.",
+        "startMs": 15760,
+        "endMs": 17140,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Understanding B-tree node layout is crucial for optimizing",
+        "startMs": 17140,
+        "endMs": 18520,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "database performance.",
+        "startMs": 18520,
+        "endMs": 18865,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "B-tree properties guarantee balance and search efficiency. The",
+        "startMs": 18866,
+        "endMs": 20246,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "key invariant is that all leaf nodes are",
+        "startMs": 20246,
+        "endMs": 21626,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "at the same level, ensuring O(log n) search",
+        "startMs": 21626,
+        "endMs": 23006,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "time. This is achieved through rebalancing during insertion",
+        "startMs": 23006,
+        "endMs": 24386,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "and deletion.",
+        "startMs": 24386,
+        "endMs": 24731,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "The lookup algorithm traverses the B-tree by comparing",
+        "startMs": 24733,
+        "endMs": 26118,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "keys and following child pointers. This process repeats",
+        "startMs": 26118,
+        "endMs": 27503,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "until the desired key is found or a",
+        "startMs": 27503,
+        "endMs": 28888,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "leaf node is reached. Efficient lookup is critical",
+        "startMs": 28888,
+        "endMs": 30273,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "for fast query performance.",
+        "startMs": 30273,
+        "endMs": 30965,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Insertion and deletion operations preserve B-tree invariants by",
+        "startMs": 30966,
+        "endMs": 32349,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "rebalancing the tree. This ensures that the tree",
+        "startMs": 32349,
+        "endMs": 33732,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "remains approximately balanced, maintaining search efficiency. Rebalancing can",
+        "startMs": 33732,
+        "endMs": 35115,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "be costly, but it's essential for long-term performance.",
+        "startMs": 35115,
+        "endMs": 36498,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "While B-tree indexes offer excellent search performance, they",
+        "startMs": 36500,
+        "endMs": 37885,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "come with costs. Insertion and deletion operations can",
+        "startMs": 37885,
+        "endMs": 39270,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "be expensive, especially for large datasets. Additionally, B-trees",
+        "startMs": 39270,
+        "endMs": 40655,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "can suffer from degradation over time if not",
+        "startMs": 40655,
+        "endMs": 42040,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "properly maintained. Understanding these trade-offs is crucial for",
+        "startMs": 42040,
+        "endMs": 43425,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "optimizing database performance in real-world workloads.",
+        "startMs": 43425,
+        "endMs": 44464,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "In conclusion, B-tree indexes are a fundamental component",
+        "startMs": 44466,
+        "endMs": 45849,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "of database performance. By understanding how they work",
+        "startMs": 45849,
+        "endMs": 47232,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "and their trade-offs, you can optimize your database",
+        "startMs": 47232,
+        "endMs": 48615,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "for fast data retrieval and efficient query performance.",
+        "startMs": 48615,
+        "endMs": 49998,
+        "timestampMs": null,
+        "confidence": null
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 208,
+      "transition": "fade",
+      "narration": "Welcome to the world of database indexes, where performance meets efficiency. In this video, we'll explore the ins and outs of B-tree indexes. By the end of this video, you'll understand why B-tree indexes are crucial for fast data retrieval.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "data": {
+            "title": "B-Tree Indexes: The Backbone of Database Performance",
+            "subtitle": "Unlocking fast data retrieval with B-tree indexes",
+            "accentColor": "#3498db",
+            "align": "center"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-2",
+      "layout": "title-left-right",
+      "title": "Why Indexes Are Needed",
+      "subtitle": "The performance gap between full table scans and indexed lookups",
+      "duration_frames": 182,
+      "transition": "slideLeft",
+      "narration": "Imagine querying a massive database with millions of rows. Without indexes, the database would have to scan every row, leading to slow performance. Indexes bridge this performance gap by enabling fast lookups, insertions, and deletions.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BulletList",
+          "data": {
+            "title": "The Performance Gap: Full Table Scans vs. Indexed Lookups",
+            "items": [
+              "Full table scan: 10,000,000 rows scanned in 10 seconds",
+              "Indexed lookup: 1,000,000 rows scanned in 1 millisecond",
+              "Example system: Google's Bigtable uses indexes for fast lookups",
+              "Real-world impact: 100x performance improvement with indexes",
+              "Database example: MySQL uses B-tree indexes by default"
+            ],
+            "accentColor": "#f1c40f",
+            "numbered": false,
+            "align": "left"
+          }
+        },
+        {
+          "area": "right",
+          "type": "CalloutAnnotation",
+          "data": {
+            "title": "Why Indexes Are Needed",
+            "body": "Imagine querying a massive database with millions of rows. Without indexes, the database would have to scan every row, leading to slow performance. Indexes bridge this performance gap by enabling fast lookups, insertions, and deletions."
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-3",
+      "layout": "title-main-sidebar",
+      "title": "B-Tree Node Layout",
+      "subtitle": "Components of a B-tree node and how they map to disk pages",
+      "duration_frames": 176,
+      "transition": "slideLeft",
+      "narration": "A B-tree node consists of key values, child pointers, and a sibling pointer. These components map to disk pages, ensuring efficient storage and retrieval. Understanding B-tree node layout is crucial for optimizing database performance.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "CalloutAnnotation",
+          "data": {
+            "title": "B-Tree Node Layout",
+            "body": "A B-tree node consists of key values, child pointers, and a sibling pointer. These components map to disk pages, ensuring efficient storage and retrieval. Understanding B-tree node layout is crucial for optimizing database performance."
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "data": {
+            "title": "B-Tree Node Components",
+            "body": "A B-tree node typically contains key values, child pointers, and a sibling pointer.",
+            "bullets": [
+              "Key values: used for search and insertion",
+              "Child pointers: point to child nodes or leaf nodes",
+              "Sibling pointer: points to adjacent nodes for efficient insertion/deletion"
+            ],
+            "position": "right",
+            "accentColor": "#e74c3c"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-4",
+      "layout": "title-content",
+      "title": "Core B-Tree Properties",
+      "subtitle": "Invariants that guarantee balance and search efficiency",
+      "duration_frames": 176,
+      "transition": "slideLeft",
+      "narration": "B-tree properties guarantee balance and search efficiency. The key invariant is that all leaf nodes are at the same level, ensuring O(log n) search time. This is achieved through rebalancing during insertion and deletion.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "EquationDerivation",
+          "data": {
+            "title": "Deriving B-Tree Balance",
+            "steps": [
+              {
+                "tokens": [
+                  "n",
+                  "=",
+                  "number of keys"
+                ],
+                "note": "Assume n keys in the B-tree"
+              },
+              {
+                "tokens": [
+                  "log",
+                  "n",
+                  "leaf nodes"
+                ],
+                "highlight": true,
+                "note": "Leaf nodes are at the same level"
+              },
+              {
+                "tokens": [
+                  "O(log",
+                  "n",
+                  ")"
+                ],
+                "final": true,
+                "note": "Guaranteed search efficiency"
+              }
+            ],
+            "accentColor": "#2ecc71"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-5",
+      "layout": "title-left-right",
+      "title": "Lookup (Search) Algorithm",
+      "subtitle": "How a key is located by traversing the tree",
+      "duration_frames": 187,
+      "transition": "slideLeft",
+      "narration": "The lookup algorithm traverses the B-tree by comparing keys and following child pointers. This process repeats until the desired key is found or a leaf node is reached. Efficient lookup is critical for fast query performance.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BulletList",
+          "data": {
+            "title": "B-Tree Lookup Algorithm",
+            "items": [
+              "Start at the root node",
+              "Compare key with node values",
+              "Follow child pointer or sibling pointer",
+              "Repeat until key is found or leaf node is reached",
+              "Example: MySQL's B-tree implementation uses this algorithm"
+            ],
+            "accentColor": "#9b59b6",
+            "numbered": false,
+            "align": "left"
+          }
+        },
+        {
+          "area": "right",
+          "type": "FlowDiagram",
+          "data": {
+            "title": "Lookup (Search) Algorithm",
+            "nodes": [
+              {
+                "id": "start",
+                "label": "Start",
+                "kind": "start",
+                "description": "",
+                "color": "#00FF00"
+              },
+              {
+                "id": "root",
+                "label": "Root Node",
+                "kind": "process",
+                "description": "Find key in root node",
+                "color": "#CCCCCC"
+              },
+              {
+                "id": "leaf",
+                "label": "Leaf Node",
+                "kind": "process",
+                "description": "Find key in leaf node",
+                "color": "#CCCCCC"
+              },
+              {
+                "id": "end",
+                "label": "End",
+                "kind": "end",
+                "description": "",
+                "color": "#0000FF"
+              }
+            ],
+            "edges": [
+              {
+                "fromId": "start",
+                "toId": "root",
+                "label": "",
+                "active": true
+              },
+              {
+                "fromId": "root",
+                "toId": "leaf",
+                "label": " Traverse tree",
+                "active": true
+              },
+              {
+                "fromId": "leaf",
+                "toId": "end",
+                "label": "Key found",
+                "active": true
+              }
+            ],
+            "accentColor": "#FFFFFF"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-6",
+      "layout": "title-main-sidebar",
+      "title": "Insertion and Deletion Mechanics",
+      "subtitle": "How updates preserve B-tree invariants",
+      "duration_frames": 166,
+      "transition": "slideLeft",
+      "narration": "Insertion and deletion operations preserve B-tree invariants by rebalancing the tree. This ensures that the tree remains approximately balanced, maintaining search efficiency. Rebalancing can be costly, but it's essential for long-term performance.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "CalloutAnnotation",
+          "data": {
+            "title": "Insertion and Deletion Mechanics",
+            "body": "Insertion and deletion operations preserve B-tree invariants by rebalancing the tree. This ensures that the tree remains approximately balanced, maintaining search efficiency. Rebalancing can be costly, but it's essential for long-term performance."
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "data": {
+            "title": "Preserving B-Tree Invariants",
+            "body": "Rebalancing during insertion and deletion ensures B-tree invariants are preserved.",
+            "bullets": [
+              "Insertion: add key to leaf node, rebalance if necessary",
+              "Deletion: remove key from leaf node, rebalance if necessary"
+            ],
+            "position": "right",
+            "accentColor": "#16a085"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-7",
+      "layout": "title-content",
+      "title": "Trade-offs and Limitations",
+      "subtitle": "Assessing the costs of B-tree indexes in real workloads",
+      "duration_frames": 239,
+      "transition": "slideLeft",
+      "narration": "While B-tree indexes offer excellent search performance, they come with costs. Insertion and deletion operations can be expensive, especially for large datasets. Additionally, B-trees can suffer from degradation over time if not properly maintained. Understanding these trade-offs is crucial for optimizing database performance in real-world workloads.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "BarChart",
+          "data": {
+            "title": "Trade-offs and Limitations",
+            "bars": [
+              {
+                "label": "Insertion",
+                "value": 10,
+                "color": "#FF0000",
+                "sublabel": "ms"
+              },
+              {
+                "label": "Deletion",
+                "value": 15,
+                "color": "#00FF00",
+                "sublabel": "ms"
+              },
+              {
+                "label": "Lookup",
+                "value": 5,
+                "color": "#0000FF",
+                "sublabel": "ms"
+              },
+              {
+                "label": "Storage",
+                "value": 50,
+                "color": "#CCCCCC",
+                "sublabel": "MB"
+              }
+            ],
+            "accentColor": "#FFFFFF",
+            "showValues": true,
+            "layout": "horizontal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-8",
+      "layout": "full",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 166,
+      "transition": "none",
+      "narration": "In conclusion, B-tree indexes are a fundamental component of database performance. By understanding how they work and their trade-offs, you can optimize your database for fast data retrieval and efficient query performance.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "data": {
+            "title": "B-Tree Indexes: The Backbone of Database Performance",
+            "subtitle": "Unlocking fast data retrieval with B-tree indexes",
+            "accentColor": "#3498db",
+            "align": "center"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -45,7 +45,27 @@ if _env_path.exists():
 
 GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
 
-if not GROQ_API_KEY:
+# ---------------------------------------------------------------------------
+# LLM backend selection
+# ---------------------------------------------------------------------------
+# "ask"  → route every agent call through the self-hosted /ask endpoint
+#          (Claude Code CLI behind ask_server.py)
+# "groq" → original Groq fallback-chain client
+LLM_BACKEND: str = os.environ.get("LLM_BACKEND", "ask")
+
+# Self-hosted Claude /ask endpoint (ask_server.py)
+ASK_URL: str = os.environ.get("ASK_URL", "http://0.0.0.0:8080/ask")
+ASK_API_KEY: str = os.environ.get(
+    "ASK_API_KEY", "sfrgf54vdfvdsfvsdf9sd2fe3sfs8cdsdceAWSdaewd5dd2"
+)
+ASK_MODEL: str = os.environ.get("ASK_MODEL", "opus")
+ASK_THINKING: str = os.environ.get("ASK_THINKING", "adaptive")
+ASK_EFFORT: str = os.environ.get("ASK_EFFORT", "medium")
+# Client timeout must exceed ask_server.py's CLAUDE_TIMEOUT (default 600) so the
+# server's own clean timeout response wins over a client-side socket cutoff.
+ASK_TIMEOUT_SECONDS: int = int(os.environ.get("ASK_TIMEOUT_SECONDS", "660"))
+
+if LLM_BACKEND == "groq" and not GROQ_API_KEY:
     raise EnvironmentError(
         "GROQ_API_KEY environment variable is not set. "
         "Export it before running the pipeline:\n"

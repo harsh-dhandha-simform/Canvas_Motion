@@ -1,203 +1,135 @@
 """
-backend/agents/scriptwriter.py — Agent 2: Scriptwriter
+backend/agents/scriptwriter.py — Agent: Scriptwriter (content)
 
-Generates dense, technically rich content for every panel in every scene.
-Each scene is a multi-panel layout — the scriptwriter fills data for each panel.
+Fills the data for every CONTENT panel — components with dataOwner="content"
+(text, lists, code, math, quotes). Does NOT touch visual/diagram panels; those
+belong to the Visual Architect and run in parallel.
+
+Also writes the per-scene NARRATION — the spoken/on-screen explanation that
+teaches the scene's subtopics. Narration is carried into the final JSON and
+shown on screen as a textual explanation.
 """
 
 import json
 import logging
 
-from graph.tools import build_agent_context
+from component_catalog import data_owner, get_schema
 from utils.api import chat_completion, parse_json_robust
 
 logger = logging.getLogger(__name__)
 AGENT_NAME = "Scriptwriter"
 
-_CTX = build_agent_context()
+CONTENT_RULES = """
+## CONTENT QUALITY RULES (teach, don't list)
+
+AnimatedTitle   {title (5-7 words, has stakes), subtitle (evocative tagline)}
+BulletList      {title, items: 5-7 strings} — each "specific claim — concrete detail/number". ≥2 with a real system or number.
+NumberedList    {title, items:[{heading, description}]} — ranked/ordered, 3-6 items.
+StepFlow        {title, steps: 4-6} — every step starts with an action verb, ≤10 words.
+ComparisonCard  {title, pros:4-5, cons:4-5} — real trade-offs about the SAME subject, not marketing.
+TwoColumnLayout {title, left:{heading,points:4-5}, right:{heading,points:4-5}} — parallel structure.
+CodeBlock       {title, code (10-18 lines of REAL production code, \\n newlines), language}
+TerminalCLI     {command, output:[lines]} — a real command + realistic streamed output.
+HttpExchange    {method, path, requestHeaders, responseBody, statusCode...} — a real HTTP exchange.
+QuoteCard       {quote (verbatim, real), author, role} — never fabricate quotes.
+CalloutAnnotation {title, body (1-3 sentences explaining the key insight), bullets?}
+GlossaryCards   {title, terms:[{term, definition}]} 4-9 terms.
+MathFormula / EquationDerivation — token-based; keep it to one clear equation / a few steps.
+
+Every number you state must be defensible (a real benchmark or spec). No placeholders, no empty arrays.
+""".strip()
+
+NARRATION_RULES = """
+## NARRATION (one per scene — this is shown on screen as the explanation)
+
+2-4 sentences that actually TEACH the scene's subtopic(s):
+  1. the problem / why it exists, 2. how the mechanism works at implementation level,
+  3. a real system that uses it, 4. the trade-off or failure mode.
+Be concrete and specific — name real systems and real numbers. No filler.
+""".strip()
+
+
+def _content_panels(scenes: list[dict]) -> list[tuple[int, str, str]]:
+    out = []
+    for sc in scenes:
+        for p in sc.get("panels", []):
+            if data_owner(p.get("type", "")) == "content":
+                out.append((sc.get("index"), p.get("area"), p.get("type")))
+    return out
+
+
+def _schema_reference(types: set[str]) -> str:
+    blocks = []
+    for t in sorted(types):
+        schema = get_schema(t)
+        if schema:
+            props = schema.get("properties", {})
+            required = schema.get("required", [])
+            blocks.append(f"### {t}  (required: {', '.join(required) or 'none'})\n{json.dumps(props)[:1000]}")
+    return "\n\n".join(blocks)
+
 
 SYSTEM_PROMPT = f"""
-You are a Principal Engineer and technical educator. Your job is to write the content that fills every
-panel in a multi-panel educational video. You care deeply about teaching — not just listing facts, but
-building genuine understanding. Senior engineers should learn something they didn't already know.
+You are a Principal Engineer and technical educator. You write the words and content that fill the
+text/code panels of an educational video, and the spoken narration for each scene. You care about
+genuine understanding — a senior engineer should learn something they did not already know.
 
-{_CTX["compact_catalog"]}
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+{CONTENT_RULES}
+
+{NARRATION_RULES}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## OUTPUT SCHEMA (return ONLY this JSON, no markdown)
+## OUTPUT SCHEMA
 
 {{
   "scenes": [
     {{
-      "scene_index": <int>,
-      "layout": "<layout name — copy from director>",
-      "title": "<scene title — copied from director>",
-      "subtitle": "<1 sentence — the scene's thesis statement>",
-      "narration": "<3-5 spoken sentences — what a professor would say>",
-      "panels": [
-        {{
-          "area": "<area name>",
-          "type": "<ExactComponentName>",
-          "data": {{ ... }}
-        }}
-      ]
+      "index": <scene index>,
+      "narration": "<2-4 teaching sentences for this scene>",
+      "panels": {{
+        "<area>": {{ ...data matching that content component's schema... }}
+      }}
     }}
   ]
 }}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## NARRATION STRUCTURE (per scene)
-
-Follow this 4-sentence arc:
-  1. PROBLEM: Why does this topic exist? What breaks without it?
-  2. MECHANISM: How does the solution actually work, at the implementation level?
-  3. REALITY: Name a real system that uses this — Kafka, Redis, Spanner, Kubernetes, etcd, Cassandra.
-  4. TRADE-OFF: What does this approach sacrifice? When does it fail?
-
-Example (topic: consistent hashing):
-  "Naive modulo hashing requires rehashing 90% of keys whenever a node is added or removed —
-   catastrophic for a live cache under load. Consistent hashing maps both keys and nodes onto a
-   ring of 2³² positions, so adding one node only migrates its immediate predecessor's keys.
-   Amazon DynamoDB and Apache Cassandra use this technique with virtual nodes to smooth out
-   hot-spot imbalances. The trade-off is complexity: with virtual nodes you're managing O(n*v)
-   ring entries, and a poorly chosen virtual-node count can still cause 30% skew on small clusters."
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## PER-COMPONENT DATA RULES
-
-### AnimatedTitle
-data: {{"title": "<5-7 word title>", "subtitle": "<evocative 8-word tagline>", "align": "center"}}
-  ✅ "The Hidden Cost of Distributed Consensus"
-  ❌ "Introduction to Raft" (too bland — no stakes)
-
-### BulletList
-data: {{"title": "<noun phrase>", "items": ["<insight>", ...]}}
-  Rules:
-  - 5-7 items. Fewer is a waste; more gets skipped.
-  - Format: "<specific claim> — <concrete detail or number>"
-    ✅ "Raft leader election: first node to time out wins, 150-300ms election timeout"
-    ❌ "Leader election process" (too vague — viewers learn nothing)
-  - At least 2 items must include a real system name, a number, or a failure mode.
-  - Items ≤15 words each.
-
-### StepFlow
-data: {{"title": "<process name>", "steps": ["<Verb + object>", ...]}}
-  Rules:
-  - 4-6 steps. Start EVERY step with an action verb.
-  - ✅ ["Hash key to ring position", "Find first node clockwise", "Replicate to N-1 successors",
-       "Acknowledge when quorum writes succeed", "Return success to client"]
-  - ❌ ["Key hashing", "Node selection"] (nouns, not actions)
-  - ≤10 words per step.
-
-### ComparisonCard
-data: {{"title": "<X vs Y>", "pros": ["<pro>", ...], "cons": ["<con>", ...]}}
-  Rules:
-  - 4-5 items per side. Equal length.
-  - Pros and cons must be about the SAME subject (the left column).
-  - Real trade-offs, not marketing language.
-  - ✅ pros: ["O(1) average lookup", "No lock required for reads", "Amortised O(1) inserts"]
-  - ❌ pros: ["Fast", "Good performance", "Easy to use"] (meaningless)
-
-### ArchitectureDiagram
-data: {{"title": "<diagram title — describe what the diagram shows>"}}
-  Nodes and connections are generated by Storyboard — DO NOT include nodes[] or connections[] here.
-
-### BarChart
-data: {{"title": "<metric (unit)>", "bars": [{{"label": "<name>", "value": <number>, "color": "<hex>"}}]}}
-  Rules:
-  - 4-6 bars. MUST use real-world values. Look them up from memory — use real benchmarks.
-  - title MUST include the unit: "Read Latency (ms)" not "Latency"
-  - Values must tell a story: the bars should vary meaningfully (not all within 10% of each other).
-  - ✅ bars: [{{"label":"Redis","value":0.5}},{{"label":"Memcached","value":0.7}},{{"label":"DynamoDB","value":6.0}},{{"label":"PostgreSQL","value":8.0}},{{"label":"Cassandra","value":12.0}}]
-  - ❌ bars: [{{"label":"Option A","value":10}},{{"label":"Option B","value":11}}] (placeholder names, similar values)
-
-### TimelineFlow
-data: {{"title": "<timeline title — describe what's being traced>"}}
-  Events are generated by Storyboard — DO NOT include events[] here.
-
-### CodeBlock
-data: {{"title": "<what this code demonstrates>", "code": "<real code>", "language": "<lang>"}}
-  Rules:
-  - 10-18 lines of REAL, production-style code. No pseudocode.
-  - Include inline comments that explain the non-obvious parts (the WHY, not the WHAT).
-  - Languages: python, go, typescript, yaml, bash, sql, rust, java — pick the most natural one for the topic.
-  - ✅ Show actual API usage, configuration, or an algorithm with real variable names.
-  - ❌ "# TODO: implement this" / placeholder function bodies / "..." ellipsis.
-  - Use \\n for newlines in the JSON string.
-  Example (Redis caching pattern in Python):
-    "code": "import redis\\nimport hashlib\\nimport json\\n\\nr = redis.Redis(host='cache.prod', port=6379, decode_responses=True)\\n\\ndef get_user(user_id: int) -> dict:\\n    cache_key = f'user:{{user_id}}'\\n    cached = r.get(cache_key)\\n    if cached:\\n        return json.loads(cached)  # ~0.5ms\\n    user = db.query('SELECT * FROM users WHERE id = %s', user_id)  # ~8ms\\n    r.setex(cache_key, 300, json.dumps(user))  # TTL = 5 min\\n    return user"
-
-### StatCallout
-data: {{"title": "<metric name>", "value": <number>, "suffix": "<unit>", "description": "<1-sentence context>"}}
-  Rules:
-  - value must be a real-world number that is surprising or dramatic.
-  - ✅ {{"title": "P99 Latency Saved", "value": 11.5, "suffix": "ms", "description": "Redis cache vs direct PostgreSQL query under 1K req/s"}}
-  - ✅ {{"title": "Kafka Throughput", "value": 1000000, "suffix": "msg/s", "description": "Single broker, batch size 16KB, no replication"}}
-  - ❌ {{"title": "Speed", "value": 100, "suffix": "%", "description": "Very fast"}}
-
-### TypewriterText
-data: {{"lines": ["<line>", "<line>", "<line>"]}}
-  Rules:
-  - 2-3 lines. Maximum 8 words each. Think billboard copy.
-  - ✅ ["Every read is a race against staleness.", "Every write is a bet on durability.", "Consistency is a dial, not a switch."]
-  - ❌ ["Introduction to distributed systems concepts."] (too generic)
-
-### QuoteCard
-data: {{"quote": "<verbatim quote>", "author": "<Name>", "role": "<Title, Organization or Paper>"}}
-  Use REAL quotes from real papers, talks, or engineers. Do not fabricate.
-
-### SplitScreen
-data: {{
-  "title": "<heading>",
-  "bullets": ["<bullet>", ...],
-  "codeSnippet": {{"code": "<real code>", "language": "<lang>"}}
-}}
-  - 4-6 bullets (same rules as BulletList) + 8-12 lines of real code.
-
-### TwoColumnLayout
-data: {{
-  "title": "<heading>",
-  "left":  {{"heading": "<col A label>", "points": ["<point>", ...]}},
-  "right": {{"heading": "<col B label>", "points": ["<point>", ...]}}
-}}
-  - 4-5 points per column, parallel structure (col A and B answer the same questions).
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## HARD RULES
-
-1. panels[] must have EXACTLY the same (area, type) pairs as director's scene_panel_plans[i].
-2. NEVER output empty arrays: items[], steps[], pros[], cons[], bars[], lines[], bullets[].
-3. For ArchitectureDiagram and TimelineFlow: data contains ONLY title — no nodes/events.
-4. JSON strings: escape newlines as \\n, escape double quotes as \\".
-5. Every number in a BarChart or StatCallout must be defensible — a real benchmark or spec.
-6. Return ONLY valid JSON. No markdown. No commentary.
+Fill data ONLY for the content panel areas given to you. Match each component's schema exactly.
+Write narration for EVERY scene (including the intro/outro title scenes). Return ONLY valid JSON.
 """.strip()
 
 
-def run_agent(director_brief: dict) -> dict:
-    topic = director_brief.get("topic", "")
-    scene_titles = director_brief.get("scene_titles", [])
-    scene_subtitles = director_brief.get("scene_subtitles", [])
-    scene_layouts = director_brief.get("scene_layouts", [])
-    scene_panel_plans = director_brief.get("scene_panel_plans", [])
+def run_agent(plan: dict, syllabus: dict) -> dict:
+    scenes = plan.get("scenes", [])
+    content = _content_panels(scenes)
+    types = {t for _, _, t in content}
 
-    logger.info("[%s] Writing %d multi-panel scenes for %r", AGENT_NAME, len(scene_titles), topic)
+    # subtopic lookup for teaching goals
+    by_id = {st.get("id"): st for st in syllabus.get("subtopics", [])}
 
-    scene_plan_text = "\n".join(
-        f"  Scene {i}: layout={layout!r}  title={title!r}  subtitle={sub!r}\n"
-        f"    panels: {json.dumps(panels)}"
-        for i, (title, sub, layout, panels) in enumerate(
-            zip(scene_titles, scene_subtitles, scene_layouts, scene_panel_plans)
+    scene_lines = []
+    for sc in scenes:
+        cpanels = [(p.get("area"), p.get("type")) for p in sc.get("panels", [])
+                   if data_owner(p.get("type", "")) == "content"]
+        goals = "; ".join(
+            f"{by_id[sid].get('title')}: {by_id[sid].get('teaching_goal','')}"
+            for sid in sc.get("covers", []) if sid in by_id
         )
-    )
+        cp = "; ".join(f"{a}={t}" for a, t in cpanels) or "(none — narration only)"
+        scene_lines.append(
+            f"  Scene {sc.get('index')} [{sc.get('title')}] — {sc.get('subtitle','')}\n"
+            f"      teaches: {goals or '(intro/outro)'}\n"
+            f"      content panels: {cp}"
+        )
 
     user_message = (
-        f"Topic: {topic!r}\n"
-        f"total_seconds: {director_brief.get('total_seconds')}\n\n"
-        f"Scene plans:\n{scene_plan_text}\n\n"
-        "Write deeply technical narration + panel data for each scene. "
-        "For ArchitectureDiagram and TimelineFlow panels, output only the title in data. "
-        "Return only JSON."
+        f"Topic: {syllabus.get('topic')}  (depth: {syllabus.get('depth_level')})\n\n"
+        f"Scenes (fill data only for the content panels; write narration for all):\n"
+        + "\n".join(scene_lines)
+        + "\n\nContent component schemas you must satisfy:\n"
+        + (_schema_reference(types) or "(no content components)")
+        + "\n\nReturn only JSON."
     )
 
     raw = chat_completion(
@@ -210,32 +142,10 @@ def run_agent(director_brief: dict) -> dict:
     )
 
     script: dict = parse_json_robust(raw, label=AGENT_NAME)
+    for s in script.get("scenes", []):
+        s.setdefault("panels", {})
+        s.setdefault("narration", "")
 
-    # Backfill layout/title/subtitle from director if LLM omitted them
-    for i, scene in enumerate(script.get("scenes", [])):
-        if i < len(scene_layouts):
-            scene.setdefault("layout", scene_layouts[i])
-        if i < len(scene_titles):
-            scene.setdefault("title", scene_titles[i])
-        if i < len(scene_subtitles):
-            scene.setdefault("subtitle", scene_subtitles[i])
-        # Backfill panel areas/types from director plan
-        if i < len(scene_panel_plans):
-            plan = scene_panel_plans[i]
-            panels = scene.get("panels", [])
-            plan_areas = {p["area"]: p["type"] for p in plan}
-            panel_areas = {p.get("area"): p for p in panels}
-            merged = []
-            for p_plan in plan:
-                area = p_plan["area"]
-                ctype = p_plan["type"]
-                existing = panel_areas.get(area, {})
-                merged.append({
-                    "area": area,
-                    "type": ctype,
-                    "data": existing.get("data", {"title": scene.get("title", "")}),
-                })
-            scene["panels"] = merged
-
-    logger.info("[%s] ✅ Script: %d scenes", AGENT_NAME, len(script.get("scenes", [])))
+    logger.info("[%s] ✅ Content for %d panels + narration across %d scenes",
+                AGENT_NAME, len(content), len(script.get("scenes", [])))
     return script

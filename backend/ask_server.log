@@ -37,3 +37,1234 @@
 2026-06-26 14:32:30,707 | INFO | Duration   : 5.22 sec
 2026-06-26 14:32:30,707 | INFO | ==========================================================================================
 2026-06-26 14:32:56,810 | INFO | Stopping server...
+2026-06-26 23:02:45,543 | INFO | 
+2026-06-26 23:02:45,543 | INFO | ==========================================================================================
+2026-06-26 23:02:45,543 | INFO | Claude Headless HTTP Server
+2026-06-26 23:02:45,543 | INFO | Listening on : http://0.0.0.0:8080
+2026-06-26 23:02:45,544 | INFO | Endpoint     : POST /ask
+2026-06-26 23:02:45,544 | INFO | Auth         : Bearer API Key
+2026-06-26 23:02:45,544 | INFO | CORS         : ENABLED (*)
+2026-06-26 23:02:45,544 | INFO | Log File     : ask_server.log
+2026-06-26 23:02:45,544 | INFO | ==========================================================================================
+2026-06-26 23:02:48,931 | INFO | Stopping server...
+2026-06-26 23:06:20,153 | INFO | 
+2026-06-26 23:06:20,153 | INFO | ==========================================================================================
+2026-06-26 23:06:20,153 | INFO | Claude Headless HTTP Server
+2026-06-26 23:06:20,153 | INFO | Listening on : http://0.0.0.0:8080
+2026-06-26 23:06:20,154 | INFO | Endpoint     : POST /ask
+2026-06-26 23:06:20,154 | INFO | Auth         : Bearer API Key
+2026-06-26 23:06:20,154 | INFO | CORS         : ENABLED (*)
+2026-06-26 23:06:20,154 | INFO | Log File     : ask_server.log
+2026-06-26 23:06:20,154 | INFO | ==========================================================================================
+2026-06-26 23:08:59,083 | INFO | ==========================================================================================
+2026-06-26 23:08:59,083 | INFO | Authenticated : YES
+2026-06-26 23:08:59,084 | INFO | Request ID : da53e113
+2026-06-26 23:08:59,084 | INFO | Client IP  : 127.0.0.1
+2026-06-26 23:08:59,084 | INFO | Endpoint   : /ask
+2026-06-26 23:08:59,084 | INFO | Query      : Reply with ONLY this JSON and nothing else: {"ok": true}
+2026-06-26 23:08:59,084 | INFO | Model      : opus
+2026-06-26 23:08:59,084 | INFO | Thinking   : adaptive
+2026-06-26 23:08:59,084 | INFO | Effort     : medium
+2026-06-26 23:08:59,084 | INFO | Claude CMD : claude -p Reply with ONLY this JSON and nothing else: {"ok": true} --model opus --thinking adaptive --effort medium
+2026-06-26 23:09:03,936 | INFO | Success    : True
+2026-06-26 23:09:03,936 | INFO | Exit Code  : 0
+2026-06-26 23:09:03,936 | INFO | Duration   : 4.85 sec
+2026-06-26 23:09:03,936 | INFO | ==========================================================================================
+2026-06-26 23:11:12,361 | INFO | ==========================================================================================
+2026-06-26 23:11:12,362 | INFO | Authenticated : YES
+2026-06-26 23:11:12,362 | INFO | Request ID : 7793a3aa
+2026-06-26 23:11:12,362 | INFO | Client IP  : 127.0.0.1
+2026-06-26 23:11:12,362 | INFO | Endpoint   : /ask
+2026-06-26 23:11:12,362 | INFO | Query      : You are a curriculum designer and subject-matter expert. Given a single topic, your job is to
+produce the COMPLETE teaching syllabus for an in-depth educational video aimed at senior engineers —
+so that, after watching, the viewer genuinely understands the topic with nothing important left out.
+
+Think like you are designing a university lecture: what must be explained, in what order, and what
+would a smart viewer STILL not understand if you skipped it. Every gap you would leave becomes a
+subtopic. Be thorough — surface the prerequisites, the core mechanism, the trade-offs, the failure
+modes, and how it works in real systems.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "topic": "<topic string, cleaned up>",
+  "one_line": "<one-sentence definition a senior engineer would accept>",
+  "depth_level": "introductory" | "intermediate" | "advanced",
+  "prerequisites": ["<concept that must be understood first>", ...],   // 0-4 items
+  "subtopics": [
+    {
+      "id": "st1",                                  // st1, st2, ... unique
+      "title": "<short noun phrase>",
+      "teaching_goal": "<what the viewer should understand after this — 1 sentence>",
+      "depth_notes": "<the specific mechanism / number / trade-off that makes this non-obvious>",
+      "real_systems": ["<real system that exemplifies this>", ...],   // 0-3
+      "must_cover": true | false                    // true = video is incomplete without it
+    }
+    // ...
+  ],
+  "misconceptions": ["<a common wrong belief this video should correct>", ...],  // 1-4
+  "key_terms": ["<term a glossary/lower-third should define>", ...]              // 3-8
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## RULES FOR DEPTH & COMPLETENESS
+
+1. Produce 5-9 subtopics. They must form a coherent arc: hook → prerequisites → core mechanism →
+   deep dive(s) → trade-offs/failure modes → synthesis/when-to-use.
+2. At least 4 subtopics MUST be must_cover=true. Mark a subtopic must_cover=false only if it is
+   genuinely optional enrichment.
+3. depth_notes is mandatory and must contain something concrete — a real mechanism, a benchmark
+   number, an algorithmic detail, or a named trade-off. Never vague ("it is fast", "it is useful").
+4. Order subtopics so each builds on the previous. Prerequisites come before the concept that needs them.
+5. real_systems must be REAL and accurate (Kafka, Raft, DynamoDB, etcd, PostgreSQL, Kubernetes, ...).
+6. Do NOT mention components, layouts, scenes, or visuals — that is a later agent's job. You design
+   WHAT must be taught, not how it is shown.
+
+Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes works
+Target video length: 70 seconds.
+
+Design the complete teaching syllabus. Be exhaustive about what a senior engineer needs in order to truly understand this — leave no important sub-topic uncovered. Return only JSON.
+2026-06-26 23:11:12,362 | INFO | Model      : opus
+2026-06-26 23:11:12,362 | INFO | Thinking   : adaptive
+2026-06-26 23:11:12,362 | INFO | Effort     : medium
+2026-06-26 23:11:12,362 | INFO | Claude CMD : claude -p You are a curriculum designer and subject-matter expert. Given a single topic, your job is to
+produce the COMPLETE teaching syllabus for an in-depth educational video aimed at senior engineers —
+so that, after watching, the viewer genuinely understands the topic with nothing important left out.
+
+Think like you are designing a university lecture: what must be explained, in what order, and what
+would a smart viewer STILL not understand if you skipped it. Every gap you would leave becomes a
+subtopic. Be thorough — surface the prerequisites, the core mechanism, the trade-offs, the failure
+modes, and how it works in real systems.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "topic": "<topic string, cleaned up>",
+  "one_line": "<one-sentence definition a senior engineer would accept>",
+  "depth_level": "introductory" | "intermediate" | "advanced",
+  "prerequisites": ["<concept that must be understood first>", ...],   // 0-4 items
+  "subtopics": [
+    {
+      "id": "st1",                                  // st1, st2, ... unique
+      "title": "<short noun phrase>",
+      "teaching_goal": "<what the viewer should understand after this — 1 sentence>",
+      "depth_notes": "<the specific mechanism / number / trade-off that makes this non-obvious>",
+      "real_systems": ["<real system that exemplifies this>", ...],   // 0-3
+      "must_cover": true | false                    // true = video is incomplete without it
+    }
+    // ...
+  ],
+  "misconceptions": ["<a common wrong belief this video should correct>", ...],  // 1-4
+  "key_terms": ["<term a glossary/lower-third should define>", ...]              // 3-8
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## RULES FOR DEPTH & COMPLETENESS
+
+1. Produce 5-9 subtopics. They must form a coherent arc: hook → prerequisites → core mechanism →
+   deep dive(s) → trade-offs/failure modes → synthesis/when-to-use.
+2. At least 4 subtopics MUST be must_cover=true. Mark a subtopic must_cover=false only if it is
+   genuinely optional enrichment.
+3. depth_notes is mandatory and must contain something concrete — a real mechanism, a benchmark
+   number, an algorithmic detail, or a named trade-off. Never vague ("it is fast", "it is useful").
+4. Order subtopics so each builds on the previous. Prerequisites come before the concept that needs them.
+5. real_systems must be REAL and accurate (Kafka, Raft, DynamoDB, etcd, PostgreSQL, Kubernetes, ...).
+6. Do NOT mention components, layouts, scenes, or visuals — that is a later agent's job. You design
+   WHAT must be taught, not how it is shown.
+
+Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes works
+Target video length: 70 seconds.
+
+Design the complete teaching syllabus. Be exhaustive about what a senior engineer needs in order to truly understand this — leave no important sub-topic uncovered. Return only JSON. --model opus --thinking adaptive --effort medium
+2026-06-26 23:11:50,323 | INFO | Success    : True
+2026-06-26 23:11:50,323 | INFO | Exit Code  : 0
+2026-06-26 23:11:50,323 | INFO | Duration   : 37.96 sec
+2026-06-26 23:11:50,323 | INFO | ==========================================================================================
+2026-06-26 23:11:50,339 | INFO | ==========================================================================================
+2026-06-26 23:11:50,340 | INFO | Authenticated : YES
+2026-06-26 23:11:50,340 | INFO | Request ID : e6d3cc19
+2026-06-26 23:11:50,340 | INFO | Client IP  : 127.0.0.1
+2026-06-26 23:11:50,340 | INFO | Endpoint   : /ask
+2026-06-26 23:11:50,340 | INFO | Query      : You are a Creative Director for in-depth technical education videos for senior engineers.
+You are given a teaching syllabus (subtopics) and, for each subtopic, a SHORTLIST of components you
+may use. Design a scene-by-scene blueprint that teaches every subtopic clearly and looks visually rich.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## THEME — pick ONE palette that fits the topic
+
+A (networking / distributed)  background=#030711 primary=#6366f1 secondary=#22d3ee accent=#f59e0b font="Space Grotesk"
+B (systems / algorithms)      background=#0a0f1e primary=#10b981 secondary=#38bdf8 accent=#fb923c font="Outfit"
+C (cloud / data / ML)         background=#050d1a primary=#8b5cf6 secondary=#34d399 accent=#22d3ee font="Inter"
+D (security / infra / k8s)    background=#0d1117 primary=#ef4444 secondary=#f59e0b accent=#a3e635 font="Space Grotesk"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## LAYOUTS — areas you must use exactly
+
+"full"                panel                     (no header) — ONLY for the hook (scene 0) and the outro (last)
+"title-left-right"    left + right              (header auto-rendered) — DEFAULT for content scenes
+"title-main-sidebar"  main + sidebar            main = big visual, sidebar = supporting callout
+"title-content"       main                      one wide component
+"left-right"          left + right              (no header) — dramatic, use at most once
+
+A scene's panels[].area values MUST exactly match the chosen layout's areas.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "theme": {"background":"<hex>","primary":"<hex>","secondary":"<hex>","accent":"<hex>","font":"<font>"},
+  "scenes": [
+    {
+      "index": 0,
+      "role": "hook" | "prerequisite" | "core" | "deep-dive" | "tradeoff" | "synthesis" | "outro",
+      "layout": "<layout name>",
+      "title": "<scene title>",
+      "subtitle": "<one-sentence thesis of this scene>",
+      "covers": ["st1", ...],                       // subtopic ids this scene teaches
+      "panels": [ {"area":"<area>","type":"<ComponentName>"} ]
+    }
+  ]
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## HARD RULES
+
+1. COVERAGE: every must-cover subtopic id MUST appear in some scene's "covers". A scene may cover 1-2 subtopics.
+2. SHORTLIST: a panel's "type" MUST be one of the components shortlisted for one of that scene's covered subtopics
+   (the staples AnimatedTitle / TypewriterText / BulletList / CalloutAnnotation are always allowed).
+3. STRUCTURE: scene 0 role="hook" layout="full" (AnimatedTitle); last scene role="outro" layout="full" (AnimatedTitle).
+   All middle scenes use a header layout (title-left-right / title-main-sidebar / title-content).
+4. TEXTUAL EXPLANATION: every middle scene must include at least one text/list component
+   (BulletList, CalloutAnnotation, NumberedList, StepFlow, TwoColumnLayout, QuoteCard) so the idea is explained in words,
+   not only shown as a diagram.
+5. VARIETY: do not use the same component type in more than ~40% of scenes; vary layouts between consecutive scenes.
+6. AnimatedTitle ONLY in "full" layout.
+
+Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes Works
+Depth level: intermediate
+Target length: 70s
+
+SYLLABUS (subtopics + their shortlisted components):
+  [st1] (MUST-COVER) The Core Idea: Declarative Reconciliation
+      goal: Understand that Kubernetes is not imperative orchestration but a control loop driving observed state toward declared desired state.
+      depth: Every controller runs a level-triggered (not edge-triggered) reconcile loop: read desired spec, observe current status, compute diff, act, repeat. Level-triggered means a missed event self-heals on the next resync — the system converges even after controller restarts or dropped notifications.
+      candidate components: StateMachine, ArchitectureDiagram, BulletList, TreeHierarchy, TwoColumnLayout, PacketFlow, AnimatedTitle, TypewriterText, CalloutAnnotation
+  [st2] (MUST-COVER) Control Plane Anatomy: API Server, etcd, Scheduler, Controllers
+      goal: Understand the four control-plane components and that the API server is the only thing that talks to etcd.
+      depth: etcd is a Raft-backed consistent key-value store; ALL state lives there and only kube-apiserver reads/writes it. The API server is a stateless REST front-end doing auth, admission, validation, and serializing every object as a versioned resource. Scheduler and controllers are just API clients — they never touch etcd directly. This single-writer funnel is why the API server is the scaling bottleneck.
+      candidate components: HttpExchange, HashRing, SequenceDiagram, StateMachine, MathFormula, CalloutAnnotation, FlowDiagram, QuoteCard, AnimatedTitle, TypewriterText, BulletList
+  [st3] (MUST-COVER) Watches and Informers: How Components Stay in Sync
+      goal: Understand how thousands of clients track cluster state without polling etcd to death.
+      depth: Clients open a WATCH on the API server (a long-lived HTTP stream keyed by resourceVersion) to receive incremental ADD/UPDATE/DELETE events. Client-go informers maintain a local cache + periodic full resync, so controllers reconcile against memory, not repeated GETs. A stale resourceVersion triggers a '410 Gone' and a full relist.
+      candidate components: HttpExchange, HashRing, TimelineFlow, StateMachine, QuoteCard, CalloutAnnotation, SequenceDiagram, AnimatedTitle, TypewriterText, BulletList
+  [st4] (MUST-COVER) Scheduling: Placing a Pod on a Node
+      goal: Understand how the scheduler decides which node runs a pending pod.
+      depth: Two phases: Filtering (predicates — does the node have enough CPU/memory, satisfy taints/tolerations, node selectors, affinity?) then Scoring (priorities — spread, least-allocated, image locality). The scheduler only writes a binding to the API server; it does NOT start the container. Resource fit is based on requests, not actual usage.
+      candidate components: HttpExchange, TwoColumnLayout, FlowDiagram, HashRing, MathFormula, SequenceDiagram, TerminalCLI, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st5] (MUST-COVER) The Node: Kubelet, Container Runtime, and CRI
+      goal: Understand how a bound pod actually becomes running containers on a worker node.
+      depth: The kubelet watches the API server for pods bound to its node, then calls the container runtime via the CRI gRPC interface (containerd/CRI-O), which pulls images and runs containers via runc. Kubelet reports node and pod status back up, and runs liveness/readiness/startup probes to gate traffic and restarts. The kubelet — not the control plane — is the agent that owns the node.
+      candidate components: HttpExchange, PieChart, BarChart, HashRing, SequenceDiagram, TerminalCLI, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st6] (MUST-COVER) Networking: Pod IPs, Services, and kube-proxy
+      goal: Understand the flat pod network model and how Services give stable virtual IPs over ephemeral pods.
+      depth: Every pod gets a routable IP (flat network, no NAT between pods) via a CNI plugin. Pods are ephemeral, so a Service provides a stable ClusterIP; kube-proxy programs iptables/IPVS rules to load-balance that VIP across the current endpoint set. DNS (CoreDNS) resolves service names to ClusterIPs. Endpoints are themselves a reconciled object updated by the endpoints controller.
+      candidate components: PacketFlow, LineChart, SequenceDiagram, TreeHierarchy, ArchitectureDiagram, HashRing, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st7] (MUST-COVER) Controllers in Layers: Deployment → ReplicaSet → Pod
+      goal: Understand how higher-level workloads are built by chaining controllers, each owning the layer below.
+      depth: A Deployment controller manages ReplicaSets (for rollouts/rollback by creating a new RS and scaling old down), and the ReplicaSet controller manages Pods. Ownership is tracked via ownerReferences, enabling cascading garbage collection. This composition — small controllers each reconciling one object kind — is the extensibility model behind Operators and CRDs.
+      candidate components: BulletList, StepFlow, GlossaryCards, ComparisonCard, EquationDerivation, StatCallout, TwoColumnLayout, TreeHierarchy, TypewriterText, AnimatedTitle, CalloutAnnotation
+  [st8] (MUST-COVER) Failure Modes and Self-Healing Limits
+      goal: Understand what happens when nodes or the control plane fail, and where self-healing stops.
+      depth: Node failure: kubelet stops heartbeating, node goes NotReady, and after pod-eviction-timeout (default ~5 min) pods are marked for deletion and rescheduled — but a partitioned node may still be running them (split-brain risk for non-fenced StatefulSets). If etcd loses quorum the cluster becomes read-only but running pods keep serving. The control plane being down does NOT stop running workloads.
+      candidate components: PieChart, StateMachine, PacketFlow, FlowDiagram, TreeHierarchy, TwoColumnLayout, ArchitectureDiagram, HashRing, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+
+COMPONENT REFERENCE (only the shortlisted ones):
+  AnimatedTitle  [areas: panel]  → scene 0 hook or final outro — a dramatic title with stakes
+  ArchitectureDiagram  [areas: main/right]  → system topology with servers, DBs, load balancers
+  BarChart  [areas: right/sidebar]  → compare 4-6 real numeric values
+  BulletList  [areas: left/right/sidebar]  → 5-7 specific claims, each with a number or system name
+  CalloutAnnotation  [areas: panel/main/sidebar]  → emphasize a key insight or definition in prose
+  ComparisonCard  [areas: main/left]  → head-to-head pros vs cons of one subject
+  EquationDerivation  [areas: panel/main]  → a multi-step proof or algebraic derivation
+  FlowDiagram  [areas: panel/main]  → branching workflow with decisions (if/else logic)
+  GlossaryCards  [areas: panel/main]  → vocabulary, acronym glossary, or concept map
+  HashRing  [areas: panel/main]  → consistent hashing, sharding, CDN/cache placement
+  HttpExchange  [areas: main/panel]  → an HTTP request/response pair (REST, API, protocol)
+  LineChart  [areas: main/right]  → trends over time, growth curves, latency vs load
+  MathFormula  [areas: panel/main]  → a single key equation or Big-O expression
+  PacketFlow  [areas: main/panel]  → data packets traveling a network (protocols, routing)
+  PieChart  [areas: panel/main]  → proportional breakdown or traffic split
+  QuoteCard  [areas: panel/main]  → a real verbatim quote from a paper, talk, or engineer
+  SequenceDiagram  [areas: panel/main]  → time-ordered messages between actors/services
+  StatCallout  [areas: sidebar/right]  → one surprising real-world number
+  StateMachine  [areas: panel/main]  → finite states and transitions (protocols, FSMs)
+  StepFlow  [areas: left/main]  → 4-6 sequential steps, each starting with an action verb
+  TerminalCLI  [areas: panel/main]  → a command plus its streamed terminal output
+  TimelineFlow  [areas: main/panel]  → chronological history with real dates and events
+  TreeHierarchy  [areas: panel/main]  → hierarchical structure (B-tree, DNS, file system, org)
+  TwoColumnLayout  [areas: panel/main]  → parallel comparison of two subjects (before/after, X vs Y)
+  TypewriterText  [areas: panel]  → billboard-style dramatic 2-3 line statement
+
+Design the scene blueprint. Cover every must-cover subtopic, give each middle scene a textual explanation component, and pick component types only from the candidates above. Return only JSON.
+2026-06-26 23:11:50,340 | INFO | Model      : opus
+2026-06-26 23:11:50,340 | INFO | Thinking   : adaptive
+2026-06-26 23:11:50,340 | INFO | Effort     : medium
+2026-06-26 23:11:50,341 | INFO | Claude CMD : claude -p You are a Creative Director for in-depth technical education videos for senior engineers.
+You are given a teaching syllabus (subtopics) and, for each subtopic, a SHORTLIST of components you
+may use. Design a scene-by-scene blueprint that teaches every subtopic clearly and looks visually rich.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## THEME — pick ONE palette that fits the topic
+
+A (networking / distributed)  background=#030711 primary=#6366f1 secondary=#22d3ee accent=#f59e0b font="Space Grotesk"
+B (systems / algorithms)      background=#0a0f1e primary=#10b981 secondary=#38bdf8 accent=#fb923c font="Outfit"
+C (cloud / data / ML)         background=#050d1a primary=#8b5cf6 secondary=#34d399 accent=#22d3ee font="Inter"
+D (security / infra / k8s)    background=#0d1117 primary=#ef4444 secondary=#f59e0b accent=#a3e635 font="Space Grotesk"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## LAYOUTS — areas you must use exactly
+
+"full"                panel                     (no header) — ONLY for the hook (scene 0) and the outro (last)
+"title-left-right"    left + right              (header auto-rendered) — DEFAULT for content scenes
+"title-main-sidebar"  main + sidebar            main = big visual, sidebar = supporting callout
+"title-content"       main                      one wide component
+"left-right"          left + right              (no header) — dramatic, use at most once
+
+A scene's panels[].area values MUST exactly match the chosen layout's areas.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "theme": {"background":"<hex>","primary":"<hex>","secondary":"<hex>","accent":"<hex>","font":"<font>"},
+  "scenes": [
+    {
+      "index": 0,
+      "role": "hook" | "prerequisite" | "core" | "deep-dive" | "tradeoff" | "synthesis" | "outro",
+      "layout": "<layout name>",
+      "title": "<scene title>",
+      "subtitle": "<one-sentence thesis of this scene>",
+      "covers": ["st1", ...],                       // subtopic ids this scene teaches
+      "panels": [ {"area":"<area>","type":"<ComponentName>"} ]
+    }
+  ]
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## HARD RULES
+
+1. COVERAGE: every must-cover subtopic id MUST appear in some scene's "covers". A scene may cover 1-2 subtopics.
+2. SHORTLIST: a panel's "type" MUST be one of the components shortlisted for one of that scene's covered subtopics
+   (the staples AnimatedTitle / TypewriterText / BulletList / CalloutAnnotation are always allowed).
+3. STRUCTURE: scene 0 role="hook" layout="full" (AnimatedTitle); last scene role="outro" layout="full" (AnimatedTitle).
+   All middle scenes use a header layout (title-left-right / title-main-sidebar / title-content).
+4. TEXTUAL EXPLANATION: every middle scene must include at least one text/list component
+   (BulletList, CalloutAnnotation, NumberedList, StepFlow, TwoColumnLayout, QuoteCard) so the idea is explained in words,
+   not only shown as a diagram.
+5. VARIETY: do not use the same component type in more than ~40% of scenes; vary layouts between consecutive scenes.
+6. AnimatedTitle ONLY in "full" layout.
+
+Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes Works
+Depth level: intermediate
+Target length: 70s
+
+SYLLABUS (subtopics + their shortlisted components):
+  [st1] (MUST-COVER) The Core Idea: Declarative Reconciliation
+      goal: Understand that Kubernetes is not imperative orchestration but a control loop driving observed state toward declared desired state.
+      depth: Every controller runs a level-triggered (not edge-triggered) reconcile loop: read desired spec, observe current status, compute diff, act, repeat. Level-triggered means a missed event self-heals on the next resync — the system converges even after controller restarts or dropped notifications.
+      candidate components: StateMachine, ArchitectureDiagram, BulletList, TreeHierarchy, TwoColumnLayout, PacketFlow, AnimatedTitle, TypewriterText, CalloutAnnotation
+  [st2] (MUST-COVER) Control Plane Anatomy: API Server, etcd, Scheduler, Controllers
+      goal: Understand the four control-plane components and that the API server is the only thing that talks to etcd.
+      depth: etcd is a Raft-backed consistent key-value store; ALL state lives there and only kube-apiserver reads/writes it. The API server is a stateless REST front-end doing auth, admission, validation, and serializing every object as a versioned resource. Scheduler and controllers are just API clients — they never touch etcd directly. This single-writer funnel is why the API server is the scaling bottleneck.
+      candidate components: HttpExchange, HashRing, SequenceDiagram, StateMachine, MathFormula, CalloutAnnotation, FlowDiagram, QuoteCard, AnimatedTitle, TypewriterText, BulletList
+  [st3] (MUST-COVER) Watches and Informers: How Components Stay in Sync
+      goal: Understand how thousands of clients track cluster state without polling etcd to death.
+      depth: Clients open a WATCH on the API server (a long-lived HTTP stream keyed by resourceVersion) to receive incremental ADD/UPDATE/DELETE events. Client-go informers maintain a local cache + periodic full resync, so controllers reconcile against memory, not repeated GETs. A stale resourceVersion triggers a '410 Gone' and a full relist.
+      candidate components: HttpExchange, HashRing, TimelineFlow, StateMachine, QuoteCard, CalloutAnnotation, SequenceDiagram, AnimatedTitle, TypewriterText, BulletList
+  [st4] (MUST-COVER) Scheduling: Placing a Pod on a Node
+      goal: Understand how the scheduler decides which node runs a pending pod.
+      depth: Two phases: Filtering (predicates — does the node have enough CPU/memory, satisfy taints/tolerations, node selectors, affinity?) then Scoring (priorities — spread, least-allocated, image locality). The scheduler only writes a binding to the API server; it does NOT start the container. Resource fit is based on requests, not actual usage.
+      candidate components: HttpExchange, TwoColumnLayout, FlowDiagram, HashRing, MathFormula, SequenceDiagram, TerminalCLI, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st5] (MUST-COVER) The Node: Kubelet, Container Runtime, and CRI
+      goal: Understand how a bound pod actually becomes running containers on a worker node.
+      depth: The kubelet watches the API server for pods bound to its node, then calls the container runtime via the CRI gRPC interface (containerd/CRI-O), which pulls images and runs containers via runc. Kubelet reports node and pod status back up, and runs liveness/readiness/startup probes to gate traffic and restarts. The kubelet — not the control plane — is the agent that owns the node.
+      candidate components: HttpExchange, PieChart, BarChart, HashRing, SequenceDiagram, TerminalCLI, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st6] (MUST-COVER) Networking: Pod IPs, Services, and kube-proxy
+      goal: Understand the flat pod network model and how Services give stable virtual IPs over ephemeral pods.
+      depth: Every pod gets a routable IP (flat network, no NAT between pods) via a CNI plugin. Pods are ephemeral, so a Service provides a stable ClusterIP; kube-proxy programs iptables/IPVS rules to load-balance that VIP across the current endpoint set. DNS (CoreDNS) resolves service names to ClusterIPs. Endpoints are themselves a reconciled object updated by the endpoints controller.
+      candidate components: PacketFlow, LineChart, SequenceDiagram, TreeHierarchy, ArchitectureDiagram, HashRing, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st7] (MUST-COVER) Controllers in Layers: Deployment → ReplicaSet → Pod
+      goal: Understand how higher-level workloads are built by chaining controllers, each owning the layer below.
+      depth: A Deployment controller manages ReplicaSets (for rollouts/rollback by creating a new RS and scaling old down), and the ReplicaSet controller manages Pods. Ownership is tracked via ownerReferences, enabling cascading garbage collection. This composition — small controllers each reconciling one object kind — is the extensibility model behind Operators and CRDs.
+      candidate components: BulletList, StepFlow, GlossaryCards, ComparisonCard, EquationDerivation, StatCallout, TwoColumnLayout, TreeHierarchy, TypewriterText, AnimatedTitle, CalloutAnnotation
+  [st8] (MUST-COVER) Failure Modes and Self-Healing Limits
+      goal: Understand what happens when nodes or the control plane fail, and where self-healing stops.
+      depth: Node failure: kubelet stops heartbeating, node goes NotReady, and after pod-eviction-timeout (default ~5 min) pods are marked for deletion and rescheduled — but a partitioned node may still be running them (split-brain risk for non-fenced StatefulSets). If etcd loses quorum the cluster becomes read-only but running pods keep serving. The control plane being down does NOT stop running workloads.
+      candidate components: PieChart, StateMachine, PacketFlow, FlowDiagram, TreeHierarchy, TwoColumnLayout, ArchitectureDiagram, HashRing, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+
+COMPONENT REFERENCE (only the shortlisted ones):
+  AnimatedTitle  [areas: panel]  → scene 0 hook or final outro — a dramatic title with stakes
+  ArchitectureDiagram  [areas: main/right]  → system topology with servers, DBs, load balancers
+  BarChart  [areas: right/sidebar]  → compare 4-6 real numeric values
+  BulletList  [areas: left/right/sidebar]  → 5-7 specific claims, each with a number or system name
+  CalloutAnnotation  [areas: panel/main/sidebar]  → emphasize a key insight or definition in prose
+  ComparisonCard  [areas: main/left]  → head-to-head pros vs cons of one subject
+  EquationDerivation  [areas: panel/main]  → a multi-step proof or algebraic derivation
+  FlowDiagram  [areas: panel/main]  → branching workflow with decisions (if/else logic)
+  GlossaryCards  [areas: panel/main]  → vocabulary, acronym glossary, or concept map
+  HashRing  [areas: panel/main]  → consistent hashing, sharding, CDN/cache placement
+  HttpExchange  [areas: main/panel]  → an HTTP request/response pair (REST, API, protocol)
+  LineChart  [areas: main/right]  → trends over time, growth curves, latency vs load
+  MathFormula  [areas: panel/main]  → a single key equation or Big-O expression
+  PacketFlow  [areas: main/panel]  → data packets traveling a network (protocols, routing)
+  PieChart  [areas: panel/main]  → proportional breakdown or traffic split
+  QuoteCard  [areas: panel/main]  → a real verbatim quote from a paper, talk, or engineer
+  SequenceDiagram  [areas: panel/main]  → time-ordered messages between actors/services
+  StatCallout  [areas: sidebar/right]  → one surprising real-world number
+  StateMachine  [areas: panel/main]  → finite states and transitions (protocols, FSMs)
+  StepFlow  [areas: left/main]  → 4-6 sequential steps, each starting with an action verb
+  TerminalCLI  [areas: panel/main]  → a command plus its streamed terminal output
+  TimelineFlow  [areas: main/panel]  → chronological history with real dates and events
+  TreeHierarchy  [areas: panel/main]  → hierarchical structure (B-tree, DNS, file system, org)
+  TwoColumnLayout  [areas: panel/main]  → parallel comparison of two subjects (before/after, X vs Y)
+  TypewriterText  [areas: panel]  → billboard-style dramatic 2-3 line statement
+
+Design the scene blueprint. Cover every must-cover subtopic, give each middle scene a textual explanation component, and pick component types only from the candidates above. Return only JSON. --model opus --thinking adaptive --effort medium
+2026-06-26 23:13:50,453 | INFO | Success    : False
+2026-06-26 23:13:50,453 | INFO | Exit Code  : -1
+2026-06-26 23:13:50,453 | INFO | Duration   : 120.11 sec
+2026-06-26 23:13:50,453 | ERROR | stderr     : Claude timed out after 120 seconds.
+2026-06-26 23:13:50,453 | INFO | ==========================================================================================
+2026-06-26 23:15:35,362 | INFO | Stopping server...
+2026-06-26 23:15:37,830 | INFO | 
+2026-06-26 23:15:37,830 | INFO | ==========================================================================================
+2026-06-26 23:15:37,830 | INFO | Claude Headless HTTP Server
+2026-06-26 23:15:37,830 | INFO | Listening on : http://0.0.0.0:8080
+2026-06-26 23:15:37,830 | INFO | Endpoint     : POST /ask
+2026-06-26 23:15:37,831 | INFO | Auth         : Bearer API Key
+2026-06-26 23:15:37,831 | INFO | CORS         : ENABLED (*)
+2026-06-26 23:15:37,831 | INFO | Log File     : ask_server.log
+2026-06-26 23:15:37,831 | INFO | ==========================================================================================
+2026-06-26 23:16:00,545 | INFO | ==========================================================================================
+2026-06-26 23:16:00,545 | INFO | Authenticated : YES
+2026-06-26 23:16:00,545 | INFO | Request ID : fbd48d51
+2026-06-26 23:16:00,545 | INFO | Client IP  : 127.0.0.1
+2026-06-26 23:16:00,545 | INFO | Endpoint   : /ask
+2026-06-26 23:16:00,546 | INFO | Query      : You are a curriculum designer and subject-matter expert. Given a single topic, your job is to
+produce the COMPLETE teaching syllabus for an in-depth educational video aimed at senior engineers —
+so that, after watching, the viewer genuinely understands the topic with nothing important left out.
+
+Think like you are designing a university lecture: what must be explained, in what order, and what
+would a smart viewer STILL not understand if you skipped it. Every gap you would leave becomes a
+subtopic. Be thorough — surface the prerequisites, the core mechanism, the trade-offs, the failure
+modes, and how it works in real systems.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "topic": "<topic string, cleaned up>",
+  "one_line": "<one-sentence definition a senior engineer would accept>",
+  "depth_level": "introductory" | "intermediate" | "advanced",
+  "prerequisites": ["<concept that must be understood first>", ...],   // 0-4 items
+  "subtopics": [
+    {
+      "id": "st1",                                  // st1, st2, ... unique
+      "title": "<short noun phrase>",
+      "teaching_goal": "<what the viewer should understand after this — 1 sentence>",
+      "depth_notes": "<the specific mechanism / number / trade-off that makes this non-obvious>",
+      "real_systems": ["<real system that exemplifies this>", ...],   // 0-3
+      "must_cover": true | false                    // true = video is incomplete without it
+    }
+    // ...
+  ],
+  "misconceptions": ["<a common wrong belief this video should correct>", ...],  // 1-4
+  "key_terms": ["<term a glossary/lower-third should define>", ...]              // 3-8
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## RULES FOR DEPTH & COMPLETENESS
+
+1. Produce 5-9 subtopics. They must form a coherent arc: hook → prerequisites → core mechanism →
+   deep dive(s) → trade-offs/failure modes → synthesis/when-to-use.
+2. At least 4 subtopics MUST be must_cover=true. Mark a subtopic must_cover=false only if it is
+   genuinely optional enrichment.
+3. depth_notes is mandatory and must contain something concrete — a real mechanism, a benchmark
+   number, an algorithmic detail, or a named trade-off. Never vague ("it is fast", "it is useful").
+4. Order subtopics so each builds on the previous. Prerequisites come before the concept that needs them.
+5. real_systems must be REAL and accurate (Kafka, Raft, DynamoDB, etcd, PostgreSQL, Kubernetes, ...).
+6. Do NOT mention components, layouts, scenes, or visuals — that is a later agent's job. You design
+   WHAT must be taught, not how it is shown.
+
+Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes works
+Target video length: 70 seconds.
+
+Design the complete teaching syllabus. Be exhaustive about what a senior engineer needs in order to truly understand this — leave no important sub-topic uncovered. Return only JSON.
+2026-06-26 23:16:00,546 | INFO | Model      : opus
+2026-06-26 23:16:00,546 | INFO | Thinking   : adaptive
+2026-06-26 23:16:00,546 | INFO | Effort     : medium
+2026-06-26 23:16:00,546 | INFO | Claude CMD : claude -p You are a curriculum designer and subject-matter expert. Given a single topic, your job is to
+produce the COMPLETE teaching syllabus for an in-depth educational video aimed at senior engineers —
+so that, after watching, the viewer genuinely understands the topic with nothing important left out.
+
+Think like you are designing a university lecture: what must be explained, in what order, and what
+would a smart viewer STILL not understand if you skipped it. Every gap you would leave becomes a
+subtopic. Be thorough — surface the prerequisites, the core mechanism, the trade-offs, the failure
+modes, and how it works in real systems.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "topic": "<topic string, cleaned up>",
+  "one_line": "<one-sentence definition a senior engineer would accept>",
+  "depth_level": "introductory" | "intermediate" | "advanced",
+  "prerequisites": ["<concept that must be understood first>", ...],   // 0-4 items
+  "subtopics": [
+    {
+      "id": "st1",                                  // st1, st2, ... unique
+      "title": "<short noun phrase>",
+      "teaching_goal": "<what the viewer should understand after this — 1 sentence>",
+      "depth_notes": "<the specific mechanism / number / trade-off that makes this non-obvious>",
+      "real_systems": ["<real system that exemplifies this>", ...],   // 0-3
+      "must_cover": true | false                    // true = video is incomplete without it
+    }
+    // ...
+  ],
+  "misconceptions": ["<a common wrong belief this video should correct>", ...],  // 1-4
+  "key_terms": ["<term a glossary/lower-third should define>", ...]              // 3-8
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## RULES FOR DEPTH & COMPLETENESS
+
+1. Produce 5-9 subtopics. They must form a coherent arc: hook → prerequisites → core mechanism →
+   deep dive(s) → trade-offs/failure modes → synthesis/when-to-use.
+2. At least 4 subtopics MUST be must_cover=true. Mark a subtopic must_cover=false only if it is
+   genuinely optional enrichment.
+3. depth_notes is mandatory and must contain something concrete — a real mechanism, a benchmark
+   number, an algorithmic detail, or a named trade-off. Never vague ("it is fast", "it is useful").
+4. Order subtopics so each builds on the previous. Prerequisites come before the concept that needs them.
+5. real_systems must be REAL and accurate (Kafka, Raft, DynamoDB, etcd, PostgreSQL, Kubernetes, ...).
+6. Do NOT mention components, layouts, scenes, or visuals — that is a later agent's job. You design
+   WHAT must be taught, not how it is shown.
+
+Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes works
+Target video length: 70 seconds.
+
+Design the complete teaching syllabus. Be exhaustive about what a senior engineer needs in order to truly understand this — leave no important sub-topic uncovered. Return only JSON. --model opus --thinking adaptive --effort medium
+2026-06-26 23:16:39,666 | INFO | Success    : True
+2026-06-26 23:16:39,666 | INFO | Exit Code  : 0
+2026-06-26 23:16:39,666 | INFO | Duration   : 39.12 sec
+2026-06-26 23:16:39,666 | INFO | ==========================================================================================
+2026-06-26 23:16:39,677 | INFO | ==========================================================================================
+2026-06-26 23:16:39,678 | INFO | Authenticated : YES
+2026-06-26 23:16:39,678 | INFO | Request ID : 0a5bbf98
+2026-06-26 23:16:39,678 | INFO | Client IP  : 127.0.0.1
+2026-06-26 23:16:39,678 | INFO | Endpoint   : /ask
+2026-06-26 23:16:39,678 | INFO | Query      : You are a Creative Director for in-depth technical education videos for senior engineers.
+You are given a teaching syllabus (subtopics) and, for each subtopic, a SHORTLIST of components you
+may use. Design a scene-by-scene blueprint that teaches every subtopic clearly and looks visually rich.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## THEME — pick ONE palette that fits the topic
+
+A (networking / distributed)  background=#030711 primary=#6366f1 secondary=#22d3ee accent=#f59e0b font="Space Grotesk"
+B (systems / algorithms)      background=#0a0f1e primary=#10b981 secondary=#38bdf8 accent=#fb923c font="Outfit"
+C (cloud / data / ML)         background=#050d1a primary=#8b5cf6 secondary=#34d399 accent=#22d3ee font="Inter"
+D (security / infra / k8s)    background=#0d1117 primary=#ef4444 secondary=#f59e0b accent=#a3e635 font="Space Grotesk"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## LAYOUTS — areas you must use exactly
+
+"full"                panel                     (no header) — ONLY for the hook (scene 0) and the outro (last)
+"title-left-right"    left + right              (header auto-rendered) — DEFAULT for content scenes
+"title-main-sidebar"  main + sidebar            main = big visual, sidebar = supporting callout
+"title-content"       main                      one wide component
+"left-right"          left + right              (no header) — dramatic, use at most once
+
+A scene's panels[].area values MUST exactly match the chosen layout's areas.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "theme": {"background":"<hex>","primary":"<hex>","secondary":"<hex>","accent":"<hex>","font":"<font>"},
+  "scenes": [
+    {
+      "index": 0,
+      "role": "hook" | "prerequisite" | "core" | "deep-dive" | "tradeoff" | "synthesis" | "outro",
+      "layout": "<layout name>",
+      "title": "<scene title>",
+      "subtitle": "<one-sentence thesis of this scene>",
+      "covers": ["st1", ...],                       // subtopic ids this scene teaches
+      "panels": [ {"area":"<area>","type":"<ComponentName>"} ]
+    }
+  ]
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## HARD RULES
+
+1. COVERAGE: every must-cover subtopic id MUST appear in some scene's "covers". A scene may cover 1-2 subtopics.
+2. SHORTLIST: a panel's "type" MUST be one of the components shortlisted for one of that scene's covered subtopics
+   (the staples AnimatedTitle / TypewriterText / BulletList / CalloutAnnotation are always allowed).
+3. STRUCTURE: scene 0 role="hook" layout="full" (AnimatedTitle); last scene role="outro" layout="full" (AnimatedTitle).
+   All middle scenes use a header layout (title-left-right / title-main-sidebar / title-content).
+4. TEXTUAL EXPLANATION: every middle scene must include at least one text/list component
+   (BulletList, CalloutAnnotation, NumberedList, StepFlow, TwoColumnLayout, QuoteCard) so the idea is explained in words,
+   not only shown as a diagram.
+5. VARIETY: do not use the same component type in more than ~40% of scenes; vary layouts between consecutive scenes.
+6. AnimatedTitle ONLY in "full" layout.
+
+Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes Works
+Depth level: intermediate
+Target length: 70s
+
+SYLLABUS (subtopics + their shortlisted components):
+  [st1] (MUST-COVER) The Declarative Reconciliation Model
+      goal: Understand that Kubernetes is not an imperative deployment tool but a control system that drives actual state toward declared desired state.
+      depth: The core primitive is a control loop: observe current state, diff against desired state in etcd, act to close the gap — level-triggered, not edge-triggered, so a missed event self-heals on the next loop rather than being lost. This is why 'kubectl apply' describes an end-state, not a sequence of steps.
+      candidate components: StateMachine, StepFlow, ArchitectureDiagram, SequenceDiagram, EquationDerivation, NumberedList, BulletList, TreeHierarchy, CalloutAnnotation, FlowDiagram, PacketFlow, TimelineFlow, AnimatedTitle, TypewriterText
+  [st2] (MUST-COVER) Control Plane Anatomy: API Server, etcd, Scheduler, Controller Manager
+      goal: Know what each control-plane component does and why the API server is the single hub everything talks through.
+      depth: The API server is the ONLY component that writes to etcd; everyone else (scheduler, controllers, kubelet) is a client that watches and reports back. etcd is a Raft-backed consistent KV store — losing quorum (e.g. 2 of 3 nodes) makes the cluster read-only. This hub-and-spoke design means components are stateless and independently restartable.
+      candidate components: HttpExchange, HashRing, StateMachine, SequenceDiagram, BulletList, EquationDerivation, FlowDiagram, MathFormula, PacketFlow, StepFlow, ArchitectureDiagram, TreeHierarchy, AnimatedTitle, TypewriterText, CalloutAnnotation
+  [st3] (MUST-COVER) Controllers and the Watch/Reconcile Loop
+      goal: Understand how controllers (Deployment → ReplicaSet → Pod) cascade to materialize high-level intent into running containers.
+      depth: Controllers don't poll; they use the API server's watch streams (long-lived HTTP, backed by etcd watch) plus a local informer cache and workqueue. A Deployment controller creates ReplicaSets; the ReplicaSet controller ensures N Pods exist. Ownership is tracked via ownerReferences, enabling cascading garbage collection when a parent is deleted.
+      candidate components: HttpExchange, HashRing, TerminalCLI, ArchitectureDiagram, SequenceDiagram, StateMachine, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st4] (MUST-COVER) Scheduling: Binding Pods to Nodes
+      goal: Understand how an unscheduled Pod gets assigned to a node and what constraints govern that choice.
+      depth: The scheduler runs filter (feasibility: resource requests, taints/tolerations, affinity) then score (best fit) phases, then writes a binding — it never starts the container itself. It schedules on requests, not actual usage, which is why overcommitting limits causes OOMKills and CPU throttling later. A Pod with no fitting node stays Pending indefinitely.
+      candidate components: PacketFlow, TerminalCLI, ArchitectureDiagram, HashRing, TreeHierarchy, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st5] (MUST-COVER) The Node Agent: Kubelet and the CRI
+      goal: Understand how the desired Pod spec actually becomes running containers on a machine.
+      depth: The kubelet watches the API server for Pods bound to its node, then calls the container runtime over the CRI (gRPC) — containerd/CRI-O, not Docker since v1.24. It runs liveness/readiness/startup probes and reports status back. A failed liveness probe restarts the container; a failed readiness probe only removes it from Service endpoints — a distinction engineers routinely conflate.
+      candidate components: HttpExchange, LineChart, HashRing, SequenceDiagram, StateMachine, TerminalCLI, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st6] (MUST-COVER) Networking: Pod IPs, Services, and kube-proxy
+      goal: Understand the flat-network model and how stable Service virtual IPs route to ephemeral Pods.
+      depth: Every Pod gets a routable IP (flat network, no NAT between Pods) via a CNI plugin. Pod IPs are ephemeral, so a Service provides a stable ClusterIP; kube-proxy programs iptables/IPVS rules (or eBPF in Cilium) to load-balance that VIP across the current endpoint set, which the EndpointSlice controller keeps in sync with ready Pods.
+      candidate components: PacketFlow, SequenceDiagram, ArchitectureDiagram, LineChart, HashRing, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st7] (MUST-COVER) Self-Healing and Failure Modes
+      goal: Understand how the same reconciliation engine recovers from node and pod failures — and where it stops.
+      depth: When a node stops heartbeating, the node controller marks it NotReady and after a grace period (default ~5 min via pod-eviction-timeout) evicts its Pods, which controllers reschedule elsewhere. Critical limit: stateful Pods can't be force-rescheduled safely without fencing, and an etcd quorum loss halts all reconciliation — Kubernetes heals workloads, not its own control plane's consensus.
+      candidate components: TwoColumnLayout, EquationDerivation, PacketFlow, StateMachine, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st8] (optional) Extensibility: CRDs and the Operator Pattern
+      goal: Understand why Kubernetes is a platform for building platforms, not just a container runner.
+      depth: Custom Resource Definitions add new API types stored in etcd and served by the API server; a custom controller (operator) then reconciles them using the exact same watch/reconcile loop as built-in controllers. This is how databases, certificates, and service meshes get day-2 automation — there is no privileged distinction between core and custom controllers.
+      candidate components: HttpExchange, SequenceDiagram, GlossaryCards, HashRing, TerminalCLI, ArchitectureDiagram, PacketFlow, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+
+COMPONENT REFERENCE (only the shortlisted ones):
+  AnimatedTitle  [areas: panel]  → scene 0 hook or final outro — a dramatic title with stakes
+  ArchitectureDiagram  [areas: main/right]  → system topology with servers, DBs, load balancers
+  BulletList  [areas: left/right/sidebar]  → 5-7 specific claims, each with a number or system name
+  CalloutAnnotation  [areas: panel/main/sidebar]  → emphasize a key insight or definition in prose
+  EquationDerivation  [areas: panel/main]  → a multi-step proof or algebraic derivation
+  FlowDiagram  [areas: panel/main]  → branching workflow with decisions (if/else logic)
+  GlossaryCards  [areas: panel/main]  → vocabulary, acronym glossary, or concept map
+  HashRing  [areas: panel/main]  → consistent hashing, sharding, CDN/cache placement
+  HttpExchange  [areas: main/panel]  → an HTTP request/response pair (REST, API, protocol)
+  LineChart  [areas: main/right]  → trends over time, growth curves, latency vs load
+  MathFormula  [areas: panel/main]  → a single key equation or Big-O expression
+  NumberedList  [areas: panel/main]  → ranked principles or ordered top-N items
+  PacketFlow  [areas: main/panel]  → data packets traveling a network (protocols, routing)
+  SequenceDiagram  [areas: panel/main]  → time-ordered messages between actors/services
+  StateMachine  [areas: panel/main]  → finite states and transitions (protocols, FSMs)
+  StepFlow  [areas: left/main]  → 4-6 sequential steps, each starting with an action verb
+  TerminalCLI  [areas: panel/main]  → a command plus its streamed terminal output
+  TimelineFlow  [areas: main/panel]  → chronological history with real dates and events
+  TreeHierarchy  [areas: panel/main]  → hierarchical structure (B-tree, DNS, file system, org)
+  TwoColumnLayout  [areas: panel/main]  → parallel comparison of two subjects (before/after, X vs Y)
+  TypewriterText  [areas: panel]  → billboard-style dramatic 2-3 line statement
+
+Design the scene blueprint. Cover every must-cover subtopic, give each middle scene a textual explanation component, and pick component types only from the candidates above. Return only JSON.
+2026-06-26 23:16:39,679 | INFO | Model      : opus
+2026-06-26 23:16:39,679 | INFO | Thinking   : adaptive
+2026-06-26 23:16:39,679 | INFO | Effort     : medium
+2026-06-26 23:16:39,679 | INFO | Claude CMD : claude -p You are a Creative Director for in-depth technical education videos for senior engineers.
+You are given a teaching syllabus (subtopics) and, for each subtopic, a SHORTLIST of components you
+may use. Design a scene-by-scene blueprint that teaches every subtopic clearly and looks visually rich.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## THEME — pick ONE palette that fits the topic
+
+A (networking / distributed)  background=#030711 primary=#6366f1 secondary=#22d3ee accent=#f59e0b font="Space Grotesk"
+B (systems / algorithms)      background=#0a0f1e primary=#10b981 secondary=#38bdf8 accent=#fb923c font="Outfit"
+C (cloud / data / ML)         background=#050d1a primary=#8b5cf6 secondary=#34d399 accent=#22d3ee font="Inter"
+D (security / infra / k8s)    background=#0d1117 primary=#ef4444 secondary=#f59e0b accent=#a3e635 font="Space Grotesk"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## LAYOUTS — areas you must use exactly
+
+"full"                panel                     (no header) — ONLY for the hook (scene 0) and the outro (last)
+"title-left-right"    left + right              (header auto-rendered) — DEFAULT for content scenes
+"title-main-sidebar"  main + sidebar            main = big visual, sidebar = supporting callout
+"title-content"       main                      one wide component
+"left-right"          left + right              (no header) — dramatic, use at most once
+
+A scene's panels[].area values MUST exactly match the chosen layout's areas.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "theme": {"background":"<hex>","primary":"<hex>","secondary":"<hex>","accent":"<hex>","font":"<font>"},
+  "scenes": [
+    {
+      "index": 0,
+      "role": "hook" | "prerequisite" | "core" | "deep-dive" | "tradeoff" | "synthesis" | "outro",
+      "layout": "<layout name>",
+      "title": "<scene title>",
+      "subtitle": "<one-sentence thesis of this scene>",
+      "covers": ["st1", ...],                       // subtopic ids this scene teaches
+      "panels": [ {"area":"<area>","type":"<ComponentName>"} ]
+    }
+  ]
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## HARD RULES
+
+1. COVERAGE: every must-cover subtopic id MUST appear in some scene's "covers". A scene may cover 1-2 subtopics.
+2. SHORTLIST: a panel's "type" MUST be one of the components shortlisted for one of that scene's covered subtopics
+   (the staples AnimatedTitle / TypewriterText / BulletList / CalloutAnnotation are always allowed).
+3. STRUCTURE: scene 0 role="hook" layout="full" (AnimatedTitle); last scene role="outro" layout="full" (AnimatedTitle).
+   All middle scenes use a header layout (title-left-right / title-main-sidebar / title-content).
+4. TEXTUAL EXPLANATION: every middle scene must include at least one text/list component
+   (BulletList, CalloutAnnotation, NumberedList, StepFlow, TwoColumnLayout, QuoteCard) so the idea is explained in words,
+   not only shown as a diagram.
+5. VARIETY: do not use the same component type in more than ~40% of scenes; vary layouts between consecutive scenes.
+6. AnimatedTitle ONLY in "full" layout.
+
+Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes Works
+Depth level: intermediate
+Target length: 70s
+
+SYLLABUS (subtopics + their shortlisted components):
+  [st1] (MUST-COVER) The Declarative Reconciliation Model
+      goal: Understand that Kubernetes is not an imperative deployment tool but a control system that drives actual state toward declared desired state.
+      depth: The core primitive is a control loop: observe current state, diff against desired state in etcd, act to close the gap — level-triggered, not edge-triggered, so a missed event self-heals on the next loop rather than being lost. This is why 'kubectl apply' describes an end-state, not a sequence of steps.
+      candidate components: StateMachine, StepFlow, ArchitectureDiagram, SequenceDiagram, EquationDerivation, NumberedList, BulletList, TreeHierarchy, CalloutAnnotation, FlowDiagram, PacketFlow, TimelineFlow, AnimatedTitle, TypewriterText
+  [st2] (MUST-COVER) Control Plane Anatomy: API Server, etcd, Scheduler, Controller Manager
+      goal: Know what each control-plane component does and why the API server is the single hub everything talks through.
+      depth: The API server is the ONLY component that writes to etcd; everyone else (scheduler, controllers, kubelet) is a client that watches and reports back. etcd is a Raft-backed consistent KV store — losing quorum (e.g. 2 of 3 nodes) makes the cluster read-only. This hub-and-spoke design means components are stateless and independently restartable.
+      candidate components: HttpExchange, HashRing, StateMachine, SequenceDiagram, BulletList, EquationDerivation, FlowDiagram, MathFormula, PacketFlow, StepFlow, ArchitectureDiagram, TreeHierarchy, AnimatedTitle, TypewriterText, CalloutAnnotation
+  [st3] (MUST-COVER) Controllers and the Watch/Reconcile Loop
+      goal: Understand how controllers (Deployment → ReplicaSet → Pod) cascade to materialize high-level intent into running containers.
+      depth: Controllers don't poll; they use the API server's watch streams (long-lived HTTP, backed by etcd watch) plus a local informer cache and workqueue. A Deployment controller creates ReplicaSets; the ReplicaSet controller ensures N Pods exist. Ownership is tracked via ownerReferences, enabling cascading garbage collection when a parent is deleted.
+      candidate components: HttpExchange, HashRing, TerminalCLI, ArchitectureDiagram, SequenceDiagram, StateMachine, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st4] (MUST-COVER) Scheduling: Binding Pods to Nodes
+      goal: Understand how an unscheduled Pod gets assigned to a node and what constraints govern that choice.
+      depth: The scheduler runs filter (feasibility: resource requests, taints/tolerations, affinity) then score (best fit) phases, then writes a binding — it never starts the container itself. It schedules on requests, not actual usage, which is why overcommitting limits causes OOMKills and CPU throttling later. A Pod with no fitting node stays Pending indefinitely.
+      candidate components: PacketFlow, TerminalCLI, ArchitectureDiagram, HashRing, TreeHierarchy, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st5] (MUST-COVER) The Node Agent: Kubelet and the CRI
+      goal: Understand how the desired Pod spec actually becomes running containers on a machine.
+      depth: The kubelet watches the API server for Pods bound to its node, then calls the container runtime over the CRI (gRPC) — containerd/CRI-O, not Docker since v1.24. It runs liveness/readiness/startup probes and reports status back. A failed liveness probe restarts the container; a failed readiness probe only removes it from Service endpoints — a distinction engineers routinely conflate.
+      candidate components: HttpExchange, LineChart, HashRing, SequenceDiagram, StateMachine, TerminalCLI, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st6] (MUST-COVER) Networking: Pod IPs, Services, and kube-proxy
+      goal: Understand the flat-network model and how stable Service virtual IPs route to ephemeral Pods.
+      depth: Every Pod gets a routable IP (flat network, no NAT between Pods) via a CNI plugin. Pod IPs are ephemeral, so a Service provides a stable ClusterIP; kube-proxy programs iptables/IPVS rules (or eBPF in Cilium) to load-balance that VIP across the current endpoint set, which the EndpointSlice controller keeps in sync with ready Pods.
+      candidate components: PacketFlow, SequenceDiagram, ArchitectureDiagram, LineChart, HashRing, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st7] (MUST-COVER) Self-Healing and Failure Modes
+      goal: Understand how the same reconciliation engine recovers from node and pod failures — and where it stops.
+      depth: When a node stops heartbeating, the node controller marks it NotReady and after a grace period (default ~5 min via pod-eviction-timeout) evicts its Pods, which controllers reschedule elsewhere. Critical limit: stateful Pods can't be force-rescheduled safely without fencing, and an etcd quorum loss halts all reconciliation — Kubernetes heals workloads, not its own control plane's consensus.
+      candidate components: TwoColumnLayout, EquationDerivation, PacketFlow, StateMachine, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+  [st8] (optional) Extensibility: CRDs and the Operator Pattern
+      goal: Understand why Kubernetes is a platform for building platforms, not just a container runner.
+      depth: Custom Resource Definitions add new API types stored in etcd and served by the API server; a custom controller (operator) then reconciles them using the exact same watch/reconcile loop as built-in controllers. This is how databases, certificates, and service meshes get day-2 automation — there is no privileged distinction between core and custom controllers.
+      candidate components: HttpExchange, SequenceDiagram, GlossaryCards, HashRing, TerminalCLI, ArchitectureDiagram, PacketFlow, AnimatedTitle, TypewriterText, BulletList, CalloutAnnotation
+
+COMPONENT REFERENCE (only the shortlisted ones):
+  AnimatedTitle  [areas: panel]  → scene 0 hook or final outro — a dramatic title with stakes
+  ArchitectureDiagram  [areas: main/right]  → system topology with servers, DBs, load balancers
+  BulletList  [areas: left/right/sidebar]  → 5-7 specific claims, each with a number or system name
+  CalloutAnnotation  [areas: panel/main/sidebar]  → emphasize a key insight or definition in prose
+  EquationDerivation  [areas: panel/main]  → a multi-step proof or algebraic derivation
+  FlowDiagram  [areas: panel/main]  → branching workflow with decisions (if/else logic)
+  GlossaryCards  [areas: panel/main]  → vocabulary, acronym glossary, or concept map
+  HashRing  [areas: panel/main]  → consistent hashing, sharding, CDN/cache placement
+  HttpExchange  [areas: main/panel]  → an HTTP request/response pair (REST, API, protocol)
+  LineChart  [areas: main/right]  → trends over time, growth curves, latency vs load
+  MathFormula  [areas: panel/main]  → a single key equation or Big-O expression
+  NumberedList  [areas: panel/main]  → ranked principles or ordered top-N items
+  PacketFlow  [areas: main/panel]  → data packets traveling a network (protocols, routing)
+  SequenceDiagram  [areas: panel/main]  → time-ordered messages between actors/services
+  StateMachine  [areas: panel/main]  → finite states and transitions (protocols, FSMs)
+  StepFlow  [areas: left/main]  → 4-6 sequential steps, each starting with an action verb
+  TerminalCLI  [areas: panel/main]  → a command plus its streamed terminal output
+  TimelineFlow  [areas: main/panel]  → chronological history with real dates and events
+  TreeHierarchy  [areas: panel/main]  → hierarchical structure (B-tree, DNS, file system, org)
+  TwoColumnLayout  [areas: panel/main]  → parallel comparison of two subjects (before/after, X vs Y)
+  TypewriterText  [areas: panel]  → billboard-style dramatic 2-3 line statement
+
+Design the scene blueprint. Cover every must-cover subtopic, give each middle scene a textual explanation component, and pick component types only from the candidates above. Return only JSON. --model opus --thinking adaptive --effort medium
+2026-06-26 23:18:19,439 | INFO | Success    : True
+2026-06-26 23:18:19,439 | INFO | Exit Code  : 0
+2026-06-26 23:18:19,439 | INFO | Duration   : 99.76 sec
+2026-06-26 23:18:19,439 | INFO | ==========================================================================================
+2026-06-26 23:18:19,444 | INFO | ==========================================================================================
+2026-06-26 23:18:19,444 | INFO | Authenticated : YES
+2026-06-26 23:18:19,444 | INFO | Request ID : 0f6384ea
+2026-06-26 23:18:19,444 | INFO | ==========================================================================================
+2026-06-26 23:18:19,445 | INFO | Client IP  : 127.0.0.1
+2026-06-26 23:18:19,445 | INFO | Authenticated : YES
+2026-06-26 23:18:19,445 | INFO | Endpoint   : /ask
+2026-06-26 23:18:19,445 | INFO | Request ID : 004ab598
+2026-06-26 23:18:19,445 | INFO | Query      : You are a Principal Engineer and technical educator. You write the words and content that fill the
+text/code panels of an educational video, and the spoken narration for each scene. You care about
+genuine understanding — a senior engineer should learn something they did not already know.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+## CONTENT QUALITY RULES (teach, don't list)
+
+AnimatedTitle   {title (5-7 words, has stakes), subtitle (evocative tagline)}
+BulletList      {title, items: 5-7 strings} — each "specific claim — concrete detail/number". ≥2 with a real system or number.
+NumberedList    {title, items:[{heading, description}]} — ranked/ordered, 3-6 items.
+StepFlow        {title, steps: 4-6} — every step starts with an action verb, ≤10 words.
+ComparisonCard  {title, pros:4-5, cons:4-5} — real trade-offs about the SAME subject, not marketing.
+TwoColumnLayout {title, left:{heading,points:4-5}, right:{heading,points:4-5}} — parallel structure.
+CodeBlock       {title, code (10-18 lines of REAL production code, \n newlines), language}
+TerminalCLI     {command, output:[lines]} — a real command + realistic streamed output.
+HttpExchange    {method, path, requestHeaders, responseBody, statusCode...} — a real HTTP exchange.
+QuoteCard       {quote (verbatim, real), author, role} — never fabricate quotes.
+CalloutAnnotation {title, body (1-3 sentences explaining the key insight), bullets?}
+GlossaryCards   {title, terms:[{term, definition}]} 4-9 terms.
+MathFormula / EquationDerivation — token-based; keep it to one clear equation / a few steps.
+
+Every number you state must be defensible (a real benchmark or spec). No placeholders, no empty arrays.
+
+## NARRATION (one per scene — this is shown on screen as the explanation)
+
+2-4 sentences that actually TEACH the scene's subtopic(s):
+  1. the problem / why it exists, 2. how the mechanism works at implementation level,
+  3. a real system that uses it, 4. the trade-off or failure mode.
+Be concrete and specific — name real systems and real numbers. No filler.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "scenes": [
+    {
+      "index": <scene index>,
+      "narration": "<2-4 teaching sentences for this scene>",
+      "panels": {
+        "<area>": { ...data matching that content component's schema... }
+      }
+    }
+  ]
+}
+
+Fill data ONLY for the content panel areas given to you. Match each component's schema exactly.
+Write narration for EVERY scene (including the intro/outro title scenes). Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes Works  (depth: intermediate)
+
+Scenes (fill data only for the content panels; write narration for all):
+  Scene 0 [Kubernetes Is Not a Deployer — It's a Control System] — Stop thinking in commands; start thinking in desired state that the cluster relentlessly drives toward.
+      teaches: (intro/outro)
+      content panels: panel=AnimatedTitle
+  Scene 1 [The Reconciliation Loop] — Observe, diff against desired state in etcd, act — a level-triggered loop that self-heals missed events.
+      teaches: The Declarative Reconciliation Model: Understand that Kubernetes is not an imperative deployment tool but a control system that drives actual state toward declared desired state.
+      content panels: sidebar=BulletList
+  Scene 2 [Control Plane Anatomy] — The API server is the only writer to etcd; every other component is a stateless client that watches the hub.
+      teaches: Control Plane Anatomy: API Server, etcd, Scheduler, Controller Manager: Know what each control-plane component does and why the API server is the single hub everything talks through.
+      content panels: left=StepFlow
+  Scene 3 [Controllers and the Watch/Reconcile Loop] — Deployment → ReplicaSet → Pod cascades via watch streams, informer caches, and ownerReferences.
+      teaches: Controllers and the Watch/Reconcile Loop: Understand how controllers (Deployment → ReplicaSet → Pod) cascade to materialize high-level intent into running containers.
+      content panels: sidebar=CalloutAnnotation
+  Scene 4 [Scheduling: Binding Pods to Nodes] — Filter then score, then write a binding — the scheduler picks a node on requests, never starts the container.
+      teaches: Scheduling: Binding Pods to Nodes: Understand how an unscheduled Pod gets assigned to a node and what constraints govern that choice.
+      content panels: left=BulletList
+  Scene 5 [The Node Agent: Kubelet and the CRI] — The kubelet turns a Pod spec into containers over gRPC and runs the probes engineers routinely conflate.
+      teaches: The Node Agent: Kubelet and the CRI: Understand how the desired Pod spec actually becomes running containers on a machine.
+      content panels: main=TerminalCLI; sidebar=CalloutAnnotation
+  Scene 6 [Networking: Pod IPs, Services, kube-proxy] — A flat network gives every Pod a routable IP; a Service VIP stays stable while endpoints churn.
+      teaches: Networking: Pod IPs, Services, and kube-proxy: Understand the flat-network model and how stable Service virtual IPs route to ephemeral Pods.
+      content panels: left=BulletList
+  Scene 7 [Self-Healing — and Where It Stops] — The same loop reschedules Pods off dead nodes, but heals workloads, not its own etcd consensus.
+      teaches: Self-Healing and Failure Modes: Understand how the same reconciliation engine recovers from node and pod failures — and where it stops.
+      content panels: main=TwoColumnLayout; sidebar=CalloutAnnotation
+  Scene 8 [One Loop, All the Way Down] — Every behavior you've seen is the same reconcile loop — declare intent, and the system converges.
+      teaches: (intro/outro)
+      content panels: panel=AnimatedTitle
+
+Content component schemas you must satisfy:
+### AnimatedTitle  (required: title)
+{"title": {"type": "string"}, "subtitle": {"type": "string"}, "accentColor": {"type": "string"}, "align": {"type": "string", "enum": ["center", "left"]}}
+
+### BulletList  (required: title, items)
+{"title": {"type": "string"}, "items": {"type": "array", "items": {"type": "string"}}, "accentColor": {"type": "string"}, "numbered": {"type": "boolean"}, "align": {"type": "string", "enum": ["left", "center"]}}
+
+### CalloutAnnotation  (required: body)
+{"title": {"type": "string"}, "body": {"type": "string"}, "bullets": {"type": "array", "items": {"type": "string"}}, "position": {"type": "string", "enum": ["left", "right", "top", "bottom"]}, "accentColor": {"type": "string"}}
+
+### StepFlow  (required: title, steps)
+{"title": {"type": "string"}, "steps": {"type": "array", "items": {"type": "string"}}, "accentColor": {"type": "string"}}
+
+### TerminalCLI  (required: command, output)
+{"title": {"type": "string"}, "command": {"type": "string"}, "output": {"type": "array", "items": {"type": "string"}}, "typingCommand": {"type": "boolean"}, "outputLineDelay": {"type": "number"}, "typingSpeed": {"type": "number"}, "caption": {"type": "string"}, "accentColor": {"type": "string"}, "highlightLines": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 9007199254740991}}, "theme": {"type": "string", "enum": ["dark", "matrix", "amber"]}}
+
+### TwoColumnLayout  (required: left, right)
+{"title": {"type": "string"}, "left": {"type": "object", "properties": {"heading": {"type": "string"}, "points": {"type": "array", "items": {"type": "string"}}, "color": {"type": "string"}, "icon": {"type": "string"}}, "required": ["heading", "points"], "additionalProperties": false}, "right": {"type": "object", "properties": {"heading": {"type": "string"}, "points": {"type": "array", "items": {"type": "string"}}, "color": {"type": "string"}, "icon": {"type": "string"}}, "required": ["heading", "points"], "additionalProperties": false}, "accentColor": {"type": "string"}, "dividerLabel": {"type": "string"}}
+
+Return only JSON.
+2026-06-26 23:18:19,445 | INFO | Client IP  : 127.0.0.1
+2026-06-26 23:18:19,445 | INFO | Model      : opus
+2026-06-26 23:18:19,445 | INFO | Endpoint   : /ask
+2026-06-26 23:18:19,445 | INFO | Thinking   : adaptive
+2026-06-26 23:18:19,445 | INFO | Query      : You are a Visual Data Architect for a technical education video. You produce the data that makes
+diagrams and charts real and accurate: topologies with real components, charts with real benchmark
+numbers, timelines with real history. Every value must be defensible.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+## SPATIAL RULES for node-based diagrams (ArchitectureDiagram, PacketFlow, FlowDiagram, etc.)
+
+Coordinates are percentages: x = left→right 0-100, y = top→bottom 0-100.
+Lay nodes out along the data-flow, left to right, and spread them so no two are within 8 units:
+
+  Client / user      x 5-12     Edge / CDN / LB    x 20-40
+  App / service       x 48-62    Cache              x 48-62 (y 65-80)
+  DB / queue / store  x 72-85
+  Vertical fan-out: use y = 20, 50, 80 for 1-3 parallel nodes.
+
+- 4-7 nodes for a meaningful diagram. Every node appears in ≥1 connection/edge.
+- Node type strings must match the component's schema enum exactly.
+- Connections: request/query/arrow vs push/replication/stream — pick the right kind.
+
+## DATA RULES for charts (BarChart, LineChart, PieChart, StatCallout)
+
+- Use REAL, defensible numbers (published benchmarks / specs from memory).
+- BarChart/LineChart values must span a meaningful range (≥4×), not all within 10%.
+- Use real system names as labels (Redis, PostgreSQL, Kafka…), never "Option A".
+- Give each bar/slice/series a distinct hex color.
+
+## TimelineFlow / SequenceDiagram / StateMachine / TreeHierarchy
+
+- Real years and real events in strict chronological order (TimelineFlow).
+- States/transitions and actors/messages must form a valid, connected diagram.
+- TreeHierarchy: a single root with nested children (≤3 levels).
+
+## TRANSITIONS  (assign one per scene)
+"fade" reflective/intro · "slideLeft" forward progression (default) · "slideUp" reveal after a question ·
+"zoom" the single most dramatic insight (use once) · "none" ONLY the last scene.
+No 3 identical transitions in a row.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "scenes": [
+    {
+      "index": <scene index>,
+      "transition": "<fade|slideLeft|slideUp|zoom|none>",
+      "panels": {
+        "<area>": { ...data matching that component's schema... }
+      }
+    }
+  ]
+}
+
+You MUST output a "panels" entry for EVERY area listed for each scene — never emit just a title.
+Components like TreeHierarchy, StateMachine, SequenceDiagram and FlowDiagram require their full nested
+structure (root/children, states/transitions, actors/messages, nodes/edges) — fill ALL required fields,
+not only the title. Match each component's schema exactly. Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes Works
+
+Scenes and their VISUAL panels (fill data only for these areas):
+  Scene 0 [Kubernetes Is Not a Deployer — It's a Control System] covers=
+      visual panels: (none — assign transition only)
+  Scene 1 [The Reconciliation Loop] covers=st1
+      visual panels: main=StateMachine
+  Scene 2 [Control Plane Anatomy] covers=st2
+      visual panels: right=ArchitectureDiagram
+  Scene 3 [Controllers and the Watch/Reconcile Loop] covers=st3
+      visual panels: main=SequenceDiagram
+  Scene 4 [Scheduling: Binding Pods to Nodes] covers=st4
+      visual panels: right=ArchitectureDiagram
+  Scene 5 [The Node Agent: Kubelet and the CRI] covers=st5
+      visual panels: (none — assign transition only)
+  Scene 6 [Networking: Pod IPs, Services, kube-proxy] covers=st6
+      visual panels: right=ArchitectureDiagram
+  Scene 7 [Self-Healing — and Where It Stops] covers=st7
+      visual panels: (none — assign transition only)
+  Scene 8 [One Loop, All the Way Down] covers=
+      visual panels: (none — assign transition only)
+
+Component schemas you must satisfy:
+### ArchitectureDiagram  (required: title)
+{"title": {"type": "string"}, "nodes": {"type": "array", "items": {"type": "object", "properties": {"id": {"type": "string"}, "type": {"type": "string", "enum": ["server", "loadBalancer", "database", "client"]}, "x": {"type": "number"}, "y": {"type": "number"}, "label": {"type": "string"}, "metrics": {"type": "object", "properties": {"cpu": {"type": "string"}, "ram": {"type": "string"}}, "additionalProperties": false}}, "required": ["id", "type", "x", "y"], "additionalProperties": false}}, "connections": {"type": "array", "items": {"type": "object", "properties": {"fromId": {"type": "string"}, "toId": {"type": "string"}, "type": {"type": "string", "enum": ["stream", "arrow"]}, "label": {"type": "string"}}, "required": ["fromId", "toId", "type"], "additionalProperties": false}}, "accentColor": {"type": "string"}}
+
+### SequenceDiagram  (required: actors, messages)
+{"title": {"type": "string"}, "actors": {"minItems": 2, "maxItems": 6, "type": "array", "items": {"type": "string"}}, "messages": {"type": "array", "items": {"type": "object", "properties": {"fromIdx": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "toIdx": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "label": {"type": "string"}, "kind": {"type": "string", "enum": ["sync", "return", "async"]}, "active": {"type": "boolean"}}, "required": ["fromIdx", "toIdx", "label"], "additionalProperties": false}}, "activations": {"type": "array", "items": {"type": "object", "properties": {"actorIdx": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "startMessage": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "endMessage": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "label": {"type": "string"}}, "required": ["actorIdx", "startMessage", "endMessage"], "additionalProperties": false}}, "accentColor": {"type": "string"}}
+
+### StateMachine  (required: states, transitions)
+{"title": {"type": "string"}, "states": {"type": "array", "items": {"type": "object", "properties": {"id": {"type": "string"}, "label": {"type": "string"}, "color": {"type": "string"}, "description": {"type": "string"}}, "required": ["id", "label"], "additionalProperties": false}}, "transitions": {"type": "array", "items": {"type": "object", "properties": {"fromId": {"type": "string"}, "toId": {"type": "string"}, "label": {"type": "string"}, "highlight": {"type": "boolean"}}, "required": ["fromId", "toId", "label"], "additionalProperties": false}}, "activeStateId": {"type": "string"}, "accentColor": {"type": "string"}}
+
+Produce accurate data for every visual panel above, and a transition for every scene. Return only JSON.
+2026-06-26 23:18:19,445 | INFO | Effort     : medium
+2026-06-26 23:18:19,445 | INFO | Model      : opus
+2026-06-26 23:18:19,445 | INFO | Claude CMD : claude -p You are a Principal Engineer and technical educator. You write the words and content that fill the
+text/code panels of an educational video, and the spoken narration for each scene. You care about
+genuine understanding — a senior engineer should learn something they did not already know.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+## CONTENT QUALITY RULES (teach, don't list)
+
+AnimatedTitle   {title (5-7 words, has stakes), subtitle (evocative tagline)}
+BulletList      {title, items: 5-7 strings} — each "specific claim — concrete detail/number". ≥2 with a real system or number.
+NumberedList    {title, items:[{heading, description}]} — ranked/ordered, 3-6 items.
+StepFlow        {title, steps: 4-6} — every step starts with an action verb, ≤10 words.
+ComparisonCard  {title, pros:4-5, cons:4-5} — real trade-offs about the SAME subject, not marketing.
+TwoColumnLayout {title, left:{heading,points:4-5}, right:{heading,points:4-5}} — parallel structure.
+CodeBlock       {title, code (10-18 lines of REAL production code, \n newlines), language}
+TerminalCLI     {command, output:[lines]} — a real command + realistic streamed output.
+HttpExchange    {method, path, requestHeaders, responseBody, statusCode...} — a real HTTP exchange.
+QuoteCard       {quote (verbatim, real), author, role} — never fabricate quotes.
+CalloutAnnotation {title, body (1-3 sentences explaining the key insight), bullets?}
+GlossaryCards   {title, terms:[{term, definition}]} 4-9 terms.
+MathFormula / EquationDerivation — token-based; keep it to one clear equation / a few steps.
+
+Every number you state must be defensible (a real benchmark or spec). No placeholders, no empty arrays.
+
+## NARRATION (one per scene — this is shown on screen as the explanation)
+
+2-4 sentences that actually TEACH the scene's subtopic(s):
+  1. the problem / why it exists, 2. how the mechanism works at implementation level,
+  3. a real system that uses it, 4. the trade-off or failure mode.
+Be concrete and specific — name real systems and real numbers. No filler.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "scenes": [
+    {
+      "index": <scene index>,
+      "narration": "<2-4 teaching sentences for this scene>",
+      "panels": {
+        "<area>": { ...data matching that content component's schema... }
+      }
+    }
+  ]
+}
+
+Fill data ONLY for the content panel areas given to you. Match each component's schema exactly.
+Write narration for EVERY scene (including the intro/outro title scenes). Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes Works  (depth: intermediate)
+
+Scenes (fill data only for the content panels; write narration for all):
+  Scene 0 [Kubernetes Is Not a Deployer — It's a Control System] — Stop thinking in commands; start thinking in desired state that the cluster relentlessly drives toward.
+      teaches: (intro/outro)
+      content panels: panel=AnimatedTitle
+  Scene 1 [The Reconciliation Loop] — Observe, diff against desired state in etcd, act — a level-triggered loop that self-heals missed events.
+      teaches: The Declarative Reconciliation Model: Understand that Kubernetes is not an imperative deployment tool but a control system that drives actual state toward declared desired state.
+      content panels: sidebar=BulletList
+  Scene 2 [Control Plane Anatomy] — The API server is the only writer to etcd; every other component is a stateless client that watches the hub.
+      teaches: Control Plane Anatomy: API Server, etcd, Scheduler, Controller Manager: Know what each control-plane component does and why the API server is the single hub everything talks through.
+      content panels: left=StepFlow
+  Scene 3 [Controllers and the Watch/Reconcile Loop] — Deployment → ReplicaSet → Pod cascades via watch streams, informer caches, and ownerReferences.
+      teaches: Controllers and the Watch/Reconcile Loop: Understand how controllers (Deployment → ReplicaSet → Pod) cascade to materialize high-level intent into running containers.
+      content panels: sidebar=CalloutAnnotation
+  Scene 4 [Scheduling: Binding Pods to Nodes] — Filter then score, then write a binding — the scheduler picks a node on requests, never starts the container.
+      teaches: Scheduling: Binding Pods to Nodes: Understand how an unscheduled Pod gets assigned to a node and what constraints govern that choice.
+      content panels: left=BulletList
+  Scene 5 [The Node Agent: Kubelet and the CRI] — The kubelet turns a Pod spec into containers over gRPC and runs the probes engineers routinely conflate.
+      teaches: The Node Agent: Kubelet and the CRI: Understand how the desired Pod spec actually becomes running containers on a machine.
+      content panels: main=TerminalCLI; sidebar=CalloutAnnotation
+  Scene 6 [Networking: Pod IPs, Services, kube-proxy] — A flat network gives every Pod a routable IP; a Service VIP stays stable while endpoints churn.
+      teaches: Networking: Pod IPs, Services, and kube-proxy: Understand the flat-network model and how stable Service virtual IPs route to ephemeral Pods.
+      content panels: left=BulletList
+  Scene 7 [Self-Healing — and Where It Stops] — The same loop reschedules Pods off dead nodes, but heals workloads, not its own etcd consensus.
+      teaches: Self-Healing and Failure Modes: Understand how the same reconciliation engine recovers from node and pod failures — and where it stops.
+      content panels: main=TwoColumnLayout; sidebar=CalloutAnnotation
+  Scene 8 [One Loop, All the Way Down] — Every behavior you've seen is the same reconcile loop — declare intent, and the system converges.
+      teaches: (intro/outro)
+      content panels: panel=AnimatedTitle
+
+Content component schemas you must satisfy:
+### AnimatedTitle  (required: title)
+{"title": {"type": "string"}, "subtitle": {"type": "string"}, "accentColor": {"type": "string"}, "align": {"type": "string", "enum": ["center", "left"]}}
+
+### BulletList  (required: title, items)
+{"title": {"type": "string"}, "items": {"type": "array", "items": {"type": "string"}}, "accentColor": {"type": "string"}, "numbered": {"type": "boolean"}, "align": {"type": "string", "enum": ["left", "center"]}}
+
+### CalloutAnnotation  (required: body)
+{"title": {"type": "string"}, "body": {"type": "string"}, "bullets": {"type": "array", "items": {"type": "string"}}, "position": {"type": "string", "enum": ["left", "right", "top", "bottom"]}, "accentColor": {"type": "string"}}
+
+### StepFlow  (required: title, steps)
+{"title": {"type": "string"}, "steps": {"type": "array", "items": {"type": "string"}}, "accentColor": {"type": "string"}}
+
+### TerminalCLI  (required: command, output)
+{"title": {"type": "string"}, "command": {"type": "string"}, "output": {"type": "array", "items": {"type": "string"}}, "typingCommand": {"type": "boolean"}, "outputLineDelay": {"type": "number"}, "typingSpeed": {"type": "number"}, "caption": {"type": "string"}, "accentColor": {"type": "string"}, "highlightLines": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 9007199254740991}}, "theme": {"type": "string", "enum": ["dark", "matrix", "amber"]}}
+
+### TwoColumnLayout  (required: left, right)
+{"title": {"type": "string"}, "left": {"type": "object", "properties": {"heading": {"type": "string"}, "points": {"type": "array", "items": {"type": "string"}}, "color": {"type": "string"}, "icon": {"type": "string"}}, "required": ["heading", "points"], "additionalProperties": false}, "right": {"type": "object", "properties": {"heading": {"type": "string"}, "points": {"type": "array", "items": {"type": "string"}}, "color": {"type": "string"}, "icon": {"type": "string"}}, "required": ["heading", "points"], "additionalProperties": false}, "accentColor": {"type": "string"}, "dividerLabel": {"type": "string"}}
+
+Return only JSON. --model opus --thinking adaptive --effort medium
+2026-06-26 23:18:19,445 | INFO | Thinking   : adaptive
+2026-06-26 23:18:19,446 | INFO | Effort     : medium
+2026-06-26 23:18:19,446 | INFO | Claude CMD : claude -p You are a Visual Data Architect for a technical education video. You produce the data that makes
+diagrams and charts real and accurate: topologies with real components, charts with real benchmark
+numbers, timelines with real history. Every value must be defensible.
+
+Output ONLY a single JSON object — no prose, no markdown fences.
+
+## SPATIAL RULES for node-based diagrams (ArchitectureDiagram, PacketFlow, FlowDiagram, etc.)
+
+Coordinates are percentages: x = left→right 0-100, y = top→bottom 0-100.
+Lay nodes out along the data-flow, left to right, and spread them so no two are within 8 units:
+
+  Client / user      x 5-12     Edge / CDN / LB    x 20-40
+  App / service       x 48-62    Cache              x 48-62 (y 65-80)
+  DB / queue / store  x 72-85
+  Vertical fan-out: use y = 20, 50, 80 for 1-3 parallel nodes.
+
+- 4-7 nodes for a meaningful diagram. Every node appears in ≥1 connection/edge.
+- Node type strings must match the component's schema enum exactly.
+- Connections: request/query/arrow vs push/replication/stream — pick the right kind.
+
+## DATA RULES for charts (BarChart, LineChart, PieChart, StatCallout)
+
+- Use REAL, defensible numbers (published benchmarks / specs from memory).
+- BarChart/LineChart values must span a meaningful range (≥4×), not all within 10%.
+- Use real system names as labels (Redis, PostgreSQL, Kafka…), never "Option A".
+- Give each bar/slice/series a distinct hex color.
+
+## TimelineFlow / SequenceDiagram / StateMachine / TreeHierarchy
+
+- Real years and real events in strict chronological order (TimelineFlow).
+- States/transitions and actors/messages must form a valid, connected diagram.
+- TreeHierarchy: a single root with nested children (≤3 levels).
+
+## TRANSITIONS  (assign one per scene)
+"fade" reflective/intro · "slideLeft" forward progression (default) · "slideUp" reveal after a question ·
+"zoom" the single most dramatic insight (use once) · "none" ONLY the last scene.
+No 3 identical transitions in a row.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## OUTPUT SCHEMA
+
+{
+  "scenes": [
+    {
+      "index": <scene index>,
+      "transition": "<fade|slideLeft|slideUp|zoom|none>",
+      "panels": {
+        "<area>": { ...data matching that component's schema... }
+      }
+    }
+  ]
+}
+
+You MUST output a "panels" entry for EVERY area listed for each scene — never emit just a title.
+Components like TreeHierarchy, StateMachine, SequenceDiagram and FlowDiagram require their full nested
+structure (root/children, states/transitions, actors/messages, nodes/edges) — fill ALL required fields,
+not only the title. Match each component's schema exactly. Return ONLY valid JSON.
+
+---
+
+Topic: How Kubernetes Works
+
+Scenes and their VISUAL panels (fill data only for these areas):
+  Scene 0 [Kubernetes Is Not a Deployer — It's a Control System] covers=
+      visual panels: (none — assign transition only)
+  Scene 1 [The Reconciliation Loop] covers=st1
+      visual panels: main=StateMachine
+  Scene 2 [Control Plane Anatomy] covers=st2
+      visual panels: right=ArchitectureDiagram
+  Scene 3 [Controllers and the Watch/Reconcile Loop] covers=st3
+      visual panels: main=SequenceDiagram
+  Scene 4 [Scheduling: Binding Pods to Nodes] covers=st4
+      visual panels: right=ArchitectureDiagram
+  Scene 5 [The Node Agent: Kubelet and the CRI] covers=st5
+      visual panels: (none — assign transition only)
+  Scene 6 [Networking: Pod IPs, Services, kube-proxy] covers=st6
+      visual panels: right=ArchitectureDiagram
+  Scene 7 [Self-Healing — and Where It Stops] covers=st7
+      visual panels: (none — assign transition only)
+  Scene 8 [One Loop, All the Way Down] covers=
+      visual panels: (none — assign transition only)
+
+Component schemas you must satisfy:
+### ArchitectureDiagram  (required: title)
+{"title": {"type": "string"}, "nodes": {"type": "array", "items": {"type": "object", "properties": {"id": {"type": "string"}, "type": {"type": "string", "enum": ["server", "loadBalancer", "database", "client"]}, "x": {"type": "number"}, "y": {"type": "number"}, "label": {"type": "string"}, "metrics": {"type": "object", "properties": {"cpu": {"type": "string"}, "ram": {"type": "string"}}, "additionalProperties": false}}, "required": ["id", "type", "x", "y"], "additionalProperties": false}}, "connections": {"type": "array", "items": {"type": "object", "properties": {"fromId": {"type": "string"}, "toId": {"type": "string"}, "type": {"type": "string", "enum": ["stream", "arrow"]}, "label": {"type": "string"}}, "required": ["fromId", "toId", "type"], "additionalProperties": false}}, "accentColor": {"type": "string"}}
+
+### SequenceDiagram  (required: actors, messages)
+{"title": {"type": "string"}, "actors": {"minItems": 2, "maxItems": 6, "type": "array", "items": {"type": "string"}}, "messages": {"type": "array", "items": {"type": "object", "properties": {"fromIdx": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "toIdx": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "label": {"type": "string"}, "kind": {"type": "string", "enum": ["sync", "return", "async"]}, "active": {"type": "boolean"}}, "required": ["fromIdx", "toIdx", "label"], "additionalProperties": false}}, "activations": {"type": "array", "items": {"type": "object", "properties": {"actorIdx": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "startMessage": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "endMessage": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "label": {"type": "string"}}, "required": ["actorIdx", "startMessage", "endMessage"], "additionalProperties": false}}, "accentColor": {"type": "string"}}
+
+### StateMachine  (required: states, transitions)
+{"title": {"type": "string"}, "states": {"type": "array", "items": {"type": "object", "properties": {"id": {"type": "string"}, "label": {"type": "string"}, "color": {"type": "string"}, "description": {"type": "string"}}, "required": ["id", "label"], "additionalProperties": false}}, "transitions": {"type": "array", "items": {"type": "object", "properties": {"fromId": {"type": "string"}, "toId": {"type": "string"}, "label": {"type": "string"}, "highlight": {"type": "boolean"}}, "required": ["fromId", "toId", "label"], "additionalProperties": false}}, "activeStateId": {"type": "string"}, "accentColor": {"type": "string"}}
+
+Produce accurate data for every visual panel above, and a transition for every scene. Return only JSON. --model opus --thinking adaptive --effort medium
+2026-06-26 23:19:05,436 | INFO | Success    : True
+2026-06-26 23:19:05,436 | INFO | Exit Code  : 0
+2026-06-26 23:19:05,436 | INFO | Duration   : 45.99 sec
+2026-06-26 23:19:05,436 | INFO | ==========================================================================================
+2026-06-26 23:19:27,373 | INFO | Success    : True
+2026-06-26 23:19:27,374 | INFO | Exit Code  : 0
+2026-06-26 23:19:27,374 | INFO | Duration   : 67.93 sec
+2026-06-26 23:19:27,374 | INFO | ==========================================================================================
+2026-06-26 23:23:32,465 | INFO | Stopping server...

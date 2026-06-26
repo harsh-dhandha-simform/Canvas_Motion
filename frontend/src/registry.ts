@@ -6,7 +6,7 @@
  * a new scene component to the library.
  */
 
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { z } from "zod";
 import { AnimatedTitle, AnimatedTitleSchema } from "./components/AnimatedTitle";
 import { ComparisonCard, ComparisonCardSchema } from "./components/ComparisonCard";
 import { BulletList, BulletListSchema } from "./components/BulletList";
@@ -98,8 +98,75 @@ export const COMPONENT_SCHEMAS = {
   CalloutAnnotation: CalloutAnnotationSchema,
 } as const;
 
+// Zod v4 ships a native JSON-Schema converter. The old `zod-to-json-schema`
+// package targets zod v3 and silently emits empty schemas against v4 — which is
+// what left the backend Validator with nothing to validate against.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const toJsonSchema = (schema: any, name: string) => zodToJsonSchema(schema, name);
+const toJsonSchema = (schema: any, _name?: string) => z.toJSONSchema(schema);
+
+/**
+ * Picker metadata — the knowledge the planning agents (Shortlister, Director,
+ * Timing) need that the Zod schema can't express:
+ *   category   : coarse grouping for shortlisting
+ *   dataOwner  : which agent fills `data` — "content" (Scriptwriter) | "visual" (Visual Architect)
+ *   bestAreas  : grid areas this component looks good in
+ *   useWhen    : one-line cue the Director uses to choose it
+ *   tags       : lexical/affinity terms the Shortlister scores against
+ *   minSeconds : minimum on-screen time for the animation to read (Timing floor)
+ *
+ * This is the ONLY place to declare a component's planning metadata. Adding a
+ * component = add its entry here + the two lines above. Everything downstream
+ * (catalog JSON, backend registry, shortlist, validation) is generated.
+ */
+export type ComponentMeta = {
+  category:
+    | "text"
+    | "list"
+    | "code"
+    | "chart"
+    | "network-diagram"
+    | "state-tree"
+    | "sequence"
+    | "math"
+    | "timeline"
+    | "title";
+  dataOwner: "content" | "visual";
+  bestAreas: string[];
+  useWhen: string;
+  tags: string[];
+  minSeconds: number;
+};
+
+export const COMPONENT_META: Record<SceneType, ComponentMeta> = {
+  AnimatedTitle: { category: "title", dataOwner: "content", bestAreas: ["panel"], useWhen: "scene 0 hook or final outro — a dramatic title with stakes", tags: ["title", "intro", "outro", "hook"], minSeconds: 4 },
+  TypewriterText: { category: "title", dataOwner: "content", bestAreas: ["panel"], useWhen: "billboard-style dramatic 2-3 line statement", tags: ["dramatic", "statement", "reveal", "billboard"], minSeconds: 4 },
+  QuoteCard: { category: "text", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "a real verbatim quote from a paper, talk, or engineer", tags: ["quote", "authority", "citation"], minSeconds: 5 },
+  CalloutAnnotation: { category: "text", dataOwner: "content", bestAreas: ["panel", "main", "sidebar"], useWhen: "emphasize a key insight or definition in prose", tags: ["insight", "definition", "takeaway", "explanation", "note"], minSeconds: 5 },
+  BulletList: { category: "list", dataOwner: "content", bestAreas: ["left", "right", "sidebar"], useWhen: "5-7 specific claims, each with a number or system name", tags: ["list", "points", "facts", "explanation"], minSeconds: 7 },
+  NumberedList: { category: "list", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "ranked principles or ordered top-N items", tags: ["ranked", "ordered", "principles", "steps"], minSeconds: 8 },
+  GlossaryCards: { category: "list", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "vocabulary, acronym glossary, or concept map", tags: ["glossary", "terms", "vocabulary", "definitions"], minSeconds: 8 },
+  StepFlow: { category: "list", dataOwner: "content", bestAreas: ["left", "main"], useWhen: "4-6 sequential steps, each starting with an action verb", tags: ["process", "steps", "sequence", "workflow"], minSeconds: 7 },
+  ComparisonCard: { category: "list", dataOwner: "content", bestAreas: ["main", "left"], useWhen: "head-to-head pros vs cons of one subject", tags: ["comparison", "pros", "cons", "tradeoffs"], minSeconds: 8 },
+  TwoColumnLayout: { category: "list", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "parallel comparison of two subjects (before/after, X vs Y)", tags: ["comparison", "parallel", "before-after", "two-column"], minSeconds: 8 },
+  SplitScreen: { category: "code", dataOwner: "content", bestAreas: ["main"], useWhen: "text bullets and a code snippet together", tags: ["code", "hybrid", "text"], minSeconds: 8 },
+  CodeBlock: { category: "code", dataOwner: "content", bestAreas: ["right", "main", "sidebar"], useWhen: "10-18 lines of real production code", tags: ["code", "implementation", "config", "snippet"], minSeconds: 8 },
+  TerminalCLI: { category: "code", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "a command plus its streamed terminal output", tags: ["terminal", "cli", "command", "shell", "debug"], minSeconds: 9 },
+  HttpExchange: { category: "code", dataOwner: "content", bestAreas: ["main", "panel"], useWhen: "an HTTP request/response pair (REST, API, protocol)", tags: ["http", "api", "rest", "request", "protocol"], minSeconds: 9 },
+  MathFormula: { category: "math", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "a single key equation or Big-O expression", tags: ["math", "formula", "equation", "big-o", "notation"], minSeconds: 6 },
+  EquationDerivation: { category: "math", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "a multi-step proof or algebraic derivation", tags: ["math", "proof", "derivation", "steps"], minSeconds: 10 },
+  StatCallout: { category: "chart", dataOwner: "visual", bestAreas: ["sidebar", "right"], useWhen: "one surprising real-world number", tags: ["stat", "metric", "number", "benchmark"], minSeconds: 4 },
+  BarChart: { category: "chart", dataOwner: "visual", bestAreas: ["right", "sidebar"], useWhen: "compare 4-6 real numeric values", tags: ["chart", "comparison", "benchmark", "metrics", "latency", "throughput"], minSeconds: 7 },
+  LineChart: { category: "chart", dataOwner: "visual", bestAreas: ["main", "right"], useWhen: "trends over time, growth curves, latency vs load", tags: ["chart", "trend", "time-series", "growth", "curve"], minSeconds: 8 },
+  PieChart: { category: "chart", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "proportional breakdown or traffic split", tags: ["chart", "proportion", "breakdown", "share", "split"], minSeconds: 7 },
+  ArchitectureDiagram: { category: "network-diagram", dataOwner: "visual", bestAreas: ["main", "right"], useWhen: "system topology with servers, DBs, load balancers", tags: ["architecture", "topology", "system", "infrastructure", "diagram"], minSeconds: 9 },
+  PacketFlow: { category: "network-diagram", dataOwner: "visual", bestAreas: ["main", "panel"], useWhen: "data packets traveling a network (protocols, routing)", tags: ["network", "packet", "protocol", "routing", "tcp"], minSeconds: 9 },
+  HashRing: { category: "network-diagram", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "consistent hashing, sharding, CDN/cache placement", tags: ["hashing", "sharding", "cache", "distributed", "ring"], minSeconds: 10 },
+  SequenceDiagram: { category: "sequence", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "time-ordered messages between actors/services", tags: ["sequence", "messages", "api-flow", "microservice", "auth"], minSeconds: 9 },
+  StateMachine: { category: "state-tree", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "finite states and transitions (protocols, FSMs)", tags: ["state-machine", "fsm", "protocol", "transitions", "raft"], minSeconds: 9 },
+  TreeHierarchy: { category: "state-tree", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "hierarchical structure (B-tree, DNS, file system, org)", tags: ["tree", "hierarchy", "b-tree", "dns", "recursion"], minSeconds: 8 },
+  FlowDiagram: { category: "state-tree", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "branching workflow with decisions (if/else logic)", tags: ["flowchart", "branching", "decision", "workflow", "algorithm"], minSeconds: 9 },
+  TimelineFlow: { category: "timeline", dataOwner: "visual", bestAreas: ["main", "panel"], useWhen: "chronological history with real dates and events", tags: ["timeline", "history", "chronology", "roadmap", "events"], minSeconds: 8 },
+};
 
 export const COMPONENT_CATALOG = {
   AnimatedTitle: {

@@ -18,7 +18,7 @@ from typing import Any
 
 from groq import Groq, RateLimitError, APIStatusError
 
-from config import GROQ_API_KEY, GROQ_MODEL, INITIAL_BACKOFF_SECONDS, MAX_RETRIES
+from config import GROQ_API_KEY, GROQ_MODEL, INITIAL_BACKOFF_SECONDS, MAX_RETRIES, LLM_BACKEND
 from utils.rate_limiter import limiter, estimate_tokens, ORDERED_MODELS, _MODEL_MAP
 
 logger = logging.getLogger(__name__)
@@ -62,8 +62,19 @@ def chat_completion(
         lf.update_current_generation(
             name=f"{agent_name}-llm",
             input=messages,
-            metadata={"agent": agent_name, "requested_model": model},
+            metadata={"agent": agent_name, "requested_model": model, "backend": LLM_BACKEND},
         )
+
+    # ── Backend dispatch ─────────────────────────────────────────────────────
+    # Route every agent call through the self-hosted /ask endpoint when enabled.
+    if LLM_BACKEND == "ask":
+        from utils.ask_client import ask
+        from config import ASK_MODEL
+        query = _flatten_messages(messages)
+        answer = ask(query, agent_name=agent_name)
+        if lf:
+            lf.update_current_generation(model=f"ask:{ASK_MODEL}", output=answer)
+        return answer
 
     est_tokens = estimate_tokens(messages)
     client = get_client()
@@ -181,6 +192,22 @@ def chat_completion(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _flatten_messages(messages: list[dict[str, str]]) -> str:
+    """Collapse chat messages into a single prompt for the /ask endpoint.
+
+    The /ask endpoint (claude -p) takes one `query` string, so the system
+    instructions and the user request are concatenated, system first.
+    """
+    system_parts = [m["content"] for m in messages if m.get("role") == "system"]
+    other_parts = [m["content"] for m in messages if m.get("role") != "system"]
+    blocks = []
+    if system_parts:
+        blocks.append("\n\n".join(system_parts))
+    if other_parts:
+        blocks.append("\n\n".join(other_parts))
+    return "\n\n---\n\n".join(blocks)
 
 
 def _parse_retry_after(exc: RateLimitError) -> float | None:

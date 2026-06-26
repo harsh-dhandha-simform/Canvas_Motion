@@ -1,193 +1,155 @@
-import json
 import logging
 from typing import Any
+
 from graph.state import PipelineState
-from agents import director, scriptwriter, storyboard, sync
-from utils.api import extract_json
+from agents import researcher, director, scriptwriter, visual_architect
+from component_catalog import data_owner
+from utils.timing import compute_timings
+from utils.captions import build_captions
+from graph.validator import validate_and_repair
 
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# 0. Researcher — topic → teaching syllabus (subtopics, prereqs, depth)
+# ---------------------------------------------------------------------------
+def researcher_node(state: PipelineState) -> dict[str, Any]:
+    logger.info("Running researcher node")
+    syllabus = researcher.run_agent(state["topic"], state.get("duration_seconds", 60))
+    return {"syllabus": syllabus}
+
+
+# ---------------------------------------------------------------------------
+# 1. Director — syllabus → scene blueprint (picks from shortlists)
+# ---------------------------------------------------------------------------
 def director_node(state: PipelineState) -> dict[str, Any]:
     logger.info("Running director node")
-    brief = director.run_agent(state["topic"])
-
-    # Override total_seconds with the caller's explicit duration
-    duration_seconds = state.get("duration_seconds", 60)
-    brief["total_seconds"] = duration_seconds
-
-    # Derive scene_count from duration: ~1 scene per 10s, clamped 4-12
-    brief["scene_count"] = max(4, min(12, duration_seconds // 10))
-
-    # Trim all scene arrays to scene_count
-    n = brief["scene_count"]
-    for key in ("scene_titles", "scene_subtitles", "scene_layouts", "scene_panel_plans"):
-        items = brief.get(key, [])
-        brief[key] = items[:n]
-
-    logger.info(
-        "[director_node] scene_count=%d total_seconds=%d",
-        brief.get("scene_count"), brief.get("total_seconds"),
-    )
-    return {"brief": brief}
+    plan = director.run_agent(state["syllabus"], state.get("duration_seconds", 60))
+    return {"plan": plan}
 
 
+# ---------------------------------------------------------------------------
+# 2a / 2b — parallel fan-out: content + visual data (disjoint panels)
+# ---------------------------------------------------------------------------
 def scriptwriter_node(state: PipelineState) -> dict[str, Any]:
     logger.info("Running scriptwriter node")
-    script = scriptwriter.run_agent(state["brief"])
+    script = scriptwriter.run_agent(state["plan"], state["syllabus"])
     return {"script": script}
 
 
-def storyboard_node(state: PipelineState) -> dict[str, Any]:
-    logger.info("Running storyboard node")
-    story = storyboard.run_agent(state["brief"], state["script"])
+def visual_architect_node(state: PipelineState) -> dict[str, Any]:
+    logger.info("Running visual architect node")
+    story = visual_architect.run_agent(state["plan"], state["syllabus"])
     return {"story": story}
 
 
-def sync_node(state: PipelineState) -> dict[str, Any]:
-    logger.info("Running sync node")
-    timing = sync.run_agent(state["brief"], state["script"])
-    return {"timing": timing}
+# ---------------------------------------------------------------------------
+# 3. Merge — combine plan + content + visual + timing + captions (pure Python)
+# ---------------------------------------------------------------------------
+def merge_node(state: PipelineState) -> dict[str, Any]:
+    logger.info("Running merge node")
+    plan = state["plan"]
+    script = state.get("script") or {}
+    story = state.get("story") or {}
 
+    content_by_idx = {s.get("index", i): s for i, s in enumerate(script.get("scenes", []))}
+    visual_by_idx = {s.get("index", i): s for i, s in enumerate(story.get("scenes", []))}
 
-def assembler_node(state: PipelineState) -> dict[str, Any]:
-    """
-    Merge multi-panel script + storyboard visual data + timing into VideoScript JSON.
-    Pure Python merge + Pydantic validation. LLM fallback only if Pydantic fails.
-    """
-    logger.info("Running assembler node (multi-panel merge)")
-    from models.video_script import VideoScript
-    from pydantic import ValidationError
-
-    brief   = state["brief"]
-    script  = state["script"]
-    story   = state.get("story") or {}
-    timing  = state["timing"]
-    topic   = state["topic"]
-
-    palette = brief.get("palette", {})
-    typo    = brief.get("typography", {})
-
-    # Index storyboard and timing by scene_index
-    story_by_idx  = {s.get("scene_index", i): s for i, s in enumerate(story.get("scenes", []))}
-    timing_by_idx = {s.get("scene_index", i): s for i, s in enumerate(timing.get("scenes", []))}
-
-    script_scenes = script.get("scenes", [])
     scenes_out: list[dict] = []
+    for i, p_scene in enumerate(plan.get("scenes", [])):
+        idx = p_scene.get("index", i)
+        c_scene = content_by_idx.get(idx, {})
+        v_scene = visual_by_idx.get(idx, {})
+        content_panels = c_scene.get("panels", {}) or {}
+        visual_panels = v_scene.get("panels", {}) or {}
 
-    for i, s_script in enumerate(script_scenes):
-        idx      = s_script.get("scene_index", i)
-        s_story  = story_by_idx.get(idx, story_by_idx.get(i, {}))
-        s_timing = timing_by_idx.get(idx, timing_by_idx.get(i, {}))
-
-        layout   = s_script.get("layout", "full")
-        title    = s_script.get("title", f"Scene {i+1}")
-        subtitle = s_script.get("subtitle")
-
-        # Merge visual data into panels by area
-        panel_visual_data = s_story.get("panel_visual_data") or {}
         panels_out = []
-        for panel in s_script.get("panels", []):
-            area   = panel.get("area", "panel")
-            ptype  = panel.get("type", "BulletList")
-            pdata  = dict(panel.get("data") or {})
+        for panel in p_scene.get("panels", []):
+            area = panel.get("area")
+            ptype = panel.get("type")
+            if data_owner(ptype) == "visual":
+                data = dict(visual_panels.get(area) or {})
+            else:
+                data = dict(content_panels.get(area) or {})
+            data.setdefault("title", p_scene.get("title", ""))
+            panels_out.append({"area": area, "type": ptype, "data": data})
 
-            # Merge visual data (nodes/bars/events) from storyboard
-            visual = panel_visual_data.get(area) or {}
-            pdata.update(visual)
-
-            # Ensure title is always in data
-            if "title" not in pdata:
-                pdata["title"] = title
-
-            panels_out.append({
-                "area": area,
-                "type": ptype,
-                "data": pdata,
-            })
-
-        # Transition: storyboard decides; last scene always "none"
-        transition = s_story.get("transition", "fade")
-        if i == len(script_scenes) - 1:
+        transition = v_scene.get("transition", "fade")
+        if i == len(plan.get("scenes", [])) - 1:
             transition = "none"
 
         scenes_out.append({
-            "id":              f"scene-{i + 1}",
-            "layout":          layout,
-            "title":           title,
-            "subtitle":        subtitle,
-            "duration_frames": s_timing.get("duration_frames", 210),
-            "transition":      transition,
-            "panels":          panels_out,
+            "id": f"scene-{i + 1}",
+            "layout": p_scene.get("layout", "full"),
+            "title": p_scene.get("title", f"Scene {i + 1}"),
+            "subtitle": p_scene.get("subtitle"),
+            "transition": transition,
+            "narration": c_scene.get("narration", ""),
+            "covers": p_scene.get("covers", []),
+            "panels": panels_out,
         })
 
-    # Fix frame sum
-    total_frames = brief.get("total_seconds", 60) * 30
-    actual_total = sum(s["duration_frames"] for s in scenes_out)
-    if actual_total != total_frames and scenes_out:
-        diff = total_frames - actual_total
-        scenes_out[-1]["duration_frames"] = max(120, scenes_out[-1]["duration_frames"] + diff)
-        logger.info("[assembler] Frame sum corrected by %d on last scene", diff)
+    # Deterministic timing (needs narration) → then captions (needs frame positions).
+    compute_timings(scenes_out, state.get("duration_seconds", 60))
+    captions = build_captions(scenes_out)
+
+    return {"scenes": scenes_out, "captions": captions}
+
+
+# ---------------------------------------------------------------------------
+# 4. Validator — schema repair + coverage check
+# ---------------------------------------------------------------------------
+def validator_node(state: PipelineState) -> dict[str, Any]:
+    logger.info("Running validator node")
+    scenes = state["scenes"]
+    report = validate_and_repair(scenes, state["syllabus"])
+    return {"scenes": scenes, "validation_report": report}
+
+
+# ---------------------------------------------------------------------------
+# 5. Assembler — VideoScript envelope + Pydantic validation
+# ---------------------------------------------------------------------------
+def assembler_node(state: PipelineState) -> dict[str, Any]:
+    logger.info("Running assembler node")
+    from models.video_script import VideoScript
+    from pydantic import ValidationError
+
+    plan = state["plan"]
+    syllabus = state["syllabus"]
+    theme = plan.get("theme", {})
+
+    scenes = state["scenes"]
+    # Strip planning-only field before validation
+    clean_scenes = [{k: v for k, v in s.items() if k != "covers"} for s in scenes]
 
     raw_script = {
-        "title":  brief.get("topic", topic),
-        "fps":    30,
-        "width":  1920,
+        "title": syllabus.get("topic", state["topic"]),
+        "fps": 30,
+        "width": 1920,
         "height": 1080,
         "theme": {
-            "primary":    palette.get("primary",    "#6366f1"),
-            "secondary":  palette.get("secondary",  "#10b981"),
-            "accent":     palette.get("accent",     palette.get("highlight", "#f59e0b")),
-            "background": palette.get("background", "#030711"),
-            "font":       typo.get("heading_font",  "Inter"),
+            "primary": theme.get("primary", "#6366f1"),
+            "secondary": theme.get("secondary", "#10b981"),
+            "accent": theme.get("accent", "#f59e0b"),
+            "background": theme.get("background", "#030711"),
+            "font": theme.get("font", "Inter"),
         },
-        "scenes": scenes_out,
+        "voiceover": {"provider": None, "captions": state.get("captions") or []},
+        "scenes": clean_scenes,
     }
 
     try:
-        vs        = VideoScript.model_validate(raw_script)
+        vs = VideoScript.model_validate(raw_script)
         validated = vs.model_dump(mode="json")
-        logger.info(
-            "[assembler] ✅ Merge OK — %d scenes, %d frames",
-            len(vs.scenes), vs.total_frames(),
-        )
+        logger.info("[assembler] ✅ %d scenes, %d frames", len(vs.scenes), vs.total_frames())
         return {"video_script": validated, "model_used": "merge", "fallback_triggered": False}
     except ValidationError as exc:
-        logger.warning("[assembler] ⚠️ Pydantic failed (%d errors) — LLM fix pass", len(exc.errors()))
-        return _assembler_llm_fix(raw_script, exc, topic)
-    except Exception as exc:
-        logger.error("[assembler] ❌ Unexpected error: %s", exc)
-        return {"errors": [str(exc)]}
-
-
-def _assembler_llm_fix(raw_script: dict, exc: Exception, topic: str) -> dict[str, Any]:
-    """Minimal LLM call to fix Pydantic validation errors after merge."""
-    from utils.api import chat_completion as _cc
-    from models.video_script import VideoScript
-    from graph.tools import COMPACT_CATALOG
-
-    errors_summary = str(exc)[:600]
-
-    try:
-        raw = _cc(
-            messages=[
-                {"role": "system", "content": (
-                    "Fix this VideoScript JSON to pass Pydantic validation. "
-                    "Return ONLY valid JSON, no markdown.\n" + COMPACT_CATALOG
-                )},
-                {"role": "user", "content": (
-                    f"Errors:\n{errors_summary}\n\n"
-                    f"JSON:\n{json.dumps(raw_script, indent=2)[:5000]}\n\n"
-                    "Return the corrected JSON."
-                )},
-            ],
-            temperature=0.1,
-            agent_name="AssemblerFix",
-        )
-        from utils.api import parse_json_robust
-        fixed = VideoScript.model_validate(parse_json_robust(raw, label="AssemblerFix"))
-        logger.info("[assembler-fix] ✅ LLM fix passed")
-        return {"video_script": fixed.model_dump(mode="json"), "model_used": "llm-fix", "fallback_triggered": True}
-    except Exception as e:
-        logger.error("[assembler-fix] ❌ LLM fix also failed: %s", e)
-        return {"video_script": raw_script, "model_used": "raw", "fallback_triggered": True, "errors": [str(e)]}
+        logger.error("[assembler] ❌ Pydantic failed: %s", exc)
+        # Envelope-level failure is rare now (Validator already fixed panels); surface raw.
+        return {
+            "video_script": raw_script,
+            "model_used": "raw",
+            "fallback_triggered": True,
+            "errors": [str(exc)[:500]],
+        }

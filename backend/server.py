@@ -46,66 +46,9 @@ logging.basicConfig(
 logger = logging.getLogger("server")
 
 # ---------------------------------------------------------------------------
-# Remotion best-practice knowledge (served via GET /api/skills)
-# The assembler_node reads this directly via the get_remotion_skill tool.
-# ---------------------------------------------------------------------------
-
-_SKILLS_DIR = _BACKEND_DIR.parent / ".agents" / "skills" / "remotion-best-practices" / "rules"
-
-
-def _load_skill(filename: str) -> str:
-    """Read a skill .md and strip YAML frontmatter."""
-    path = _SKILLS_DIR / filename
-    if not path.exists():
-        logger.warning("Skill file not found: %s", path)
-        return ""
-    content = path.read_text()
-    if content.startswith("---"):
-        end = content.find("---", 3)
-        if end != -1:
-            content = content[end + 3:].strip()
-    return content
-
-
-def _build_remotion_knowledge() -> str:
-    _load_skill("timing.md")
-    _load_skill("sequencing.md")
-    _load_skill("transitions.md")
-    _load_skill("compositions.md")
-
-    return """## REMOTION BEST-PRACTICE REFERENCE
-(Sourced from skills/remotion-best-practices — timing, sequencing, transitions, compositions)
-
-### Frame budget  (fps = 30)
-| Duration | Frames |  | Duration | Frames |
-|----------|--------|--|----------|--------|
-| 1 s      | 30     |  | 5 s      | 150    |
-| 2 s      | 60     |  | 6 s      | 180    |
-| 3 s      | 90     |  | 8 s      | 240    |
-| 4 s      | 120    |  | 10 s     | 300    |
-
-Minimum readable durations:
-- AnimatedTitle (title only): 90 frames (3 s)
-- AnimatedTitle (title + subtitle): 120 frames (4 s)
-- ComparisonCard (3–5 pairs): 150 frames (5 s)
-- ArchitectureDiagram: 180–240 frames (6–8 s)
-- SplitScreen / BulletList: 150–210 frames (5–7 s)
-- Intro / outro: 120–150 frames
-
-### Transition rules
-Transitions in this system are 15-frame OVERLAY effects inside the scene's own duration.
-They do NOT overlap the next scene → sum(duration_frames) MUST equal duration_seconds × 30.
-- "fade": calm reveals
-- "slideLeft": forward motion between content scenes
-- "slideUp": after a comparison or diagram
-- "zoom": key emphasis (use 1–2× per video max)
-- "none": ONLY for the very last scene
-"""
-
-
-REMOTION_KNOWLEDGE = _build_remotion_knowledge()
-logger.info("Loaded Remotion knowledge block (%d chars)", len(REMOTION_KNOWLEDGE))
-
+# Note: Remotion best-practice knowledge is no longer injected into agents.
+# Agents only emit (component type + data); Remotion/animation expertise lives
+# in the frontend components and in per-component `minSeconds` (timing).
 # ---------------------------------------------------------------------------
 # FastAPI app
 # ---------------------------------------------------------------------------
@@ -165,7 +108,7 @@ class ComponentListResponse(BaseModel):
 # Constants
 # ---------------------------------------------------------------------------
 
-_PIPELINE_AGENTS = ["Director", "Scriptwriter", "Storyboard", "Sync", "Assembler"]
+_PIPELINE_AGENTS = ["Researcher", "Director", "Scriptwriter", "VisualArchitect", "Validator", "Assembler"]
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -185,21 +128,7 @@ def health():
         "pipeline": "langgraph",
         "agents": _PIPELINE_AGENTS,
         "models": {"primary": GROQ_MODEL, "fallback": GROQ_FALLBACK_MODEL},
-        "skills_loaded": bool(REMOTION_KNOWLEDGE),
         "tracing": "langfuse" if tracing_enabled() else "disabled",
-    }
-
-
-@app.get("/api/skills")
-def get_skills():
-    """
-    Return the Remotion best-practice knowledge injected into the assembler.
-    The assembler_node reads this via the get_remotion_skill LangGraph tool.
-    """
-    return {
-        "source": "skills/remotion-best-practices (timing, sequencing, transitions, compositions)",
-        "knowledge": REMOTION_KNOWLEDGE,
-        "injected_via": "get_remotion_skill tool → assembler_node system prompt",
     }
 
 
@@ -242,11 +171,14 @@ def generate_script(req: GenerateScriptRequest):
     initial_state: PipelineState = {
         "topic": req.topic,
         "duration_seconds": req.duration_seconds,
-        "brief": None,
+        "syllabus": None,
+        "plan": None,
         "script": None,
         "story": None,
-        "timing": None,
+        "scenes": None,
+        "captions": None,
         "video_script": None,
+        "validation_report": None,
         "errors": [],
         "model_used": None,
         "fallback_triggered": False,

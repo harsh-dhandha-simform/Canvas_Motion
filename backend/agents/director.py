@@ -1,170 +1,195 @@
 """
 backend/agents/director.py — Agent 1: Director
 
-Plans the video: picks layout + panel types per scene.
-Multi-panel layouts produce richer, denser educational content.
+Turns the Researcher's syllabus into a scene-by-scene blueprint. Picks the
+layout and the components for each scene — choosing ONLY from the per-subtopic
+shortlists (so the catalog can grow to hundreds without bloating this prompt).
+
+Guarantees every must-cover subtopic is mapped to at least one scene (enforced
+in Python after the LLM call; the Validator double-checks coverage later).
 """
 
 import logging
 
-from graph.tools import build_agent_context
+from component_catalog import get_catalog
+from graph.shortlister import build_shortlists
 from utils.api import chat_completion, parse_json_robust
 
 logger = logging.getLogger(__name__)
 AGENT_NAME = "Director"
 
-_CTX = build_agent_context()
+# Layout → required area strings (mirrors models/video_script.py VALID_LAYOUTS)
+LAYOUT_AREAS = {
+    "full": ["panel"],
+    "left-right": ["left", "right"],
+    "title-content": ["main"],
+    "title-left-right": ["left", "right"],
+    "title-main-sidebar": ["main", "sidebar"],
+}
 
-SYSTEM_PROMPT = f"""
-You are a Creative Director for deep-dive technical education videos targeting senior engineers.
-Your job: design a scene-by-scene video blueprint that maximises information density, visual variety,
-and narrative coherence. Output ONLY a single JSON object — no prose, no markdown fences.
+SYSTEM_PROMPT = """
+You are a Creative Director for in-depth technical education videos for senior engineers.
+You are given a teaching syllabus (subtopics) and, for each subtopic, a SHORTLIST of components you
+may use. Design a scene-by-scene blueprint that teaches every subtopic clearly and looks visually rich.
 
-{_CTX["compact_catalog"]}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## THEME — pick ONE palette that fits the topic's vibe
-
-OPTION A  (cool tech / networking / distributed systems)
-  background=#030711  primary=#6366f1  secondary=#22d3ee  accent=#f59e0b  font="Space Grotesk"
-
-OPTION B  (terminal / systems / low-level / algorithms)
-  background=#0a0f1e  primary=#10b981  secondary=#38bdf8  accent=#fb923c  font="Outfit"
-
-OPTION C  (cloud / data / ML / databases)
-  background=#050d1a  primary=#8b5cf6  secondary=#34d399  accent=#22d3ee  font="Inter"
-
-OPTION D  (security / infra / Kubernetes / DevOps)
-  background=#0d1117  primary=#ef4444  secondary=#f59e0b  accent=#a3e635  font="Space Grotesk"
-
-Choose whichever option's colors contrast well with the topic. Never invent colors outside these palettes.
+Output ONLY a single JSON object — no prose, no markdown fences.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## SCENE COUNT
+## THEME — pick ONE palette that fits the topic
 
-6-8 scenes for architecture/systems topics.
-7-10 scenes for algorithm/narrative topics.
-ALL four arrays (scene_titles, scene_subtitles, scene_layouts, scene_panel_plans)
-must have EXACTLY scene_count entries.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## SCENE STRUCTURE — follow this narrative arc
-
-Scene 0  (Hook / Intro)    → layout="full"  panels=[{{area:"panel",type:"AnimatedTitle"}}]
-                              Dramatic title + 1 punchy subtitle that reveals the stakes.
-
-Scene 1  (Why It Matters)  → layout="title-left-right"
-                              left=BulletList (what problem this solves + real cost of NOT knowing),
-                              right=StatCallout or BarChart (a striking real-world number).
-
-Scene 2  (Core Concept)    → layout="title-left-right" or "title-main-sidebar"
-                              Explain the mechanism. Prefer CodeBlock or StepFlow + ArchitectureDiagram.
-
-Scene 3  (Deep Dive A)     → layout="title-main-sidebar"
-                              Most complex visual — use ArchitectureDiagram in "main".
-                              sidebar=BulletList (trade-offs) or StatCallout (key metric).
-
-Scene 4  (Deep Dive B)     → layout="title-left-right"
-                              Contrast or alternative path. BarChart comparisons or ComparisonCard.
-
-Scene 5+ (Synthesis)       → layout="title-left-right" or "title-content"
-                              Connect dots — TwoColumnLayout (before/after) or StepFlow (decision flow).
-
-Last     (Insight / Outro) → layout="full"  panels=[{{area:"panel",type:"AnimatedTitle"}}]
-                              Reframe the problem with the new understanding. NOT "summary".
+A (networking / distributed)  background=#030711 primary=#6366f1 secondary=#22d3ee accent=#f59e0b font="Space Grotesk"
+B (systems / algorithms)      background=#0a0f1e primary=#10b981 secondary=#38bdf8 accent=#fb923c font="Outfit"
+C (cloud / data / ML)         background=#050d1a primary=#8b5cf6 secondary=#34d399 accent=#22d3ee font="Inter"
+D (security / infra / k8s)    background=#0d1117 primary=#ef4444 secondary=#f59e0b accent=#a3e635 font="Space Grotesk"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## LAYOUT RULES
+## LAYOUTS — areas you must use exactly
 
-"title-left-right"   → areas: left + right (each 960×920). DEFAULT for middle scenes.
-  Good combos: BulletList+CodeBlock · StepFlow+ArchitectureDiagram · BulletList+BarChart
+"full"                panel                     (no header) — ONLY for the hook (scene 0) and the outro (last)
+"title-left-right"    left + right              (header auto-rendered) — DEFAULT for content scenes
+"title-main-sidebar"  main + sidebar            main = big visual, sidebar = supporting callout
+"title-content"       main                      one wide component
+"left-right"          left + right              (no header) — dramatic, use at most once
 
-"title-main-sidebar" → areas: main (1248×920, wide) + sidebar (672×920, narrow).
-  main gets the biggest visual. sidebar gets supporting callout.
-  Good combos: ArchitectureDiagram+BulletList · TimelineFlow+StatCallout · CodeBlock+BulletList
-
-"title-content"      → area: main (full width below header). Span-worthy components only.
-  Use for: ComparisonCard · TwoColumnLayout · TimelineFlow (many events)
-
-"left-right"         → areas: left + right (full height, no header). Max drama. Use ≤1 time.
-  Use for: TypewriterText+ArchitectureDiagram · QuoteCard+CodeBlock
-
-"full"               → area: panel. ONLY for scene 0 and last scene.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## DIVERSITY CONSTRAINTS (middle scenes only)
-
-1. BulletList may appear in at most 50% of middle scenes. Use StepFlow, CodeBlock, TwoColumnLayout as alternatives.
-2. No two consecutive scenes may have identical (layout, left_type, right_type) tuples.
-3. ArchitectureDiagram: required in ≥2 scenes for diagram-driven; optional but ≥1 for narrative.
-4. CodeBlock: required in ≥1 scene for any topic with code, config, protocols, or commands.
-5. StatCallout: required in ≥1 scene (sidebar is ideal). Use a metric that is surprising or large.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## COMPARISON TOPICS ("X vs Y" or "A or B")
-
-scene_count = 7 EXACTLY. Fixed layout sequence:
-  0: full            → AnimatedTitle
-  1: title-left-right→ BulletList(X) + BulletList(Y)   [what each IS]
-  2: title-main-sidebar → ArchitectureDiagram(X) + StatCallout(key X metric)
-  3: title-main-sidebar → ArchitectureDiagram(Y) + StatCallout(key Y metric)
-  4: title-content   → ComparisonCard(trade-offs head-to-head)
-  5: title-left-right→ BarChart(metric comparison) + BulletList(decision guide)
-  6: full            → AnimatedTitle(verdict)
+A scene's panels[].area values MUST exactly match the chosen layout's areas.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## OUTPUT SCHEMA
 
-{{
-  "topic": "<topic string>",
-  "depth_level": "introductory" | "intermediate" | "advanced",
-  "palette": {{
-    "background": "<hex>", "primary": "<hex>", "secondary": "<hex>",
-    "accent": "<hex>", "highlight": "<hex>"
-  }},
-  "typography": {{"heading_font": "<Google Font name>", "body_font": "Inter", "code_font": "Fira Code"}},
-  "total_seconds": <60-120>,
-  "scene_count": <int>,
-  "scene_titles":      ["<title>", ...],
-  "scene_subtitles":   ["<one punchy sentence — the scene's thesis>", ...],
-  "scene_layouts":     ["<layout>", ...],
-  "scene_panel_plans": [[{{"area":"<area>","type":"<Type>"}},...], ...],
-  "key_concepts":      ["<concept>", ...]
-}}
+{
+  "theme": {"background":"<hex>","primary":"<hex>","secondary":"<hex>","accent":"<hex>","font":"<font>"},
+  "scenes": [
+    {
+      "index": 0,
+      "role": "hook" | "prerequisite" | "core" | "deep-dive" | "tradeoff" | "synthesis" | "outro",
+      "layout": "<layout name>",
+      "title": "<scene title>",
+      "subtitle": "<one-sentence thesis of this scene>",
+      "covers": ["st1", ...],                       // subtopic ids this scene teaches
+      "panels": [ {"area":"<area>","type":"<ComponentName>"} ]
+    }
+  ]
+}
 
-Return ONLY valid JSON. No markdown, no commentary.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## HARD RULES
+
+1. COVERAGE: every must-cover subtopic id MUST appear in some scene's "covers". A scene may cover 1-2 subtopics.
+2. SHORTLIST: a panel's "type" MUST be one of the components shortlisted for one of that scene's covered subtopics
+   (the staples AnimatedTitle / TypewriterText / BulletList / CalloutAnnotation are always allowed).
+3. STRUCTURE: scene 0 role="hook" layout="full" (AnimatedTitle); last scene role="outro" layout="full" (AnimatedTitle).
+   All middle scenes use a header layout (title-left-right / title-main-sidebar / title-content).
+4. TEXTUAL EXPLANATION: every middle scene must include at least one text/list component
+   (BulletList, CalloutAnnotation, NumberedList, StepFlow, TwoColumnLayout, QuoteCard) so the idea is explained in words,
+   not only shown as a diagram.
+5. VARIETY: do not use the same component type in more than ~40% of scenes; vary layouts between consecutive scenes.
+6. AnimatedTitle ONLY in "full" layout.
+
+Return ONLY valid JSON.
 """.strip()
 
 
-def run_agent(topic: str) -> dict:
-    logger.info("[%s] Planning video for topic: %r", AGENT_NAME, topic)
+def _candidate_reference(names: set[str]) -> str:
+    """Compact reference (name · areas · owner · useWhen) for the shortlisted components only."""
+    cat = get_catalog()
+    lines = []
+    for name in sorted(names):
+        info = cat.get(name, {})
+        areas = "/".join(info.get("bestAreas", []))
+        lines.append(f"  {name}  [areas: {areas}]  → {info.get('useWhen','')}")
+    return "\n".join(lines)
+
+
+def run_agent(syllabus: dict, duration_seconds: int = 60) -> dict:
+    topic = syllabus.get("topic", "")
+    subtopics = syllabus.get("subtopics", [])
+    logger.info("[%s] Planning scenes for %r (%d subtopics)", AGENT_NAME, topic, len(subtopics))
+
+    shortlists = build_shortlists(syllabus)
+    all_candidates = {n for names in shortlists.values() for n in names}
+
+    subtopic_lines = []
+    for st in subtopics:
+        sid = st.get("id")
+        cands = shortlists.get(sid, [])
+        flag = "MUST-COVER" if st.get("must_cover") else "optional"
+        subtopic_lines.append(
+            f"  [{sid}] ({flag}) {st.get('title')}\n"
+            f"      goal: {st.get('teaching_goal','')}\n"
+            f"      depth: {st.get('depth_notes','')}\n"
+            f"      candidate components: {', '.join(cands)}"
+        )
+
+    user_message = (
+        f"Topic: {topic}\n"
+        f"Depth level: {syllabus.get('depth_level')}\n"
+        f"Target length: {duration_seconds}s\n\n"
+        f"SYLLABUS (subtopics + their shortlisted components):\n"
+        + "\n".join(subtopic_lines)
+        + "\n\nCOMPONENT REFERENCE (only the shortlisted ones):\n"
+        + _candidate_reference(all_candidates)
+        + "\n\nDesign the scene blueprint. Cover every must-cover subtopic, give each middle scene a "
+        "textual explanation component, and pick component types only from the candidates above. "
+        "Return only JSON."
+    )
 
     raw = chat_completion(
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": (
-                f"Topic: {topic}\n\n"
-                "Plan a rich, educational technical video. "
-                "Maximize scene density — use multi-panel layouts for all middle scenes. "
-                "Return only JSON."
-            )},
+            {"role": "user", "content": user_message},
         ],
         temperature=0.7,
         agent_name=AGENT_NAME,
     )
 
-    brief: dict = parse_json_robust(raw, label=AGENT_NAME)
+    plan: dict = parse_json_robust(raw, label=AGENT_NAME)
+    plan = _normalize_plan(plan, syllabus)
 
-    # Validate array lengths match scene_count
-    n = brief.get("scene_count", 0)
-    for key in ("scene_titles", "scene_subtitles", "scene_layouts", "scene_panel_plans"):
-        items = brief.get(key, [])
-        if len(items) < n:
-            logger.warning("[%s] %s has %d items, expected %d — padding", AGENT_NAME, key, len(items), n)
-        brief[key] = items[:n]  # trim to scene_count
+    n_scenes = len(plan.get("scenes", []))
+    logger.info("[%s] ✅ Plan: %d scenes, layouts=%s",
+                AGENT_NAME, n_scenes, [s.get("layout") for s in plan.get("scenes", [])])
+    return plan
 
-    logger.info(
-        "[%s] ✅ Brief: %d scenes, layouts=%s",
-        AGENT_NAME, n, brief.get("scene_layouts"),
-    )
-    return brief
+
+def _normalize_plan(plan: dict, syllabus: dict) -> dict:
+    """Repair structural issues deterministically: areas, intro/outro, coverage gaps."""
+    scenes = plan.get("scenes") or []
+
+    for i, sc in enumerate(scenes):
+        sc["index"] = i
+        layout = sc.get("layout")
+        if layout not in LAYOUT_AREAS:
+            layout = "title-left-right"
+            sc["layout"] = layout
+        # Force intro/outro to full + AnimatedTitle
+        is_first, is_last = (i == 0), (i == len(scenes) - 1)
+        if is_first or is_last:
+            sc["layout"] = "full"
+            sc["panels"] = [{"area": "panel", "type": "AnimatedTitle"}]
+            sc["role"] = "hook" if is_first else "outro"
+            continue
+        # Align panel areas to the layout's required areas
+        required = LAYOUT_AREAS[sc["layout"]]
+        panels = sc.get("panels") or []
+        fixed = []
+        for area, panel in zip(required, panels):
+            fixed.append({"area": area, "type": (panel or {}).get("type", "BulletList")})
+        # if LLM gave fewer panels than the layout needs, fill remaining areas with a text panel
+        for area in required[len(fixed):]:
+            fixed.append({"area": area, "type": "BulletList"})
+        sc["panels"] = fixed
+        sc.setdefault("covers", [])
+
+    # Coverage repair: any must-cover subtopic not in any scene → attach to nearest middle scene
+    covered = {sid for sc in scenes for sid in sc.get("covers", [])}
+    middle = [sc for sc in scenes if sc.get("role") not in ("hook", "outro")] or scenes
+    for st in syllabus.get("subtopics", []):
+        sid = st.get("id")
+        if st.get("must_cover") and sid not in covered and middle:
+            middle[len(covered) % len(middle)].setdefault("covers", []).append(sid)
+            logger.warning("[%s] coverage gap — attached %s to a scene", AGENT_NAME, sid)
+            covered.add(sid)
+
+    plan["scenes"] = scenes
+    plan.setdefault("theme", {})
+    return plan

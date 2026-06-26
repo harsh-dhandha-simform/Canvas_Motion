@@ -2,13 +2,24 @@ import React from "react";
 import {
   AbsoluteFill,
   Sequence,
+  Easing,
   interpolate,
-  spring,
   useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
 import { ThemeProvider, Theme, useTheme } from "./ThemeContext";
 import { COMPONENT_REGISTRY, SceneType } from "./registry";
+import { Background } from "./components/Background";
+import { CaptionLayer } from "./components/CaptionLayer";
+
+const DIAGRAM_TYPES = new Set([
+  "ArchitectureDiagram",
+  "PacketFlow",
+  "HashRing",
+  "StateMachine",
+  "TreeHierarchy",
+  "SequenceDiagram",
+  "FlowDiagram",
+]);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,10 +40,24 @@ type SceneSpec = {
   subtitle?: string;
   duration_frames: number;
   transition: TransitionType;
+  narration?: string;
   panels?: Panel[];
   // Legacy single-component format (old JSON files)
   type?: string;
   data?: Record<string, unknown>;
+};
+
+export type Caption = {
+  text: string;
+  startMs: number;
+  endMs: number;
+  timestampMs: number | null;
+  confidence: number | null;
+};
+
+export type VoiceoverSpec = {
+  provider: string | null;
+  captions: Caption[];
 };
 
 /** Normalise both old {type,data} and new {layout,panels[]} scene shapes. */
@@ -66,6 +91,7 @@ export type VideoScriptProps = {
   width: number;
   height: number;
   theme: Theme;
+  voiceover?: VoiceoverSpec | null;
   scenes: SceneSpec[];
 };
 
@@ -209,6 +235,7 @@ const PanelCell: React.FC<{ panel: Panel; gridArea: string }> = ({
   panel,
   gridArea,
 }) => {
+  const theme = useTheme();
   const Component = COMPONENT_REGISTRY[panel.type as SceneType];
 
   const safeProps = Object.fromEntries(
@@ -217,6 +244,13 @@ const PanelCell: React.FC<{ panel: Panel; gridArea: string }> = ({
       v === null ? undefined : v,
     ]),
   ) as Record<string, unknown>;
+
+  // Thread the theme into every accent-aware component from one place, so the
+  // palette the Director picked actually drives the whole video. Components keep
+  // their own default if the data already specifies an accentColor.
+  if (safeProps.accentColor == null) {
+    safeProps.accentColor = theme.primary;
+  }
 
   if (!Component) {
     return (
@@ -251,39 +285,41 @@ const PanelCell: React.FC<{ panel: Panel; gridArea: string }> = ({
 
 const TRANSITION_FRAMES = 15;
 
-const SceneWrapper: React.FC<{ scene: SceneSpec; background: string }> = ({
-  scene,
-  background,
-}) => {
+const SceneWrapper: React.FC<{ scene: SceneSpec }> = ({ scene }) => {
   const { layout, title, panels } = normaliseScene(scene);
   const config = LAYOUTS[layout] ?? LAYOUTS["full"];
   const contentH = config.hasHeader ? CONTENT_H : 1080;
+  const hasDiagram = panels.some((p) => DIAGRAM_TYPES.has(p.type));
 
   return (
-    <AbsoluteFill
-      style={{ backgroundColor: background, flexDirection: "column" }}
-    >
-      {/* Header bar */}
-      {config.hasHeader && (
-        <SceneHeader title={title} subtitle={scene.subtitle} />
-      )}
+    <AbsoluteFill>
+      {/* Animated theme-driven background (behind everything) */}
+      <Background variant={hasDiagram ? "grid" : "glow"} />
 
-      {/* Content grid */}
-      <div
-        style={{
-          flex: 1,
-          height: contentH,
-          display: "grid",
-          gridTemplateAreas: config.gridTemplateAreas,
-          gridTemplateColumns: config.gridTemplateColumns,
-          gridTemplateRows: config.gridTemplateRows,
-          gap: 0,
-        }}
-      >
-        {panels.map((panel) => (
-          <PanelCell key={panel.area} panel={panel} gridArea={panel.area} />
-        ))}
-      </div>
+      {/* Content above the background */}
+      <AbsoluteFill style={{ flexDirection: "column", zIndex: 1 }}>
+        {/* Header bar */}
+        {config.hasHeader && (
+          <SceneHeader title={title} subtitle={scene.subtitle} />
+        )}
+
+        {/* Content grid */}
+        <div
+          style={{
+            flex: 1,
+            height: contentH,
+            display: "grid",
+            gridTemplateAreas: config.gridTemplateAreas,
+            gridTemplateColumns: config.gridTemplateColumns,
+            gridTemplateRows: config.gridTemplateRows,
+            gap: 0,
+          }}
+        >
+          {panels.map((panel) => (
+            <PanelCell key={panel.area} panel={panel} gridArea={panel.area} />
+          ))}
+        </div>
+      </AbsoluteFill>
 
       {/* Transition overlay */}
       {scene.transition !== "none" && (
@@ -307,30 +343,30 @@ const TransitionOverlay: React.FC<{ transition: TransitionType }> = ({
   transition,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const theme = useTheme();
 
-  const progress = spring({
-    frame,
-    fps,
-    config: { damping: 20, stiffness: 300 },
-    durationInFrames: TRANSITION_FRAMES,
+  // Smooth 0→1 sweep across the overlay's lifetime (eased, not springy, so the
+  // wipe reads as a clean directional motion).
+  const p = interpolate(frame, [0, TRANSITION_FRAMES], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.65, 0, 0.35, 1),
   });
 
-  const fadeOpacity = interpolate(
-    frame,
-    [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES],
-    [0, 1, 0],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    },
-  );
+  // A themed gradient panel — more cinematic than flat black.
+  const panel = `linear-gradient(135deg, ${theme.background} 0%, ${theme.primary}cc 60%, ${theme.accent}aa 100%)`;
 
   if (transition === "fade") {
+    const fadeOpacity = interpolate(
+      frame,
+      [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES],
+      [0, 0.95, 0],
+      { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+    );
     return (
       <AbsoluteFill
         style={{
-          backgroundColor: "#000",
+          background: panel,
           opacity: fadeOpacity,
           pointerEvents: "none",
         }}
@@ -338,12 +374,12 @@ const TransitionOverlay: React.FC<{ transition: TransitionType }> = ({
     );
   }
   if (transition === "slideLeft") {
+    // Wipe in from the right, covering the outgoing scene.
     return (
       <AbsoluteFill
         style={{
-          backgroundColor: "#000",
-          opacity: 0.7,
-          transform: `translateX(${interpolate(progress, [0, 1], [0, -100])}%)`,
+          background: panel,
+          transform: `translateX(${interpolate(p, [0, 1], [100, 0])}%)`,
           pointerEvents: "none",
         }}
       />
@@ -353,21 +389,27 @@ const TransitionOverlay: React.FC<{ transition: TransitionType }> = ({
     return (
       <AbsoluteFill
         style={{
-          backgroundColor: "#000",
-          opacity: 0.7,
-          transform: `translateY(${interpolate(progress, [0, 1], [0, -100])}%)`,
+          background: panel,
+          transform: `translateY(${interpolate(p, [0, 1], [100, 0])}%)`,
           pointerEvents: "none",
         }}
       />
     );
   }
   if (transition === "zoom") {
+    // Radial flash that scales up — for the most dramatic beat.
+    const flash = interpolate(
+      frame,
+      [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES],
+      [0, 0.85, 0],
+      { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+    );
     return (
       <AbsoluteFill
         style={{
-          backgroundColor: "#000",
-          opacity: fadeOpacity * 0.6,
-          transform: `scale(${interpolate(progress, [0, 1], [1, 1.08])})`,
+          background: `radial-gradient(circle at 50% 50%, ${theme.accent}, ${theme.primary} 50%, ${theme.background} 100%)`,
+          opacity: flash,
+          transform: `scale(${interpolate(p, [0, 1], [1, 1.12])})`,
           pointerEvents: "none",
         }}
       />
@@ -380,7 +422,11 @@ const TransitionOverlay: React.FC<{ transition: TransitionType }> = ({
 // DynamicVideo — top-level composition
 // ---------------------------------------------------------------------------
 
-export const DynamicVideo: React.FC<VideoScriptProps> = ({ theme, scenes }) => {
+export const DynamicVideo: React.FC<VideoScriptProps> = ({
+  theme,
+  scenes,
+  voiceover,
+}) => {
   let cursor = 0;
   const positioned = scenes.map((scene) => {
     const from = cursor;
@@ -401,9 +447,12 @@ export const DynamicVideo: React.FC<VideoScriptProps> = ({ theme, scenes }) => {
               translate: "-23.8px -15.1px",
             }}
           >
-            <SceneWrapper scene={scene} background={theme.background} />
+            <SceneWrapper scene={scene} />
           </Sequence>
         ))}
+
+        {/* On-screen textual explanation (narration), synced to the absolute timeline */}
+        <CaptionLayer captions={voiceover?.captions} />
       </AbsoluteFill>
     </ThemeProvider>
   );

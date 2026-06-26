@@ -10,6 +10,10 @@ import os
 
 PORT = 8080
 
+# Max seconds to let the `claude` CLI run per request. Opus with thinking on
+# large prompts (e.g. the Director) routinely needs >120s, so default high and
+# allow override. Restart the server after changing this.
+CLAUDE_TIMEOUT = int(os.getenv("CLAUDE_TIMEOUT", "600"))
 
 API_KEY = os.getenv("API_KEY", "sfrgf54vdfvdsfvsdf9sd2fe3sfs8cdsdceAWSdaewd5dd2")
 # -----------------------------------------------------------------------------
@@ -62,7 +66,7 @@ def ask_claude(
             cmd,
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=CLAUDE_TIMEOUT,
         )
 
         duration = round(time.time() - start, 2)
@@ -82,7 +86,7 @@ def ask_claude(
         return {
             "success": False,
             "answer": "",
-            "stderr": "Claude timed out after 120 seconds.",
+            "stderr": f"Claude timed out after {CLAUDE_TIMEOUT} seconds.",
             "exit_code": -1,
             "duration": duration,
         }

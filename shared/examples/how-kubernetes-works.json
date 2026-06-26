@@ -1,0 +1,1327 @@
+{
+  "title": "How Kubernetes Works",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#ef4444",
+    "secondary": "#f59e0b",
+    "accent": "#a3e635",
+    "background": "#0d1117",
+    "font": "Space Grotesk"
+  },
+  "voiceover": {
+    "provider": null,
+    "captions": [
+      {
+        "text": "Most engineers first meet Kubernetes through `kubectl apply`",
+        "startMs": 0,
+        "endMs": 840,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "and assume it's a fancy deployment script. It",
+        "startMs": 840,
+        "endMs": 1680,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "isn't. Kubernetes is a closed-loop control system: you",
+        "startMs": 1680,
+        "endMs": 2520,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "write a desired state into etcd, and a",
+        "startMs": 2520,
+        "endMs": 3360,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "set of controllers continuously observe reality and act",
+        "startMs": 3360,
+        "endMs": 4200,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "to close the gap. The mental shift \u2014",
+        "startMs": 4200,
+        "endMs": 5040,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "from issuing commands to declaring intent \u2014 is",
+        "startMs": 5040,
+        "endMs": 5880,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "the single most important idea for understanding everything",
+        "startMs": 5880,
+        "endMs": 6720,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "else.",
+        "startMs": 6720,
+        "endMs": 6825,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "A controller runs an endless reconcile loop: read",
+        "startMs": 6833,
+        "endMs": 7675,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "desired state from etcd, observe actual state, compute",
+        "startMs": 7675,
+        "endMs": 8517,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "the diff, and take corrective action. Crucially it's",
+        "startMs": 8517,
+        "endMs": 9359,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "level-triggered, not edge-triggered \u2014 it acts on the",
+        "startMs": 9359,
+        "endMs": 10201,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "current state of the world, not on a",
+        "startMs": 10201,
+        "endMs": 11043,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "stream of 'pod deleted' events. That's why a",
+        "startMs": 11043,
+        "endMs": 11885,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "missed or dropped watch event never causes drift:",
+        "startMs": 11885,
+        "endMs": 12727,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "the next resync re-observes reality and converges anyway.",
+        "startMs": 12727,
+        "endMs": 13569,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "The cost is latency and idempotency pressure \u2014",
+        "startMs": 13569,
+        "endMs": 14411,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "every reconcile must be safe to run thousands",
+        "startMs": 14411,
+        "endMs": 15253,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "of times.",
+        "startMs": 15253,
+        "endMs": 15463,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "The control plane has four core pieces, but",
+        "startMs": 15466,
+        "endMs": 16306,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "only one writes to etcd: the API server.",
+        "startMs": 16306,
+        "endMs": 17146,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "The scheduler, controller-manager, and kubelets are all stateless",
+        "startMs": 17146,
+        "endMs": 17986,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "clients that watch the API server and react.",
+        "startMs": 17986,
+        "endMs": 18826,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "This hub-and-spoke design means etcd has exactly one",
+        "startMs": 18826,
+        "endMs": 19666,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "consumer to reason about for consistency, authz, and",
+        "startMs": 19666,
+        "endMs": 20506,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "admission, and components can crash and restart freely",
+        "startMs": 20506,
+        "endMs": 21346,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "because their truth lives in etcd, not in",
+        "startMs": 21346,
+        "endMs": 22186,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "process memory.",
+        "startMs": 22186,
+        "endMs": 22396,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "High-level intent materializes through a cascade of controllers,",
+        "startMs": 22400,
+        "endMs": 23242,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "each watching the layer above it. The Deployment",
+        "startMs": 23242,
+        "endMs": 24084,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "controller creates and scales ReplicaSets; the ReplicaSet controller",
+        "startMs": 24084,
+        "endMs": 24926,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "creates Pods to match its replica count. They",
+        "startMs": 24926,
+        "endMs": 25768,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "don't poll \u2014 they use informers, an in-memory",
+        "startMs": 25768,
+        "endMs": 26610,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "cache fed by a single shared watch stream,",
+        "startMs": 26610,
+        "endMs": 27452,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "so thousands of objects don't hammer the API",
+        "startMs": 27452,
+        "endMs": 28294,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "server. ownerReferences wire children to parents, enabling cascading",
+        "startMs": 28294,
+        "endMs": 29136,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "deletion and letting a controller find 'its' objects",
+        "startMs": 29136,
+        "endMs": 29978,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "by label selector.",
+        "startMs": 29978,
+        "endMs": 30294,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "A freshly created Pod has no node assigned",
+        "startMs": 30300,
+        "endMs": 31141,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "\u2014 its nodeName is empty. The scheduler watches",
+        "startMs": 31141,
+        "endMs": 31982,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "for these and runs a two-phase algorithm: filtering",
+        "startMs": 31982,
+        "endMs": 32823,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "(which nodes can even fit this Pod?) then",
+        "startMs": 32823,
+        "endMs": 33664,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "scoring (which feasible node is best?). It decides",
+        "startMs": 33664,
+        "endMs": 34505,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "based on resource *requests*, not actual usage, so",
+        "startMs": 34505,
+        "endMs": 35346,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "a node packed with idle-but-reserved CPU looks full.",
+        "startMs": 35346,
+        "endMs": 36187,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "The scheduler never starts a container \u2014 it",
+        "startMs": 36187,
+        "endMs": 37028,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "only writes a Binding object; the kubelet on",
+        "startMs": 37028,
+        "endMs": 37869,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "the chosen node does the rest.",
+        "startMs": 37869,
+        "endMs": 38499,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Once a Pod is bound, the kubelet on",
+        "startMs": 38500,
+        "endMs": 39344,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "that node owns turning the spec into running",
+        "startMs": 39344,
+        "endMs": 40188,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "containers. It doesn't run containers itself \u2014 it",
+        "startMs": 40188,
+        "endMs": 41032,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "calls a container runtime (containerd, CRI-O) over the",
+        "startMs": 41032,
+        "endMs": 41876,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "gRPC Container Runtime Interface to pull images and",
+        "startMs": 41876,
+        "endMs": 42720,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "start the sandbox. The kubelet also runs probes",
+        "startMs": 42720,
+        "endMs": 43564,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "that engineers routinely conflate: a failed livenessProbe restarts",
+        "startMs": 43564,
+        "endMs": 44408,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "the container, while a failed readinessProbe only pulls",
+        "startMs": 44408,
+        "endMs": 45252,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "the Pod out of Service endpoints \u2014 no",
+        "startMs": 45252,
+        "endMs": 46096,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "restart. Confusing the two is a classic cause",
+        "startMs": 46096,
+        "endMs": 46940,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "of restart storms.",
+        "startMs": 46940,
+        "endMs": 47256,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Kubernetes mandates a flat network: every Pod gets",
+        "startMs": 47266,
+        "endMs": 48108,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "its own routable IP and can reach any",
+        "startMs": 48108,
+        "endMs": 48950,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "other Pod without NAT \u2014 the CNI plugin",
+        "startMs": 48950,
+        "endMs": 49792,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "(Calico, Cilium) implements this. But Pod IPs are",
+        "startMs": 49792,
+        "endMs": 50634,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "ephemeral; they change on every reschedule. A Service",
+        "startMs": 50634,
+        "endMs": 51476,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "solves that with a stable virtual IP (ClusterIP)",
+        "startMs": 51476,
+        "endMs": 52318,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "backed by an Endpoints/EndpointSlice list that controllers keep",
+        "startMs": 52318,
+        "endMs": 53160,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "current as Pods churn. kube-proxy (or eBPF in",
+        "startMs": 53160,
+        "endMs": 54002,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Cilium) programs the node's iptables/IPVS rules so the",
+        "startMs": 54002,
+        "endMs": 54844,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "VIP load-balances to whatever healthy Pods exist right",
+        "startMs": 54844,
+        "endMs": 55686,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "now.",
+        "startMs": 55686,
+        "endMs": 55791,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Self-healing is just the reconcile loop applied to",
+        "startMs": 55800,
+        "endMs": 56642,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "failure. When a node stops sending heartbeats, the",
+        "startMs": 56642,
+        "endMs": 57484,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "node controller marks it NotReady after ~40s, and",
+        "startMs": 57484,
+        "endMs": 58326,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "after a grace period (default 5m) evicts its",
+        "startMs": 58326,
+        "endMs": 59168,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Pods so controllers reschedule them elsewhere. But the",
+        "startMs": 59168,
+        "endMs": 60010,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "loop only heals *workloads* \u2014 it cannot heal",
+        "startMs": 60010,
+        "endMs": 60852,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "its own foundation. If etcd loses quorum, the",
+        "startMs": 60852,
+        "endMs": 61694,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "API server goes read-only and reconciliation halts; the",
+        "startMs": 61694,
+        "endMs": 62536,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "loop that fixes everything else has no one",
+        "startMs": 62536,
+        "endMs": 63378,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "to fix it.",
+        "startMs": 63378,
+        "endMs": 63694,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Scheduling, controllers, kubelet, networking, self-healing \u2014 none of",
+        "startMs": 63700,
+        "endMs": 64540,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "these are separate mechanisms. Each is the same",
+        "startMs": 64540,
+        "endMs": 65380,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "reconcile loop watching a different resource and driving",
+        "startMs": 65380,
+        "endMs": 66220,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "actual state toward declared intent. Once you see",
+        "startMs": 66220,
+        "endMs": 67060,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "that one pattern, Kubernetes stops being a pile",
+        "startMs": 67060,
+        "endMs": 67900,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "of components and becomes a single idea repeated",
+        "startMs": 67900,
+        "endMs": 68740,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "at every layer: declare what you want, and",
+        "startMs": 68740,
+        "endMs": 69580,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "let the system converge.",
+        "startMs": 69580,
+        "endMs": 70000,
+        "timestampMs": null,
+        "confidence": null
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full",
+      "title": "Kubernetes Is Not a Deployer \u2014 It's a Control System",
+      "subtitle": "Stop thinking in commands; start thinking in desired state that the cluster relentlessly drives toward.",
+      "duration_frames": 205,
+      "transition": "fade",
+      "narration": "Most engineers first meet Kubernetes through `kubectl apply` and assume it's a fancy deployment script. It isn't. Kubernetes is a closed-loop control system: you write a desired state into etcd, and a set of controllers continuously observe reality and act to close the gap. The mental shift \u2014 from issuing commands to declaring intent \u2014 is the single most important idea for understanding everything else.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "data": {
+            "title": "Kubernetes Is Not a Deployer \u2014 It's a Control System",
+            "subtitle": "Declare the destination; the cluster drives there, relentlessly.",
+            "accentColor": "#326CE5",
+            "align": "center"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-2",
+      "layout": "title-main-sidebar",
+      "title": "The Reconciliation Loop",
+      "subtitle": "Observe, diff against desired state in etcd, act \u2014 a level-triggered loop that self-heals missed events.",
+      "duration_frames": 259,
+      "transition": "slideLeft",
+      "narration": "A controller runs an endless reconcile loop: read desired state from etcd, observe actual state, compute the diff, and take corrective action. Crucially it's level-triggered, not edge-triggered \u2014 it acts on the current state of the world, not on a stream of 'pod deleted' events. That's why a missed or dropped watch event never causes drift: the next resync re-observes reality and converges anyway. The cost is latency and idempotency pressure \u2014 every reconcile must be safe to run thousands of times.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "StateMachine",
+          "data": {
+            "title": "The Reconciliation Loop",
+            "states": [
+              {
+                "id": "observe",
+                "label": "Observe",
+                "color": "#3b82f6",
+                "description": "Read actual cluster state from etcd via the API server"
+              },
+              {
+                "id": "diff",
+                "label": "Compare",
+                "color": "#f59e0b",
+                "description": "Compute the delta between desired spec and observed status"
+              },
+              {
+                "id": "act",
+                "label": "Act",
+                "color": "#10b981",
+                "description": "Issue API calls to drive actual state toward desired state"
+              },
+              {
+                "id": "converged",
+                "label": "Converged",
+                "color": "#8b5cf6",
+                "description": "actual == desired; requeue and watch for the next change"
+              }
+            ],
+            "transitions": [
+              {
+                "fromId": "observe",
+                "toId": "diff",
+                "label": "actual state read"
+              },
+              {
+                "fromId": "diff",
+                "toId": "act",
+                "label": "delta detected",
+                "highlight": true
+              },
+              {
+                "fromId": "diff",
+                "toId": "converged",
+                "label": "no delta"
+              },
+              {
+                "fromId": "act",
+                "toId": "observe",
+                "label": "re-observe after mutation"
+              },
+              {
+                "fromId": "converged",
+                "toId": "observe",
+                "label": "watch event / resync"
+              }
+            ],
+            "activeStateId": "diff",
+            "accentColor": "#3b82f6"
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "BulletList",
+          "data": {
+            "title": "Why Level-Triggered Wins",
+            "items": [
+              "Desired state lives in etcd \u2014 a Raft-backed key-value store, not in any controller's memory",
+              "Reconcile reads full current state, not deltas \u2014 a lost event causes no permanent drift",
+              "Every action must be idempotent \u2014 controllers re-run reconcile on resync (default ~10m informer resync)",
+              "controller-runtime requeues failed reconciles with exponential backoff, capped near 1000s",
+              "Edge-triggered systems break on dropped events; Kubernetes self-heals by re-observing",
+              "etcd watch revisions let clients resume from the last seen index, not replay from zero"
+            ],
+            "accentColor": "#326CE5",
+            "numbered": false,
+            "align": "left"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-3",
+      "layout": "title-left-right",
+      "title": "Control Plane Anatomy",
+      "subtitle": "The API server is the only writer to etcd; every other component is a stateless client that watches the hub.",
+      "duration_frames": 208,
+      "transition": "slideUp",
+      "narration": "The control plane has four core pieces, but only one writes to etcd: the API server. The scheduler, controller-manager, and kubelets are all stateless clients that watch the API server and react. This hub-and-spoke design means etcd has exactly one consumer to reason about for consistency, authz, and admission, and components can crash and restart freely because their truth lives in etcd, not in process memory.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "StepFlow",
+          "data": {
+            "title": "How a Spec Reaches etcd",
+            "steps": [
+              "Client sends declarative YAML to the API server",
+              "Authenticate, authorize (RBAC), then run admission webhooks",
+              "Validate against the resource schema and defaults",
+              "Persist the object to etcd via Raft consensus",
+              "Stream the change to all watching components",
+              "Controllers observe and begin reconciling intent"
+            ],
+            "accentColor": "#326CE5"
+          }
+        },
+        {
+          "area": "right",
+          "type": "ArchitectureDiagram",
+          "data": {
+            "title": "Control Plane Anatomy",
+            "nodes": [
+              {
+                "id": "kubectl",
+                "type": "client",
+                "x": 8,
+                "y": 50,
+                "label": "kubectl / clients"
+              },
+              {
+                "id": "apiserver",
+                "type": "loadBalancer",
+                "x": 32,
+                "y": 50,
+                "label": "kube-apiserver"
+              },
+              {
+                "id": "etcd",
+                "type": "database",
+                "x": 55,
+                "y": 50,
+                "label": "etcd (state store)"
+              },
+              {
+                "id": "scheduler",
+                "type": "server",
+                "x": 80,
+                "y": 20,
+                "label": "kube-scheduler"
+              },
+              {
+                "id": "controllers",
+                "type": "server",
+                "x": 80,
+                "y": 50,
+                "label": "controller-manager"
+              },
+              {
+                "id": "cloud",
+                "type": "server",
+                "x": 80,
+                "y": 80,
+                "label": "cloud-controller-manager"
+              }
+            ],
+            "connections": [
+              {
+                "fromId": "kubectl",
+                "toId": "apiserver",
+                "type": "arrow",
+                "label": "REST / watch"
+              },
+              {
+                "fromId": "apiserver",
+                "toId": "etcd",
+                "type": "arrow",
+                "label": "read / write state"
+              },
+              {
+                "fromId": "scheduler",
+                "toId": "apiserver",
+                "type": "stream",
+                "label": "watch unscheduled pods"
+              },
+              {
+                "fromId": "controllers",
+                "toId": "apiserver",
+                "type": "stream",
+                "label": "watch / reconcile"
+              },
+              {
+                "fromId": "cloud",
+                "toId": "apiserver",
+                "type": "stream",
+                "label": "watch nodes / LBs"
+              }
+            ],
+            "accentColor": "#326ce5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-4",
+      "layout": "title-main-sidebar",
+      "title": "Controllers and the Watch/Reconcile Loop",
+      "subtitle": "Deployment \u2192 ReplicaSet \u2192 Pod cascades via watch streams, informer caches, and ownerReferences.",
+      "duration_frames": 237,
+      "transition": "slideLeft",
+      "narration": "High-level intent materializes through a cascade of controllers, each watching the layer above it. The Deployment controller creates and scales ReplicaSets; the ReplicaSet controller creates Pods to match its replica count. They don't poll \u2014 they use informers, an in-memory cache fed by a single shared watch stream, so thousands of objects don't hammer the API server. ownerReferences wire children to parents, enabling cascading deletion and letting a controller find 'its' objects by label selector.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "SequenceDiagram",
+          "data": {
+            "title": "Controller: Watch / Reconcile Loop",
+            "actors": [
+              "Controller",
+              "Informer Cache",
+              "kube-apiserver",
+              "etcd"
+            ],
+            "messages": [
+              {
+                "fromIdx": 0,
+                "toIdx": 1,
+                "label": "register watch on Deployments",
+                "kind": "sync",
+                "active": true
+              },
+              {
+                "fromIdx": 1,
+                "toIdx": 2,
+                "label": "LIST + WATCH",
+                "kind": "sync"
+              },
+              {
+                "fromIdx": 2,
+                "toIdx": 3,
+                "label": "read current objects",
+                "kind": "sync"
+              },
+              {
+                "fromIdx": 3,
+                "toIdx": 2,
+                "label": "object stream",
+                "kind": "return"
+              },
+              {
+                "fromIdx": 2,
+                "toIdx": 1,
+                "label": "ADDED / MODIFIED events",
+                "kind": "async"
+              },
+              {
+                "fromIdx": 1,
+                "toIdx": 0,
+                "label": "enqueue object key",
+                "kind": "async"
+              },
+              {
+                "fromIdx": 0,
+                "toIdx": 0,
+                "label": "reconcile: compare desired vs actual",
+                "kind": "sync",
+                "active": true
+              },
+              {
+                "fromIdx": 0,
+                "toIdx": 2,
+                "label": "create ReplicaSet / update status",
+                "kind": "sync"
+              },
+              {
+                "fromIdx": 2,
+                "toIdx": 3,
+                "label": "persist new state",
+                "kind": "sync"
+              },
+              {
+                "fromIdx": 2,
+                "toIdx": 0,
+                "label": "200 OK",
+                "kind": "return"
+              }
+            ],
+            "activations": [
+              {
+                "actorIdx": 0,
+                "startMessage": 5,
+                "endMessage": 9,
+                "label": "reconcile"
+              },
+              {
+                "actorIdx": 2,
+                "startMessage": 1,
+                "endMessage": 9,
+                "label": "serving"
+              }
+            ],
+            "accentColor": "#326ce5"
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "data": {
+            "title": "The Controller Cascade",
+            "body": "Deployment \u2192 ReplicaSet \u2192 Pod isn't one component \u2014 it's three independent reconcile loops, each translating one layer of intent into the next. Informer caches absorb the read load so reconciles are nearly free.",
+            "bullets": [
+              "Informers share one watch + local cache \u2014 reads hit RAM, not the API server",
+              "ownerReferences enable garbage collection: delete the Deployment, children cascade",
+              "Label selectors, not IDs, link controllers to the Pods they own"
+            ],
+            "position": "right",
+            "accentColor": "#326CE5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-5",
+      "layout": "title-left-right",
+      "title": "Scheduling: Binding Pods to Nodes",
+      "subtitle": "Filter then score, then write a binding \u2014 the scheduler picks a node on requests, never starts the container.",
+      "duration_frames": 246,
+      "transition": "slideUp",
+      "narration": "A freshly created Pod has no node assigned \u2014 its nodeName is empty. The scheduler watches for these and runs a two-phase algorithm: filtering (which nodes can even fit this Pod?) then scoring (which feasible node is best?). It decides based on resource *requests*, not actual usage, so a node packed with idle-but-reserved CPU looks full. The scheduler never starts a container \u2014 it only writes a Binding object; the kubelet on the chosen node does the rest.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BulletList",
+          "data": {
+            "title": "What the Scheduler Actually Decides",
+            "items": [
+              "Filtering eliminates nodes failing taints, nodeSelector, affinity, or resource fit",
+              "Scoring ranks survivors \u2014 spread, least-allocated, image locality each contribute weighted points",
+              "Decisions use Pod requests (e.g. cpu: 500m), never live utilization \u2014 overcommit is invisible here",
+              "PodSpec.nodeName starts empty; scheduling sets it by writing a Binding subresource",
+              "A Pod that fits nowhere stays Pending \u2014 kubectl describe shows '0/N nodes available'",
+              "Default scheduler handles thousands of pods/sec; it picks the node but never launches the container"
+            ],
+            "accentColor": "#326CE5",
+            "numbered": false,
+            "align": "left"
+          }
+        },
+        {
+          "area": "right",
+          "type": "ArchitectureDiagram",
+          "data": {
+            "title": "Scheduling: Binding Pods to Nodes",
+            "nodes": [
+              {
+                "id": "apiserver",
+                "type": "loadBalancer",
+                "x": 10,
+                "y": 50,
+                "label": "kube-apiserver"
+              },
+              {
+                "id": "scheduler",
+                "type": "server",
+                "x": 35,
+                "y": 50,
+                "label": "kube-scheduler"
+              },
+              {
+                "id": "node1",
+                "type": "server",
+                "x": 80,
+                "y": 20,
+                "label": "node-1",
+                "metrics": {
+                  "cpu": "85%",
+                  "ram": "70%"
+                }
+              },
+              {
+                "id": "node2",
+                "type": "server",
+                "x": 80,
+                "y": 50,
+                "label": "node-2",
+                "metrics": {
+                  "cpu": "30%",
+                  "ram": "40%"
+                }
+              },
+              {
+                "id": "node3",
+                "type": "server",
+                "x": 80,
+                "y": 80,
+                "label": "node-3",
+                "metrics": {
+                  "cpu": "95%",
+                  "ram": "88%"
+                }
+              }
+            ],
+            "connections": [
+              {
+                "fromId": "scheduler",
+                "toId": "apiserver",
+                "type": "stream",
+                "label": "watch pods (nodeName=\"\")"
+              },
+              {
+                "fromId": "scheduler",
+                "toId": "node1",
+                "type": "arrow",
+                "label": "filter + score"
+              },
+              {
+                "fromId": "scheduler",
+                "toId": "node2",
+                "type": "arrow",
+                "label": "best fit \u2192 Bind"
+              },
+              {
+                "fromId": "scheduler",
+                "toId": "node3",
+                "type": "arrow",
+                "label": "filtered out (pressure)"
+              }
+            ],
+            "accentColor": "#10b981"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-6",
+      "layout": "title-main-sidebar",
+      "title": "The Node Agent: Kubelet and the CRI",
+      "subtitle": "The kubelet turns a Pod spec into containers over gRPC and runs the probes engineers routinely conflate.",
+      "duration_frames": 263,
+      "transition": "slideLeft",
+      "narration": "Once a Pod is bound, the kubelet on that node owns turning the spec into running containers. It doesn't run containers itself \u2014 it calls a container runtime (containerd, CRI-O) over the gRPC Container Runtime Interface to pull images and start the sandbox. The kubelet also runs probes that engineers routinely conflate: a failed livenessProbe restarts the container, while a failed readinessProbe only pulls the Pod out of Service endpoints \u2014 no restart. Confusing the two is a classic cause of restart storms.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "TerminalCLI",
+          "data": {
+            "title": "kubelet \u2192 CRI handoff",
+            "command": "journalctl -u kubelet -f | grep -E 'CRI|Probe'",
+            "output": [
+              "I0626 10:14:02 kubelet.go] SyncPod \"web-7d9f-xk2\" desired=Running",
+              "I0626 10:14:02 remote_runtime.go] RunPodSandbox via /run/containerd/containerd.sock",
+              "I0626 10:14:03 remote_image.go] PullImage \"nginx:1.27\" succeeded (1.4s)",
+              "I0626 10:14:03 remote_runtime.go] CreateContainer + StartContainer ok",
+              "I0626 10:14:13 prober.go] Readiness probe GET :8080/healthz -> 200, Pod Ready",
+              "I0626 10:15:41 prober.go] Liveness probe failed: HTTP 500 (x3)",
+              "I0626 10:15:41 kuberuntime_manager.go] Killing container, restartCount=1"
+            ],
+            "typingCommand": true,
+            "highlightLines": [
+              2,
+              5,
+              6
+            ],
+            "theme": "dark",
+            "accentColor": "#326CE5"
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "data": {
+            "title": "Liveness \u2260 Readiness",
+            "body": "A failed liveness probe restarts the container; a failed readiness probe only removes the Pod from Service endpoints \u2014 traffic stops, the process keeps running. Pointing liveness at a dependency you don't control turns one slow backend into a cluster-wide restart storm.",
+            "position": "right",
+            "accentColor": "#326CE5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-7",
+      "layout": "title-left-right",
+      "title": "Networking: Pod IPs, Services, kube-proxy",
+      "subtitle": "A flat network gives every Pod a routable IP; a Service VIP stays stable while endpoints churn.",
+      "duration_frames": 256,
+      "transition": "slideLeft",
+      "narration": "Kubernetes mandates a flat network: every Pod gets its own routable IP and can reach any other Pod without NAT \u2014 the CNI plugin (Calico, Cilium) implements this. But Pod IPs are ephemeral; they change on every reschedule. A Service solves that with a stable virtual IP (ClusterIP) backed by an Endpoints/EndpointSlice list that controllers keep current as Pods churn. kube-proxy (or eBPF in Cilium) programs the node's iptables/IPVS rules so the VIP load-balances to whatever healthy Pods exist right now.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BulletList",
+          "data": {
+            "title": "Stable VIPs Over Ephemeral Pods",
+            "items": [
+              "CNI gives every Pod a unique, routable IP \u2014 no NAT between Pods, by spec",
+              "Pod IPs are disposable: a reschedule means a new IP, so clients can't target them directly",
+              "A Service's ClusterIP is a virtual IP with no interface \u2014 it exists only as kube-proxy rules",
+              "EndpointSlices track ready Pod IPs; the endpoints controller updates them as Pods come and go",
+              "kube-proxy programs iptables/IPVS (or Cilium uses eBPF) to DNAT VIP traffic to a live backend",
+              "kube-dns/CoreDNS resolves service.namespace.svc.cluster.local to the stable ClusterIP"
+            ],
+            "accentColor": "#326CE5",
+            "numbered": false,
+            "align": "left"
+          }
+        },
+        {
+          "area": "right",
+          "type": "ArchitectureDiagram",
+          "data": {
+            "title": "Networking: Services, Pod IPs, kube-proxy",
+            "nodes": [
+              {
+                "id": "client",
+                "type": "client",
+                "x": 8,
+                "y": 50,
+                "label": "client"
+              },
+              {
+                "id": "svc",
+                "type": "loadBalancer",
+                "x": 30,
+                "y": 50,
+                "label": "Service (ClusterIP / VIP)"
+              },
+              {
+                "id": "proxy",
+                "type": "server",
+                "x": 52,
+                "y": 50,
+                "label": "kube-proxy (iptables/IPVS)"
+              },
+              {
+                "id": "pod1",
+                "type": "server",
+                "x": 82,
+                "y": 22,
+                "label": "pod 10.244.1.5"
+              },
+              {
+                "id": "pod2",
+                "type": "server",
+                "x": 82,
+                "y": 50,
+                "label": "pod 10.244.2.7"
+              },
+              {
+                "id": "pod3",
+                "type": "server",
+                "x": 82,
+                "y": 78,
+                "label": "pod 10.244.3.9"
+              }
+            ],
+            "connections": [
+              {
+                "fromId": "client",
+                "toId": "svc",
+                "type": "arrow",
+                "label": "request to VIP:80"
+              },
+              {
+                "fromId": "svc",
+                "toId": "proxy",
+                "type": "arrow",
+                "label": "DNAT rules"
+              },
+              {
+                "fromId": "proxy",
+                "toId": "pod1",
+                "type": "arrow",
+                "label": "load-balance"
+              },
+              {
+                "fromId": "proxy",
+                "toId": "pod2",
+                "type": "arrow",
+                "label": "load-balance"
+              },
+              {
+                "fromId": "proxy",
+                "toId": "pod3",
+                "type": "arrow",
+                "label": "load-balance"
+              }
+            ],
+            "accentColor": "#f59e0b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-8",
+      "layout": "title-main-sidebar",
+      "title": "Self-Healing \u2014 and Where It Stops",
+      "subtitle": "The same loop reschedules Pods off dead nodes, but heals workloads, not its own etcd consensus.",
+      "duration_frames": 237,
+      "transition": "zoom",
+      "narration": "Self-healing is just the reconcile loop applied to failure. When a node stops sending heartbeats, the node controller marks it NotReady after ~40s, and after a grace period (default 5m) evicts its Pods so controllers reschedule them elsewhere. But the loop only heals *workloads* \u2014 it cannot heal its own foundation. If etcd loses quorum, the API server goes read-only and reconciliation halts; the loop that fixes everything else has no one to fix it.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "TwoColumnLayout",
+          "data": {
+            "title": "What Heals \u2014 and What Doesn't",
+            "left": {
+              "heading": "Self-Heals (workload layer)",
+              "points": [
+                "Crashed container \u2192 kubelet restarts per restartPolicy",
+                "Dead node \u2192 Pods evicted after ~5m, rescheduled elsewhere",
+                "Deleted Pod \u2192 ReplicaSet recreates to match replica count",
+                "Failed rollout \u2192 Deployment can roll back to last good ReplicaSet"
+              ],
+              "color": "#22C55E"
+            },
+            "right": {
+              "heading": "Does NOT Heal (control plane)",
+              "points": [
+                "etcd quorum loss \u2192 API server read-only, all reconciliation stops",
+                "Split-brain etcd \u2192 Raft refuses writes rather than diverge",
+                "Stateful data in a Pod \u2192 no replicas without a StatefulSet + storage",
+                "Persistent misconfiguration \u2192 loop faithfully reconciles the wrong intent"
+              ],
+              "color": "#EF4444"
+            },
+            "accentColor": "#326CE5",
+            "dividerLabel": "the loop's edge"
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "data": {
+            "title": "The Loop Can't Heal Itself",
+            "body": "etcd needs a majority quorum (2 of 3, 3 of 5) to accept writes. Lose it and the API server can still serve reads but rejects all writes \u2014 so the reconciliation engine that recovers every workload simply stops, because it has nowhere to record intent.",
+            "position": "right",
+            "accentColor": "#326CE5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-9",
+      "layout": "full",
+      "title": "One Loop, All the Way Down",
+      "subtitle": "Every behavior you've seen is the same reconcile loop \u2014 declare intent, and the system converges.",
+      "duration_frames": 189,
+      "transition": "none",
+      "narration": "Scheduling, controllers, kubelet, networking, self-healing \u2014 none of these are separate mechanisms. Each is the same reconcile loop watching a different resource and driving actual state toward declared intent. Once you see that one pattern, Kubernetes stops being a pile of components and becomes a single idea repeated at every layer: declare what you want, and let the system converge.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "data": {
+            "title": "One Loop, All the Way Down",
+            "subtitle": "Declare intent. Observe reality. Close the gap. Forever.",
+            "accentColor": "#326CE5",
+            "align": "center"
+          }
+        }
+      ]
+    }
+  ]
+}
