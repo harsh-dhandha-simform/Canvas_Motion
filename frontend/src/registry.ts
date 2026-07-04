@@ -134,7 +134,8 @@ export type ComponentMeta = {
     | "sequence"
     | "math"
     | "timeline"
-    | "title";
+    | "title"
+    | "algorithm";
   dataOwner: "content" | "visual";
   bestAreas: string[];
   useWhen: string;
