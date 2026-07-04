@@ -43,6 +43,7 @@ import { CalloutAnnotation, CalloutAnnotationSchema } from "./components/Callout
 import { SortingVisualizer, SortingVisualizerSchema } from "./components/SortingVisualizer";
 import { LinearStructure, LinearStructureSchema } from "./components/LinearStructure";
 import { ArrayAlgorithm, ArrayAlgorithmSchema } from "./components/ArrayAlgorithm";
+import { DPTableVisualizer, DPTableVisualizerSchema } from "./components/DPTableVisualizer";
 
 export const COMPONENT_REGISTRY = {
   AnimatedTitle,
@@ -76,6 +77,7 @@ export const COMPONENT_REGISTRY = {
   SortingVisualizer,
   LinearStructure,
   ArrayAlgorithm,
+  DPTableVisualizer,
 } as const;
 
 export const COMPONENT_SCHEMAS = {
@@ -110,6 +112,7 @@ export const COMPONENT_SCHEMAS = {
   SortingVisualizer: SortingVisualizerSchema,
   LinearStructure: LinearStructureSchema,
   ArrayAlgorithm: ArrayAlgorithmSchema,
+  DPTableVisualizer: DPTableVisualizerSchema,
 } as const;
 
 // Zod v4 ships a native JSON-Schema converter. The old `zod-to-json-schema`
@@ -201,6 +204,13 @@ export const COMPONENT_META: Record<SceneType, ComponentMeta> = {
     useWhen: "an array-scan algorithm — binary search, sliding window, or two-pointer technique",
     tags: ["array", "pointer", "binary-search", "sliding-window", "two-pointer"],
     minSeconds: 8,
+  },
+  DPTableVisualizer: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a 2D DP table being filled cell-by-cell, or a matrix-based algorithm (LCS, edit distance, Floyd-Warshall, knapsack)",
+    tags: ["dp", "dynamic-programming", "matrix", "table", "memoization", "subproblems"],
+    minSeconds: 12,
   },
 };
 
@@ -328,6 +338,10 @@ export const COMPONENT_CATALOG = {
   ArrayAlgorithm: {
     description: "An animated array walkthrough with pointer overlays. Modes: binary-search (L/M/R), sliding-window (start/end + running sum), two-pointer (i/j).",
     schema: toJsonSchema(ArrayAlgorithmSchema, "ArrayAlgorithmProps"),
+  },
+  DPTableVisualizer: {
+    description: "An animated 2D DP table. Cells fill in order with dependency arrows from prior cells; optional final path traces the optimal answer.",
+    schema: toJsonSchema(DPTableVisualizerSchema, "DPTableVisualizerProps"),
   },
 };
 

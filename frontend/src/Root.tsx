@@ -12,6 +12,7 @@ import { EXAMPLE_SCRIPTS } from "./generated/examples.generated";
 import { SortingVisualizer } from "./components/SortingVisualizer";
 import { LinearStructure } from "./components/LinearStructure";
 import { ArrayAlgorithm } from "./components/ArrayAlgorithm";
+import { DPTableVisualizer } from "./components/DPTableVisualizer";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -82,6 +83,31 @@ export const RemotionRoot: React.FC = () => {
           mode: "binary-search" as const,
           values: [3, 7, 11, 15, 19, 23, 27, 31, 35],
           target: 23,
+        }}
+      />
+
+      <Composition
+        id="preview-DPTableVisualizer"
+        component={DPTableVisualizer}
+        durationInFrames={30 * 15}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          title: "Fibonacci DP table",
+          rows: 1,
+          cols: 8,
+          colLabels: ["0", "1", "2", "3", "4", "5", "6", "7"],
+          fills: [
+            { row: 0, col: 0, value: 0 },
+            { row: 0, col: 1, value: 1 },
+            { row: 0, col: 2, value: 1, dependsOn: [{ row: 0, col: 0 }, { row: 0, col: 1 }] },
+            { row: 0, col: 3, value: 2, dependsOn: [{ row: 0, col: 1 }, { row: 0, col: 2 }] },
+            { row: 0, col: 4, value: 3, dependsOn: [{ row: 0, col: 2 }, { row: 0, col: 3 }] },
+            { row: 0, col: 5, value: 5, dependsOn: [{ row: 0, col: 3 }, { row: 0, col: 4 }] },
+            { row: 0, col: 6, value: 8, dependsOn: [{ row: 0, col: 4 }, { row: 0, col: 5 }] },
+            { row: 0, col: 7, value: 13, dependsOn: [{ row: 0, col: 5 }, { row: 0, col: 6 }] },
+          ],
         }}
       />
     </>
