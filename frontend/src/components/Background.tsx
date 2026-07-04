@@ -1,3 +1,10 @@
+/**
+ * Background.tsx
+ * 
+ * Renders an animated, theme-aware background behind the video content.
+ * Supports different variants (e.g. "glow", "grid") which the SceneWrapper
+ * automatically switches between based on the components present in the scene.
+ */
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
 import { useTheme } from "../ThemeContext";

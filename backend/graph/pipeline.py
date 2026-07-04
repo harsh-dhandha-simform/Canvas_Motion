@@ -1,14 +1,15 @@
 from langgraph.graph import StateGraph, END
 from graph.state import PipelineState
 from graph.nodes import (
-    researcher_node,
-    director_node,
-    scriptwriter_node,
-    visual_architect_node,
     merge_node,
     validator_node,
+    tts_node,
     assembler_node,
 )
+from agents.researcher.node import researcher_node
+from agents.director.node import director_node
+from agents.scriptwriter.node import scriptwriter_node
+from agents.visual_architect.node import visual_architect_node
 
 
 def build_state_graph():
@@ -20,6 +21,7 @@ def build_state_graph():
     workflow.add_node("visual_architect", visual_architect_node)
     workflow.add_node("merge", merge_node)
     workflow.add_node("validator", validator_node)
+    workflow.add_node("tts", tts_node)
     workflow.add_node("assembler", assembler_node)
 
     workflow.set_entry_point("researcher")
@@ -34,7 +36,15 @@ def build_state_graph():
     workflow.add_edge("visual_architect", "merge")
 
     workflow.add_edge("merge", "validator")
-    workflow.add_edge("validator", "assembler")
+    
+    # Conditional edge: run TTS if enabled, else go straight to assembler
+    def route_tts(state: PipelineState) -> str:
+        if state.get("enable_audio", False) and state.get("checkpoint_slug"):
+            return "tts"
+        return "assembler"
+        
+    workflow.add_conditional_edges("validator", route_tts)
+    workflow.add_edge("tts", "assembler")
     workflow.add_edge("assembler", END)
 
     return workflow.compile()

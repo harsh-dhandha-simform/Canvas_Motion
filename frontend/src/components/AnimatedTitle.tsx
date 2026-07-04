@@ -1,5 +1,11 @@
+/**
+ * AnimatedTitle.tsx
+ * 
+ * Renders a bold, animated title and optional subtitle with an animated underline.
+ * Uses relative sizing based on video height instead of hardcoded pixels.
+ */
 import React from "react";
-import { interpolate, Easing, useCurrentFrame } from "remotion";
+import { interpolate, Easing, useCurrentFrame, useVideoConfig } from "remotion";
 import { z } from "zod";
 
 export const AnimatedTitleSchema = z.object({
@@ -27,6 +33,7 @@ export const AnimatedTitle: React.FC<AnimatedTitleProps> = ({
   className,
 }) => {
   const frame = useCurrentFrame();
+  const { height, width } = useVideoConfig();
 
   // Entry animation
   const opacity = interpolate(frame, [0, 25], [0, 1], {
@@ -48,7 +55,7 @@ export const AnimatedTitle: React.FC<AnimatedTitleProps> = ({
     extrapolateRight: "clamp",
   });
 
-  const alignmentClass = align === "center" ? "items-center text-center" : "items-start text-left";
+  const isCenter = align === "center";
 
   return (
     <div
@@ -57,30 +64,50 @@ export const AnimatedTitle: React.FC<AnimatedTitleProps> = ({
         transform: `translateY(${translateY}px)`,
         display: "flex",
         flexDirection: "column",
+        width: "100%",
+        alignItems: isCenter ? "center" : "flex-start",
+        textAlign: isCenter ? "center" : "left",
+        userSelect: "none",
         ...style,
       }}
-      className={`w-full ${alignmentClass} select-none ${className || ""}`}
     >
       {subtitle && (
         <span
-          style={{ color: accentColor }}
-          className="text-lg md:text-xl font-bold tracking-widest uppercase mb-2 drop-shadow-[0_0_10px_rgba(56,189,248,0.2)]"
+          style={{ 
+            color: accentColor,
+            fontSize: Math.round(height * 0.02), // ~22px
+            fontWeight: 700,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            marginBottom: Math.round(height * 0.01), // ~10px
+            filter: `drop-shadow(0 0 10px ${accentColor}33)`,
+          }}
         >
           {subtitle}
         </span>
       )}
-      <h1 className="text-4xl md:text-6xl font-black text-white leading-tight tracking-tight max-w-4xl">
+      <h1 
+        style={{
+          margin: 0,
+          fontSize: Math.round(height * 0.06), // ~65px
+          fontWeight: 900,
+          color: "#ffffff",
+          lineHeight: 1.1,
+          letterSpacing: "-0.02em",
+          maxWidth: width * 0.8,
+        }}
+      >
         {title}
       </h1>
       <div
         style={{
-          width: "120px",
-          height: "4px",
+          width: Math.round(width * 0.08), // ~150px
+          height: Math.max(3, Math.round(height * 0.005)), // ~5px
           background: `linear-gradient(90deg, ${accentColor}, transparent)`,
           transform: `scaleX(${lineScaleX})`,
-          transformOrigin: align === "center" ? "center" : "left",
-          marginTop: "16px",
-          borderRadius: "2px",
+          transformOrigin: isCenter ? "center" : "left",
+          marginTop: Math.round(height * 0.02), // ~20px
+          borderRadius: Math.max(1, Math.round(height * 0.002)),
           boxShadow: `0 0 8px ${accentColor}`,
         }}
       />

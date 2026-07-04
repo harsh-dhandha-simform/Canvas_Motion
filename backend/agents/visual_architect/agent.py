@@ -17,6 +17,7 @@ import logging
 
 from component_catalog import data_owner, get_schema
 from utils.api import chat_completion, parse_json_robust
+from .schema import StoryOutput
 
 logger = logging.getLogger(__name__)
 AGENT_NAME = "VisualArchitect"
@@ -91,20 +92,6 @@ Output ONLY a single JSON object — no prose, no markdown fences.
 
 {TRANSITION_RULES}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## OUTPUT SCHEMA
-
-{{
-  "scenes": [
-    {{
-      "index": <scene index>,
-      "transition": "<fade|slideLeft|slideUp|zoom|none>",
-      "panels": {{
-        "<area>": {{ ...data matching that component's schema... }}
-      }}
-    }}
-  ]
-}}
 
 You MUST output a "panels" entry for EVERY area listed for each scene — never emit just a title.
 Components like TreeHierarchy, StateMachine, SequenceDiagram and FlowDiagram require their full nested
@@ -146,18 +133,20 @@ def run_agent(plan: dict, syllabus: dict) -> dict:
         ],
         temperature=0.5,
         agent_name=AGENT_NAME,
+        response_model=StoryOutput,
     )
 
-    story: dict = parse_json_robust(raw, label=AGENT_NAME)
-
-    # Normalize → index scenes, default transitions, force last scene "none"
-    out_scenes = story.get("scenes", [])
-    for s in out_scenes:
-        s.setdefault("panels", {})
-        s.setdefault("transition", "slideLeft")
-    if out_scenes:
-        out_scenes[-1]["transition"] = "none"
+    raw_dict: dict = parse_json_robust(raw, label=AGENT_NAME)
+    
+    # Normalize default transitions before validation to avoid validation errors
+    # on missing fields if we want, or rely on Pydantic defaults. Pydantic handles defaults.
+    
+    story = StoryOutput.model_validate(raw_dict)
+    
+    # Force last scene transition to "none" after validation
+    if story.scenes:
+        story.scenes[-1].transition = "none"
 
     logger.info("[%s] ✅ Visual data for %d panels across %d scenes",
-                AGENT_NAME, len(visual), len(out_scenes))
-    return story
+                AGENT_NAME, len(visual), len(story.scenes))
+    return story.model_dump()

@@ -35,6 +35,7 @@ from config import GROQ_MODEL, GROQ_FALLBACK_MODEL
 from graph.pipeline import compiled_graph
 from graph.state import PipelineState
 from component_catalog import get_catalog
+from utils.checkpoint import checkpoint_slug, clear_checkpoints, load_checkpoint
 from utils.file_output import write_example_script, list_example_scripts, slugify_topic
 from utils.tracing import get_langfuse, flush as flush_langfuse, is_enabled as tracing_enabled
 
@@ -79,6 +80,11 @@ class GenerateScriptRequest(BaseModel):
     context: Optional[str] = Field(None, description="Additional context or constraints")
     duration_seconds: int = Field(60, ge=10, le=300, description="Target video length in seconds")
     style: str = Field("educational", description="educational | explainer | tutorial")
+    force_restart: bool = Field(False, description="Clear checkpoints and regenerate from scratch")
+    enable_audio: bool = Field(False, description="Generate Deepgram TTS audio")
+    fps: int = Field(30, description="Frames per second")
+    width: int = Field(1920, description="Canvas width")
+    height: int = Field(1080, description="Canvas height")
 
 
 class GenerateMeta(BaseModel):
@@ -87,6 +93,7 @@ class GenerateMeta(BaseModel):
     generation_time_ms: int
     agents_used: list[str]
     pipeline_mode: str
+    checkpoint_slug: str
     trace_url: Optional[str] = None  # Langfuse trace URL (None when tracing is off)
 
 
@@ -151,6 +158,17 @@ def list_scripts():
     return {"scripts": [p.name for p in paths], "count": len(paths)}
 
 
+@app.get("/api/checkpoints/{slug}")
+def check_checkpoints(slug: str):
+    """Return the status of checkpoints for a given slug."""
+    stages = ["syllabus", "plan", "script", "story", "scenes", "validation_report", "video_script"]
+    status = {}
+    for stage in stages:
+        data = load_checkpoint(slug, stage)
+        status[stage] = data is not None
+    return {"slug": slug, "checkpoints": status}
+
+
 @app.post("/api/generate-script", response_model=GenerateScriptResponse)
 def generate_script(req: GenerateScriptRequest):
     """
@@ -168,9 +186,21 @@ def generate_script(req: GenerateScriptRequest):
     total_frames = req.duration_seconds * 30
     t0 = time.monotonic()
 
+    slug = checkpoint_slug(req.topic, req.duration_seconds)
+    if req.force_restart:
+        clear_checkpoints(slug)
+
     initial_state: PipelineState = {
         "topic": req.topic,
         "duration_seconds": req.duration_seconds,
+        "fps": req.fps,
+        "width": req.width,
+        "height": req.height,
+        "checkpoint_slug": slug,
+        "force_restart": req.force_restart,
+        "enable_audio": req.enable_audio,
+        "audio_path": None,
+        "audio_url": None,
         "syllabus": None,
         "plan": None,
         "script": None,
@@ -278,6 +308,7 @@ def generate_script(req: GenerateScriptRequest):
             generation_time_ms=elapsed_ms,
             agents_used=_PIPELINE_AGENTS,
             pipeline_mode="langgraph",
+            checkpoint_slug=slug,
             trace_url=trace_url,
         ),
     )

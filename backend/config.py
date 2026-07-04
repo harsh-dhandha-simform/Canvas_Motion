@@ -30,6 +30,12 @@ SHARED_DIR = REPO_ROOT / "shared"
 COMPONENT_CATALOG_PATH = SHARED_DIR / "componentCatalog.json"
 EXAMPLES_DIR = SHARED_DIR / "examples"
 
+# Checkpoint and audio directories
+CHECKPOINT_DIR: Path = REPO_ROOT / "backend" / "checkpoints"
+AUDIO_DIR: Path = REPO_ROOT / "backend" / "audio"
+
+CHECKPOINT_TTL_HOURS: int = int(os.environ.get("CHECKPOINT_TTL_HOURS", "24"))
+
 # ---------------------------------------------------------------------------
 # Groq API
 # ---------------------------------------------------------------------------
@@ -44,6 +50,7 @@ if _env_path.exists():
             os.environ[_k.strip()] = _v.strip().strip("'\"")
 
 GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
+DEEPGRAM_API_KEY: str = os.environ.get("DEEPGRAM_API_KEY", "")
 
 # ---------------------------------------------------------------------------
 # LLM backend selection

@@ -15,4 +15,6 @@ dependencies = [
     "headroom-ai[mcp]",
     "langfuse>=2.0.0",
     "httpx[http2]>=0.28.1",
+    "pydantic>=2.13.4",
+    "deepgram-sdk>=7.4.0",
 ]

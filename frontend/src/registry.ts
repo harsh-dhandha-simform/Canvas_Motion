@@ -2,11 +2,16 @@
  * src/registry.ts
  *
  * Maps scene type names (as produced by the backend JSON) to the actual
- * imported React components. This is the single file you touch when adding
- * a new scene component to the library.
+ * imported React components. 
+ * 
+ * Checklist for adding a new component:
+ * 1. Build the component in `src/components/` and export its React component and Zod schema.
+ * 2. Import it here and add it to `COMPONENT_REGISTRY` and `COMPONENT_SCHEMAS`.
+ * 3. Add its `ComponentMeta` to `COMPONENT_META` (used by backend Planner agents).
+ * 4. Add its `description` and `schema` to `COMPONENT_CATALOG` (used by backend Assembler agent).
  */
 
-import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { AnimatedTitle, AnimatedTitleSchema } from "./components/AnimatedTitle";
 import { ComparisonCard, ComparisonCardSchema } from "./components/ComparisonCard";
 import { BulletList, BulletListSchema } from "./components/BulletList";
@@ -102,7 +107,7 @@ export const COMPONENT_SCHEMAS = {
 // package targets zod v3 and silently emits empty schemas against v4 — which is
 // what left the backend Validator with nothing to validate against.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const toJsonSchema = (schema: any, _name?: string) => z.toJSONSchema(schema);
+const toJsonSchema = (schema: any, name?: string) => zodToJsonSchema(schema, name);
 
 /**
  * Picker metadata — the knowledge the planning agents (Shortlister, Director,

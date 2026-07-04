@@ -15,6 +15,7 @@ import logging
 
 from component_catalog import data_owner, get_schema
 from utils.api import chat_completion, parse_json_robust
+from .schema import ScriptOutput
 
 logger = logging.getLogger(__name__)
 AGENT_NAME = "Scriptwriter"
@@ -80,20 +81,6 @@ Output ONLY a single JSON object — no prose, no markdown fences.
 
 {NARRATION_RULES}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## OUTPUT SCHEMA
-
-{{
-  "scenes": [
-    {{
-      "index": <scene index>,
-      "narration": "<2-4 teaching sentences for this scene>",
-      "panels": {{
-        "<area>": {{ ...data matching that content component's schema... }}
-      }}
-    }}
-  ]
-}}
 
 Fill data ONLY for the content panel areas given to you. Match each component's schema exactly.
 Write narration for EVERY scene (including the intro/outro title scenes). Return ONLY valid JSON.
@@ -139,13 +126,12 @@ def run_agent(plan: dict, syllabus: dict) -> dict:
         ],
         temperature=0.7,
         agent_name=AGENT_NAME,
+        response_model=ScriptOutput,
     )
 
-    script: dict = parse_json_robust(raw, label=AGENT_NAME)
-    for s in script.get("scenes", []):
-        s.setdefault("panels", {})
-        s.setdefault("narration", "")
+    raw_dict: dict = parse_json_robust(raw, label=AGENT_NAME)
+    script = ScriptOutput.model_validate(raw_dict)
 
-    logger.info("[%s] ✅ Content for %d panels + narration across %d scenes",
-                AGENT_NAME, len(content), len(script.get("scenes", [])))
-    return script
+    logger.info("[%s] ✅ Script generated for %d scenes (%d content panels)",
+                AGENT_NAME, len(script.scenes), len(content))
+    return script.model_dump()

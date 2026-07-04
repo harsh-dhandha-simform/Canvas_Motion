@@ -47,6 +47,7 @@ def chat_completion(
     temperature: float = 0.7,
     max_tokens: int | None = None,
     agent_name: str = "agent",
+    response_model: Any = None,
 ) -> str:
     """
     Send a chat-completion to Groq, walking ORDERED_MODELS (highest-TPM first).
@@ -117,9 +118,26 @@ def chat_completion(
                 )
                 create_kwargs: dict = dict(
                     model=current_model,
-                    messages=messages,  # type: ignore[arg-type]
+                    messages=list(messages),  # type: ignore[arg-type]
                     temperature=temperature,
                 )
+                if response_model is not None:
+                    import json
+                    schema_str = json.dumps(response_model.model_json_schema(), indent=2)
+                    schema_instruction = (
+                        "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        "## OUTPUT FORMAT\n"
+                        "Return ONLY a valid JSON object matching the following JSON Schema:\n"
+                        f"{schema_str}\n"
+                    )
+                    # Safe to mutate since we made a list copy above
+                    if create_kwargs["messages"] and create_kwargs["messages"][0].get("role") == "system":
+                        create_kwargs["messages"][0] = dict(create_kwargs["messages"][0])
+                        create_kwargs["messages"][0]["content"] += schema_instruction
+                    else:
+                        create_kwargs["messages"].insert(0, {"role": "system", "content": schema_instruction})
+                    create_kwargs["response_format"] = {"type": "json_object"}
+
                 if current_max_tokens is not None:
                     create_kwargs["max_tokens"] = current_max_tokens
                 response = client.chat.completions.create(**create_kwargs)

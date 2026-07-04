@@ -12,8 +12,10 @@ in Python after the LLM call; the Validator double-checks coverage later).
 import logging
 
 from component_catalog import get_catalog
+from component_catalog import picker_view
 from graph.shortlister import build_shortlists
 from utils.api import chat_completion, parse_json_robust
+from .schema import DirectorPlan
 
 logger = logging.getLogger(__name__)
 AGENT_NAME = "Director"
@@ -53,25 +55,7 @@ D (security / infra / k8s)    background=#0d1117 primary=#ef4444 secondary=#f59e
 
 A scene's panels[].area values MUST exactly match the chosen layout's areas.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## OUTPUT SCHEMA
 
-{
-  "theme": {"background":"<hex>","primary":"<hex>","secondary":"<hex>","accent":"<hex>","font":"<font>"},
-  "scenes": [
-    {
-      "index": 0,
-      "role": "hook" | "prerequisite" | "core" | "deep-dive" | "tradeoff" | "synthesis" | "outro",
-      "layout": "<layout name>",
-      "title": "<scene title>",
-      "subtitle": "<one-sentence thesis of this scene>",
-      "covers": ["st1", ...],                       // subtopic ids this scene teaches
-      "panels": [ {"area":"<area>","type":"<ComponentName>"} ]
-    }
-  ]
-}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## HARD RULES
 
 1. COVERAGE: every must-cover subtopic id MUST appear in some scene's "covers". A scene may cover 1-2 subtopics.
@@ -140,15 +124,18 @@ def run_agent(syllabus: dict, duration_seconds: int = 60) -> dict:
         ],
         temperature=0.7,
         agent_name=AGENT_NAME,
+        response_model=DirectorPlan,
     )
 
-    plan: dict = parse_json_robust(raw, label=AGENT_NAME)
-    plan = _normalize_plan(plan, syllabus)
+    raw_dict: dict = parse_json_robust(raw, label=AGENT_NAME)
+    raw_dict = _normalize_plan(raw_dict, syllabus)
 
-    n_scenes = len(plan.get("scenes", []))
+    plan = DirectorPlan.model_validate(raw_dict)
+
+    n_scenes = len(plan.scenes)
     logger.info("[%s] ✅ Plan: %d scenes, layouts=%s",
-                AGENT_NAME, n_scenes, [s.get("layout") for s in plan.get("scenes", [])])
-    return plan
+                AGENT_NAME, n_scenes, [s.layout for s in plan.scenes])
+    return plan.model_dump()
 
 
 def _normalize_plan(plan: dict, syllabus: dict) -> dict:

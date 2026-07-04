@@ -4,6 +4,8 @@ import { useTheme } from "../ThemeContext";
 import type { Caption } from "../DynamicVideo";
 
 /**
+ * CaptionLayer.tsx
+ * 
  * On-screen textual explanation. Renders the narration as a lower-third caption,
  * synced to the absolute video timeline via the caption startMs/endMs.
  *
@@ -12,7 +14,7 @@ import type { Caption } from "../DynamicVideo";
  */
 export const CaptionLayer: React.FC<{ captions?: Caption[] }> = ({ captions }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, height } = useVideoConfig();
   const theme = useTheme();
 
   if (!captions || captions.length === 0) return null;
@@ -42,26 +44,26 @@ export const CaptionLayer: React.FC<{ captions?: Caption[] }> = ({ captions }) =
   });
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 56,
-        display: "flex",
-        justifyContent: "center",
-        pointerEvents: "none",
-        opacity,
-        transform: `translateY(${translateY}px)`,
-      }}
-    >
       <div
         style={{
-          maxWidth: "72%",
-          padding: "16px 30px",
-          borderRadius: 14,
-          background: "rgba(3, 7, 17, 0.72)",
-          backdropFilter: "blur(8px)",
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: Math.round(height * 0.05), // ~54px on 1080p
+          display: "flex",
+          justifyContent: "center",
+          pointerEvents: "none",
+          opacity,
+          transform: `translateY(${translateY}px)`,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "75%",
+            padding: `${Math.round(height * 0.015)}px ${Math.round(height * 0.03)}px`, // ~16px 32px
+            borderRadius: Math.round(height * 0.013), // ~14px
+            background: "rgba(3, 7, 17, 0.72)",
+            backdropFilter: "blur(8px)",
           border: `1px solid ${theme.primary}40`,
           boxShadow: `0 8px 40px rgba(0,0,0,0.45)`,
           borderLeft: `4px solid ${theme.accent}`,
@@ -69,7 +71,7 @@ export const CaptionLayer: React.FC<{ captions?: Caption[] }> = ({ captions }) =
       >
         <span
           style={{
-            fontSize: 30,
+            fontSize: Math.round(height * 0.032), // ~34px on 1080p
             lineHeight: 1.35,
             fontWeight: 600,
             color: "#f1f5f9",

@@ -4,6 +4,15 @@ from typing import TypedDict, Any, Optional
 class PipelineState(TypedDict):
     topic: str
     duration_seconds: int            # user-requested length; Timing scales scenes to fit
+    fps: int
+    width: int
+    height: int
+
+    checkpoint_slug: str
+    force_restart: bool
+    enable_audio: bool
+    audio_path: Optional[str]
+    audio_url: Optional[str]
 
     syllabus: Optional[dict[str, Any]]   # Researcher: subtopics, prereqs, depth
     plan: Optional[dict[str, Any]]       # Director: scenes[] blueprint (layout, panels, covers) + theme

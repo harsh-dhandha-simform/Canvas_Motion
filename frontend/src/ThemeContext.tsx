@@ -1,3 +1,10 @@
+/**
+ * ThemeContext.tsx
+ * 
+ * Provides a React context for the video theme (colors and font).
+ * All scene components should read from this to ensure consistent styling
+ * that matches the backend's generated theme.
+ */
 import React, { createContext, useContext } from "react";
 
 export type Theme = {

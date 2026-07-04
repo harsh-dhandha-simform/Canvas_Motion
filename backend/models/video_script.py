@@ -119,11 +119,12 @@ class Voiceover(_NullSafeBase):
 
 class VideoScript(_NullSafeBase):
     title: str
-    fps: Literal[30] = 30
-    width: Literal[1920] = 1920
-    height: Literal[1080] = 1080
+    fps: int = 30
+    width: int = 1920
+    height: int = 1080
     theme: Theme
     voiceover: Optional[Voiceover] = None
+    audio_url: Optional[str] = None
     scenes: list[Scene]
 
     def total_frames(self) -> int:

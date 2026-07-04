@@ -1,3 +1,10 @@
+/**
+ * Root.tsx — Remotion entry point.
+ * 
+ * Maps all scripts found in `generated/examples.generated.ts` into individual
+ * Remotion `<Composition>`s. This allows previewing and rendering any generated
+ * script in the Remotion studio without code changes.
+ */
 import "./index.css";
 import { Composition } from "remotion";
 import { DynamicVideo, VideoScriptProps } from "./DynamicVideo";
@@ -25,18 +32,6 @@ export const RemotionRoot: React.FC = () => {
         );
       })}
 
-      {/* Fallback for stale browser URLs from before the refactor */}
-      {EXAMPLE_SCRIPTS["scaling"] && (
-        <Composition
-          id="DynamicVideo"
-          component={DynamicVideo}
-          durationInFrames={EXAMPLE_SCRIPTS["scaling"].scenes.reduce((sum, s) => sum + s.duration_frames, 0)}
-          fps={EXAMPLE_SCRIPTS["scaling"].fps}
-          width={EXAMPLE_SCRIPTS["scaling"].width}
-          height={EXAMPLE_SCRIPTS["scaling"].height}
-          defaultProps={EXAMPLE_SCRIPTS["scaling"] as VideoScriptProps}
-        />
-      )}
     </>
   );
 };

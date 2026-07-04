@@ -16,10 +16,9 @@ from component_catalog import min_seconds
 
 logger = logging.getLogger(__name__)
 
-FPS = 30
-_MIN_SCENE_FRAMES = 120                 # 4s floor so nothing flashes by
+_MIN_SCENE_FRAMES_30FPS = 120           # 4s floor at 30fps
 _WORDS_PER_SECOND = 2.5                 # comfortable narration reading/speaking pace
-_TRANSITION_FRAMES = 15                 # overlay is inside the scene; informational
+_TRANSITION_FRAMES_30FPS = 15           # overlay is inside the scene; informational
 
 
 def _reading_seconds(narration: str | None) -> float:
@@ -35,7 +34,7 @@ def _scene_base_seconds(scene: dict) -> float:
     for a single full layout, capped for multi-panel)."""
     panels = scene.get("panels", [])
     if not panels:
-        return _MIN_SCENE_FRAMES / FPS
+        return 4.0 # default to 4 seconds if no panels
     secs = [min_seconds(p.get("type", "")) for p in panels]
     # one full-screen panel → its own time; multi-panel → the longest + a small premium
     if len(secs) == 1:
@@ -43,27 +42,29 @@ def _scene_base_seconds(scene: dict) -> float:
     return max(secs) + 0.4 * sum(sorted(secs)[:-1])
 
 
-def compute_timings(scenes: list[dict], total_seconds: int) -> list[dict]:
+def compute_timings(scenes: list[dict], total_seconds: int, fps: int = 30) -> list[dict]:
     """Assign duration_frames + start_frame to each scene. Mutates and returns scenes.
 
     `scenes` items need: panels[{type}] and optionally narration. Order is preserved.
     """
-    total_frames = total_seconds * FPS
+    total_frames = total_seconds * fps
     if not scenes:
         return scenes
+
+    min_scene_frames = 4 * fps
 
     # Step 1: base = max(component absorb, narration reading), floored.
     bases = []
     for sc in scenes:
         absorb = _scene_base_seconds(sc)
         reading = _reading_seconds(sc.get("narration"))
-        base_frames = max(absorb, reading) * FPS
-        bases.append(max(_MIN_SCENE_FRAMES, base_frames))
+        base_frames = max(absorb, reading) * fps
+        bases.append(max(min_scene_frames, base_frames))
 
     # Step 2: scale to fit total exactly.
     raw_total = sum(bases)
     scale = total_frames / raw_total if raw_total else 1.0
-    durations = [max(_MIN_SCENE_FRAMES, round(b * scale)) for b in bases]
+    durations = [max(min_scene_frames, round(b * scale)) for b in bases]
 
     # Step 3: absorb rounding/clamp drift on the largest middle scene (not intro/outro).
     drift = total_frames - sum(durations)
@@ -72,7 +73,7 @@ def compute_timings(scenes: list[dict], total_seconds: int) -> list[dict]:
             idx = max(range(1, len(durations) - 1), key=lambda i: durations[i])
         else:
             idx = len(durations) - 1
-        durations[idx] = max(_MIN_SCENE_FRAMES, durations[idx] + drift)
+        durations[idx] = max(min_scene_frames, durations[idx] + drift)
 
     # Step 4: write back duration_frames + start_frame.
     cursor = 0

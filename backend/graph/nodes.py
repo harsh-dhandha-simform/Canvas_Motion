@@ -2,46 +2,14 @@ import logging
 from typing import Any
 
 from graph.state import PipelineState
-from agents import researcher, director, scriptwriter, visual_architect
 from component_catalog import data_owner
 from utils.timing import compute_timings
-from utils.captions import build_captions
 from graph.validator import validate_and_repair
+from schemas import MergedScene
+from utils.checkpoint import load_checkpoint, save_checkpoint
 
 logger = logging.getLogger(__name__)
 
-
-# ---------------------------------------------------------------------------
-# 0. Researcher — topic → teaching syllabus (subtopics, prereqs, depth)
-# ---------------------------------------------------------------------------
-def researcher_node(state: PipelineState) -> dict[str, Any]:
-    logger.info("Running researcher node")
-    syllabus = researcher.run_agent(state["topic"], state.get("duration_seconds", 60))
-    return {"syllabus": syllabus}
-
-
-# ---------------------------------------------------------------------------
-# 1. Director — syllabus → scene blueprint (picks from shortlists)
-# ---------------------------------------------------------------------------
-def director_node(state: PipelineState) -> dict[str, Any]:
-    logger.info("Running director node")
-    plan = director.run_agent(state["syllabus"], state.get("duration_seconds", 60))
-    return {"plan": plan}
-
-
-# ---------------------------------------------------------------------------
-# 2a / 2b — parallel fan-out: content + visual data (disjoint panels)
-# ---------------------------------------------------------------------------
-def scriptwriter_node(state: PipelineState) -> dict[str, Any]:
-    logger.info("Running scriptwriter node")
-    script = scriptwriter.run_agent(state["plan"], state["syllabus"])
-    return {"script": script}
-
-
-def visual_architect_node(state: PipelineState) -> dict[str, Any]:
-    logger.info("Running visual architect node")
-    story = visual_architect.run_agent(state["plan"], state["syllabus"])
-    return {"story": story}
 
 
 # ---------------------------------------------------------------------------
@@ -49,6 +17,11 @@ def visual_architect_node(state: PipelineState) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 def merge_node(state: PipelineState) -> dict[str, Any]:
     logger.info("Running merge node")
+    slug = state["checkpoint_slug"]
+    if (cached := load_checkpoint(slug, "scenes")) is not None:
+        logger.info("[Merge] ⏩ Loaded from checkpoint")
+        return cached
+
     plan = state["plan"]
     script = state.get("script") or {}
     story = state.get("story") or {}
@@ -91,10 +64,16 @@ def merge_node(state: PipelineState) -> dict[str, Any]:
         })
 
     # Deterministic timing (needs narration) → then captions (needs frame positions).
-    compute_timings(scenes_out, state.get("duration_seconds", 60))
-    captions = build_captions(scenes_out)
+    fps = state.get("fps", 30)
+    compute_timings(scenes_out, state.get("duration_seconds", 60), fps=fps)
+    captions = build_captions(scenes_out, fps=fps)
 
-    return {"scenes": scenes_out, "captions": captions}
+    # Validate all merged scenes before returning them
+    validated_scenes = [MergedScene.model_validate(s).model_dump() for s in scenes_out]
+
+    data = {"scenes": validated_scenes, "captions": captions}
+    save_checkpoint(slug, "scenes", data)
+    return data
 
 
 # ---------------------------------------------------------------------------
@@ -102,9 +81,55 @@ def merge_node(state: PipelineState) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 def validator_node(state: PipelineState) -> dict[str, Any]:
     logger.info("Running validator node")
+    slug = state["checkpoint_slug"]
+    if (cached := load_checkpoint(slug, "validation_report")) is not None:
+        logger.info("[Validator] ⏩ Loaded from checkpoint")
+        return cached
+
     scenes = state["scenes"]
     report = validate_and_repair(scenes, state["syllabus"])
-    return {"scenes": scenes, "validation_report": report}
+    
+    data = {"scenes": scenes, "validation_report": report}
+    save_checkpoint(slug, "validation_report", data)
+    return data
+
+
+# ---------------------------------------------------------------------------
+# 4.5 TTS — Generate audio and update captions with perfect timestamps
+# ---------------------------------------------------------------------------
+def tts_node(state: PipelineState) -> dict[str, Any]:
+    logger.info("Running TTS node")
+    slug = state["checkpoint_slug"]
+    
+    # We don't cache this strictly because the user might have enabled/disabled audio.
+    # If audio is requested and already generated for this slug, we check if file exists.
+    if (cached := load_checkpoint(slug, "tts")) is not None:
+        logger.info("[TTS] ⏩ Loaded from checkpoint")
+        return cached
+
+    from utils.tts import generate_audio_and_timestamps
+    from utils.captions import build_captions_from_words
+    
+    # Concatenate all narration
+    scenes = state["scenes"]
+    full_narration = " ".join(s.get("narration", "").strip() for s in scenes)
+    
+    audio_path, words = generate_audio_and_timestamps(full_narration, slug)
+    
+    if not audio_path or not words:
+        logger.warning("[TTS] Failed to generate audio or timestamps.")
+        return {}
+        
+    # Rebuild captions using perfect word timestamps
+    perfect_captions = build_captions_from_words(words)
+    
+    data = {
+        "audio_path": audio_path, 
+        "audio_url": f"/audio/{slug}.mp3", 
+        "captions": perfect_captions
+    }
+    save_checkpoint(slug, "tts", data)
+    return data
 
 
 # ---------------------------------------------------------------------------
@@ -112,9 +137,14 @@ def validator_node(state: PipelineState) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 def assembler_node(state: PipelineState) -> dict[str, Any]:
     logger.info("Running assembler node")
+    slug = state["checkpoint_slug"]
+    if (cached := load_checkpoint(slug, "video_script")) is not None:
+        logger.info("[Assembler] ⏩ Loaded from checkpoint")
+        return {"video_script": cached}
+
     from models.video_script import VideoScript
     from pydantic import ValidationError
-
+    
     plan = state["plan"]
     syllabus = state["syllabus"]
     theme = plan.get("theme", {})
@@ -125,9 +155,9 @@ def assembler_node(state: PipelineState) -> dict[str, Any]:
 
     raw_script = {
         "title": syllabus.get("topic", state["topic"]),
-        "fps": 30,
-        "width": 1920,
-        "height": 1080,
+        "fps": state.get("fps", 30),
+        "width": state.get("width", 1920),
+        "height": state.get("height", 1080),
         "theme": {
             "primary": theme.get("primary", "#6366f1"),
             "secondary": theme.get("secondary", "#10b981"),
@@ -135,7 +165,11 @@ def assembler_node(state: PipelineState) -> dict[str, Any]:
             "background": theme.get("background", "#030711"),
             "font": theme.get("font", "Inter"),
         },
-        "voiceover": {"provider": None, "captions": state.get("captions") or []},
+        "voiceover": {
+            "provider": "deepgram" if state.get("audio_path") else None, 
+            "captions": state.get("captions") or []
+        },
+        "audio_url": state.get("audio_url"),
         "scenes": clean_scenes,
     }
 
@@ -143,6 +177,7 @@ def assembler_node(state: PipelineState) -> dict[str, Any]:
         vs = VideoScript.model_validate(raw_script)
         validated = vs.model_dump(mode="json")
         logger.info("[assembler] ✅ %d scenes, %d frames", len(vs.scenes), vs.total_frames())
+        save_checkpoint(slug, "video_script", validated)
         return {"video_script": validated, "model_used": "merge", "fallback_triggered": False}
     except ValidationError as exc:
         logger.error("[assembler] ❌ Pydantic failed: %s", exc)

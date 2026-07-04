@@ -63,7 +63,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
         fontFamily: "'Fira Code', 'Courier New', monospace",
       }}
     >
-      {revealedLines.map((line, i) => (
+      {revealedLines.map((line: string, i: number) => (
         <div key={i} style={{ position: "relative", minHeight: fontSize * 1.4 }}>
           <span
             style={{
