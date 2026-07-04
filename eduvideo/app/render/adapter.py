@@ -1,8 +1,11 @@
-"""Revideo adapter (MASTER_CONTEXT.md §2 stage 10). The ONLY Python module aware
-that the renderer is Revideo — swapping renderers later means touching only this
-file + renderer/. Invokes `npm run render` (renderer/render.ts, Phase 9) as a
-subprocess against the job's video_plan.json + voiceover.mp3, and writes
-rendered.mp4 back into the job dir (render.ts's own contract).
+"""Render stage dispatcher (MASTER_CONTEXT.md §2 stage 10). Picks the renderer
+engine from config.render.engine:
+  - "revideo" (default): this file's own subprocess call to `npm run render`
+    (renderer/render.ts) — unchanged from Phase 9/10.
+  - "remotion": delegates to remotion_adapter.py, the only module aware of the
+    Remotion project's component names/props.
+Either path writes rendered.mp4 back into the job dir — orchestrator.py and
+every downstream stage (player) don't need to know which engine ran.
 """
 
 from __future__ import annotations
@@ -13,6 +16,7 @@ from pathlib import Path
 from app.clients.tracing import span
 from app.config import BASE_DIR, get_settings
 from app.jobs import read_manifest
+from app.render import remotion_adapter
 
 
 def run(job_dir: Path) -> None:
@@ -22,9 +26,16 @@ def run(job_dir: Path) -> None:
         raise RuntimeError("render: video_plan.json has not passed validation yet")
 
     render_cfg = get_settings().config.render
-    renderer_dir = BASE_DIR / render_cfg.renderer_dir
 
-    with span("render", input=str(job_dir)) as obs:
+    with span("render", input=str(job_dir), engine=render_cfg.engine) as obs:
+        if render_cfg.engine == "remotion":
+            renderer_dir = BASE_DIR / render_cfg.remotion_dir
+            remotion_adapter.render(job_dir, renderer_dir, render_cfg.timeout_seconds)
+            rendered_path = job_dir / "rendered.mp4"
+            obs.update(output=f"rendered.mp4: {rendered_path.stat().st_size} bytes (remotion)")
+            return
+
+        renderer_dir = BASE_DIR / render_cfg.renderer_dir
         result = subprocess.run(
             ["npm", "run", "render", "--", str(job_dir.resolve())],
             cwd=str(renderer_dir),

@@ -25,3 +25,6 @@ subtitles:
   max_words_per_line: 9
   max_chars_per_line: 42
   min_display_seconds: 0.8
+
+render:
+  engine: remotion

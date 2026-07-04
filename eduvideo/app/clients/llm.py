@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import httpx
 
 from app.clients.tracing import span
@@ -76,6 +78,13 @@ class LLMClient:
         answer = body.get("answer")
         if not answer:
             raise RuntimeError("custom LLM API returned an empty answer")
+        if not isinstance(answer, str):
+            # The custom server sometimes parses the JSON itself and returns the
+            # object directly in `answer` instead of a JSON string (observed with
+            # "Respond with raw JSON only" prompts). Every caller expects a str
+            # and does its own json.loads() — round-trip through json.dumps so
+            # both response shapes look identical downstream.
+            answer = json.dumps(answer)
         return answer
 
     def _call_azure(self, system: str, user: str, json_mode: bool) -> str:
