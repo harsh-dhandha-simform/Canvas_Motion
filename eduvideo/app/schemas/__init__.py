@@ -1,16 +1,16 @@
-"""Pydantic models for every pipeline artifact, re-exported for `from app.schemas import X`."""
+"""Pydantic models for the tail/learning-module artifacts, re-exported for
+`from app.schemas import X`. The video-generation artifacts (script, storyboard,
+video_plan, …) were replaced by the LangGraph engine's own models under
+app/engine/models/, so they no longer live here."""
 
 from app.schemas.concepts import ConceptWindow, Concepts
-from app.schemas.content_analysis import Concept, ContentAnalysis
 from app.schemas.enums import (
-    AnimationPreset,
     ChartType,
     CodeLanguage,
     DiagramType,
     InteractionType,
     JobStatus,
     SceneType,
-    Template,
 )
 from app.schemas.input import JobInput
 from app.schemas.interactions import (
@@ -31,56 +31,18 @@ from app.schemas.interactions import (
     StepThroughStep,
 )
 from app.schemas.manifest import JobManifest
-from app.schemas.scene_timings import SceneTime, SceneTimings
-from app.schemas.script import Script, ScriptSection
-from app.schemas.storyboard import Storyboard, StoryboardScene
-from app.schemas.subtitles import Subtitle, Subtitles
-from app.schemas.timings import Segment, Timings
-from app.schemas.video_plan import (
-    AudioRef,
-    BulletListProps,
-    ChartProps,
-    ChartSeries,
-    CodeProps,
-    CodeStep,
-    ComparisonProps,
-    ComparisonSide,
-    DefinitionProps,
-    DiagramProps,
-    OutroProps,
-    PlanScene,
-    QuizProps,
-    RecapProps,
-    TitleProps,
-    VideoMeta,
-    VideoPlan,
-    VideoStyle,
-)
 
 __all__ = [
-    "AnimationPreset",
-    "AudioRef",
-    "BulletListProps",
-    "ChartProps",
-    "ChartSeries",
     "ChartType",
     "CodeLanguage",
     "CodePlaygroundProps",
-    "CodeProps",
-    "CodeStep",
-    "ComparisonProps",
-    "ComparisonSide",
-    "Concept",
     "ConceptWindow",
     "Concepts",
-    "ContentAnalysis",
     "CustomCode",
     "DataStructureProps",
-    "DefinitionProps",
     "DiagramEdge",
     "DiagramExploreProps",
     "DiagramNode",
-    "DiagramProps",
     "DiagramType",
     "FlashcardsCard",
     "FlashcardsProps",
@@ -90,29 +52,10 @@ __all__ = [
     "JobInput",
     "JobManifest",
     "JobStatus",
-    "OutroProps",
     "ParamExplorerParam",
     "ParamExplorerProps",
-    "PlanScene",
-    "QuizProps",
     "QuizWidgetProps",
-    "RecapProps",
-    "SceneTime",
-    "SceneTimings",
     "SceneType",
-    "Script",
-    "ScriptSection",
-    "Segment",
     "StepThroughProps",
     "StepThroughStep",
-    "Storyboard",
-    "StoryboardScene",
-    "Subtitle",
-    "Subtitles",
-    "Template",
-    "TitleProps",
-    "Timings",
-    "VideoMeta",
-    "VideoPlan",
-    "VideoStyle",
 ]

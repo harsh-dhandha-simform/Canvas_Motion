@@ -1,9 +1,9 @@
 """Interaction Planner agent (MASTER_CONTEXT.md §2 stage 8, §5.2 hybrid library).
 For each concept in the spine, picks ONE interactive component for the right-hand
 panel — a fixed-library widget by default, `custom` sandboxed code only when no
-library widget fits. One LLM call for the whole spine (consistent with
-script_writer/storyboarder — cheaper and faster than one call per concept), not one
-call per concept; per-concept granularity is still enforced by validation below.
+library widget fits. One LLM call for the whole spine (cheaper and faster than one
+call per concept), not one call per concept; per-concept granularity is still
+enforced by validation below.
 """
 
 from __future__ import annotations
