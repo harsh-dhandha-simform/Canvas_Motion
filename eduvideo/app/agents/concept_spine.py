@@ -1,66 +1,103 @@
-"""Concept Spine builder (MASTER_CONTEXT.md §2.1, §2 stage 6). Computes each
-concept's real [start, end] time window from scene_timings.json — the shared
-backbone that both video_plan.json and (later) interactions.json key off.
+"""Concept Spine builder (MASTER_CONTEXT.md §2.1). Derives the concept spine —
+the shared time-window backbone the interactions stage and the React player key
+off — from the engine's syllabus.json (subtopics) + scenes_timed.json (the
+gapless, ordered scene windows the assembler wrote).
 
-Purely deterministic: groups scenes by concept_id and takes the min/max bound of
-each group. Concepts must not interleave in time (script_writer/storyboarder
-enforce non-decreasing concept order upstream) — this stage fails loudly rather
-than silently reordering or merging windows.
+Purely deterministic. Each scene declares which subtopics it `covers`; the scene's
+PRIMARY concept is covers[0] (a scene with no covers — e.g. a title/outro — inherits
+the previous scene's primary; scene 0 borrows the first non-empty primary). Runs of
+consecutive scenes sharing a primary collapse into one contiguous window
+[first.start, last.end]. Because scenes are gapless and ordered, the windows tile
+[0, total] by construction; we still assert contiguity and fail loudly if a primary
+reappears non-adjacently (A…B…A) rather than silently producing overlapping windows.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
+from loguru import logger
+
 from app.clients.tracing import span
-from app.jobs import read_artifact, write_artifact
+from app.jobs import read_json_artifact, write_artifact
 from app.schemas.concepts import ConceptWindow, Concepts
-from app.schemas.content_analysis import ContentAnalysis
-from app.schemas.scene_timings import SceneTimings
 
 _TOLERANCE = 0.5
 
 
+def _primaries(scenes: list[dict]) -> list[str | None]:
+    """Per-scene primary concept id: covers[0], else inherit previous; scene 0 with no
+    covers borrows the first non-empty primary in the sequence."""
+    raw = [(s.get("covers") or [None])[0] for s in scenes]
+    first_non_empty = next((p for p in raw if p), None)
+    out: list[str | None] = []
+    for i, p in enumerate(raw):
+        if p:
+            out.append(p)
+        elif i == 0:
+            out.append(first_non_empty)
+        else:
+            out.append(out[-1])
+    return out
+
+
 def run(job_dir: Path) -> None:
-    analysis = read_artifact(job_dir, "content_analysis", ContentAnalysis)
-    scene_timings = read_artifact(job_dir, "scene_timings", SceneTimings)
+    syllabus = read_json_artifact(job_dir, "syllabus")
+    scenes_timed = read_json_artifact(job_dir, "scenes_timed")
+    if syllabus is None or scenes_timed is None:
+        raise FileNotFoundError("concept_spine: syllabus.json and scenes_timed.json must exist (run the engine first)")
 
-    with span("concept_spine", input=f"{len(analysis.concepts)} concepts") as obs:
-        bounds: dict[str, tuple[float, float]] = {}
-        for scene in scene_timings.scenes:
-            start, end = scene.start, scene.start + scene.duration
-            if scene.concept_id in bounds:
-                prev_start, prev_end = bounds[scene.concept_id]
-                bounds[scene.concept_id] = (min(prev_start, start), max(prev_end, end))
-            else:
-                bounds[scene.concept_id] = (start, end)
+    scenes = scenes_timed.get("scenes", [])
+    if not scenes:
+        raise ValueError("concept_spine: scenes_timed.json has no scenes")
+    subtopics = {st["id"]: st for st in syllabus.get("subtopics", [])}
 
-        missing = [c.id for c in analysis.concepts if c.id not in bounds]
-        if missing:
-            raise ValueError(f"concept_spine: no scenes found for concept(s): {missing}")
+    with span("concept_spine", input=f"{len(scenes)} scenes, {len(subtopics)} subtopics") as obs:
+        primaries = _primaries(scenes)
+        if not any(primaries):
+            raise ValueError("concept_spine: no scene declares a concept in `covers` — cannot build a spine")
 
-        windows = [
-            ConceptWindow(
-                id=c.id,
-                title=c.title,
-                order=c.order,
-                description=c.description,
-                start=round(bounds[c.id][0], 2),
-                end=round(bounds[c.id][1], 2),
+        windows: list[ConceptWindow] = []
+        seen: set[str] = set()
+        i = 0
+        n = len(scenes)
+        while i < n:
+            pid = primaries[i]
+            # Extend the run of consecutive scenes sharing this primary.
+            j = i
+            while j + 1 < n and primaries[j + 1] == pid:
+                j += 1
+            if pid in seen:
+                raise ValueError(
+                    f"concept_spine: concept '{pid}' reappears non-adjacently (A…B…A) — scenes "
+                    "covering one concept must be contiguous; check scene `covers` ordering upstream"
+                )
+            seen.add(pid)
+
+            st = subtopics.get(pid, {})
+            if not st:
+                logger.warning("concept_spine: primary '{}' not in syllabus subtopics — using id as title", pid)
+            start = round(scenes[i]["start"], 2)
+            end = round(scenes[j]["start"] + scenes[j]["duration"], 2)
+            windows.append(
+                ConceptWindow(
+                    id=pid,
+                    title=st.get("title") or pid,
+                    order=len(windows),
+                    description=st.get("teaching_goal") or st.get("depth_notes") or st.get("title") or pid,
+                    start=start,
+                    end=end,
+                )
             )
-            for c in analysis.concepts
-        ]
+            i = j + 1
 
-        # Ordered, contiguous, non-overlapping, covering [0, total] — fail loudly on
-        # interleaving/gaps rather than silently reordering or merging.
+        # Contiguity safety check — windows should tile [0, total] with no gaps/overlap.
         cursor = 0.0
         for w in windows:
             if abs(w.start - cursor) > _TOLERANCE:
                 raise ValueError(
-                    f"concept_spine: concepts interleave or have a timing gap — concept '{w.id}' "
-                    f"starts at {w.start}, expected ~{round(cursor, 2)} (windows must be contiguous "
-                    "and in content_analysis order; check for a scene tagged with an out-of-order "
-                    "concept_id upstream)"
+                    f"concept_spine: window for '{w.id}' starts at {w.start}, expected ~{round(cursor, 2)} "
+                    "(windows must be contiguous — check scenes_timed gaplessness)"
                 )
             if w.end <= w.start:
                 raise ValueError(f"concept_spine: concept '{w.id}' has a non-positive window ({w.start} -> {w.end})")
@@ -69,3 +106,4 @@ def run(job_dir: Path) -> None:
         total = round(cursor, 2)
         write_artifact(job_dir, "concepts", Concepts(concepts=windows, totalDurationSec=total))
         obs.update(output=f"{len(windows)} concept windows, totalDurationSec={total}")
+        logger.info("concept_spine: {} windows tiling [0, {}]", len(windows), total)
