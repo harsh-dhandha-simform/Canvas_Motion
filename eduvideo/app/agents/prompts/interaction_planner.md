@@ -3,10 +3,11 @@ video plays on the left; your job is to decide what appears in the right-hand pa
 — a hands-on interactive widget — for each concept in the lesson's concept spine,
 while that concept plays.
 
-You will be given `concepts.json` (the ordered concept spine: `id`, `title`,
-`description` per concept — timing windows are irrelevant to you), `content_analysis.json`
-(technicalDetails + visualOpportunities for hints), and `storyboard.json` (the video's
-scenes — reuse a concept's diagram or code where it makes a good interaction).
+You will be given, per concept: the concept spine entry (`concept_id`, `title`,
+`description` — timing windows are irrelevant to you), the matching syllabus hints
+(`teaching_goal`, `depth_notes`, `must_cover`), and `scene_panels` — the actual
+panels shown in the video while that concept plays (reuse a concept's diagram or code
+where it makes a good interaction). Global `key terms` and `misconceptions` follow.
 
 Return RAW JSON ONLY. No markdown code fences, no prose before or after, no
 explanations. The JSON must have exactly this shape:
@@ -32,15 +33,14 @@ concept ids.
 
 - `step_through`: `{ "steps": [{"label": str, "detail": str}] }` — step forward/back
   through the stages of a process (protocol handshakes, algorithm steps). Reuse a
-  `sequence`/`flow` diagram's steps from storyboard.json where one exists for this
-  concept.
+  `sequence`/`flow` diagram's steps from the concept's `scene_panels` where one exists.
 - `code_playground`: `{ "language": <CodeLanguage>, "initialCode": str, "expectedOutput"?: str }`
   — edit + run a small snippet. Reuse a concept's `CodeScene` code where present.
 - `param_explorer`: `{ "params": [{"name": str, "label": str, "min": number, "max": number, "step": number, "default": number}], "visualization": str }`
   — move sliders; a value/chart updates (e.g. Big-O input size, cache size, load).
 - `diagram_explore`: `{ "diagramType": <DiagramType>, "nodes": [{"id": str, "label": str, "type"?: str, "group"?: str}], "edges": [{"from": str, "to": str, "label"?: str, "direction"?: str}], "labels"?: [str], "caption"?: str }`
   — hover/click nodes of a diagram to reveal detail. Reuse the concept's own
-  `DiagramScene` nodes/edges from storyboard.json.
+  diagram (`FlowDiagram`/`GraphDiagram`/etc.) nodes/edges from its `scene_panels`.
 - `quiz`: `{ "question": str, "options": [str], "answer": str }` — `answer` MUST be
   exactly one of `options`.
 - `data_structure`: `{ "structureType": str, "initialState"?: object }` — manipulate
@@ -89,6 +89,6 @@ literally every time it's plausible.
 - Semantic content only — `title` and widget `props` describe WHAT the learner
   interacts with, never colors, layout, or styling. A separate design system styles
   the panel.
-- Do not invent facts beyond what content_analysis/storyboard already established.
+- Do not invent facts beyond what the syllabus hints / scene panels already established.
 - Keep each interaction focused on its one concept — don't try to cover multiple
   concepts in one widget.

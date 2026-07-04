@@ -15,11 +15,9 @@ from pydantic import ValidationError
 
 from app.clients.llm import LLMClient
 from app.clients.tracing import span
-from app.jobs import read_artifact, write_artifact
+from app.jobs import read_artifact, read_json_artifact, write_artifact
 from app.schemas.concepts import Concepts
-from app.schemas.content_analysis import ContentAnalysis
 from app.schemas.interactions import Interactions
-from app.schemas.storyboard import Storyboard
 
 _SYSTEM_PROMPT = (Path(__file__).parent / "prompts" / "interaction_planner.md").read_text(encoding="utf-8")
 
@@ -40,16 +38,44 @@ def _parse_response(raw: str) -> Interactions:
     return Interactions.model_validate(data)
 
 
-def _build_user_prompt(concepts: Concepts, analysis: ContentAnalysis, storyboard: Storyboard) -> str:
+def _panels_by_concept(scenes_timed: dict, video_script: dict) -> dict[str, list[dict]]:
+    """For each concept id, the panels (type + data) of the video scenes that cover it —
+    so the planner can reuse a diagram/code the learner is already seeing. Joins
+    scenes_timed (which carries `covers`) to the VideoScript scenes (which carry the
+    covers-stripped panels) by scene id, falling back to positional order."""
+    vs_scenes = video_script.get("scenes", [])
+    vs_by_id = {s.get("id"): s for s in vs_scenes}
+    out: dict[str, list[dict]] = {}
+    for idx, st in enumerate(scenes_timed.get("scenes", [])):
+        vscene = vs_by_id.get(st.get("id")) or (vs_scenes[idx] if idx < len(vs_scenes) else {})
+        panels = [{"type": p.get("type"), "data": p.get("data")} for p in (vscene.get("panels") or [])]
+        for cid in st.get("covers") or []:
+            out.setdefault(cid, []).extend(panels)
+    return out
+
+
+def _build_user_prompt(concepts: Concepts, syllabus: dict, panels_by_concept: dict[str, list[dict]]) -> str:
+    subs = {st["id"]: st for st in syllabus.get("subtopics", [])}
+    concept_blocks = []
+    for c in concepts.concepts:
+        st = subs.get(c.id, {})
+        concept_blocks.append(
+            {
+                "concept_id": c.id,
+                "title": c.title,
+                "description": c.description,
+                "teaching_goal": st.get("teaching_goal"),
+                "depth_notes": st.get("depth_notes"),
+                "must_cover": st.get("must_cover"),
+                "scene_panels": panels_by_concept.get(c.id, []),
+            }
+        )
     lines = [
-        "concepts.json (exactly one interaction per concept, in this order):",
-        concepts.model_dump_json(indent=2),
+        "concepts (produce EXACTLY one interaction per concept_id, in this order):",
+        json.dumps(concept_blocks, indent=2),
         "",
-        "content_analysis.json (technicalDetails + visualOpportunities hints):",
-        analysis.model_dump_json(indent=2),
-        "",
-        "storyboard.json (reuse a concept's diagram/code where relevant):",
-        storyboard.model_dump_json(indent=2),
+        "Global key terms: " + ", ".join(syllabus.get("key_terms", [])),
+        "Common misconceptions: " + json.dumps(syllabus.get("misconceptions", [])),
     ]
     return "\n".join(lines)
 
@@ -70,11 +96,13 @@ def _validate_concept_coverage(interactions: Interactions, concepts: Concepts) -
 
 def run(job_dir: Path) -> None:
     concepts = read_artifact(job_dir, "concepts", Concepts)
-    analysis = read_artifact(job_dir, "content_analysis", ContentAnalysis)
-    storyboard = read_artifact(job_dir, "storyboard", Storyboard)
-    user_prompt = _build_user_prompt(concepts, analysis, storyboard)
+    syllabus = read_json_artifact(job_dir, "syllabus") or {}
+    scenes_timed = read_json_artifact(job_dir, "scenes_timed") or {}
+    video_script = read_json_artifact(job_dir, "video_script") or {}
+    panels_by_concept = _panels_by_concept(scenes_timed, video_script)
+    user_prompt = _build_user_prompt(concepts, syllabus, panels_by_concept)
 
-    with span("interaction_planner", input=user_prompt, topic=analysis.topic) as obs:
+    with span("interaction_planner", input=user_prompt, topic=syllabus.get("topic")) as obs:
         llm = LLMClient()
         raw = llm.complete(_SYSTEM_PROMPT, user_prompt, json_mode=True)
 
