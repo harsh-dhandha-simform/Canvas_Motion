@@ -61,10 +61,12 @@ class SubtitlesConfig(BaseModel):
 
 class RenderConfig(BaseModel):
     renderer_dir: str = "renderer"
-    timeout_seconds: float = 900.0
-    # "revideo" (default, unchanged) or "remotion" — new richer renderer, kept
-    # behind this flag so the working Revideo path stays intact/switchable while
-    # the Remotion integration is verified (see app/render/remotion_adapter.py).
+    # Generous ceiling — the engine sizes videos to narration length (durationSec is a
+    # floor, not a cap), so a rich multi-subtopic lesson can run ~10 min and take many
+    # minutes to render frame-by-frame. Fast renders still finish well before this.
+    timeout_seconds: float = 3600.0
+    # "remotion" (default/only supported with the VideoScript engine) or "revideo"
+    # (legacy canvas path — now raises; see app/render/adapter.py).
     engine: str = "remotion"
     remotion_dir: str = "renderer_remotion"
 
