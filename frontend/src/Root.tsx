@@ -11,6 +11,7 @@ import { DynamicVideo, VideoScriptProps } from "./DynamicVideo";
 import { EXAMPLE_SCRIPTS } from "./generated/examples.generated";
 import { SortingVisualizer } from "./components/SortingVisualizer";
 import { LinearStructure } from "./components/LinearStructure";
+import { ArrayAlgorithm } from "./components/ArrayAlgorithm";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -67,6 +68,20 @@ export const RemotionRoot: React.FC = () => {
             { op: "dequeue" as const },
           ],
           showHeadTail: true,
+        }}
+      />
+      <Composition
+        id="preview-ArrayAlgorithm"
+        component={ArrayAlgorithm}
+        durationInFrames={30 * 10}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          title: "Binary search for 23",
+          mode: "binary-search" as const,
+          values: [3, 7, 11, 15, 19, 23, 27, 31, 35],
+          target: 23,
         }}
       />
     </>

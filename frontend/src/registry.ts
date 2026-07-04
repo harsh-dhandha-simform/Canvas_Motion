@@ -42,6 +42,7 @@ import { FlowDiagram, FlowDiagramSchema } from "./components/FlowDiagram";
 import { CalloutAnnotation, CalloutAnnotationSchema } from "./components/CalloutAnnotation";
 import { SortingVisualizer, SortingVisualizerSchema } from "./components/SortingVisualizer";
 import { LinearStructure, LinearStructureSchema } from "./components/LinearStructure";
+import { ArrayAlgorithm, ArrayAlgorithmSchema } from "./components/ArrayAlgorithm";
 
 export const COMPONENT_REGISTRY = {
   AnimatedTitle,
@@ -74,6 +75,7 @@ export const COMPONENT_REGISTRY = {
   CalloutAnnotation,
   SortingVisualizer,
   LinearStructure,
+  ArrayAlgorithm,
 } as const;
 
 export const COMPONENT_SCHEMAS = {
@@ -107,6 +109,7 @@ export const COMPONENT_SCHEMAS = {
   CalloutAnnotation: CalloutAnnotationSchema,
   SortingVisualizer: SortingVisualizerSchema,
   LinearStructure: LinearStructureSchema,
+  ArrayAlgorithm: ArrayAlgorithmSchema,
 } as const;
 
 // Zod v4 ships a native JSON-Schema converter. The old `zod-to-json-schema`
@@ -190,6 +193,13 @@ export const COMPONENT_META: Record<SceneType, ComponentMeta> = {
     bestAreas: ["panel", "main"],
     useWhen: "a linear data structure — array, stack, queue, deque, or linked list — being mutated by a sequence of operations",
     tags: ["array", "stack", "queue", "deque", "linked-list", "data-structure", "push", "pop"],
+    minSeconds: 8,
+  },
+  ArrayAlgorithm: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "an array-scan algorithm — binary search, sliding window, or two-pointer technique",
+    tags: ["array", "pointer", "binary-search", "sliding-window", "two-pointer"],
     minSeconds: 8,
   },
 };
@@ -314,6 +324,10 @@ export const COMPONENT_CATALOG = {
   LinearStructure: {
     description: "An animated linear data structure — array, stack, queue, deque, or linked list — with push/pop/enqueue/dequeue/insert/delete motion. Cells shift, fade, and translate to visualise each operation.",
     schema: toJsonSchema(LinearStructureSchema, "LinearStructureProps"),
+  },
+  ArrayAlgorithm: {
+    description: "An animated array walkthrough with pointer overlays. Modes: binary-search (L/M/R), sliding-window (start/end + running sum), two-pointer (i/j).",
+    schema: toJsonSchema(ArrayAlgorithmSchema, "ArrayAlgorithmProps"),
   },
 };
 
