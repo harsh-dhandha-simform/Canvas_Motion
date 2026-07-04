@@ -69,19 +69,46 @@ export const CaptionLayer: React.FC<{ captions?: Caption[] }> = ({ captions }) =
           borderLeft: `4px solid ${theme.accent}`,
         }}
       >
-        <span
+        <div
           style={{
             fontSize: Math.round(height * 0.032), // ~34px on 1080p
             lineHeight: 1.35,
-            fontWeight: 600,
-            color: "#f1f5f9",
-            textAlign: "center",
-            display: "block",
             letterSpacing: "-0.01em",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: "0.35em",
           }}
         >
-          {active.text}
-        </span>
+          {(() => {
+            // Per-word keyword highlight (SEAM 3, ported from the Revideo SubtitleBox):
+            // phrases in `highlight` are expanded to individual words so a multi-word key
+            // term like "load balancer" highlights each word. Only the text styling
+            // changes — the pill/position/fade above are untouched.
+            const hi = new Set<string>();
+            (active.highlight ?? []).forEach((h) =>
+              h.toLowerCase().split(/\s+/).forEach((w) => w && hi.add(w)),
+            );
+            return active.text
+              .split(/\s+/)
+              .filter(Boolean)
+              .map((word, i) => {
+                const bare = word.replace(/[.,!?;:'"]/g, "").toLowerCase();
+                const on = hi.has(bare);
+                return (
+                  <span
+                    key={i}
+                    style={{
+                      fontWeight: on ? 700 : 600,
+                      color: on ? theme.secondary : "#f1f5f9",
+                    }}
+                  >
+                    {word}
+                  </span>
+                );
+              });
+          })()}
+        </div>
       </div>
     </div>
   );

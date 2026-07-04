@@ -69,6 +69,8 @@ export type Caption = {
   endMs: number;
   timestampMs: number | null;
   confidence: number | null;
+  // Keyword words/phrases to render bold+amber within this caption line (SEAM 3).
+  highlight?: string[];
 };
 
 export type VoiceoverSpec = {
