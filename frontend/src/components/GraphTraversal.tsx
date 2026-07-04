@@ -7,6 +7,10 @@ import { useTheme } from "../ThemeContext";
 import { mix, stepAt, resolveSteps } from "./_shared/anim";
 import { generateGraphSteps } from "./GraphTraversal.steps";
 
+function edgeKey(a: string, b: string): string {
+  return a < b ? `${a}-${b}` : `${b}-${a}`;
+}
+
 const GraphNodeSchema = z.object({
   id: z.string(),
   label: z.string().optional(),
@@ -55,7 +59,7 @@ export const GraphTraversal: React.FC<GraphTraversalProps> = ({
   steps: explicitSteps, showDistanceTable, speed = 1, accentColor,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
   const theme = useTheme();
   const accent = accentColor ?? theme.accent;
 
@@ -84,12 +88,12 @@ export const GraphTraversal: React.FC<GraphTraversalProps> = ({
       const s = steps[i];
       if (s.kind === "visit" && s.node) nodeState.set(s.node, "visited");
       if (s.kind === "enqueue" && s.edge) {
-        const k = `${s.edge.from}-${s.edge.to}`;
+        const k = edgeKey(s.edge.from, s.edge.to);
         edgeState.set(k, "traversed");
         if (nodeState.get(s.edge.to) !== "visited") nodeState.set(s.edge.to, "frontier");
       }
       if (s.kind === "relax" && s.edge && s.node) {
-        edgeState.set(`${s.edge.from}-${s.edge.to}`, "relaxed");
+        edgeState.set(edgeKey(s.edge.from, s.edge.to), "relaxed");
         if (typeof s.distance === "number") distance.set(s.node, s.distance);
         if (nodeState.get(s.node) !== "settled") nodeState.set(s.node, "frontier");
       }
@@ -97,8 +101,8 @@ export const GraphTraversal: React.FC<GraphTraversalProps> = ({
         nodeState.set(s.node, "settled");
         if (typeof s.distance === "number") distance.set(s.node, s.distance);
       }
-      if (s.kind === "mst-select" && s.edge) edgeState.set(`${s.edge.from}-${s.edge.to}`, "mst");
-      if (s.kind === "mst-reject" && s.edge) edgeState.set(`${s.edge.from}-${s.edge.to}`, "rejected");
+      if (s.kind === "mst-select" && s.edge) edgeState.set(edgeKey(s.edge.from, s.edge.to), "mst");
+      if (s.kind === "mst-reject" && s.edge) edgeState.set(edgeKey(s.edge.from, s.edge.to), "rejected");
       if (s.kind === "topo-emit" && s.node) { nodeState.set(s.node, "topo"); topoOrder.push(s.node); }
     }
   }
@@ -114,7 +118,7 @@ export const GraphTraversal: React.FC<GraphTraversalProps> = ({
   };
 
   const edgeColour = (from: string, to: string) => {
-    const st = edgeState.get(`${from}-${to}`) ?? "neutral";
+    const st = edgeState.get(edgeKey(from, to)) ?? "neutral";
     if (st === "mst") return { stroke: accent, width: 4 };
     if (st === "rejected") return { stroke: "#ef4444", width: 2 };
     if (st === "relaxed") return { stroke: accent, width: 3 };
@@ -163,7 +167,7 @@ export const GraphTraversal: React.FC<GraphTraversalProps> = ({
                 stroke={stroke} strokeWidth={width} strokeLinecap="round"
               />
               {typeof e.weight === "number" && (
-                <g transform={`translate(${mx}%, ${my}%)`} opacity={entrance}>
+                <g transform={`translate(${mx / 100 * width}, ${my / 100 * height})`} opacity={entrance}>
                   <rect x={-16} y={-14} width={32} height={22} rx={11}
                     fill="#0f172a" stroke="#334155" strokeWidth={1} />
                   <text textAnchor="middle" dy={4} fill="#e2e8f0" fontSize={14} fontWeight={700}>
@@ -186,9 +190,11 @@ export const GraphTraversal: React.FC<GraphTraversalProps> = ({
           const pulse = isCurrentTarget
             ? 1 + 0.15 * Math.sin(stepProgress * Math.PI)
             : 1;
+          const nodeX = n.x / 100 * width;
+          const nodeY = n.y / 100 * height;
           return (
             <g key={n.id}
-              transform={`translate(${n.x}%, ${n.y}%)`}
+              transform={`translate(${nodeX}, ${nodeY})`}
               opacity={enter}
             >
               <circle r={28 * pulse} fill={fill} stroke={border} strokeWidth={3} />
