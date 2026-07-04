@@ -14,7 +14,7 @@ class Subtopic(BaseModel):
 
     id: str
     title: str
-    teaching_goal: str
+    teaching_goal: str = ""
     depth_notes: str = ""
     real_systems: list[str] = Field(default_factory=list)
     must_cover: bool = True

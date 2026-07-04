@@ -22,16 +22,19 @@ class PanelBlueprint(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     area: str    # "panel" | "left" | "right" | "main" | "sidebar"
-    type: str    # component name e.g. "BulletList"
+    type: str = Field(description="The component ID (e.g. 'BulletList', 'ArchitectureDiagram')")
+    size_ratio: int = Field(default=1, description="Relative width proportion for grid layouts")
+    delay_frames: int = Field(default=0, description="Delay in frames before this component appears in the scene")
+    # data is omitted; that is populated by Scriptwriter/VisualArchitect
 
 
 class SceneBlueprint(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     index: int
-    role: Literal["hook", "prerequisite", "core", "deep-dive", "tradeoff", "synthesis", "outro"]
+    role: str = "core"
     layout: str
-    title: str
+    title: str = ""
     subtitle: str = ""
     covers: list[str] = Field(default_factory=list)  # subtopic ids
     panels: list[PanelBlueprint] = Field(default_factory=list)
@@ -41,4 +44,4 @@ class DirectorPlan(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     theme: Theme = Field(default_factory=Theme)
-    scenes: list[SceneBlueprint] = Field(default_factory=list)
+    scenes: list[SceneBlueprint]

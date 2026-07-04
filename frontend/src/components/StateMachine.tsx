@@ -74,8 +74,11 @@ export const StateMachine: React.FC<StateMachineProps> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const positions = layoutStates(states.length);
-  const stateById = new Map(states.map((s, i) => [s.id, { ...s, ...positions[i] }]));
+  const safeStates = states ?? [];
+  const safeTransitions = transitions ?? [];
+
+  const positions = layoutStates(safeStates.length);
+  const stateById = new Map(safeStates.map((s, i) => [s.id, { ...s, ...positions[i] }]));
 
   // Title fade
   const titleOpacity = interpolate(frame, [0, 20], [0, 1], {
@@ -85,7 +88,7 @@ export const StateMachine: React.FC<StateMachineProps> = ({
   });
 
   // States spring in stagger
-  const stateSprings = states.map((_, i) =>
+  const stateSprings = safeStates.map((_, i) =>
     spring({
       frame: frame - (15 + i * 8),
       fps,
@@ -95,8 +98,8 @@ export const StateMachine: React.FC<StateMachineProps> = ({
   );
 
   // Transitions draw in after states
-  const transitionStart = 15 + states.length * 8 + 10;
-  const transitionSprings = transitions.map((_, i) =>
+  const transitionStart = 15 + safeStates.length * 8 + 10;
+  const transitionSprings = safeTransitions.map((_, i) =>
     spring({
       frame: frame - (transitionStart + i * 8),
       fps,
@@ -189,7 +192,7 @@ export const StateMachine: React.FC<StateMachineProps> = ({
           </defs>
 
           {/* Transitions (drawn under states) */}
-          {transitions.map((t, i) => {
+          {safeTransitions.map((t, i) => {
             const from = stateById.get(t.fromId);
             const to = stateById.get(t.toId);
             if (!from || !to) return null;
@@ -298,7 +301,7 @@ export const StateMachine: React.FC<StateMachineProps> = ({
           })}
 
           {/* States */}
-          {states.map((s, i) => {
+          {safeStates.map((s, i) => {
             const pos = positions[i];
             const sp = stateSprings[i];
             const isActive = s.id === activeStateId;

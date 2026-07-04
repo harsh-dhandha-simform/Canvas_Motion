@@ -5,8 +5,9 @@ from graph.state import PipelineState
 from component_catalog import data_owner
 from utils.timing import compute_timings
 from graph.validator import validate_and_repair
-from schemas import MergedScene
+from schemas.merge import MergedScene
 from utils.checkpoint import load_checkpoint, save_checkpoint
+from utils.captions import build_captions
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +27,13 @@ def merge_node(state: PipelineState) -> dict[str, Any]:
     script = state.get("script") or {}
     story = state.get("story") or {}
 
-    content_by_idx = {s.get("index", i): s for i, s in enumerate(script.get("scenes", []))}
-    visual_by_idx = {s.get("index", i): s for i, s in enumerate(story.get("scenes", []))}
+    content_by_idx = {i: s for i, s in enumerate(script.get("scenes", []))}
+    visual_by_idx = {i: s for i, s in enumerate(story.get("scenes", []))}
 
     scenes_out: list[dict] = []
     for i, p_scene in enumerate(plan.get("scenes", [])):
-        idx = p_scene.get("index", i)
-        c_scene = content_by_idx.get(idx, {})
-        v_scene = visual_by_idx.get(idx, {})
+        c_scene = content_by_idx.get(i, {})
+        v_scene = visual_by_idx.get(i, {})
         content_panels = c_scene.get("panels", {}) or {}
         visual_panels = v_scene.get("panels", {}) or {}
 
@@ -41,12 +41,31 @@ def merge_node(state: PipelineState) -> dict[str, Any]:
         for panel in p_scene.get("panels", []):
             area = panel.get("area")
             ptype = panel.get("type")
+            size_ratio = panel.get("size_ratio", 1)
+            delay_frames = panel.get("delay_frames", 0)
             if data_owner(ptype) == "visual":
-                data = dict(visual_panels.get(area) or {})
+                raw_data = dict(visual_panels.get(area) or {})
+                owner = "visual_architect"
             else:
-                data = dict(content_panels.get(area) or {})
+                raw_data = dict(content_panels.get(area) or {})
+                owner = "scriptwriter"
+                
+            # Safety net: LLMs sometimes wrap the payload in {"component": "...", "data": {...}} 
+            # instead of putting the schema properties directly at the top level.
+            # The agents now normalize this themselves, but we keep it here as a fallback.
+            data = raw_data.get("data") if "data" in raw_data and isinstance(raw_data["data"], dict) else raw_data
+            
+            # Warn if we got empty data for a panel that should have been filled
+            if not data or data == {}:
+                logger.warning(
+                    "[Merge] ⚠️  Scene %d area='%s' type='%s' — %s returned EMPTY data! "
+                    "This panel will be blank in the final video.",
+                    i, area, ptype, owner
+                )
+            
             data.setdefault("title", p_scene.get("title", ""))
-            panels_out.append({"area": area, "type": ptype, "data": data})
+            panels_out.append({"area": area, "type": ptype, "size_ratio": size_ratio, "delay_frames": delay_frames, "data": data})
+
 
         transition = v_scene.get("transition", "fade")
         if i == len(plan.get("scenes", [])) - 1:

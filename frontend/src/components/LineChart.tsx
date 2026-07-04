@@ -57,6 +57,9 @@ export const LineChart: React.FC<LineChartProps> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
+  const safeXLabels = xLabels ?? [];
+  const safeSeries = series ?? [];
+
   // Plot area
   const PAD_L = 140;
   const PAD_R = 80;
@@ -65,13 +68,13 @@ export const LineChart: React.FC<LineChartProps> = ({
   const PLOT_W = 1920 - PAD_L - PAD_R;
   const PLOT_H = 1080 - PAD_T - PAD_B;
 
-  const allValues = series.flatMap((s) => s.values);
+  const allValues = safeSeries.flatMap((s) => s.values ?? []);
   const yMin = Math.min(0, ...allValues);
   const yMax = Math.max(...allValues) * 1.1 || 1;
   const yRange = yMax - yMin || 1;
 
   const xAt = (i: number) =>
-    PAD_L + (PLOT_W * i) / Math.max(1, xLabels.length - 1);
+    PAD_L + (PLOT_W * i) / Math.max(1, safeXLabels.length - 1);
   const yAt = (v: number) =>
     PAD_T + PLOT_H - ((v - yMin) / yRange) * PLOT_H;
 
@@ -91,7 +94,7 @@ export const LineChart: React.FC<LineChartProps> = ({
   });
 
   // Each series draws in over time
-  const seriesDrawProgress = series.map((_, i) =>
+  const seriesDrawProgress = safeSeries.map((_, i) =>
     interpolate(frame, [20 + i * 10, 70 + i * 10], [0, 1], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
@@ -173,7 +176,7 @@ export const LineChart: React.FC<LineChartProps> = ({
           ))}
 
           {/* X-axis labels */}
-          {xLabels.map((label, i) => (
+          {safeXLabels.map((label, i) => (
             <text
               key={`xl-${i}`}
               x={xAt(i)}
@@ -235,17 +238,18 @@ export const LineChart: React.FC<LineChartProps> = ({
           />
 
           {/* Each series */}
-          {series.map((s, sIdx) => {
+          {safeSeries.map((s, sIdx) => {
             const color = s.color || SERIES_PALETTE[sIdx % SERIES_PALETTE.length];
             const progress = seriesDrawProgress[sIdx];
 
             // Build the path
-            const visiblePoints = s.values.length;
+            const sValues = s.values ?? [];
+            const visiblePoints = sValues.length;
             const visibleCount = Math.max(
               2,
               Math.floor(visiblePoints * progress)
             );
-            const pathPoints = s.values.slice(0, visibleCount).map((v, i) => ({
+            const pathPoints = sValues.slice(0, visibleCount).map((v, i) => ({
               x: xAt(i),
               y: yAt(v),
             }));
@@ -306,7 +310,7 @@ export const LineChart: React.FC<LineChartProps> = ({
           })}
 
           {/* Highlight index callout */}
-          {highlightIndex !== undefined && highlightIndex < xLabels.length && (
+          {highlightIndex !== undefined && highlightIndex < safeXLabels.length && (
             <g>
               <line
                 x1={xAt(highlightIndex)}
@@ -327,7 +331,7 @@ export const LineChart: React.FC<LineChartProps> = ({
                 fontWeight={700}
                 fontFamily="Fira Code, monospace"
               >
-                {xLabels[highlightIndex]}
+                {safeXLabels[highlightIndex]}
               </text>
             </g>
           )}
@@ -346,7 +350,7 @@ export const LineChart: React.FC<LineChartProps> = ({
               opacity: titleOpacity,
             }}
           >
-            {series.map((s, i) => {
+            {safeSeries.map((s, i) => {
               const color = s.color || SERIES_PALETTE[i % SERIES_PALETTE.length];
               return (
                 <div

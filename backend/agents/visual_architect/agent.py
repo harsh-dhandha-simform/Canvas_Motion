@@ -96,7 +96,11 @@ Output ONLY a single JSON object — no prose, no markdown fences.
 You MUST output a "panels" entry for EVERY area listed for each scene — never emit just a title.
 Components like TreeHierarchy, StateMachine, SequenceDiagram and FlowDiagram require their full nested
 structure (root/children, states/transitions, actors/messages, nodes/edges) — fill ALL required fields,
-not only the title. Match each component's schema exactly. Return ONLY valid JSON.
+not only the title. Match each component's schema exactly.
+
+STYLING: You may optionally output a "style" object inside any component's "data" payload to dynamically override CSS properties of its wrapper container (e.g. {{"backgroundColor": "rgba(0,0,0,0.5)", "padding": "40px", "borderRadius": "10px"}}). Use this for visual flair or adjusting spacing.
+
+Return ONLY valid JSON.
 """.strip()
 
 
@@ -138,10 +142,20 @@ def run_agent(plan: dict, syllabus: dict) -> dict:
 
     raw_dict: dict = parse_json_robust(raw, label=AGENT_NAME)
     
-    # Normalize default transitions before validation to avoid validation errors
-    # on missing fields if we want, or rely on Pydantic defaults. Pydantic handles defaults.
-    
     story = StoryOutput.model_validate(raw_dict)
+    
+    # Normalize: LLMs sometimes wrap panel data as {"component": "X", "data": {...}}
+    # instead of putting the schema fields directly at the top level.
+    # Also handle: {"data": {...}} wrapper without component key.
+    for scene in story.scenes:
+        normalized = {}
+        for area, panel_data in scene.panels.items():
+            if isinstance(panel_data, dict) and "data" in panel_data and isinstance(panel_data["data"], dict):
+                # Unwrap — take the inner data dict, ignore "component" key
+                normalized[area] = panel_data["data"]
+            else:
+                normalized[area] = panel_data
+        scene.panels = normalized
     
     # Force last scene transition to "none" after validation
     if story.scenes:

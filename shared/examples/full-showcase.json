@@ -1,5 +1,5 @@
 {
-  "title": "Canvas Motion — Full Component Showcase",
+  "title": "Canvas Motion \u2014 Full Component Showcase",
   "fps": 30,
   "width": 1920,
   "height": 1080,
@@ -59,10 +59,22 @@
       "data": {
         "title": "Library design principles",
         "items": [
-          { "heading": "Composition over creation", "description": "Combine primitives; never author one-off SVG per scene." },
-          { "heading": "JSON-serialisable", "description": "Every prop must be valid JSON — no functions, no Date objects." },
-          { "heading": "Deterministic motion", "description": "useCurrentFrame() only. No Math.random() during render." },
-          { "heading": "Topic-aware", "description": "Components cover the most common CS / systems visuals." }
+          {
+            "heading": "Composition over creation",
+            "description": "Combine primitives; never author one-off SVG per scene."
+          },
+          {
+            "heading": "JSON-serialisable",
+            "description": "Every prop must be valid JSON \u2014 no functions, no Date objects."
+          },
+          {
+            "heading": "Deterministic motion",
+            "description": "useCurrentFrame() only. No Math.random() during render."
+          },
+          {
+            "heading": "Topic-aware",
+            "description": "Components cover the most common CS / systems visuals."
+          }
         ],
         "layout": "grid"
       }
@@ -75,12 +87,36 @@
       "data": {
         "title": "Vocabulary you'll see in this library",
         "terms": [
-          { "term": "Scene", "definition": "One timed segment of a video — has a type, data, and duration.", "icon": "🎬" },
-          { "term": "Panel", "definition": "A component placed in one area of a scene's grid.", "icon": "▦" },
-          { "term": "Transition", "definition": "A 15-frame overlay effect between two scenes.", "icon": "↔" },
-          { "term": "Token", "definition": "A typed unit of a math formula — var, frac, sup, etc.", "icon": "Σ" },
-          { "term": "Lifeline", "definition": "A vertical timeline for one actor in a sequence diagram.", "icon": "│" },
-          { "term": "Frame budget", "definition": "Total frames at 30 fps. Sum of scene durations must match exactly.", "icon": "⊟" }
+          {
+            "term": "Scene",
+            "definition": "One timed segment of a video \u2014 has a type, data, and duration.",
+            "icon": "\ud83c\udfac"
+          },
+          {
+            "term": "Panel",
+            "definition": "A component placed in one area of a scene's grid.",
+            "icon": "\u25a6"
+          },
+          {
+            "term": "Transition",
+            "definition": "A 15-frame overlay effect between two scenes.",
+            "icon": "\u2194"
+          },
+          {
+            "term": "Token",
+            "definition": "A typed unit of a math formula \u2014 var, frac, sup, etc.",
+            "icon": "\u03a3"
+          },
+          {
+            "term": "Lifeline",
+            "definition": "A vertical timeline for one actor in a sequence diagram.",
+            "icon": "\u2502"
+          },
+          {
+            "term": "Frame budget",
+            "definition": "Total frames at 30 fps. Sum of scene durations must match exactly.",
+            "icon": "\u229f"
+          }
         ],
         "grid": "3x2"
       }
@@ -93,20 +129,81 @@
       "data": {
         "title": "The workhorse of algorithm analysis",
         "tokens": [
-          { "type": "var", "value": "T" },
-          { "type": "op", "value": "(" },
-          { "type": "var", "value": "n" },
-          { "type": "op", "value": ")" },
-          { "type": "op", "value": "=" },
-          { "type": "var", "value": "O" },
-          { "type": "op", "value": "(" },
-          { "type": "var", "value": "n" },
+          {
+            "type": "var",
+            "value": "T"
+          },
+          {
+            "type": "op",
+            "value": "("
+          },
+          {
+            "type": "var",
+            "value": "n"
+          },
+          {
+            "type": "op",
+            "value": ")"
+          },
+          {
+            "type": "op",
+            "value": "="
+          },
+          {
+            "type": "var",
+            "value": "O"
+          },
+          {
+            "type": "op",
+            "value": "("
+          },
+          {
+            "type": "var",
+            "value": "n"
+          },
           {
             "type": "frac",
-            "numerator": [{ "type": "var", "value": "n" }, { "type": "op", "value": "·" }, { "type": "op", "value": "(" }, { "type": "var", "value": "n" }, { "type": "op", "value": "+" }, { "type": "num", "value": "1" }, { "type": "op", "value": ")" }],
-            "denominator": [{ "type": "num", "value": "2" }]
+            "numerator": [
+              {
+                "type": "var",
+                "value": "n"
+              },
+              {
+                "type": "op",
+                "value": "\u00b7"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
+              {
+                "type": "op",
+                "value": "+"
+              },
+              {
+                "type": "num",
+                "value": "1"
+              },
+              {
+                "type": "op",
+                "value": ")"
+              }
+            ],
+            "denominator": [
+              {
+                "type": "num",
+                "value": "2"
+              }
+            ]
           },
-          { "type": "op", "value": ")" }
+          {
+            "type": "op",
+            "value": ")"
+          }
         ],
         "description": "Merge sort's T(n) recurrence solves to O(n log n)."
       }
@@ -122,104 +219,354 @@
           {
             "label": "start",
             "tokens": [
-              { "type": "var", "value": "T" },
-              { "type": "op", "value": "(" },
-              { "type": "var", "value": "n" },
-              { "type": "op", "value": ")" },
-              { "type": "op", "value": "=" },
-              { "type": "num", "value": "2" },
-              { "type": "var", "value": "T" },
-              { "type": "op", "value": "(" },
+              {
+                "type": "var",
+                "value": "T"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
+              {
+                "type": "op",
+                "value": ")"
+              },
+              {
+                "type": "op",
+                "value": "="
+              },
+              {
+                "type": "num",
+                "value": "2"
+              },
+              {
+                "type": "var",
+                "value": "T"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
               {
                 "type": "frac",
-                "numerator": [{ "type": "var", "value": "n" }],
-                "denominator": [{ "type": "num", "value": "2" }]
+                "numerator": [
+                  {
+                    "type": "var",
+                    "value": "n"
+                  }
+                ],
+                "denominator": [
+                  {
+                    "type": "num",
+                    "value": "2"
+                  }
+                ]
               },
-              { "type": "op", "value": ")" },
-              { "type": "op", "value": "+" },
-              { "type": "var", "value": "O" },
-              { "type": "op", "value": "(" },
-              { "type": "var", "value": "n" },
-              { "type": "op", "value": ")" }
+              {
+                "type": "op",
+                "value": ")"
+              },
+              {
+                "type": "op",
+                "value": "+"
+              },
+              {
+                "type": "var",
+                "value": "O"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
+              {
+                "type": "op",
+                "value": ")"
+              }
             ]
           },
           {
             "label": "unroll",
             "tokens": [
-              { "type": "var", "value": "T" },
-              { "type": "op", "value": "(" },
-              { "type": "var", "value": "n" },
-              { "type": "op", "value": ")" },
-              { "type": "op", "value": "=" },
-              { "type": "num", "value": "2" },
-              { "type": "var", "value": "T" },
-              { "type": "op", "value": "(" },
+              {
+                "type": "var",
+                "value": "T"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
+              {
+                "type": "op",
+                "value": ")"
+              },
+              {
+                "type": "op",
+                "value": "="
+              },
+              {
+                "type": "num",
+                "value": "2"
+              },
+              {
+                "type": "var",
+                "value": "T"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
               {
                 "type": "frac",
-                "numerator": [{ "type": "var", "value": "n" }],
-                "denominator": [{ "type": "num", "value": "4" }]
+                "numerator": [
+                  {
+                    "type": "var",
+                    "value": "n"
+                  }
+                ],
+                "denominator": [
+                  {
+                    "type": "num",
+                    "value": "4"
+                  }
+                ]
               },
-              { "type": "op", "value": ")" },
-              { "type": "op", "value": "+" },
-              { "type": "num", "value": "2" },
-              { "type": "var", "value": "O" },
+              {
+                "type": "op",
+                "value": ")"
+              },
+              {
+                "type": "op",
+                "value": "+"
+              },
+              {
+                "type": "num",
+                "value": "2"
+              },
+              {
+                "type": "var",
+                "value": "O"
+              },
               {
                 "type": "frac",
-                "numerator": [{ "type": "var", "value": "n" }],
-                "denominator": [{ "type": "num", "value": "2" }]
+                "numerator": [
+                  {
+                    "type": "var",
+                    "value": "n"
+                  }
+                ],
+                "denominator": [
+                  {
+                    "type": "num",
+                    "value": "2"
+                  }
+                ]
               },
-              { "type": "op", "value": "+" },
-              { "type": "var", "value": "O" },
-              { "type": "op", "value": "(" },
-              { "type": "var", "value": "n" },
-              { "type": "op", "value": ")" }
+              {
+                "type": "op",
+                "value": "+"
+              },
+              {
+                "type": "var",
+                "value": "O"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
+              {
+                "type": "op",
+                "value": ")"
+              }
             ],
             "note": "unroll once"
           },
           {
             "label": "generalise",
             "tokens": [
-              { "type": "var", "value": "T" },
-              { "type": "op", "value": "(" },
-              { "type": "var", "value": "n" },
-              { "type": "op", "value": ")" },
-              { "type": "op", "value": "=" },
-              { "type": "num", "value": "2" },
-              { "type": "sup", "base": [{ "type": "var", "value": "k" }], "exponent": [{ "type": "var", "value": "T" }] },
-              { "type": "op", "value": "(" },
+              {
+                "type": "var",
+                "value": "T"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
+              {
+                "type": "op",
+                "value": ")"
+              },
+              {
+                "type": "op",
+                "value": "="
+              },
+              {
+                "type": "num",
+                "value": "2"
+              },
+              {
+                "type": "sup",
+                "base": [
+                  {
+                    "type": "var",
+                    "value": "k"
+                  }
+                ],
+                "exponent": [
+                  {
+                    "type": "var",
+                    "value": "T"
+                  }
+                ]
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
               {
                 "type": "frac",
-                "numerator": [{ "type": "var", "value": "n" }],
-                "denominator": [{ "type": "sup", "base": [{ "type": "num", "value": "2" }], "exponent": [{ "type": "var", "value": "k" }] }]
+                "numerator": [
+                  {
+                    "type": "var",
+                    "value": "n"
+                  }
+                ],
+                "denominator": [
+                  {
+                    "type": "sup",
+                    "base": [
+                      {
+                        "type": "num",
+                        "value": "2"
+                      }
+                    ],
+                    "exponent": [
+                      {
+                        "type": "var",
+                        "value": "k"
+                      }
+                    ]
+                  }
+                ]
               },
-              { "type": "op", "value": ")" },
-              { "type": "op", "value": "+" },
-              { "type": "var", "value": "k" },
-              { "type": "var", "value": "O" },
-              { "type": "op", "value": "(" },
-              { "type": "var", "value": "n" },
-              { "type": "op", "value": ")" }
+              {
+                "type": "op",
+                "value": ")"
+              },
+              {
+                "type": "op",
+                "value": "+"
+              },
+              {
+                "type": "var",
+                "value": "k"
+              },
+              {
+                "type": "var",
+                "value": "O"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
+              {
+                "type": "op",
+                "value": ")"
+              }
             ],
             "note": "after k unrolls"
           },
           {
             "label": "result",
             "tokens": [
-              { "type": "var", "value": "T" },
-              { "type": "op", "value": "(" },
-              { "type": "var", "value": "n" },
-              { "type": "op", "value": ")" },
-              { "type": "op", "value": "=" },
-              { "type": "var", "value": "O" },
-              { "type": "op", "value": "(" },
-              { "type": "var", "value": "n" },
+              {
+                "type": "var",
+                "value": "T"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
+              {
+                "type": "op",
+                "value": ")"
+              },
+              {
+                "type": "op",
+                "value": "="
+              },
+              {
+                "type": "var",
+                "value": "O"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
               {
                 "type": "sum",
-                "lower": [{ "type": "var", "value": "i" }, { "type": "op", "value": "=" }, { "type": "num", "value": "0" }],
-                "upper": [{ "type": "var", "value": "k" }],
-                "body": [{ "type": "num", "value": "1" }]
+                "lower": [
+                  {
+                    "type": "var",
+                    "value": "i"
+                  },
+                  {
+                    "type": "op",
+                    "value": "="
+                  },
+                  {
+                    "type": "num",
+                    "value": "0"
+                  }
+                ],
+                "upper": [
+                  {
+                    "type": "var",
+                    "value": "k"
+                  }
+                ],
+                "body": [
+                  {
+                    "type": "num",
+                    "value": "1"
+                  }
+                ]
               },
-              { "type": "op", "value": ")" }
+              {
+                "type": "op",
+                "value": ")"
+              }
             ],
             "note": "geometric series"
           },
@@ -227,22 +574,63 @@
             "label": "final",
             "final": true,
             "tokens": [
-              { "type": "var", "value": "T" },
-              { "type": "op", "value": "(" },
-              { "type": "var", "value": "n" },
-              { "type": "op", "value": ")" },
-              { "type": "op", "value": "=" },
-              { "type": "var", "value": "O" },
-              { "type": "op", "value": "(" },
-              { "type": "var", "value": "n" },
+              {
+                "type": "var",
+                "value": "T"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
+              {
+                "type": "op",
+                "value": ")"
+              },
+              {
+                "type": "op",
+                "value": "="
+              },
+              {
+                "type": "var",
+                "value": "O"
+              },
+              {
+                "type": "op",
+                "value": "("
+              },
+              {
+                "type": "var",
+                "value": "n"
+              },
               {
                 "type": "sup",
-                "base": [{ "type": "var", "value": "log" }],
-                "exponent": [{ "type": "num", "value": "2" }, { "type": "var", "value": "n" }]
+                "base": [
+                  {
+                    "type": "var",
+                    "value": "log"
+                  }
+                ],
+                "exponent": [
+                  {
+                    "type": "num",
+                    "value": "2"
+                  },
+                  {
+                    "type": "var",
+                    "value": "n"
+                  }
+                ]
               },
-              { "type": "op", "value": ")" }
+              {
+                "type": "op",
+                "value": ")"
+              }
             ],
-            "note": "since k = log₂ n"
+            "note": "since k = log\u2082 n"
           }
         ]
       }
@@ -254,9 +642,18 @@
       "transition": "fade",
       "data": {
         "title": "Consistent hashing",
-        "servers": ["Cache-A", "Cache-B", "Cache-C", "Cache-D"],
+        "servers": [
+          "Cache-A",
+          "Cache-B",
+          "Cache-C",
+          "Cache-D"
+        ],
         "virtualNodesPerServer": 4,
-        "lookupKeys": ["user:42", "post:99", "page:1"],
+        "lookupKeys": [
+          "user:42",
+          "post:99",
+          "page:1"
+        ],
         "ticks": 96,
         "accentColor": "#22d3ee"
       }
@@ -267,18 +664,54 @@
       "duration_frames": 300,
       "transition": "slideUp",
       "data": {
-        "title": "Raft consensus — leader state transitions",
+        "title": "Raft consensus \u2014 leader state transitions",
         "states": [
-          { "id": "follower", "label": "FOLLOWER", "description": "issues AppendEntries", "color": "#38BDF8" },
-          { "id": "candidate", "label": "CANDIDATE", "description": "election in progress", "color": "#f59e0b" },
-          { "id": "leader", "label": "LEADER", "description": "replicates logs", "color": "#34d399" }
+          {
+            "id": "follower",
+            "label": "FOLLOWER",
+            "description": "issues AppendEntries",
+            "color": "#38BDF8"
+          },
+          {
+            "id": "candidate",
+            "label": "CANDIDATE",
+            "description": "election in progress",
+            "color": "#f59e0b"
+          },
+          {
+            "id": "leader",
+            "label": "LEADER",
+            "description": "replicates logs",
+            "color": "#34d399"
+          }
         ],
         "transitions": [
-          { "fromId": "follower", "toId": "candidate", "label": "election timeout" },
-          { "fromId": "candidate", "toId": "candidate", "label": "split vote" },
-          { "fromId": "candidate", "toId": "leader", "label": "majority votes", "highlight": true },
-          { "fromId": "candidate", "toId": "follower", "label": "higher term seen" },
-          { "fromId": "leader", "toId": "follower", "label": "higher term seen" }
+          {
+            "fromId": "follower",
+            "toId": "candidate",
+            "label": "election timeout"
+          },
+          {
+            "fromId": "candidate",
+            "toId": "candidate",
+            "label": "split vote"
+          },
+          {
+            "fromId": "candidate",
+            "toId": "leader",
+            "label": "majority votes",
+            "highlight": true
+          },
+          {
+            "fromId": "candidate",
+            "toId": "follower",
+            "label": "higher term seen"
+          },
+          {
+            "fromId": "leader",
+            "toId": "follower",
+            "label": "higher term seen"
+          }
         ],
         "activeStateId": "leader"
       }
@@ -300,9 +733,18 @@
               "description": "Verisign",
               "color": "#38BDF8",
               "children": [
-                { "label": "google.com", "description": "authoritative NS" },
-                { "label": "amazon.com", "description": "authoritative NS" },
-                { "label": "github.com", "description": "authoritative NS" }
+                {
+                  "label": "google.com",
+                  "description": "authoritative NS"
+                },
+                {
+                  "label": "amazon.com",
+                  "description": "authoritative NS"
+                },
+                {
+                  "label": "github.com",
+                  "description": "authoritative NS"
+                }
               ]
             },
             {
@@ -310,8 +752,12 @@
               "description": "Public Interest Registry",
               "color": "#34d399",
               "children": [
-                { "label": "wikipedia.org" },
-                { "label": "mozilla.org" }
+                {
+                  "label": "wikipedia.org"
+                },
+                {
+                  "label": "mozilla.org"
+                }
               ]
             },
             {
@@ -319,8 +765,12 @@
               "description": "Internet Computer Bureau",
               "color": "#f59e0b",
               "children": [
-                { "label": "gitlab.io" },
-                { "label": "herokuapp.com" }
+                {
+                  "label": "gitlab.io"
+                },
+                {
+                  "label": "herokuapp.com"
+                }
               ]
             }
           ]
@@ -333,21 +783,71 @@
       "duration_frames": 300,
       "transition": "slideUp",
       "data": {
-        "title": "OAuth 2.0 — Authorization Code Flow",
-        "actors": ["User", "App", "Auth Server", "Resource API"],
+        "title": "OAuth 2.0 \u2014 Authorization Code Flow",
+        "actors": [
+          "User",
+          "App",
+          "Auth Server",
+          "Resource API"
+        ],
         "messages": [
-          { "fromIdx": 0, "toIdx": 1, "label": "1. click login" },
-          { "fromIdx": 1, "toIdx": 2, "label": "2. /authorize?client_id=..." },
-          { "fromIdx": 2, "toIdx": 0, "label": "3. login + consent" },
-          { "fromIdx": 0, "toIdx": 2, "label": "4. grant permission" },
-          { "fromIdx": 2, "toIdx": 1, "label": "5. redirect w/ code", "kind": "return" },
-          { "fromIdx": 1, "toIdx": 2, "label": "6. /token (code + secret)", "active": true },
-          { "fromIdx": 2, "toIdx": 1, "label": "7. access_token", "kind": "return" },
-          { "fromIdx": 1, "toIdx": 3, "label": "8. GET /me (Bearer …)" },
-          { "fromIdx": 3, "toIdx": 1, "label": "9. 200 OK user JSON", "kind": "return" }
+          {
+            "fromIdx": 0,
+            "toIdx": 1,
+            "label": "1. click login"
+          },
+          {
+            "fromIdx": 1,
+            "toIdx": 2,
+            "label": "2. /authorize?client_id=..."
+          },
+          {
+            "fromIdx": 2,
+            "toIdx": 0,
+            "label": "3. login + consent"
+          },
+          {
+            "fromIdx": 0,
+            "toIdx": 2,
+            "label": "4. grant permission"
+          },
+          {
+            "fromIdx": 2,
+            "toIdx": 1,
+            "label": "5. redirect w/ code",
+            "kind": "return"
+          },
+          {
+            "fromIdx": 1,
+            "toIdx": 2,
+            "label": "6. /token (code + secret)",
+            "active": true
+          },
+          {
+            "fromIdx": 2,
+            "toIdx": 1,
+            "label": "7. access_token",
+            "kind": "return"
+          },
+          {
+            "fromIdx": 1,
+            "toIdx": 3,
+            "label": "8. GET /me (Bearer \u2026)"
+          },
+          {
+            "fromIdx": 3,
+            "toIdx": 1,
+            "label": "9. 200 OK user JSON",
+            "kind": "return"
+          }
         ],
         "activations": [
-          { "actorIdx": 2, "startMessage": 1, "endMessage": 4, "label": "consent UI" }
+          {
+            "actorIdx": 2,
+            "startMessage": 1,
+            "endMessage": 4,
+            "label": "consent UI"
+          }
         ]
       }
     },
@@ -359,22 +859,74 @@
       "data": {
         "title": "Cache-aside read path",
         "nodes": [
-          { "id": "start", "label": "Request", "kind": "start" },
-          { "id": "check", "label": "cache hit?", "kind": "decision" },
-          { "id": "read_cache", "label": "Read from cache", "kind": "process" },
-          { "id": "read_db", "label": "Read from DB", "kind": "process" },
-          { "id": "fill", "label": "Fill cache", "kind": "process" },
-          { "id": "return", "label": "Return data", "kind": "process" },
-          { "id": "end", "label": "Respond", "kind": "end" }
+          {
+            "id": "start",
+            "label": "Request",
+            "kind": "start"
+          },
+          {
+            "id": "check",
+            "label": "cache hit?",
+            "kind": "decision"
+          },
+          {
+            "id": "read_cache",
+            "label": "Read from cache",
+            "kind": "process"
+          },
+          {
+            "id": "read_db",
+            "label": "Read from DB",
+            "kind": "process"
+          },
+          {
+            "id": "fill",
+            "label": "Fill cache",
+            "kind": "process"
+          },
+          {
+            "id": "return",
+            "label": "Return data",
+            "kind": "process"
+          },
+          {
+            "id": "end",
+            "label": "Respond",
+            "kind": "end"
+          }
         ],
         "edges": [
-          { "fromId": "start", "toId": "check" },
-          { "fromId": "check", "toId": "read_cache", "label": "yes", "active": true },
-          { "fromId": "check", "toId": "read_db", "label": "no" },
-          { "fromId": "read_db", "toId": "fill" },
-          { "fromId": "fill", "toId": "return" },
-          { "fromId": "read_cache", "toId": "return" },
-          { "fromId": "return", "toId": "end" }
+          {
+            "fromId": "start",
+            "toId": "check"
+          },
+          {
+            "fromId": "check",
+            "toId": "read_cache",
+            "label": "yes",
+            "active": true
+          },
+          {
+            "fromId": "check",
+            "toId": "read_db",
+            "label": "no"
+          },
+          {
+            "fromId": "read_db",
+            "toId": "fill"
+          },
+          {
+            "fromId": "fill",
+            "toId": "return"
+          },
+          {
+            "fromId": "read_cache",
+            "toId": "return"
+          },
+          {
+            "fromId": "return",
+            "toId": "end"
+          }
         ]
       }
     },
@@ -402,8 +954,11 @@
         ],
         "typingSpeed": 1.2,
         "outputLineDelay": 6,
-        "caption": "kubectl describe — the first command to run when something is wrong",
-        "highlightLines": [4, 11],
+        "caption": "kubectl describe \u2014 the first command to run when something is wrong",
+        "highlightLines": [
+          4,
+          11
+        ],
         "theme": "dark"
       }
     },
@@ -415,11 +970,31 @@
       "data": {
         "title": "Median API latency by region (ms)",
         "bars": [
-          { "label": "us-east-1", "value": 42, "color": "#38BDF8" },
-          { "label": "us-west-2", "value": 88, "color": "#a78bfa" },
-          { "label": "eu-west-1", "value": 96, "color": "#f59e0b" },
-          { "label": "ap-south-1", "value": 184, "color": "#f472b6" },
-          { "label": "sa-east-1", "value": 221, "color": "#fb923c" }
+          {
+            "label": "us-east-1",
+            "value": 42,
+            "color": "#38BDF8"
+          },
+          {
+            "label": "us-west-2",
+            "value": 88,
+            "color": "#a78bfa"
+          },
+          {
+            "label": "eu-west-1",
+            "value": 96,
+            "color": "#f59e0b"
+          },
+          {
+            "label": "ap-south-1",
+            "value": 184,
+            "color": "#f472b6"
+          },
+          {
+            "label": "sa-east-1",
+            "value": 221,
+            "color": "#fb923c"
+          }
         ],
         "layout": "vertical"
       }
@@ -430,19 +1005,43 @@
       "duration_frames": 300,
       "transition": "slideLeft",
       "data": {
-        "title": "Requests per second — Black Friday 2024",
-        "xLabels": ["00:00", "04:00", "08:00", "12:00", "16:00", "20:00", "23:59"],
+        "title": "Requests per second \u2014 Black Friday 2024",
+        "xLabels": [
+          "00:00",
+          "04:00",
+          "08:00",
+          "12:00",
+          "16:00",
+          "20:00",
+          "23:59"
+        ],
         "series": [
           {
             "name": "2024",
             "color": "#22d3ee",
-            "values": [1200, 1800, 4500, 9800, 14200, 22100, 31500],
+            "values": [
+              1200,
+              1800,
+              4500,
+              9800,
+              14200,
+              22100,
+              31500
+            ],
             "fill": true
           },
           {
             "name": "2023",
             "color": "#f59e0b",
-            "values": [1100, 1500, 3800, 7400, 11200, 16800, 22400]
+            "values": [
+              1100,
+              1500,
+              3800,
+              7400,
+              11200,
+              16800,
+              22400
+            ]
           }
         ],
         "yLabel": "req/sec",
@@ -458,11 +1057,31 @@
       "data": {
         "title": "Where does CPU time go?",
         "slices": [
-          { "label": "GC pauses", "value": 38, "color": "#a78bfa" },
-          { "label": "Lock contention", "value": 27, "color": "#f59e0b" },
-          { "label": "Serialization", "value": 18, "color": "#38BDF8" },
-          { "label": "Useful work", "value": 12, "color": "#34d399" },
-          { "label": "Other", "value": 5, "color": "#64748b" }
+          {
+            "label": "GC pauses",
+            "value": 38,
+            "color": "#a78bfa"
+          },
+          {
+            "label": "Lock contention",
+            "value": 27,
+            "color": "#f59e0b"
+          },
+          {
+            "label": "Serialization",
+            "value": 18,
+            "color": "#38BDF8"
+          },
+          {
+            "label": "Useful work",
+            "value": 12,
+            "color": "#34d399"
+          },
+          {
+            "label": "Other",
+            "value": 5,
+            "color": "#64748b"
+          }
         ],
         "variant": "donut",
         "centerLabel": "WASTED",
@@ -501,7 +1120,7 @@
         "left": {
           "heading": "Push (Kafka)",
           "color": "#22d3ee",
-          "icon": "→",
+          "icon": "\u2192",
           "points": [
             "Broker forwards each event",
             "Low consumer-side latency",
@@ -511,7 +1130,7 @@
         "right": {
           "heading": "Pull (SQS, Kinesis GetRecords)",
           "color": "#f59e0b",
-          "icon": "←",
+          "icon": "\u2190",
           "points": [
             "Consumer polls on its own pace",
             "Natural backpressure",
@@ -544,12 +1163,37 @@
       "data": {
         "title": "Database evolution",
         "events": [
-          { "year": "1970", "label": "Relational model", "description": "Codd's paper" },
-          { "year": "1991", "label": "PostgreSQL", "description": "Berkeley" },
-          { "year": "2007", "label": "Cassandra", "description": "Dynamo + Bigtable" },
-          { "year": "2009", "label": "Redis", "description": "in-memory KV" },
-          { "year": "2014", "label": "FoundationDB", "description": "ACID on KV", "highlight": true },
-          { "year": "2023", "label": "DuckDB", "description": "OLAP in process" }
+          {
+            "year": "1970",
+            "label": "Relational model",
+            "description": "Codd's paper"
+          },
+          {
+            "year": "1991",
+            "label": "PostgreSQL",
+            "description": "Berkeley"
+          },
+          {
+            "year": "2007",
+            "label": "Cassandra",
+            "description": "Dynamo + Bigtable"
+          },
+          {
+            "year": "2009",
+            "label": "Redis",
+            "description": "in-memory KV"
+          },
+          {
+            "year": "2014",
+            "label": "FoundationDB",
+            "description": "ACID on KV",
+            "highlight": true
+          },
+          {
+            "year": "2023",
+            "label": "DuckDB",
+            "description": "OLAP in process"
+          }
         ]
       }
     },
@@ -562,7 +1206,11 @@
         "quote": "A component library is the compiler's intermediate representation of visual ideas.",
         "author": "Linus Torvalds (paraphrased)",
         "role": "on reuse",
-        "highlightWords": ["compiler", "intermediate", "reuse"]
+        "highlightWords": [
+          "compiler",
+          "intermediate",
+          "reuse"
+        ]
       }
     },
     {
@@ -579,6 +1227,423 @@
           "Coverage of common CS visuals becomes a one-time investment"
         ],
         "position": "right"
+      }
+    },
+    {
+      "id": "split-screen",
+      "type": "SplitScreen",
+      "duration_frames": 240,
+      "transition": "slideLeft",
+      "data": {
+        "title": "React Component Architecture",
+        "bullets": [
+          "State is isolated per component",
+          "Props pass data down",
+          "Hooks manage side-effects"
+        ],
+        "code": "function Counter() {\n  const [count, setCount] = useState(0);\n  return <button onClick={() => setCount(count+1)}>{count}</button>;\n}",
+        "mediaUrl": ""
+      }
+    },
+    {
+      "id": "typewriter",
+      "type": "TypewriterText",
+      "duration_frames": 180,
+      "transition": "fade",
+      "data": {
+        "lines": [
+          "Hello, World!",
+          "This is Canvas Motion.",
+          "Automated video generation."
+        ],
+        "accentColor": "#f59e0b"
+      }
+    },
+    {
+      "id": "code-block",
+      "type": "CodeBlock",
+      "duration_frames": 180,
+      "transition": "slideUp",
+      "data": {
+        "code": "def hello():\n    print('world')",
+        "language": "python",
+        "filename": "hello.py",
+        "highlightLines": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "id": "arch-diagram",
+      "type": "ArchitectureDiagram",
+      "duration_frames": 300,
+      "transition": "zoom",
+      "data": {
+        "title": "System Architecture",
+        "nodes": [
+          {
+            "id": "lb",
+            "label": "Load Balancer",
+            "type": "LoadBalancer",
+            "x": 20,
+            "y": 50
+          },
+          {
+            "id": "api",
+            "label": "API Server",
+            "type": "Server",
+            "x": 50,
+            "y": 30
+          },
+          {
+            "id": "db",
+            "label": "Database",
+            "type": "Database",
+            "x": 80,
+            "y": 50
+          }
+        ],
+        "connections": [
+          {
+            "fromId": "lb",
+            "toId": "api",
+            "label": "HTTPS",
+            "animated": true
+          },
+          {
+            "fromId": "api",
+            "toId": "db",
+            "label": "TCP",
+            "animated": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "packet-flow",
+      "type": "PacketFlow",
+      "duration_frames": 300,
+      "transition": "slideLeft",
+      "data": {
+        "title": "TCP Handshake",
+        "nodes": [
+          {
+            "id": "client",
+            "label": "Client",
+            "x": 20,
+            "y": 50
+          },
+          {
+            "id": "server",
+            "label": "Server",
+            "x": 80,
+            "y": 50
+          }
+        ],
+        "packets": [
+          {
+            "id": "p1",
+            "fromId": "client",
+            "toId": "server",
+            "label": "SYN",
+            "startFrame": 30,
+            "endFrame": 90,
+            "color": "#38BDF8"
+          },
+          {
+            "id": "p2",
+            "fromId": "server",
+            "toId": "client",
+            "label": "SYN-ACK",
+            "startFrame": 100,
+            "endFrame": 160,
+            "color": "#34d399"
+          },
+          {
+            "id": "p3",
+            "fromId": "client",
+            "toId": "server",
+            "label": "ACK",
+            "startFrame": 170,
+            "endFrame": 230,
+            "color": "#f59e0b"
+          }
+        ]
+      }
+    },
+    {
+      "id": "http-exchange",
+      "type": "HttpExchange",
+      "duration_frames": 240,
+      "transition": "fade",
+      "data": {
+        "title": "REST API Request",
+        "request": {
+          "method": "POST",
+          "path": "/api/users",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer token123"
+          },
+          "body": "{\n  \"name\": \"Alice\"\n}"
+        },
+        "response": {
+          "statusCode": 201,
+          "statusText": "Created",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\n  \"id\": 42,\n  \"name\": \"Alice\"\n}"
+        }
+      }
+    },
+    {
+      "id": "sort-viz",
+      "type": "SortingVisualizer",
+      "duration_frames": 300,
+      "transition": "slideUp",
+      "data": {
+        "title": "Quick Sort",
+        "algorithm": "quick",
+        "values": [
+          9,
+          3,
+          7,
+          5,
+          6,
+          4,
+          8,
+          2
+        ],
+        "showComparisonCounter": true
+      }
+    },
+    {
+      "id": "linear-struct",
+      "type": "LinearStructure",
+      "duration_frames": 300,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Stack Operations",
+        "kind": "stack",
+        "initial": [
+          10,
+          20
+        ],
+        "operations": [
+          {
+            "op": "push",
+            "value": 30
+          },
+          {
+            "op": "push",
+            "value": 40
+          },
+          {
+            "op": "pop"
+          }
+        ],
+        "showHeadTail": true
+      }
+    },
+    {
+      "id": "array-algo",
+      "type": "ArrayAlgorithm",
+      "duration_frames": 300,
+      "transition": "zoom",
+      "data": {
+        "title": "Binary Search",
+        "mode": "binary-search",
+        "values": [
+          2,
+          5,
+          8,
+          12,
+          16,
+          23,
+          38,
+          56,
+          72,
+          91
+        ],
+        "target": 23
+      }
+    },
+    {
+      "id": "dp-table",
+      "type": "DPTableVisualizer",
+      "duration_frames": 300,
+      "transition": "fade",
+      "data": {
+        "title": "Fibonacci DP",
+        "rows": 1,
+        "cols": 6,
+        "colLabels": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "fills": [
+          {
+            "row": 0,
+            "col": 0,
+            "value": 0
+          },
+          {
+            "row": 0,
+            "col": 1,
+            "value": 1
+          },
+          {
+            "row": 0,
+            "col": 2,
+            "value": 1,
+            "dependsOn": [
+              {
+                "row": 0,
+                "col": 0
+              },
+              {
+                "row": 0,
+                "col": 1
+              }
+            ]
+          },
+          {
+            "row": 0,
+            "col": 3,
+            "value": 2,
+            "dependsOn": [
+              {
+                "row": 0,
+                "col": 1
+              },
+              {
+                "row": 0,
+                "col": 2
+              }
+            ]
+          },
+          {
+            "row": 0,
+            "col": 4,
+            "value": 3,
+            "dependsOn": [
+              {
+                "row": 0,
+                "col": 2
+              },
+              {
+                "row": 0,
+                "col": 3
+              }
+            ]
+          },
+          {
+            "row": 0,
+            "col": 5,
+            "value": 5,
+            "dependsOn": [
+              {
+                "row": 0,
+                "col": 3
+              },
+              {
+                "row": 0,
+                "col": 4
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "graph-trav",
+      "type": "GraphTraversal",
+      "duration_frames": 300,
+      "transition": "slideUp",
+      "data": {
+        "title": "BFS Traversal",
+        "algorithm": "bfs",
+        "nodes": [
+          {
+            "id": "A",
+            "x": 50,
+            "y": 20
+          },
+          {
+            "id": "B",
+            "x": 30,
+            "y": 50
+          },
+          {
+            "id": "C",
+            "x": 70,
+            "y": 50
+          },
+          {
+            "id": "D",
+            "x": 50,
+            "y": 80
+          }
+        ],
+        "edges": [
+          {
+            "from": "A",
+            "to": "B"
+          },
+          {
+            "from": "A",
+            "to": "C"
+          },
+          {
+            "from": "B",
+            "to": "D"
+          },
+          {
+            "from": "C",
+            "to": "D"
+          }
+        ],
+        "start": "A",
+        "showDistanceTable": false
+      }
+    },
+    {
+      "id": "rec-tree",
+      "type": "RecursionTree",
+      "duration_frames": 300,
+      "transition": "slideLeft",
+      "data": {
+        "title": "Recursive Factorial",
+        "root": {
+          "label": "fact(3)",
+          "returns": 6,
+          "children": [
+            {
+              "label": "fact(2)",
+              "returns": 2,
+              "children": [
+                {
+                  "label": "fact(1)",
+                  "returns": 1,
+                  "children": [
+                    {
+                      "label": "fact(0)",
+                      "returns": 1
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "showReturns": true,
+        "memoized": []
       }
     },
     {

@@ -38,6 +38,11 @@ export const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
+  const safeLeft = left ?? { heading: "", points: [] };
+  const safeRight = right ?? { heading: "", points: [] };
+  const safeLeftPoints = safeLeft.points ?? [];
+  const safeRightPoints = safeRight.points ?? [];
+
   // Title
   const titleOpacity = interpolate(frame, [0, 20], [0, 1], {
     extrapolateLeft: "clamp",
@@ -86,8 +91,8 @@ export const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
       })
     );
 
-  const leftBullets = bulletSprings("left", left.points.length);
-  const rightBullets = bulletSprings("right", right.points.length);
+  const leftBullets = bulletSprings("left", safeLeftPoints.length);
+  const rightBullets = bulletSprings("right", safeRightPoints.length);
 
   const renderColumn = (
     col: typeof left,
@@ -136,7 +141,7 @@ export const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
 
       {/* Points */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {col.points.map((point, i) => (
+        {(col.points ?? []).map((point, i) => (
           <div
             key={i}
             style={{
@@ -214,7 +219,7 @@ export const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
         }}
       >
         {/* Left column */}
-        {renderColumn(left, leftBullets, leftX, leftSpring, "left")}
+        {renderColumn(safeLeft, leftBullets, leftX, leftSpring, "left")}
 
         {/* Divider */}
         <div
@@ -261,7 +266,7 @@ export const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
         </div>
 
         {/* Right column */}
-        {renderColumn(right, rightBullets, rightX, rightSpring, "right")}
+        {renderColumn(safeRight, rightBullets, rightX, rightSpring, "right")}
       </div>
     </div>
   );

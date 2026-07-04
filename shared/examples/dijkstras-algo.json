@@ -1,0 +1,1606 @@
+{
+  "title": "Dijkstra's Algorithm",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#10b981",
+    "secondary": "#38bdf8",
+    "accent": "#fb923c",
+    "background": "#0a0f1e",
+    "font": "Outfit"
+  },
+  "voiceover": {
+    "provider": "deepgram",
+    "captions": [
+      {
+        "text": "Every routing engine from Google Maps to OSPF",
+        "startMs": 240,
+        "endMs": 3460,
+        "timestampMs": 240,
+        "confidence": null
+      },
+      {
+        "text": "inside your data center's routers has to answer",
+        "startMs": 3840,
+        "endMs": 6799,
+        "timestampMs": 3840,
+        "confidence": null
+      },
+      {
+        "text": "one deceptively simple question. What is the cheapest",
+        "startMs": 6799,
+        "endMs": 10639,
+        "timestampMs": 6799,
+        "confidence": null
+      },
+      {
+        "text": "way to get from here to there? Dijkstra's",
+        "startMs": 10639,
+        "endMs": 13485,
+        "timestampMs": 10639,
+        "confidence": null
+      },
+      {
+        "text": "algorithm, published in 1959, is the workhorse that",
+        "startMs": 13625,
+        "endMs": 17625,
+        "timestampMs": 13625,
+        "confidence": null
+      },
+      {
+        "text": "answers it for graphs with non negative edge",
+        "startMs": 17625,
+        "endMs": 20265,
+        "timestampMs": 17625,
+        "confidence": null
+      },
+      {
+        "text": "weights. In this video, we'll rebuild it from",
+        "startMs": 20265,
+        "endMs": 23145,
+        "timestampMs": 20265,
+        "confidence": null
+      },
+      {
+        "text": "the ground up. The greedy insight, why it's",
+        "startMs": 23145,
+        "endMs": 26400,
+        "timestampMs": 23145,
+        "confidence": null
+      },
+      {
+        "text": "provably correct, and where it quietly falls apart.",
+        "startMs": 26400,
+        "endMs": 29619,
+        "timestampMs": 26400,
+        "confidence": null
+      },
+      {
+        "text": "The naive approach, try every possible path, explodes",
+        "startMs": 30320,
+        "endMs": 34739,
+        "timestampMs": 30320,
+        "confidence": null
+      },
+      {
+        "text": "combinatorially. A graph with just 20 fully connected",
+        "startMs": 34880,
+        "endMs": 38640,
+        "timestampMs": 34880,
+        "confidence": null
+      },
+      {
+        "text": "nodes has more paths than there are atoms",
+        "startMs": 38640,
+        "endMs": 41115,
+        "timestampMs": 38640,
+        "confidence": null
+      },
+      {
+        "text": "in a room. The nontrivial part is that",
+        "startMs": 41115,
+        "endMs": 43915,
+        "timestampMs": 41115,
+        "confidence": null
+      },
+      {
+        "text": "a shortest path can weave through many intermediate",
+        "startMs": 43915,
+        "endMs": 46575,
+        "timestampMs": 43915,
+        "confidence": null
+      },
+      {
+        "text": "nodes, so you cannot decide the best route",
+        "startMs": 46715,
+        "endMs": 49775,
+        "timestampMs": 46715,
+        "confidence": null
+      },
+      {
+        "text": "to a destination in isolation. Dijkstra's breakthrough was",
+        "startMs": 49915,
+        "endMs": 54315,
+        "timestampMs": 49915,
+        "confidence": null
+      },
+      {
+        "text": "realizing you can compute shortest distances to all",
+        "startMs": 54315,
+        "endMs": 57270,
+        "timestampMs": 54315,
+        "confidence": null
+      },
+      {
+        "text": "nodes in one sweep in order of increasing",
+        "startMs": 57270,
+        "endMs": 60410,
+        "timestampMs": 57270,
+        "confidence": null
+      },
+      {
+        "text": "distance, reusing work. That single insight turns exponential",
+        "startMs": 60470,
+        "endMs": 65050,
+        "timestampMs": 60470,
+        "confidence": null
+      },
+      {
+        "text": "search into near linear log time. Two ideas",
+        "startMs": 65190,
+        "endMs": 68150,
+        "timestampMs": 65190,
+        "confidence": null
+      },
+      {
+        "text": "make Dijkstra work. First, optimal substructure. If the",
+        "startMs": 68150,
+        "endMs": 72415,
+        "timestampMs": 68150,
+        "confidence": null
+      },
+      {
+        "text": "shortest path from source to node v passes",
+        "startMs": 72415,
+        "endMs": 75375,
+        "timestampMs": 72415,
+        "confidence": null
+      },
+      {
+        "text": "through u, then the piece from source to",
+        "startMs": 75375,
+        "endMs": 77775,
+        "timestampMs": 75375,
+        "confidence": null
+      },
+      {
+        "text": "u must itself be shortest. Otherwise, you could",
+        "startMs": 77775,
+        "endMs": 82335,
+        "timestampMs": 77775,
+        "confidence": null
+      },
+      {
+        "text": "splice in a shorter prefix and beat the",
+        "startMs": 82335,
+        "endMs": 84815,
+        "timestampMs": 82335,
+        "confidence": null
+      },
+      {
+        "text": "supposedly optimal path. Second, edge relaxation. We keep",
+        "startMs": 84815,
+        "endMs": 89700,
+        "timestampMs": 84815,
+        "confidence": null
+      },
+      {
+        "text": "a tentative distance, disti, and repeatedly ask whether",
+        "startMs": 89700,
+        "endMs": 93860,
+        "timestampMs": 89700,
+        "confidence": null
+      },
+      {
+        "text": "going through u gives a shorter route. Relaxation",
+        "startMs": 93860,
+        "endMs": 97160,
+        "timestampMs": 93860,
+        "confidence": null
+      },
+      {
+        "text": "is the atomic operation Dijkstra performs thousands of",
+        "startMs": 97380,
+        "endMs": 100660,
+        "timestampMs": 97380,
+        "confidence": null
+      },
+      {
+        "text": "times. The entire algorithm is just relaxation applied",
+        "startMs": 100660,
+        "endMs": 104695,
+        "timestampMs": 100660,
+        "confidence": null
+      },
+      {
+        "text": "in a clever order. Here's the greedy heart",
+        "startMs": 104695,
+        "endMs": 107575,
+        "timestampMs": 104695,
+        "confidence": null
+      },
+      {
+        "text": "of the algorithm. Keep every node's tentative distance",
+        "startMs": 107575,
+        "endMs": 111255,
+        "timestampMs": 107575,
+        "confidence": null
+      },
+      {
+        "text": "in a priority queue. Repeatedly extract the node",
+        "startMs": 111255,
+        "endMs": 114455,
+        "timestampMs": 111255,
+        "confidence": null
+      },
+      {
+        "text": "with the smallest tentative distance, call it u,",
+        "startMs": 114455,
+        "endMs": 117750,
+        "timestampMs": 114455,
+        "confidence": null
+      },
+      {
+        "text": "and declare its distance final. Then relax every",
+        "startMs": 117750,
+        "endMs": 121030,
+        "timestampMs": 117750,
+        "confidence": null
+      },
+      {
+        "text": "edge, leaving u, updating its neighbor's tentative distances.",
+        "startMs": 121030,
+        "endMs": 124890,
+        "timestampMs": 121030,
+        "confidence": null
+      },
+      {
+        "text": "The gamble is that the closest unsettled node's",
+        "startMs": 125430,
+        "endMs": 128229,
+        "timestampMs": 125430,
+        "confidence": null
+      },
+      {
+        "text": "distance can never improve, so we lock it",
+        "startMs": 128229,
+        "endMs": 131115,
+        "timestampMs": 128229,
+        "confidence": null
+      },
+      {
+        "text": "in immediately. That single greedy commitment is what",
+        "startMs": 131115,
+        "endMs": 134475,
+        "timestampMs": 131115,
+        "confidence": null
+      },
+      {
+        "text": "makes the algorithm fast and as we'll prove",
+        "startMs": 134475,
+        "endMs": 137275,
+        "timestampMs": 134475,
+        "confidence": null
+      },
+      {
+        "text": "next. Correct? Why is it safe to freeze",
+        "startMs": 137275,
+        "endMs": 140555,
+        "timestampMs": 137275,
+        "confidence": null
+      },
+      {
+        "text": "u's distance the moment we extract it? Suppose",
+        "startMs": 140555,
+        "endMs": 143610,
+        "timestampMs": 140555,
+        "confidence": null
+      },
+      {
+        "text": "for contradiction that a shorter path to u",
+        "startMs": 143610,
+        "endMs": 146090,
+        "timestampMs": 143610,
+        "confidence": null
+      },
+      {
+        "text": "existed. That path must leave the settled set",
+        "startMs": 146090,
+        "endMs": 149210,
+        "timestampMs": 146090,
+        "confidence": null
+      },
+      {
+        "text": "at some edge into an unsettled node. Why?",
+        "startMs": 149210,
+        "endMs": 151870,
+        "timestampMs": 149210,
+        "confidence": null
+      },
+      {
+        "text": "Because all edge weights are non negative. Why's",
+        "startMs": 152410,
+        "endMs": 155290,
+        "timestampMs": 152410,
+        "confidence": null
+      },
+      {
+        "text": "tentative distance is already at least as small",
+        "startMs": 155290,
+        "endMs": 157610,
+        "timestampMs": 155290,
+        "confidence": null
+      },
+      {
+        "text": "as u's, and the remaining path only adds",
+        "startMs": 157610,
+        "endMs": 160525,
+        "timestampMs": 157610,
+        "confidence": null
+      },
+      {
+        "text": "more weight. So the alternative path cannot be",
+        "startMs": 160525,
+        "endMs": 163485,
+        "timestampMs": 160525,
+        "confidence": null
+      },
+      {
+        "text": "shorter than distu. A contradiction. This exchange argument",
+        "startMs": 163485,
+        "endMs": 167745,
+        "timestampMs": 163485,
+        "confidence": null
+      },
+      {
+        "text": "is exactly why non negative weights are non",
+        "startMs": 167805,
+        "endMs": 170285,
+        "timestampMs": 167805,
+        "confidence": null
+      },
+      {
+        "text": "negotiable. The priority queue you choose dictates the",
+        "startMs": 170285,
+        "endMs": 174000,
+        "timestampMs": 170285,
+        "confidence": null
+      },
+      {
+        "text": "complexity. With a binary heap, Python's CPU or",
+        "startMs": 174000,
+        "endMs": 178720,
+        "timestampMs": 174000,
+        "confidence": null
+      },
+      {
+        "text": "c priority queue, each of the v extract",
+        "startMs": 178720,
+        "endMs": 182320,
+        "timestampMs": 178720,
+        "confidence": null
+      },
+      {
+        "text": "minute and e decrease key operations costs o",
+        "startMs": 182320,
+        "endMs": 185600,
+        "timestampMs": 182320,
+        "confidence": null
+      },
+      {
+        "text": "log five. Giving OV plus E log v.",
+        "startMs": 185600,
+        "endMs": 189395,
+        "timestampMs": 185600,
+        "confidence": null
+      },
+      {
+        "text": "A Fibonacci heap drops decrease key to amortized",
+        "startMs": 189455,
+        "endMs": 192355,
+        "timestampMs": 189455,
+        "confidence": null
+      },
+      {
+        "text": "one, improving the bound to OE plus V",
+        "startMs": 192415,
+        "endMs": 195295,
+        "timestampMs": 192415,
+        "confidence": null
+      },
+      {
+        "text": "log v, though its large constants make it",
+        "startMs": 195295,
+        "endMs": 198175,
+        "timestampMs": 195295,
+        "confidence": null
+      },
+      {
+        "text": "slower in practice on real graphs. The common",
+        "startMs": 198175,
+        "endMs": 201310,
+        "timestampMs": 198175,
+        "confidence": null
+      },
+      {
+        "text": "production trick shown here is a lazy binary",
+        "startMs": 201310,
+        "endMs": 204130,
+        "timestampMs": 201310,
+        "confidence": null
+      },
+      {
+        "text": "heap. Never decrease key, just push duplicates, and",
+        "startMs": 204190,
+        "endMs": 207870,
+        "timestampMs": 204190,
+        "confidence": null
+      },
+      {
+        "text": "skip stale entries on pop. Dijkstra's Achilles heel",
+        "startMs": 207870,
+        "endMs": 211390,
+        "timestampMs": 207870,
+        "confidence": null
+      },
+      {
+        "text": "is negative edge weights. A negative edge can",
+        "startMs": 211390,
+        "endMs": 214364,
+        "timestampMs": 211390,
+        "confidence": null
+      },
+      {
+        "text": "retroactively make a path to an already settled",
+        "startMs": 214364,
+        "endMs": 216925,
+        "timestampMs": 214364,
+        "confidence": null
+      },
+      {
+        "text": "node cheaper, violating the freeze once in variant",
+        "startMs": 216925,
+        "endMs": 220065,
+        "timestampMs": 216925,
+        "confidence": null
+      },
+      {
+        "text": "and producing wrong answers. With a negative cycle,",
+        "startMs": 220205,
+        "endMs": 223665,
+        "timestampMs": 220205,
+        "confidence": null
+      },
+      {
+        "text": "no shortest path even exists. This is a",
+        "startMs": 223885,
+        "endMs": 226939,
+        "timestampMs": 223885,
+        "confidence": null
+      },
+      {
+        "text": "real constraint. Currency arbitrage graphs and some cost",
+        "startMs": 226939,
+        "endMs": 231099,
+        "timestampMs": 226939,
+        "confidence": null
+      },
+      {
+        "text": "models have negative edges, and there you must",
+        "startMs": 231099,
+        "endMs": 233739,
+        "timestampMs": 231099,
+        "confidence": null
+      },
+      {
+        "text": "switch to Bellman Ford or Johnson's algorithm. Dijkstra",
+        "startMs": 233739,
+        "endMs": 237439,
+        "timestampMs": 233739,
+        "confidence": null
+      },
+      {
+        "text": "also computes single source paths for all pairs",
+        "startMs": 237500,
+        "endMs": 240540,
+        "timestampMs": 237500,
+        "confidence": null
+      },
+      {
+        "text": "on dense graphs. Floyd Warshall is often the",
+        "startMs": 240540,
+        "endMs": 243395,
+        "timestampMs": 240540,
+        "confidence": null
+      },
+      {
+        "text": "better tool. In practice, raw Dijkstra is too",
+        "startMs": 243395,
+        "endMs": 246675,
+        "timestampMs": 243395,
+        "confidence": null
+      },
+      {
+        "text": "slow for continental road networks with tens of",
+        "startMs": 246675,
+        "endMs": 249715,
+        "timestampMs": 246675,
+        "confidence": null
+      },
+      {
+        "text": "millions of nodes, so real routing engines layer",
+        "startMs": 249715,
+        "endMs": 253075,
+        "timestampMs": 249715,
+        "confidence": null
+      },
+      {
+        "text": "on speed ups. A star adds an admissible",
+        "startMs": 253075,
+        "endMs": 256029,
+        "timestampMs": 253075,
+        "confidence": null
+      },
+      {
+        "text": "heuristic rate line distance to steer the search",
+        "startMs": 256089,
+        "endMs": 259370,
+        "timestampMs": 256089,
+        "confidence": null
+      },
+      {
+        "text": "toward the goal, and bidirectional search runs two",
+        "startMs": 259370,
+        "endMs": 262410,
+        "timestampMs": 259370,
+        "confidence": null
+      },
+      {
+        "text": "frontiers that meet in the middle, roughly having",
+        "startMs": 262410,
+        "endMs": 265450,
+        "timestampMs": 262410,
+        "confidence": null
+      },
+      {
+        "text": "the explored area. Google Maps and OSRM go",
+        "startMs": 265450,
+        "endMs": 269745,
+        "timestampMs": 265450,
+        "confidence": null
+      },
+      {
+        "text": "further with contraction hierarchies, precomputing shortcut edges, so",
+        "startMs": 269745,
+        "endMs": 274705,
+        "timestampMs": 269745,
+        "confidence": null
+      },
+      {
+        "text": "a query touches only a tiny fraction of",
+        "startMs": 274705,
+        "endMs": 277185,
+        "timestampMs": 274705,
+        "confidence": null
+      },
+      {
+        "text": "the graph, answering continental roots in under a",
+        "startMs": 277185,
+        "endMs": 280785,
+        "timestampMs": 277185,
+        "confidence": null
+      },
+      {
+        "text": "millisecond. All of these still have Dijkstra's relaxation",
+        "startMs": 280785,
+        "endMs": 284500,
+        "timestampMs": 280785,
+        "confidence": null
+      },
+      {
+        "text": "at their core. Dijkstra is greedy done right.",
+        "startMs": 284720,
+        "endMs": 288020,
+        "timestampMs": 284720,
+        "confidence": null
+      },
+      {
+        "text": "Settle the nearest unsettled node, relax its edges,",
+        "startMs": 288320,
+        "endMs": 292020,
+        "timestampMs": 288320,
+        "confidence": null
+      },
+      {
+        "text": "repeat, and an exchange argument proves that greedy",
+        "startMs": 292400,
+        "endMs": 295995,
+        "timestampMs": 292400,
+        "confidence": null
+      },
+      {
+        "text": "commitment is always optimal as long as weights",
+        "startMs": 295995,
+        "endMs": 299515,
+        "timestampMs": 295995,
+        "confidence": null
+      },
+      {
+        "text": "stay non negative. Remember the three levers, the",
+        "startMs": 299515,
+        "endMs": 303595,
+        "timestampMs": 299515,
+        "confidence": null
+      },
+      {
+        "text": "invariant that settled means final, the non negative",
+        "startMs": 303595,
+        "endMs": 307275,
+        "timestampMs": 303595,
+        "confidence": null
+      },
+      {
+        "text": "weight requirement that makes it true, and the",
+        "startMs": 307275,
+        "endMs": 310235,
+        "timestampMs": 307275,
+        "confidence": null
+      },
+      {
+        "text": "priority queue that sets your complexity. Master those,",
+        "startMs": 310235,
+        "endMs": 313800,
+        "timestampMs": 310235,
+        "confidence": null
+      },
+      {
+        "text": "and you understand not just Dijkstra, but the",
+        "startMs": 313940,
+        "endMs": 317060,
+        "timestampMs": 313940,
+        "confidence": null
+      },
+      {
+        "text": "whole family of shortest path algorithms built on",
+        "startMs": 317060,
+        "endMs": 319860,
+        "timestampMs": 317060,
+        "confidence": null
+      },
+      {
+        "text": "top of it.",
+        "startMs": 319860,
+        "endMs": 320423,
+        "timestampMs": 319860,
+        "confidence": null
+      }
+    ]
+  },
+  "audio_url": "/audio/dijkstras-algo-60s.mp3",
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 852,
+      "transition": "fade",
+      "narration": "Every routing engine, from Google Maps to OSPF inside your datacenter's routers, has to answer one deceptively simple question: what is the cheapest way to get from here to there? Dijkstra's algorithm, published in 1959, is the workhorse that answers it for graphs with non-negative edge weights. In this video we'll rebuild it from the ground up — the greedy insight, why it's provably correct, and where it quietly falls apart.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Dijkstra: Shortest Paths, Greedily Proven",
+            "subtitle": "How a 1959 greedy idea still routes the internet",
+            "accentColor": "#38bdf8",
+            "align": "center"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-2",
+      "layout": "title-main-sidebar",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 1020,
+      "transition": "slideLeft",
+      "narration": "The naive approach — try every possible path — explodes combinatorially: a graph with just 20 fully-connected nodes has more paths than there are atoms in a room. The nontrivial part is that a shortest path can weave through many intermediate nodes, so you cannot decide the best route to a destination in isolation. Dijkstra's breakthrough was realizing you can compute shortest distances to ALL nodes in one sweep, in order of increasing distance, reusing work. That single insight turns exponential search into near-linear-log time.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "GraphTraversal",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "Dijkstra's Shortest Path",
+            "algorithm": "dijkstra",
+            "start": "A",
+            "showDistanceTable": true,
+            "nodes": [
+              {
+                "id": "A",
+                "label": "A",
+                "x": 10,
+                "y": 50
+              },
+              {
+                "id": "B",
+                "label": "B",
+                "x": 35,
+                "y": 20
+              },
+              {
+                "id": "C",
+                "label": "C",
+                "x": 35,
+                "y": 80
+              },
+              {
+                "id": "D",
+                "label": "D",
+                "x": 62,
+                "y": 35
+              },
+              {
+                "id": "E",
+                "label": "E",
+                "x": 62,
+                "y": 75
+              },
+              {
+                "id": "F",
+                "label": "F",
+                "x": 88,
+                "y": 50
+              }
+            ],
+            "edges": [
+              {
+                "from": "A",
+                "to": "B",
+                "weight": 4,
+                "directed": false
+              },
+              {
+                "from": "A",
+                "to": "C",
+                "weight": 2,
+                "directed": false
+              },
+              {
+                "from": "B",
+                "to": "D",
+                "weight": 5,
+                "directed": false
+              },
+              {
+                "from": "C",
+                "to": "B",
+                "weight": 1,
+                "directed": false
+              },
+              {
+                "from": "C",
+                "to": "E",
+                "weight": 8,
+                "directed": false
+              },
+              {
+                "from": "D",
+                "to": "F",
+                "weight": 3,
+                "directed": false
+              },
+              {
+                "from": "E",
+                "to": "F",
+                "weight": 6,
+                "directed": false
+              },
+              {
+                "from": "D",
+                "to": "E",
+                "weight": 2,
+                "directed": false
+              }
+            ],
+            "steps": [
+              {
+                "kind": "settle",
+                "node": "A",
+                "distance": 0,
+                "note": "Source, distance 0"
+              },
+              {
+                "kind": "relax",
+                "node": "C",
+                "edge": {
+                  "from": "A",
+                  "to": "C"
+                },
+                "distance": 2
+              },
+              {
+                "kind": "relax",
+                "node": "B",
+                "edge": {
+                  "from": "A",
+                  "to": "B"
+                },
+                "distance": 4
+              }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Why brute force fails",
+            "body": "Enumerating paths is exponential, but shortest paths overlap heavily — the route to a far node contains the route to nearer nodes on the way. Dijkstra exploits this by solving nodes in order of distance, never revisiting a settled one.",
+            "bullets": [
+              "Path count grows factorially with graph size",
+              "Optimal routes share prefixes — reuse them",
+              "Settle nodes nearest-first, exactly once"
+            ],
+            "position": "right",
+            "accentColor": "#38bdf8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-3",
+      "layout": "title-left-right",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 1032,
+      "transition": "slideUp",
+      "narration": "Two ideas make Dijkstra work. First, optimal substructure: if the shortest path from source to node v passes through u, then the piece from source to u must itself be shortest — otherwise you could splice in a shorter prefix and beat the supposedly-optimal path. Second, edge relaxation: we keep a tentative distance dist[v] and repeatedly ask whether going through u gives a shorter route. Relaxation is the atomic operation Dijkstra performs thousands of times; the entire algorithm is just relaxation applied in a clever order.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "MathFormula",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Edge relaxation",
+            "tokens": [
+              {
+                "type": "text",
+                "value": "if "
+              },
+              {
+                "type": "var",
+                "value": "dist[u]"
+              },
+              {
+                "type": "op",
+                "value": "+"
+              },
+              {
+                "type": "var",
+                "value": "w(u,v)"
+              },
+              {
+                "type": "op",
+                "value": "<"
+              },
+              {
+                "type": "var",
+                "value": "dist[v]"
+              },
+              {
+                "type": "text",
+                "value": " then "
+              },
+              {
+                "type": "var",
+                "value": "dist[v]"
+              },
+              {
+                "type": "op",
+                "value": "="
+              },
+              {
+                "type": "var",
+                "value": "dist[u]"
+              },
+              {
+                "type": "op",
+                "value": "+"
+              },
+              {
+                "type": "var",
+                "value": "w(u,v)"
+              }
+            ]
+          }
+        },
+        {
+          "area": "right",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "The two guarantees underneath",
+            "items": [
+              "Optimal substructure — a shortest path's every prefix is itself a shortest path",
+              "Relaxation is monotone — dist[v] only ever decreases, never increases",
+              "Invariant — once a node is settled, dist[v] equals its true shortest distance",
+              "Non-negative weights — required so a settled distance can never later shrink",
+              "Bellman-Ford relaxes all edges V-1 times; Dijkstra relaxes each edge exactly once"
+            ],
+            "accentColor": "#a78bfa"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-4",
+      "layout": "title-main-sidebar",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 972,
+      "transition": "slideLeft",
+      "narration": "Here is the greedy heart of the algorithm. Keep every node's tentative distance in a priority queue. Repeatedly extract the node with the smallest tentative distance — call it u — and declare its distance final. Then relax every edge leaving u, updating its neighbors' tentative distances. The gamble is that the closest unsettled node's distance can never improve, so we lock it in immediately. That single greedy commitment is what makes the algorithm fast and, as we'll prove next, correct.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "GraphTraversal",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "Greedy Relaxation of Frontier Edges",
+            "algorithm": "dijkstra",
+            "start": "A",
+            "showDistanceTable": true,
+            "nodes": [
+              {
+                "id": "A",
+                "label": "A",
+                "x": 10,
+                "y": 50
+              },
+              {
+                "id": "B",
+                "label": "B",
+                "x": 35,
+                "y": 20
+              },
+              {
+                "id": "C",
+                "label": "C",
+                "x": 35,
+                "y": 80
+              },
+              {
+                "id": "D",
+                "label": "D",
+                "x": 62,
+                "y": 35
+              },
+              {
+                "id": "E",
+                "label": "E",
+                "x": 62,
+                "y": 75
+              },
+              {
+                "id": "F",
+                "label": "F",
+                "x": 88,
+                "y": 50
+              }
+            ],
+            "edges": [
+              {
+                "from": "A",
+                "to": "B",
+                "weight": 4,
+                "directed": false
+              },
+              {
+                "from": "A",
+                "to": "C",
+                "weight": 2,
+                "directed": false
+              },
+              {
+                "from": "B",
+                "to": "D",
+                "weight": 5,
+                "directed": false
+              },
+              {
+                "from": "C",
+                "to": "B",
+                "weight": 1,
+                "directed": false
+              },
+              {
+                "from": "C",
+                "to": "E",
+                "weight": 8,
+                "directed": false
+              },
+              {
+                "from": "D",
+                "to": "F",
+                "weight": 3,
+                "directed": false
+              },
+              {
+                "from": "E",
+                "to": "F",
+                "weight": 6,
+                "directed": false
+              },
+              {
+                "from": "D",
+                "to": "E",
+                "weight": 2,
+                "directed": false
+              }
+            ],
+            "steps": [
+              {
+                "kind": "settle",
+                "node": "A",
+                "distance": 0,
+                "note": "Source settled"
+              },
+              {
+                "kind": "relax",
+                "node": "C",
+                "edge": {
+                  "from": "A",
+                  "to": "C"
+                },
+                "distance": 2
+              },
+              {
+                "kind": "relax",
+                "node": "B",
+                "edge": {
+                  "from": "A",
+                  "to": "B"
+                },
+                "distance": 4
+              },
+              {
+                "kind": "settle",
+                "node": "C",
+                "distance": 2,
+                "note": "Smallest tentative, settle"
+              },
+              {
+                "kind": "relax",
+                "node": "B",
+                "edge": {
+                  "from": "C",
+                  "to": "B"
+                },
+                "distance": 3,
+                "note": "2+1 < 4, improved"
+              },
+              {
+                "kind": "relax",
+                "node": "E",
+                "edge": {
+                  "from": "C",
+                  "to": "E"
+                },
+                "distance": 10
+              },
+              {
+                "kind": "settle",
+                "node": "B",
+                "distance": 3,
+                "note": "Settle B"
+              },
+              {
+                "kind": "relax",
+                "node": "D",
+                "edge": {
+                  "from": "B",
+                  "to": "D"
+                },
+                "distance": 8
+              },
+              {
+                "kind": "settle",
+                "node": "D",
+                "distance": 8,
+                "note": "Settle D"
+              },
+              {
+                "kind": "relax",
+                "node": "E",
+                "edge": {
+                  "from": "D",
+                  "to": "E"
+                },
+                "distance": 10
+              },
+              {
+                "kind": "relax",
+                "node": "F",
+                "edge": {
+                  "from": "D",
+                  "to": "F"
+                },
+                "distance": 11
+              },
+              {
+                "kind": "settle",
+                "node": "E",
+                "distance": 10,
+                "note": "Settle E"
+              },
+              {
+                "kind": "settle",
+                "node": "F",
+                "distance": 11,
+                "note": "Destination reached"
+              }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "StepFlow",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "The greedy loop",
+            "steps": [
+              "Initialize dist[source]=0, all others infinity",
+              "Extract the closest unsettled node u",
+              "Mark u as settled — its distance is final",
+              "Relax every outgoing edge from u",
+              "Push or decrease-key updated neighbors",
+              "Repeat until the queue empties"
+            ],
+            "accentColor": "#38bdf8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-5",
+      "layout": "title-content",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 1020,
+      "transition": "slideLeft",
+      "narration": "Why is it safe to freeze u's distance the moment we extract it? Suppose, for contradiction, that a shorter path to u existed. That path must leave the settled set at some edge into an unsettled node y. Because all edge weights are non-negative, y's tentative distance is already at least as small as u's, and the remaining path only adds more weight. So the alternative path cannot be shorter than dist[u] — a contradiction. This exchange argument is exactly why non-negative weights are non-negotiable.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "EquationDerivation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Correctness by contradiction",
+            "steps": [
+              {
+                "label": "Assume a shorter path to u exists",
+                "tokens": [
+                  {
+                    "type": "var",
+                    "value": "d(u)"
+                  },
+                  {
+                    "type": "op",
+                    "value": "<"
+                  },
+                  {
+                    "type": "var",
+                    "value": "dist[u]"
+                  }
+                ]
+              },
+              {
+                "label": "It leaves the settled set at edge x→y",
+                "tokens": [
+                  {
+                    "type": "var",
+                    "value": "dist[y]"
+                  },
+                  {
+                    "type": "op",
+                    "value": "≤"
+                  },
+                  {
+                    "type": "var",
+                    "value": "d(y)"
+                  }
+                ],
+                "note": "y already relaxed while x was settled"
+              },
+              {
+                "label": "Non-negative weights: rest of path only adds cost",
+                "tokens": [
+                  {
+                    "type": "var",
+                    "value": "d(y)"
+                  },
+                  {
+                    "type": "op",
+                    "value": "≤"
+                  },
+                  {
+                    "type": "var",
+                    "value": "d(u)"
+                  }
+                ]
+              },
+              {
+                "label": "But we extracted u as the minimum",
+                "tokens": [
+                  {
+                    "type": "var",
+                    "value": "dist[u]"
+                  },
+                  {
+                    "type": "op",
+                    "value": "≤"
+                  },
+                  {
+                    "type": "var",
+                    "value": "dist[y]"
+                  }
+                ]
+              },
+              {
+                "label": "Chain the inequalities — contradiction",
+                "tokens": [
+                  {
+                    "type": "var",
+                    "value": "dist[u]"
+                  },
+                  {
+                    "type": "op",
+                    "value": "≤"
+                  },
+                  {
+                    "type": "var",
+                    "value": "d(u)"
+                  },
+                  {
+                    "type": "op",
+                    "value": "<"
+                  },
+                  {
+                    "type": "var",
+                    "value": "dist[u]"
+                  }
+                ],
+                "highlight": true,
+                "final": true
+              }
+            ],
+            "accentColor": "#f472b6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-6",
+      "layout": "title-left-right",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 1020,
+      "transition": "fade",
+      "narration": "The priority queue you choose dictates the complexity. With a binary heap — Python's heapq, or std::priority_queue — each of the V extract-min and E decrease-key operations costs O(log V), giving O((V+E) log V). A Fibonacci heap drops decrease-key to amortized O(1), improving the bound to O(E + V log V), though its large constants make it slower in practice on real graphs. The common production trick, shown here, is a lazy binary heap: never decrease-key, just push duplicates and skip stale entries on pop.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "CodeBlock",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "Lazy-deletion Dijkstra (Python)",
+            "code": "import heapq\n\ndef dijkstra(graph, source):\n    dist = {v: float('inf') for v in graph}\n    dist[source] = 0\n    pq = [(0, source)]          # (distance, node)\n    while pq:\n        d, u = heapq.heappop(pq)\n        if d > dist[u]:\n            continue            # stale entry, skip\n        for v, w in graph[u]:\n            nd = d + w\n            if nd < dist[v]:\n                dist[v] = nd\n                heapq.heappush(pq, (nd, v))\n    return dist",
+            "language": "python",
+            "accentColor": "#4ade80",
+            "highlightLines": [
+              9,
+              10
+            ]
+          }
+        },
+        {
+          "area": "right",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Complexity by data structure",
+            "items": [
+              "Array scan for min — O(V²), best on dense graphs where E ≈ V²",
+              "Binary heap — O((V+E) log V), the everyday default",
+              "Fibonacci heap — O(E + V log V) amortized, big constants, rarely faster in practice",
+              "Lazy heap — pushes stale duplicates, bounded by O(E) extra entries",
+              "Radix / bucket queue (Dial's) — O(E + V·C) when weights are small integers"
+            ],
+            "accentColor": "#a78bfa"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-7",
+      "layout": "left-right",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 936,
+      "transition": "slideUp",
+      "narration": "Dijkstra's Achilles heel is negative edge weights. A negative edge can retroactively make a path to an already-settled node cheaper, violating the freeze-once invariant and producing wrong answers — with a negative cycle, no shortest path even exists. This is a real constraint: currency-arbitrage graphs and some cost models have negative edges, and there you must switch to Bellman-Ford or Johnson's algorithm. Dijkstra also computes single-source paths; for all-pairs on dense graphs, Floyd-Warshall is often the better tool.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "GraphTraversal",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Why Non-Negative Weights Matter",
+            "algorithm": "dijkstra",
+            "start": "A",
+            "showDistanceTable": false,
+            "nodes": [
+              {
+                "id": "A",
+                "label": "A",
+                "x": 10,
+                "y": 50
+              },
+              {
+                "id": "B",
+                "label": "B",
+                "x": 40,
+                "y": 25
+              },
+              {
+                "id": "C",
+                "label": "C",
+                "x": 40,
+                "y": 75
+              },
+              {
+                "id": "D",
+                "label": "D",
+                "x": 78,
+                "y": 50
+              }
+            ],
+            "edges": [
+              {
+                "from": "A",
+                "to": "B",
+                "weight": 2,
+                "directed": true
+              },
+              {
+                "from": "A",
+                "to": "C",
+                "weight": 5,
+                "directed": true
+              },
+              {
+                "from": "B",
+                "to": "D",
+                "weight": 6,
+                "directed": true
+              },
+              {
+                "from": "C",
+                "to": "D",
+                "weight": 1,
+                "directed": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "settle",
+                "node": "A",
+                "distance": 0
+              },
+              {
+                "kind": "relax",
+                "node": "B",
+                "edge": {
+                  "from": "A",
+                  "to": "B"
+                },
+                "distance": 2
+              },
+              {
+                "kind": "relax",
+                "node": "C",
+                "edge": {
+                  "from": "A",
+                  "to": "C"
+                },
+                "distance": 5
+              },
+              {
+                "kind": "settle",
+                "node": "B",
+                "distance": 2,
+                "note": "Settled, never revisited"
+              }
+            ]
+          }
+        },
+        {
+          "area": "right",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Where Dijkstra breaks",
+            "body": "The correctness proof relied entirely on non-negative weights. Introduce a single negative edge and the greedy 'settle once' rule can lock in a distance that a later, cheaper path would have improved.",
+            "bullets": [
+              "Negative edges → wrong distances; negative cycles → no solution",
+              "Use Bellman-Ford (O(V·E)) or Johnson's for negative weights",
+              "Single-source only — Floyd-Warshall for dense all-pairs"
+            ],
+            "position": "right",
+            "accentColor": "#f472b6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-8",
+      "layout": "title-main-sidebar",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 1152,
+      "transition": "zoom",
+      "narration": "In practice, raw Dijkstra is too slow for continental road networks with tens of millions of nodes, so real routing engines layer on speedups. A* adds an admissible heuristic — straight-line distance — to steer the search toward the goal, and bidirectional search runs two frontiers that meet in the middle, roughly halving the explored area. Google Maps and OSRM go further with Contraction Hierarchies, precomputing shortcut edges so a query touches only a tiny fraction of the graph, answering continental routes in under a millisecond. All of these still have Dijkstra's relaxation at their core.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "PacketFlow",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "Dijkstra in Network Routing (OSPF)",
+            "accentColor": "#22d3ee",
+            "packetInterval": 1200,
+            "nodes": [
+              {
+                "id": "src",
+                "label": "Source Host",
+                "x": 8,
+                "y": 50,
+                "type": "client",
+                "sublabel": "192.168.1.10"
+              },
+              {
+                "id": "r1",
+                "label": "Router R1",
+                "x": 30,
+                "y": 25,
+                "type": "router",
+                "sublabel": "link cost 10"
+              },
+              {
+                "id": "r2",
+                "label": "Router R2",
+                "x": 30,
+                "y": 75,
+                "type": "router",
+                "sublabel": "link cost 25"
+              },
+              {
+                "id": "r3",
+                "label": "Router R3",
+                "x": 58,
+                "y": 50,
+                "type": "router",
+                "sublabel": "link cost 5"
+              },
+              {
+                "id": "dst",
+                "label": "Dest Server",
+                "x": 85,
+                "y": 50,
+                "type": "server",
+                "sublabel": "10.0.0.5"
+              }
+            ],
+            "edges": [
+              {
+                "from": "src",
+                "to": "r1",
+                "label": "cost 10",
+                "color": "#22d3ee"
+              },
+              {
+                "from": "src",
+                "to": "r2",
+                "label": "cost 25",
+                "color": "#64748b"
+              },
+              {
+                "from": "r1",
+                "to": "r3",
+                "label": "cost 5",
+                "color": "#22d3ee"
+              },
+              {
+                "from": "r2",
+                "to": "r3",
+                "label": "cost 8",
+                "color": "#64748b"
+              },
+              {
+                "from": "r3",
+                "to": "dst",
+                "label": "cost 5",
+                "color": "#22d3ee"
+              }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "StatCallout",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "SPF Recomputation Time",
+            "value": 189,
+            "suffix": " ms",
+            "description": "OSPF runs Dijkstra's SPF on every topology change; a binary-heap implementation is O((V+E) log V), keeping recomputation sub-second even on large areas.",
+            "accentColor": "#22d3ee"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-9",
+      "layout": "full",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 924,
+      "transition": "none",
+      "narration": "Dijkstra is greedy done right: settle the nearest unsettled node, relax its edges, repeat — and an exchange argument proves that greedy commitment is always optimal, as long as weights stay non-negative. Remember the three levers: the invariant that settled means final, the non-negative-weight requirement that makes it true, and the priority queue that sets your complexity. Master those and you understand not just Dijkstra, but the whole family of shortest-path algorithms built on top of it.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Greedy, Proven, and Everywhere",
+            "subtitle": "Settle nearest, relax, repeat — correctness guaranteed",
+            "accentColor": "#38bdf8",
+            "align": "center"
+          }
+        }
+      ]
+    }
+  ]
+}

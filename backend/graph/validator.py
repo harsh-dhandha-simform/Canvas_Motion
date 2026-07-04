@@ -72,6 +72,21 @@ def validate_and_repair(scenes: list[dict], syllabus: dict) -> dict:
             ok, error = validate_panel_data(ptype, data)
             if ok:
                 continue
+            
+            # Skip repair when the data is essentially empty (only has 'title' or nothing).
+            # This means the upstream agent (Scriptwriter or VisualArchitect) failed to fill
+            # the panel — repairing an empty object just hallucinates minimal placeholder data.
+            meaningful_keys = {k for k in data if k != "title" and data[k] not in (None, "", [], {})}
+            if not meaningful_keys:
+                logger.warning(
+                    "[%s] ⚠️ Skipping repair for %s in scene %s — data is empty (upstream agent failed). "
+                    "Degrading to CalloutAnnotation instead of hallucinating placeholder data.",
+                    AGENT_NAME, ptype, sc.get("id")
+                )
+                _degrade_to_text(panel, sc)
+                degraded += 1
+                continue
+            
             logger.info("[%s] invalid %s in scene %s: %s", AGENT_NAME, ptype, sc.get("id"), error)
             fixed = _repair_panel(ptype, data, error or "")
             if fixed is not None:
@@ -81,6 +96,7 @@ def validate_and_repair(scenes: list[dict], syllabus: dict) -> dict:
                 _degrade_to_text(panel, sc)
                 degraded += 1
                 logger.warning("[%s] %s unrepairable → degraded to CalloutAnnotation", AGENT_NAME, ptype)
+
 
     # Coverage check
     covered = {sid for sc in scenes for sid in sc.get("covers", [])}

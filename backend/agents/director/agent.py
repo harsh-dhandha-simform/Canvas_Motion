@@ -9,7 +9,9 @@ Guarantees every must-cover subtopic is mapped to at least one scene (enforced
 in Python after the LLM call; the Validator double-checks coverage later).
 """
 
+from __future__ import annotations
 import logging
+from typing import Optional
 
 from component_catalog import get_catalog
 from component_catalog import picker_view
@@ -63,11 +65,13 @@ A scene's panels[].area values MUST exactly match the chosen layout's areas.
    (the staples AnimatedTitle / TypewriterText / BulletList / CalloutAnnotation are always allowed).
 3. STRUCTURE: scene 0 role="hook" layout="full" (AnimatedTitle); last scene role="outro" layout="full" (AnimatedTitle).
    All middle scenes use a header layout (title-left-right / title-main-sidebar / title-content).
-4. TEXTUAL EXPLANATION: every middle scene must include at least one text/list component
+4. SIZING: Assign a size_ratio (integer) to each panel to dynamically size them relative to each other in multi-panel layouts. For example, if a diagram is complex, give it size_ratio: 2 and the text size_ratio: 1 so the diagram gets 2/3 of the screen width. Default to 1.
+5. TEXTUAL EXPLANATION: every middle scene must include at least one text/list component
    (BulletList, CalloutAnnotation, NumberedList, StepFlow, TwoColumnLayout, QuoteCard) so the idea is explained in words,
    not only shown as a diagram.
-5. VARIETY: do not use the same component type in more than ~40% of scenes; vary layouts between consecutive scenes.
-6. AnimatedTitle ONLY in "full" layout.
+6. VARIETY: do not use the same component type in more than ~40% of scenes; vary layouts between consecutive scenes.
+7. TIMING: you may optionally set `delay_frames` (integer) on panels in a multi-panel layout to stagger their entrance. If omitted, they will be auto-staggered.
+8. AnimatedTitle ONLY in "full" layout.
 
 Return ONLY valid JSON.
 """.strip()
@@ -160,10 +164,10 @@ def _normalize_plan(plan: dict, syllabus: dict) -> dict:
         panels = sc.get("panels") or []
         fixed = []
         for area, panel in zip(required, panels):
-            fixed.append({"area": area, "type": (panel or {}).get("type", "BulletList")})
+            fixed.append({"area": area, "type": (panel or {}).get("type", "BulletList"), "size_ratio": (panel or {}).get("size_ratio", 1)})
         # if LLM gave fewer panels than the layout needs, fill remaining areas with a text panel
         for area in required[len(fixed):]:
-            fixed.append({"area": area, "type": "BulletList"})
+            fixed.append({"area": area, "type": "BulletList", "size_ratio": 1})
         sc["panels"] = fixed
         sc.setdefault("covers", [])
 

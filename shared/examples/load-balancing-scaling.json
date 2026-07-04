@@ -1,0 +1,614 @@
+{
+  "title": "Load Balancing & Scaling",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#10b981",
+    "secondary": "#38bdf8",
+    "accent": "#fb923c",
+    "background": "#0a0f1e",
+    "font": "Outfit"
+  },
+  "voiceover": {
+    "provider": "deepgram",
+    "captions": [
+      {
+        "text": "Scaling is not one technique but a stack.",
+        "startMs": 240,
+        "endMs": 2659,
+        "timestampMs": 240,
+        "confidence": null
+      },
+      {
+        "text": "Make services stateless, distribute with the right balancer",
+        "startMs": 3199,
+        "endMs": 6319,
+        "timestampMs": 3199,
+        "confidence": null
+      },
+      {
+        "text": "at the right layer, detect failure with health",
+        "startMs": 6319,
+        "endMs": 8960,
+        "timestampMs": 6319,
+        "confidence": null
+      },
+      {
+        "text": "checks and draining, close the loop with auto",
+        "startMs": 8960,
+        "endMs": 11599,
+        "timestampMs": 8960,
+        "confidence": null
+      },
+      {
+        "text": "scaling, and defend against the herd and cascade",
+        "startMs": 11599,
+        "endMs": 14240,
+        "timestampMs": 11599,
+        "confidence": null
+      },
+      {
+        "text": "under load. The engineers who build systems that",
+        "startMs": 14240,
+        "endMs": 17355,
+        "timestampMs": 14240,
+        "confidence": null
+      },
+      {
+        "text": "survive traffic spikes aren't the ones with the",
+        "startMs": 17355,
+        "endMs": 19675,
+        "timestampMs": 17355,
+        "confidence": null
+      },
+      {
+        "text": "biggest machines. They're the ones who assumed every",
+        "startMs": 19675,
+        "endMs": 22715,
+        "timestampMs": 19675,
+        "confidence": null
+      },
+      {
+        "text": "node would fail and designed the fleet to",
+        "startMs": 22715,
+        "endMs": 24875,
+        "timestampMs": 22715,
+        "confidence": null
+      },
+      {
+        "text": "route around it.",
+        "startMs": 24875,
+        "endMs": 25583,
+        "timestampMs": 24875,
+        "confidence": null
+      }
+    ]
+  },
+  "audio_url": "/audio/load-balancing-scaling-60s.mp3",
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 433,
+      "transition": "none",
+      "narration": "Scaling is not one technique but a stack: make services stateless, distribute with the right balancer at the right layer, detect failure with health checks and draining, close the loop with autoscaling, and defend against the herd and cascade under load. The engineers who build systems that survive traffic spikes aren't the ones with the biggest machines — they're the ones who assumed every node would fail and designed the fleet to route around it.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Build Fleets That Route Around Failure",
+            "subtitle": "Stateless, balanced, self-healing, and defended"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-2",
+      "layout": "title-left-right",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 162,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "left",
+          "type": "ComparisonCard",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "L4 vs L7 Load Balancing",
+            "pros": [
+              "Fast",
+              "Simple"
+            ],
+            "cons": [
+              "No content inspection",
+              "Basic routing"
+            ]
+          }
+        },
+        {
+          "area": "right",
+          "type": "LineChart",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Traffic Volume",
+            "xLabels": [
+              "12:00",
+              "12:05",
+              "12:10",
+              "12:15"
+            ],
+            "series": [
+              {
+                "name": "Requests/sec",
+                "values": [
+                  100,
+                  500,
+                  2000,
+                  5000
+                ],
+                "fill": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-3",
+      "layout": "title-main-sidebar",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 170,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "main",
+          "type": "ArchitectureDiagram",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "Auto-scaling Architecture",
+            "nodes": [
+              {
+                "id": "lb",
+                "type": "loadBalancer",
+                "x": 20,
+                "y": 50,
+                "label": "LB"
+              },
+              {
+                "id": "s1",
+                "type": "server",
+                "x": 60,
+                "y": 30,
+                "label": "Server 1"
+              },
+              {
+                "id": "s2",
+                "type": "server",
+                "x": 60,
+                "y": 70,
+                "label": "Server 2"
+              }
+            ],
+            "connections": [
+              {
+                "fromId": "lb",
+                "toId": "s1",
+                "type": "stream"
+              },
+              {
+                "fromId": "lb",
+                "toId": "s2",
+                "type": "stream"
+              }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Key Metrics",
+            "items": [
+              "CPU Utilization > 70%",
+              "Queue Length > 100",
+              "Latency > 200ms"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-4",
+      "layout": "title-left-right",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 176,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "left",
+          "type": "TwoColumnLayout",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Scaling Approaches",
+            "left": {
+              "heading": "Vertical",
+              "points": [
+                "Bigger CPU",
+                "More RAM",
+                "Downtime required"
+              ]
+            },
+            "right": {
+              "heading": "Horizontal",
+              "points": [
+                "More nodes",
+                "Load balancer",
+                "Zero downtime"
+              ]
+            }
+          }
+        },
+        {
+          "area": "right",
+          "type": "PacketFlow",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Network Flow",
+            "nodes": [
+              {
+                "id": "c1",
+                "label": "Client",
+                "x": 10,
+                "y": 50,
+                "type": "client"
+              },
+              {
+                "id": "lb",
+                "label": "LB",
+                "x": 50,
+                "y": 50,
+                "type": "router"
+              },
+              {
+                "id": "s1",
+                "label": "Backend",
+                "x": 90,
+                "y": 50,
+                "type": "server"
+              }
+            ],
+            "edges": [
+              {
+                "from": "c1",
+                "to": "lb",
+                "label": "Req"
+              },
+              {
+                "from": "lb",
+                "to": "s1",
+                "label": "Fwd"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-5",
+      "layout": "title-main-sidebar",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 120,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "main",
+          "type": "HashRing",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "Consistent Hashing",
+            "servers": [
+              "Node A",
+              "Node B",
+              "Node C"
+            ],
+            "virtualNodesPerServer": 3,
+            "lookupKeys": [
+              "user_123",
+              "session_abc",
+              "cart_456"
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Benefits",
+            "items": [
+              "Minimal data movement",
+              "Even distribution",
+              "Fault tolerant"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-6",
+      "layout": "title-left-right",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 170,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "left",
+          "type": "StateMachine",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Connection State",
+            "states": [
+              {
+                "id": "idle",
+                "label": "Idle"
+              },
+              {
+                "id": "active",
+                "label": "Active"
+              },
+              {
+                "id": "draining",
+                "label": "Draining"
+              }
+            ],
+            "transitions": [
+              {
+                "fromId": "idle",
+                "toId": "active",
+                "label": "req"
+              },
+              {
+                "fromId": "active",
+                "toId": "draining",
+                "label": "scale-in"
+              }
+            ],
+            "activeStateId": "active"
+          }
+        },
+        {
+          "area": "right",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Strategies",
+            "items": [
+              "Round Robin",
+              "Least Connections",
+              "IP Hash"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-7",
+      "layout": "title-main-sidebar",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 159,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "main",
+          "type": "FlowDiagram",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "Decision Tree",
+            "nodes": [
+              {
+                "id": "start",
+                "label": "Request",
+                "kind": "start"
+              },
+              {
+                "id": "check",
+                "label": "Healthy?",
+                "kind": "decision"
+              },
+              {
+                "id": "route",
+                "label": "Route",
+                "kind": "process"
+              },
+              {
+                "id": "drop",
+                "label": "Drop",
+                "kind": "end"
+              }
+            ],
+            "edges": [
+              {
+                "fromId": "start",
+                "toId": "check"
+              },
+              {
+                "fromId": "check",
+                "toId": "route",
+                "label": "Yes"
+              },
+              {
+                "fromId": "check",
+                "toId": "drop",
+                "label": "No"
+              }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Takeaway",
+            "body": "Scaling is not infinite.",
+            "bullets": [
+              "Cache aggressively",
+              "Use read replicas"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-8",
+      "layout": "title-content",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 120,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "main",
+          "type": "TreeHierarchy",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "System Hierarchy",
+            "root": {
+              "label": "Global LB",
+              "children": [
+                {
+                  "label": "US East",
+                  "children": [
+                    {
+                      "label": "AZ-1",
+                      "children": []
+                    },
+                    {
+                      "label": "AZ-2",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "label": "EU West",
+                  "children": [
+                    {
+                      "label": "AZ-1",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-9",
+      "layout": "title-left-right",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 170,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "left",
+          "type": "StateMachine",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Failure States",
+            "states": [
+              {
+                "id": "up",
+                "label": "Up"
+              },
+              {
+                "id": "down",
+                "label": "Down"
+              }
+            ],
+            "transitions": [
+              {
+                "fromId": "up",
+                "toId": "down",
+                "label": "crash"
+              }
+            ],
+            "activeStateId": "up"
+          }
+        },
+        {
+          "area": "right",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Mitigation",
+            "items": [
+              "Circuit Breakers",
+              "Retries",
+              "Timeouts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-10",
+      "layout": "full",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 120,
+      "transition": "none",
+      "narration": "",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Summary",
+            "subtitle": "Build for resilience, not just scale."
+          }
+        }
+      ]
+    }
+  ]
+}

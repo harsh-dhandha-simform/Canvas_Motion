@@ -11,7 +11,6 @@
  * 4. Add its `description` and `schema` to `COMPONENT_CATALOG` (used by backend Assembler agent).
  */
 
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { AnimatedTitle, AnimatedTitleSchema } from "./components/AnimatedTitle";
 import { ComparisonCard, ComparisonCardSchema } from "./components/ComparisonCard";
 import { BulletList, BulletListSchema } from "./components/BulletList";
@@ -121,11 +120,18 @@ export const COMPONENT_SCHEMAS = {
   RecursionTree: RecursionTreeSchema,
 } as const;
 
+import { toJSONSchema } from "zod";
+
 // Zod v4 ships a native JSON-Schema converter. The old `zod-to-json-schema`
 // package targets zod v3 and silently emits empty schemas against v4 — which is
 // what left the backend Validator with nothing to validate against.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const toJsonSchema = (schema: any, name?: string) => zodToJsonSchema(schema, name);
+const toJsonSchema = (schema: any, name?: string) => {
+  const s = toJSONSchema(schema);
+  // Optional: wrap it in a root def to match the old format if needed, 
+  // but just returning it directly is fine for the validator
+  return s;
+};
 
 /**
  * Picker metadata — the knowledge the planning agents (Shortlister, Director,

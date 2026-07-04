@@ -129,7 +129,10 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const { positions } = layout(nodes, edges);
+  const safeNodes = nodes ?? [];
+  const safeEdges = edges ?? [];
+
+  const { positions } = layout(safeNodes, safeEdges);
 
   const titleOpacity = interpolate(frame, [0, 18], [0, 1], {
     extrapolateLeft: "clamp",
@@ -139,10 +142,10 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
 
   // Reveal nodes by depth first
   const nodeSprings = new Map<string, number>();
-  nodes.forEach((n) => {
+  safeNodes.forEach((n) => {
     // depth is implicit in position.y — derive index
     // We'll just stagger by index in input order — simpler and stable
-    const idx = nodes.findIndex((x) => x.id === n.id);
+    const idx = safeNodes.findIndex((x) => x.id === n.id);
     nodeSprings.set(
       n.id,
       spring({
@@ -154,16 +157,16 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
     );
   });
 
-  const edgeSprings = edges.map((_, i) =>
+  const edgeSprings = safeEdges.map((_, i) =>
     spring({
-      frame: frame - (10 + nodes.length * 8 + i * 6),
+      frame: frame - (10 + safeNodes.length * 8 + i * 6),
       fps,
       config: { damping: 14, stiffness: 140 },
       durationInFrames: 30,
     })
   );
 
-  const renderShape = (n: typeof nodes[0], x: number, y: number) => {
+  const renderShape = (n: typeof safeNodes[0], x: number, y: number) => {
     const sp = nodeSprings.get(n.id) || 0;
     const color = n.color || KIND_COLORS[n.kind || "process"];
     const scale = interpolate(sp, [0, 1], [0.6, 1]);
@@ -350,7 +353,7 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
           </defs>
 
           {/* Edges */}
-          {edges.map((e, i) => {
+          {safeEdges.map((e, i) => {
             const from = positions.get(e.fromId);
             const to = positions.get(e.toId);
             if (!from || !to) return null;
@@ -421,7 +424,7 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
           })}
 
           {/* Nodes */}
-          {nodes.map((n) => {
+          {safeNodes.map((n) => {
             const pos = positions.get(n.id);
             if (!pos) return null;
             return <React.Fragment key={n.id}>{renderShape(n, pos.x, pos.y)}</React.Fragment>;

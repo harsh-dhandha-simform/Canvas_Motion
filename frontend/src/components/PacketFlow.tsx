@@ -62,7 +62,11 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
   packetInterval = 18,
 }) => {
   const frame = useCurrentFrame();
-  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+
+  const safeNodes = nodes ?? [];
+  const safeEdges = edges ?? [];
+
+  const nodeMap = new Map(safeNodes.map((n) => [n.id, n]));
 
   // Title fade-in
   const titleOpacity = interpolate(frame, [0, 20], [0, 1], {
@@ -127,7 +131,7 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
         </defs>
 
         {/* ── Edges ─────────────────────────────────────────────────── */}
-        {edges.map((edge, ei) => {
+        {safeEdges.map((edge, ei) => {
           const from = nodeMap.get(edge.from);
           const to = nodeMap.get(edge.to);
           if (!from || !to) return null;
@@ -217,7 +221,7 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
         })}
 
         {/* ── Nodes ─────────────────────────────────────────────────── */}
-        {nodes.map((node, ni) => {
+        {safeNodes.map((node, ni) => {
           const cx = (node.x / 100) * LW;
           const cy = (node.y / 100) * LH;
           const delay = ni * 12;

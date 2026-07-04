@@ -70,7 +70,16 @@ def ask(
             f"[{agent_name}] /ask returned failure: {data.get('stderr') or data.get('error')}"
         )
 
-    answer = (data.get("answer") or "").strip()
+    raw_answer = data.get("answer")
+    if isinstance(raw_answer, dict):
+        if list(raw_answer.keys()) == ["raw_output"]:
+            answer = raw_answer["raw_output"].strip()
+        else:
+            import json
+            answer = json.dumps(raw_answer).strip()
+    else:
+        answer = (raw_answer or "").strip()
+        
     if not answer:
         raise RuntimeError(f"[{agent_name}] /ask returned empty answer")
 

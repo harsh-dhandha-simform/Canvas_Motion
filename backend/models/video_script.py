@@ -50,6 +50,8 @@ class _NullSafeBase(BaseModel):
 class Panel(BaseModel):
     area: str   # "panel" | "left" | "right" | "main" | "sidebar"
     type: str   # one of the 13 component names
+    size_ratio: int = 1
+    delay_frames: Optional[int] = None
     data: dict[str, Any] = Field(default_factory=dict)
 
 

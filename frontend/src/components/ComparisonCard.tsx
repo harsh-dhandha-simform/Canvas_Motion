@@ -31,6 +31,9 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
 }) => {
   const frame = useCurrentFrame();
 
+  const safePros = pros ?? [];
+  const safeCons = cons ?? [];
+
   return (
     <div
       style={{
@@ -62,7 +65,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
             Advantages (Pros)
           </span>
           <ul className="flex flex-col gap-2.5">
-            {pros.map((pro, index) => {
+            {safePros.map((pro, index) => {
               const isVisible = index < visibleCount;
               const itemFrame = frame - index * 6; // stagger entry
               const itemOpacity = isVisible
@@ -111,9 +114,9 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
             Limitations (Cons)
           </span>
           <ul className="flex flex-col gap-2.5">
-            {cons.map((con, index) => {
+            {safeCons.map((con, index) => {
               // Offset visible count index for cons to stagger after pros
-              const conIndex = pros.length + index;
+              const conIndex = safePros.length + index;
               const isVisible = conIndex < visibleCount;
               const itemFrame = frame - conIndex * 6;
               const itemOpacity = isVisible

@@ -1,0 +1,549 @@
+{
+  "title": "Breadth first search",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#10b981",
+    "secondary": "#38bdf8",
+    "accent": "#fb923c",
+    "background": "#0a0f1e",
+    "font": "Outfit"
+  },
+  "voiceover": {
+    "provider": "deepgram",
+    "captions": [
+      {
+        "text": "Breadth first search is layered exploration made rigorous.",
+        "startMs": 160,
+        "endMs": 3220,
+        "timestampMs": 160,
+        "confidence": null
+      },
+      {
+        "text": "A FIFO queue and a visited set that",
+        "startMs": 3600,
+        "endMs": 6399,
+        "timestampMs": 3600,
+        "confidence": null
+      },
+      {
+        "text": "together guarantees shortest paths in unweighted graphs at",
+        "startMs": 6399,
+        "endMs": 10080,
+        "timestampMs": 6399,
+        "confidence": null
+      },
+      {
+        "text": "optimal O(V+E) time. Remember the two things that bite people.",
+        "startMs": 10080,
+        "endMs": 13445,
+        "timestampMs": 10080,
+        "confidence": null
+      },
+      {
+        "text": "Mark nodes visited on enqueue, and watch the frontier memory",
+        "startMs": 13445,
+        "endMs": 16965,
+        "timestampMs": 13445,
+        "confidence": null
+      },
+      {
+        "text": "on wide graphs. Master BFS and you've mastered",
+        "startMs": 16965,
+        "endMs": 19845,
+        "timestampMs": 16965,
+        "confidence": null
+      },
+      {
+        "text": "the template that Dijkstra, A*, and every",
+        "startMs": 19845,
+        "endMs": 23910,
+        "timestampMs": 19845,
+        "confidence": null
+      },
+      {
+        "text": "shortest path system in production build upon.",
+        "startMs": 23910,
+        "endMs": 27270,
+        "timestampMs": 23910,
+        "confidence": null
+      }
+    ]
+  },
+  "audio_url": "/audio/breadth-first-search-60s.mp3",
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full",
+      "title": "Breadth-First Search",
+      "subtitle": "The shortest-path algorithm",
+      "duration_frames": 780,
+      "transition": "fade",
+      "narration": "Breadth-first search is the algorithm that answers a deceptively simple question: what is the fewest number of hops between two nodes in a graph? From the shortest chain of friends on a social network to the minimum moves in a puzzle, this 'distance by hop count' problem is everywhere. BFS solves it exactly, in linear time, using nothing more than a queue.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Breadth-First Search",
+            "subtitle": "Shortest paths by hop count",
+            "accentColor": "#10b981"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-2",
+      "layout": "title-main-sidebar",
+      "title": "BFS: Level-Order Exploration",
+      "subtitle": "Exploring the graph layer by layer",
+      "duration_frames": 900,
+      "transition": "slideLeft",
+      "narration": "The problem BFS solves is unweighted shortest path: find the minimum number of edges from a source to every other reachable node. Think of it as expanding a wavefront outward from the source, one ring of distance at a time.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "GraphTraversal",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "BFS: Level-Order Exploration",
+            "algorithm": "bfs",
+            "start": "A",
+            "nodes": [
+              { "id": "A", "label": "A", "x": 50, "y": 12 },
+              { "id": "B", "label": "B", "x": 30, "y": 40 },
+              { "id": "C", "label": "C", "x": 70, "y": 40 },
+              { "id": "D", "label": "D", "x": 15, "y": 72 },
+              { "id": "E", "label": "E", "x": 40, "y": 72 },
+              { "id": "F", "label": "F", "x": 60, "y": 72 },
+              { "id": "G", "label": "G", "x": 85, "y": 72 }
+            ],
+            "edges": [
+              { "from": "A", "to": "B", "directed": false },
+              { "from": "A", "to": "C", "directed": false },
+              { "from": "B", "to": "D", "directed": false },
+              { "from": "B", "to": "E", "directed": false },
+              { "from": "C", "to": "F", "directed": false },
+              { "from": "C", "to": "G", "directed": false }
+            ],
+            "steps": [
+              { "kind": "enqueue", "node": "A", "note": "Start: enqueue root A" },
+              { "kind": "visit", "node": "A", "note": "Dequeue A, visit its neighbors" },
+              { "kind": "enqueue", "node": "B", "edge": { "from": "A", "to": "B" }, "note": "Enqueue B (level 1)" },
+              { "kind": "enqueue", "node": "C", "edge": { "from": "A", "to": "C" }, "note": "Enqueue C (level 1)" },
+              { "kind": "visit", "node": "B", "note": "Dequeue B" },
+              { "kind": "enqueue", "node": "D", "edge": { "from": "B", "to": "D" }, "note": "Enqueue D (level 2)" },
+              { "kind": "enqueue", "node": "E", "edge": { "from": "B", "to": "E" }, "note": "Enqueue E (level 2)" },
+              { "kind": "visit", "node": "C", "note": "Dequeue C" },
+              { "kind": "enqueue", "node": "F", "edge": { "from": "C", "to": "F" }, "note": "Enqueue F (level 2)" },
+              { "kind": "enqueue", "node": "G", "edge": { "from": "C", "to": "G" }, "note": "Enqueue G (level 2)" },
+              { "kind": "visit", "node": "D", "note": "Dequeue D (leaf)" },
+              { "kind": "visit", "node": "E", "note": "Dequeue E (leaf)" },
+              { "kind": "visit", "node": "F", "note": "Dequeue F (leaf)" },
+              { "kind": "visit", "node": "G", "note": "Dequeue G \u2014 traversal complete" }
+            ],
+            "showDistanceTable": false
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "The Key Insight",
+            "body": "BFS visits all nodes at distance d before any node at distance d+1. The first time you reach a node is guaranteed to be the shortest path.",
+            "accentColor": "#10b981",
+            "icon": "lightbulb"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-3",
+      "layout": "title-left-right",
+      "title": "The FIFO Queue & Visited Set",
+      "subtitle": "Two data structures powering BFS",
+      "duration_frames": 900,
+      "transition": "slideUp",
+      "narration": "BFS depends on two data structures working together. The first is a FIFO queue: nodes are processed in the exact order they are discovered, which enforces the by-distance ordering. The second is a visited set that marks a node the moment it is first enqueued, not when it is dequeued. Marking on enqueue is the classic correctness detail.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "LinearStructure",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "The Queue: FIFO Frontier",
+            "kind": "queue",
+            "initial": ["A"],
+            "operations": [
+              { "op": "dequeue", "note": "Remove A (front), visit it" },
+              { "op": "enqueue", "value": "B", "note": "Add A's neighbor B to back" },
+              { "op": "enqueue", "value": "C", "note": "Add A's neighbor C to back" },
+              { "op": "dequeue", "note": "Remove B \u2014 oldest first (FIFO)" },
+              { "op": "enqueue", "value": "D", "note": "Add B's neighbor D" },
+              { "op": "enqueue", "value": "E", "note": "Add B's neighbor E" },
+              { "op": "dequeue", "note": "Remove C before D/E \u2014 preserves level order" }
+            ],
+            "showIndices": false,
+            "showHeadTail": true,
+            "accentColor": "#3b82f6"
+          }
+        },
+        {
+          "area": "right",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Critical Rules",
+            "items": [
+              "Mark visited on ENQUEUE, not dequeue",
+              "Use FIFO queue — not a stack",
+              "Visited set gives O(1) membership checks",
+              "A stack would turn BFS into DFS"
+            ],
+            "accentColor": "#fb923c"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-4",
+      "layout": "title-left-right",
+      "title": "The BFS Algorithm",
+      "subtitle": "Every line matters",
+      "duration_frames": 900,
+      "transition": "slideLeft",
+      "narration": "The core loop is short but every line matters. Dequeue the front node, then scan its adjacency list. For each neighbor not yet in the visited set, mark it discovered, record its distance as current plus one, and enqueue it. Repeat until the queue empties.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "CodeBlock",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "BFS Implementation",
+            "language": "python",
+            "code": "from collections import deque\n\ndef bfs(graph, start):\n    # Mark start as visited on ENQUEUE\n    visited = {start}\n    queue = deque([start])\n    dist = {start: 0}\n\n    while queue:\n        node = queue.popleft()   # FIFO dequeue\n        for neighbor in graph[node]:\n            if neighbor not in visited:\n                visited.add(neighbor) # Mark on ENQUEUE!\n                dist[neighbor] = dist[node] + 1\n                queue.append(neighbor)\n\n    return dist",
+            "highlightLines": [5, 6, 11, 12]
+          }
+        },
+        {
+          "area": "right",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "\u26a0\ufe0f Common Mistake",
+            "body": "If you mark visited on DEQUEUE instead of ENQUEUE, the same node gets pushed multiple times. This breaks the O(V) enqueue bound and corrupts shortest-path distances.",
+            "accentColor": "#fb923c",
+            "icon": "warning"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-5",
+      "layout": "title-main-sidebar",
+      "title": "Why BFS Finds the Shortest Path",
+      "subtitle": "The monotone-distance invariant",
+      "duration_frames": 960,
+      "transition": "slideUp",
+      "narration": "Why is the first path found always the shortest? The proof rests on a monotone-distance invariant: at every point in the run, distances of nodes in the queue are nondecreasing and span at most two adjacent values, d and d+1. By induction, nodes leave the queue in nondecreasing distance order, so the first time a node is discovered it carries its true shortest distance.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "GraphTraversal",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "BFS Finds the Shortest Path",
+            "algorithm": "bfs",
+            "start": "S",
+            "nodes": [
+              { "id": "S", "label": "S", "x": 8, "y": 50 },
+              { "id": "A", "label": "A", "x": 32, "y": 25 },
+              { "id": "B", "label": "B", "x": 32, "y": 75 },
+              { "id": "C", "label": "C", "x": 58, "y": 25 },
+              { "id": "D", "label": "D", "x": 58, "y": 75 },
+              { "id": "T", "label": "T", "x": 85, "y": 50 }
+            ],
+            "edges": [
+              { "from": "S", "to": "A", "directed": false },
+              { "from": "S", "to": "B", "directed": false },
+              { "from": "A", "to": "C", "directed": false },
+              { "from": "B", "to": "D", "directed": false },
+              { "from": "C", "to": "T", "directed": false },
+              { "from": "D", "to": "T", "directed": false },
+              { "from": "A", "to": "B", "directed": false }
+            ],
+            "steps": [
+              { "kind": "enqueue", "node": "S", "note": "Source S, distance 0" },
+              { "kind": "visit", "node": "S", "note": "Dequeue S" },
+              { "kind": "enqueue", "node": "A", "edge": { "from": "S", "to": "A" }, "note": "A at distance 1" },
+              { "kind": "enqueue", "node": "B", "edge": { "from": "S", "to": "B" }, "note": "B at distance 1" },
+              { "kind": "visit", "node": "A", "note": "Dequeue A" },
+              { "kind": "enqueue", "node": "C", "edge": { "from": "A", "to": "C" }, "note": "C at distance 2" },
+              { "kind": "visit", "node": "B", "note": "Dequeue B" },
+              { "kind": "enqueue", "node": "D", "edge": { "from": "B", "to": "D" }, "note": "D at distance 2" },
+              { "kind": "visit", "node": "C", "note": "Dequeue C" },
+              { "kind": "enqueue", "node": "T", "edge": { "from": "C", "to": "T" }, "note": "T reached at distance 3 \u2014 shortest path S\u2192A\u2192C\u2192T" },
+              { "kind": "visit", "node": "T", "note": "Target found: 3 edges, guaranteed minimal" }
+            ],
+            "showDistanceTable": true
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "StatCallout",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Time Complexity",
+            "value": 1,
+            "suffix": "O(V + E)",
+            "description": "BFS visits every vertex once and traverses every edge once \u2014 linear in the size of the graph. This is optimal.",
+            "accentColor": "#10b981"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-6",
+      "layout": "title-content",
+      "title": "BFS Complexity Analysis",
+      "subtitle": "Time and space bounds",
+      "duration_frames": 840,
+      "transition": "fade",
+      "narration": "BFS runs in O(V + E) time: every vertex is dequeued once and every edge is examined once. The catch is space. BFS is O(V) in memory, and the real killer is the frontier: at peak, the queue can hold an entire layer. In a branching graph with factor b and depth d, that frontier is O(b^d).",
+      "panels": [
+        {
+          "area": "main",
+          "type": "EquationDerivation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "BFS Complexity",
+            "steps": [
+              {
+                "label": "Time",
+                "tokens": [
+                  { "type": "text", "value": "Each vertex dequeued once:" },
+                  { "type": "math", "value": "O(V)" }
+                ]
+              },
+              {
+                "label": "Edges",
+                "tokens": [
+                  { "type": "text", "value": "Each edge scanned once:" },
+                  { "type": "math", "value": "O(E)" }
+                ]
+              },
+              {
+                "label": "Total",
+                "tokens": [
+                  { "type": "text", "value": "Combined time complexity:" },
+                  { "type": "math", "value": "O(V + E)" }
+                ]
+              },
+              {
+                "label": "Space",
+                "tokens": [
+                  { "type": "text", "value": "Queue + visited set:" },
+                  { "type": "math", "value": "O(V)" }
+                ]
+              },
+              {
+                "label": "Worst-case frontier",
+                "tokens": [
+                  { "type": "text", "value": "Branching factor b, depth d:" },
+                  { "type": "math", "value": "O(b^d)" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-7",
+      "layout": "title-left-right",
+      "title": "BFS vs DFS: The Trade-off",
+      "subtitle": "Optimality vs memory",
+      "duration_frames": 900,
+      "transition": "zoom",
+      "narration": "BFS has three well-known failure modes and fixes. Memory blowup on wide graphs, mitigated by iterative deepening. Weighted edges that break the correctness proof, fixed by Dijkstra. And single-source search that explores too many nodes, fixed by bidirectional BFS.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "BFS vs DFS Trade-offs",
+            "items": [
+              "BFS: guarantees shortest path (unweighted)",
+              "DFS: only O(depth) memory, no SP guarantee",
+              "IDDFS: DFS memory + BFS optimality",
+              "Dijkstra: BFS for weighted edges",
+              "Bidirectional BFS: O(b^(d/2)) instead of O(b^d)"
+            ],
+            "accentColor": "#38bdf8"
+          }
+        },
+        {
+          "area": "right",
+          "type": "LineChart",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "BFS Cost Grows Linearly with Graph Size",
+            "xLabels": ["100", "500", "1K", "5K", "10K", "50K"],
+            "xLabel": "Vertices (V), with E \u2248 4V",
+            "yLabel": "Operations (V + E)",
+            "series": [
+              {
+                "name": "BFS Operations (V + E)",
+                "color": "#3b82f6",
+                "values": [500, 2500, 5000, 25000, 50000, 250000],
+                "fill": true
+              },
+              {
+                "name": "DFS Operations (V + E)",
+                "color": "#10b981",
+                "values": [500, 2500, 5000, 25000, 50000, 250000],
+                "fill": false
+              }
+            ],
+            "accentColor": "#3b82f6",
+            "showLegend": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-8",
+      "layout": "title-main-sidebar",
+      "title": "BFS in Production",
+      "subtitle": "Real-world applications",
+      "duration_frames": 960,
+      "transition": "slideLeft",
+      "narration": "BFS shows up in production far beyond textbooks. Web crawlers crawl in BFS order to reach high-value pages first. Network tools use BFS for shortest-hop routing. At scale, distributed graph engines like Pregel express BFS as vertex-centric supersteps, advancing one level per superstep across thousands of machines.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "ComparisonCard",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "When to Use BFS vs Alternatives",
+            "pros": [
+              "Unweighted shortest path \u2014 guaranteed optimal",
+              "Simple to implement with a queue",
+              "O(V + E) time is optimal for this problem",
+              "Social networks: degrees of separation",
+              "GPS: min hops in road graphs"
+            ],
+            "cons": [
+              "O(V) space, frontier can be O(b^d)",
+              "Fails with weighted edges (use Dijkstra)",
+              "Slow for deep targets in wide graphs",
+              "Not suitable for infinite graphs"
+            ],
+            "accentColor": "#10b981"
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Real Systems",
+            "body": "Google Pagerank crawling, LinkedIn 1st/2nd/3rd connections, network broadcast, maze solvers, Kubernetes dependency resolution.",
+            "accentColor": "#38bdf8",
+            "icon": "server"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-9",
+      "layout": "title-left-right",
+      "title": "BFS Architecture: Web Crawler",
+      "subtitle": "BFS powering production crawl systems",
+      "duration_frames": 900,
+      "transition": "slideLeft",
+      "narration": "Web crawlers like Googlebot conceptually crawl in BFS order to reach high-value pages near seed URLs first. Distributed graph engines like Pregel and Apache Giraph express BFS as vertex-centric supersteps — each vertex processes its layer, sends messages to neighbors, and the frontier advances one BFS level per superstep.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "TwoColumnLayout",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "BFS Variants",
+            "left": {
+              "heading": "Standard BFS",
+              "points": [
+                "Single source",
+                "Explores all levels",
+                "O(b^d) frontier size",
+                "Simple implementation"
+              ]
+            },
+            "right": {
+              "heading": "Bidirectional BFS",
+              "points": [
+                "Source + target search",
+                "Meet in the middle",
+                "O(b^(d/2)) frontier",
+                "2x faster in practice"
+              ]
+            }
+          }
+        },
+        {
+          "area": "right",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "LinkedIn Degrees",
+            "body": "LinkedIn uses bidirectional BFS to compute 1st/2nd/3rd degree connections in real-time across 900M+ member graphs.",
+            "accentColor": "#38bdf8",
+            "icon": "network"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-10",
+      "layout": "full",
+      "title": "Master BFS",
+      "subtitle": "The foundation of graph search",
+      "duration_frames": 780,
+      "transition": "none",
+      "narration": "The heart of BFS is one elegant idea: because a FIFO queue drains nodes in nondecreasing distance order, the first time you touch any node is guaranteed to be along a shortest path. Remember to mark on enqueue, watch the frontier for memory, and reach for Dijkstra or bidirectional BFS when the assumptions change.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "Master BFS",
+            "subtitle": "Mark on enqueue. FIFO queue. O(V+E) guaranteed.",
+            "accentColor": "#10b981"
+          }
+        }
+      ]
+    }
+  ]
+}

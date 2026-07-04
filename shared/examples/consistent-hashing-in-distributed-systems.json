@@ -1,0 +1,517 @@
+{
+  "title": "Consistent Hashing in Distributed Systems",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#6366f1",
+    "secondary": "#22d3ee",
+    "accent": "#f59e0b",
+    "background": "#030711",
+    "font": "Space Grotesk"
+  },
+  "voiceover": {
+    "provider": "deepgram",
+    "captions": [
+      {
+        "text": "Welcome to our discussion on consistent hashing in",
+        "startMs": 160,
+        "endMs": 2560,
+        "timestampMs": 160,
+        "confidence": null
+      },
+      {
+        "text": "distributed systems. This technique is crucial for scaling",
+        "startMs": 2560,
+        "endMs": 6160,
+        "timestampMs": 2560,
+        "confidence": null
+      },
+      {
+        "text": "data storage and minimizing data movement when nodes",
+        "startMs": 6160,
+        "endMs": 8800,
+        "timestampMs": 6160,
+        "confidence": null
+      },
+      {
+        "text": "change. Naive Majulo based sharding doesn't scale well.",
+        "startMs": 8800,
+        "endMs": 12420,
+        "timestampMs": 8800,
+        "confidence": null
+      },
+      {
+        "text": "When the number of nodes changes, a large",
+        "startMs": 12615,
+        "endMs": 14615,
+        "timestampMs": 12615,
+        "confidence": null
+      },
+      {
+        "text": "portion of the data needs to be re",
+        "startMs": 14615,
+        "endMs": 16295,
+        "timestampMs": 14615,
+        "confidence": null
+      },
+      {
+        "text": "sharded, leading to significant data movement and potential",
+        "startMs": 16295,
+        "endMs": 19494,
+        "timestampMs": 16295,
+        "confidence": null
+      },
+      {
+        "text": "service disruption Consistent hashing uses, a logical ring",
+        "startMs": 19494,
+        "endMs": 23255,
+        "timestampMs": 19494,
+        "confidence": null
+      },
+      {
+        "text": "to map keys and nodes Punction with a",
+        "startMs": 23255,
+        "endMs": 25589,
+        "timestampMs": 23255,
+        "confidence": null
+      },
+      {
+        "text": "uniform distribution is critical to ensure that each",
+        "startMs": 25589,
+        "endMs": 28390,
+        "timestampMs": 25589,
+        "confidence": null
+      },
+      {
+        "text": "node is responsible for approximately equal portions of",
+        "startMs": 28390,
+        "endMs": 31349,
+        "timestampMs": 28390,
+        "confidence": null
+      },
+      {
+        "text": "the key space. The consistent hashing algorithm provides",
+        "startMs": 31349,
+        "endMs": 35050,
+        "timestampMs": 31349,
+        "confidence": null
+      },
+      {
+        "text": "a deterministic lookup process. It works by hashing",
+        "startMs": 35190,
+        "endMs": 38255,
+        "timestampMs": 35190,
+        "confidence": null
+      },
+      {
+        "text": "the key and then searching the logical ring",
+        "startMs": 38255,
+        "endMs": 40335,
+        "timestampMs": 38255,
+        "confidence": null
+      },
+      {
+        "text": "in a clockwise direction until it finds the",
+        "startMs": 40335,
+        "endMs": 43055,
+        "timestampMs": 40335,
+        "confidence": null
+      },
+      {
+        "text": "node responsible for that key. This results in",
+        "startMs": 43055,
+        "endMs": 45935,
+        "timestampMs": 43055,
+        "confidence": null
+      },
+      {
+        "text": "an o log n lookup time when using",
+        "startMs": 45935,
+        "endMs": 48335,
+        "timestampMs": 45935,
+        "confidence": null
+      },
+      {
+        "text": "assorted list or binary search. Vert node v",
+        "startMs": 48335,
+        "endMs": 51510,
+        "timestampMs": 48335,
+        "confidence": null
+      },
+      {
+        "text": "nodes help with load balancing by allowing a",
+        "startMs": 51510,
+        "endMs": 54390,
+        "timestampMs": 51510,
+        "confidence": null
+      },
+      {
+        "text": "single physical node to be responsible for multiple",
+        "startMs": 54390,
+        "endMs": 57110,
+        "timestampMs": 54390,
+        "confidence": null
+      },
+      {
+        "text": "portions of the key space. This evens out",
+        "startMs": 57110,
+        "endMs": 59670,
+        "timestampMs": 57110,
+        "confidence": null
+      },
+      {
+        "text": "load variance and simplifies rebalancing when nodes are",
+        "startMs": 59670,
+        "endMs": 62790,
+        "timestampMs": 59670,
+        "confidence": null
+      },
+      {
+        "text": "added or removed. Replica placement is critical for",
+        "startMs": 62790,
+        "endMs": 66145,
+        "timestampMs": 62790,
+        "confidence": null
+      },
+      {
+        "text": "data durability and availability. Consistent hashing places replicas",
+        "startMs": 66145,
+        "endMs": 70245,
+        "timestampMs": 66145,
+        "confidence": null
+      },
+      {
+        "text": "in a clockwise direction. Node failures are handled",
+        "startMs": 70385,
+        "endMs": 74305,
+        "timestampMs": 70385,
+        "confidence": null
+      },
+      {
+        "text": "by redirecting requests to the next available node.",
+        "startMs": 74305,
+        "endMs": 77205,
+        "timestampMs": 74305,
+        "confidence": null
+      },
+      {
+        "text": "Consistent hashing, particularly useful in large dynamic clusters",
+        "startMs": 77460,
+        "endMs": 81060,
+        "timestampMs": 77460,
+        "confidence": null
+      },
+      {
+        "text": "with read heavy workloads. It minimizes data movement",
+        "startMs": 81060,
+        "endMs": 84260,
+        "timestampMs": 81060,
+        "confidence": null
+      },
+      {
+        "text": "during scaling and no changes making it suitable",
+        "startMs": 84260,
+        "endMs": 86660,
+        "timestampMs": 84260,
+        "confidence": null
+      },
+      {
+        "text": "for systems that require high availability and low",
+        "startMs": 86660,
+        "endMs": 89140,
+        "timestampMs": 86660,
+        "confidence": null
+      },
+      {
+        "text": "latency. Thank you for joining me on this",
+        "startMs": 89140,
+        "endMs": 91302,
+        "timestampMs": 89140,
+        "confidence": null
+      },
+      {
+        "text": "exploration of consistent hashing and distributed systems. This",
+        "startMs": 91302,
+        "endMs": 94982,
+        "timestampMs": 91302,
+        "confidence": null
+      },
+      {
+        "text": "technique is a powerful tool for building scalable",
+        "startMs": 94982,
+        "endMs": 97542,
+        "timestampMs": 94982,
+        "confidence": null
+      },
+      {
+        "text": "and resilient systems.",
+        "startMs": 97542,
+        "endMs": 98682,
+        "timestampMs": 97542,
+        "confidence": null
+      }
+    ]
+  },
+  "audio_url": "/audio/consistent-hashing-in-distributed-systems-60s.mp3",
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 169,
+      "transition": "fade",
+      "narration": "Welcome to our discussion on Consistent Hashing in Distributed Systems. This technique is crucial for scaling data storage and minimizing data movement when nodes change.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "size_ratio": 1,
+          "data": {
+            "title": "Consistent Hashing",
+            "subtitle": "Scaling Distributed Systems with Minimal Data Movement",
+            "accentColor": "#2196F3",
+            "align": "center",
+            "style": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-2",
+      "layout": "title-left-right",
+      "title": "Motivation and Hook",
+      "subtitle": "Why Consistent Hashing?",
+      "duration_frames": 216,
+      "transition": "slideLeft",
+      "narration": "Naive modulo-based sharding doesn't scale well. When the number of nodes changes, a large portion of the data needs to be re-sharded, leading to significant data movement and potential service disruption.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "data": {
+            "title": "Problems with Modulo-Based Sharding",
+            "items": [
+              "Data redistribution causes service disruption",
+              "Inefficient use of resources during scaling",
+              "Difficult to handle node failures",
+              "Not suitable for large, dynamic clusters",
+              "Read-heavy workloads suffer from increased latency"
+            ],
+            "accentColor": "#E74C3C",
+            "numbered": false,
+            "align": "left",
+            "style": {}
+          }
+        },
+        {
+          "area": "right",
+          "type": "CalloutAnnotation",
+          "size_ratio": 2,
+          "data": {
+            "title": "Motivation and Hook",
+            "body": "Naive modulo-based sharding doesn't scale well. When the number of nodes changes, a large portion of the data needs to be re-sharded, leading to significant data movement and potential service disruption."
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-3",
+      "layout": "title-main-sidebar",
+      "title": "Hash Functions and Logical Ring",
+      "subtitle": "",
+      "duration_frames": 236,
+      "transition": "slideLeft",
+      "narration": "Consistent Hashing uses a logical ring to map keys and nodes. A hash function with a uniform distribution is critical to ensure that each node is responsible for approximately equal portions of the key space.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "CalloutAnnotation",
+          "size_ratio": 2,
+          "data": {
+            "title": "Hash Functions and Logical Ring",
+            "body": "Consistent Hashing uses a logical ring to map keys and nodes. A hash function with a uniform distribution is critical to ensure that each node is responsible for approximately equal portions of the key space."
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "data": {
+            "title": "Hash Space and Logical Ring",
+            "body": "The hash space is typically 2^32-1. Keys and nodes are mapped onto this space, and the node responsible for a key is the one closest to the key's hash value in a clockwise direction.",
+            "bullets": [
+              "Uniform hash distribution is crucial",
+              "Hash space is usually 2^32-1",
+              "Keys and nodes are mapped onto the ring"
+            ],
+            "position": "right",
+            "accentColor": "#2196F3",
+            "style": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-4",
+      "layout": "title-content",
+      "title": "Core Consistent Hashing Algorithm",
+      "subtitle": "",
+      "duration_frames": 337,
+      "transition": "slideLeft",
+      "narration": "The Consistent Hashing algorithm provides a deterministic lookup process. It works by hashing the key and then searching the logical ring in a clockwise direction until it finds the node responsible for that key. This results in an O(log N) lookup time when using a sorted list or binary search.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "data": {
+            "title": "Core Consistent Hashing Algorithm",
+            "body": "The Consistent Hashing algorithm provides a deterministic lookup process. It works by hashing the key and then searching the logical ring in a clockwise direction until it finds the node responsible for that key. This results in an O(log N) lookup time when using a sorted list or binary search."
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-5",
+      "layout": "title-left-right",
+      "title": "Virtual Nodes for Load Balancing",
+      "subtitle": "",
+      "duration_frames": 249,
+      "transition": "slideLeft",
+      "narration": "Virtual Nodes (VNodes) help with load balancing by allowing a single physical node to be responsible for multiple portions of the key space. This evens out load variance and simplifies rebalancing when nodes are added or removed.",
+      "panels": [
+        {
+          "area": "left",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "data": {
+            "title": "Benefits of Virtual Nodes",
+            "items": [
+              "Load balancing across nodes",
+              "Simplified rebalancing",
+              "Even distribution of key space",
+              "Reduced impact of node failures",
+              "Easier maintenance and upgrades"
+            ],
+            "accentColor": "#8BC34A",
+            "numbered": false,
+            "align": "left",
+            "style": {}
+          }
+        },
+        {
+          "area": "right",
+          "type": "CalloutAnnotation",
+          "size_ratio": 2,
+          "data": {
+            "title": "Virtual Nodes for Load Balancing",
+            "body": "Virtual Nodes (VNodes) help with load balancing by allowing a single physical node to be responsible for multiple portions of the key space. This evens out load variance and simplifies rebalancing when nodes are added or removed."
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-6",
+      "layout": "title-main-sidebar",
+      "title": "Replica Placement and Failure Modes",
+      "subtitle": "",
+      "duration_frames": 196,
+      "transition": "slideLeft",
+      "narration": "Replica placement is critical for data durability and availability. Consistent Hashing places replicas in a clockwise direction. Node failures are handled by redirecting requests to the next available node.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "CalloutAnnotation",
+          "size_ratio": 2,
+          "data": {
+            "title": "Replica Placement and Failure Modes",
+            "body": "Replica placement is critical for data durability and availability. Consistent Hashing places replicas in a clockwise direction. Node failures are handled by redirecting requests to the next available node."
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "data": {
+            "title": "Replica Placement and Failure Handling",
+            "body": "Replicas are placed by moving R nodes clockwise from the primary node. This ensures data is durable and available even in the event of node failures.",
+            "bullets": [
+              "Replicas are placed clockwise",
+              "Handles node failures and churn",
+              "Ensures data durability and availability"
+            ],
+            "position": "right",
+            "accentColor": "#2196F3",
+            "style": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-7",
+      "layout": "title-content",
+      "title": "When to Use Consistent Hashing",
+      "subtitle": "",
+      "duration_frames": 222,
+      "transition": "slideLeft",
+      "narration": "Consistent Hashing is particularly useful in large, dynamic clusters with read-heavy workloads. It minimizes data movement during scaling and node changes, making it suitable for systems that require high availability and low latency.",
+      "panels": [
+        {
+          "area": "main",
+          "type": "NumberedList",
+          "size_ratio": 1,
+          "data": {
+            "title": "When to Use Consistent Hashing",
+            "items": [
+              {
+                "heading": "Large Clusters",
+                "description": "Suitable for large, distributed systems"
+              },
+              {
+                "heading": "Dynamic Clusters",
+                "description": "Handles node additions and removals efficiently"
+              },
+              {
+                "heading": "Read-Heavy Workloads",
+                "description": "Minimizes latency and data movement"
+              },
+              {
+                "heading": "High Availability",
+                "description": "Ensures data durability and availability"
+              }
+            ],
+            "accentColor": "#2196F3",
+            "layout": "stack",
+            "style": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-8",
+      "layout": "full",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 175,
+      "transition": "none",
+      "narration": "Thank you for joining me on this exploration of Consistent Hashing in Distributed Systems. This technique is a powerful tool for building scalable and resilient systems.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "size_ratio": 1,
+          "data": {
+            "title": "Consistent Hashing",
+            "subtitle": "Scaling Distributed Systems with Minimal Data Movement",
+            "accentColor": "#2196F3",
+            "align": "center",
+            "style": {}
+          }
+        }
+      ]
+    }
+  ]
+}

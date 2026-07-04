@@ -20,10 +20,10 @@ export const RemotionRoot: React.FC = () => {
   return (
     <>
       {Object.entries(EXAMPLE_SCRIPTS).map(([slug, script]) => {
-        const totalFrames = script.scenes.reduce(
+        const totalFrames = Math.max(1, script.scenes.reduce(
           (sum, s) => sum + s.duration_frames,
           0
-        );
+        ));
         return (
           <Composition
             key={slug}

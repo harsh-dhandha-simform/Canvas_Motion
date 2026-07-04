@@ -2163,5 +2163,703 @@
       "note"
     ],
     "minSeconds": 5
+  },
+  "SortingVisualizer": {
+    "description": "An animated sorting-algorithm walkthrough. Bars represent values; steps compare, swap, partition, set, or merge-write to visualise bubble / merge / quick / heap / radix / counting sort.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "algorithm": {
+          "type": "string",
+          "enum": [
+            "bubble",
+            "merge",
+            "quick",
+            "heap",
+            "radix",
+            "counting"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "compare",
+                  "swap",
+                  "set",
+                  "partition",
+                  "merge-write"
+                ]
+              },
+              "indices": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "writeValue": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "indices"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "showComparisonCounter": {
+          "type": "boolean"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a sorting algorithm being walked through, or comparing sort algorithms visually",
+    "tags": [
+      "sort",
+      "algorithm",
+      "swap",
+      "comparison",
+      "complexity",
+      "bubble",
+      "merge",
+      "quick",
+      "heap",
+      "radix"
+    ],
+    "minSeconds": 10
+  },
+  "LinearStructure": {
+    "description": "An animated linear data structure — array, stack, queue, deque, or linked list — with push/pop/enqueue/dequeue/insert/delete motion. Cells shift, fade, and translate to visualise each operation.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "array",
+            "stack",
+            "queue",
+            "deque",
+            "linked-list"
+          ]
+        },
+        "initial": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "push",
+                  "pop",
+                  "enqueue",
+                  "dequeue",
+                  "push-front",
+                  "push-back",
+                  "pop-front",
+                  "pop-back",
+                  "insert-at",
+                  "delete-at",
+                  "read"
+                ]
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "index": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "showIndices": {
+          "type": "boolean"
+        },
+        "showHeadTail": {
+          "type": "boolean"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "initial",
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "a linear data structure — array, stack, queue, deque, or linked list — being mutated by a sequence of operations",
+    "tags": [
+      "array",
+      "stack",
+      "queue",
+      "deque",
+      "linked-list",
+      "data-structure",
+      "push",
+      "pop"
+    ],
+    "minSeconds": 8
+  },
+  "ArrayAlgorithm": {
+    "description": "An animated array walkthrough with pointer overlays. Modes: binary-search (L/M/R), sliding-window (start/end + running sum), two-pointer (i/j).",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "binary-search",
+            "sliding-window",
+            "two-pointer"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "windowSize": {
+          "type": "number"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pointers": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "windowSum": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string"
+              },
+              "result": {
+                "type": "string",
+                "enum": [
+                  "found",
+                  "narrow-left",
+                  "narrow-right",
+                  "expand",
+                  "shrink",
+                  "advance"
+                ]
+              }
+            },
+            "required": [
+              "pointers"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "an array-scan algorithm — binary search, sliding window, or two-pointer technique",
+    "tags": [
+      "array",
+      "pointer",
+      "binary-search",
+      "sliding-window",
+      "two-pointer"
+    ],
+    "minSeconds": 8
+  },
+  "DPTableVisualizer": {
+    "description": "An animated 2D DP table. Cells fill in order with dependency arrows from prior cells; optional final path traces the optimal answer.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "rows": {
+          "type": "number"
+        },
+        "cols": {
+          "type": "number"
+        },
+        "rowLabels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "colLabels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "row": {
+                "type": "number"
+              },
+              "col": {
+                "type": "number"
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "row": {
+                      "type": "number"
+                    },
+                    "col": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "row",
+                    "col"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "row",
+              "col",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "highlightPath": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "row": {
+                "type": "number"
+              },
+              "col": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "row",
+              "col"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rows",
+        "cols",
+        "fills"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a 2D DP table being filled cell-by-cell, or a matrix-based algorithm (LCS, edit distance, Floyd-Warshall, knapsack)",
+    "tags": [
+      "dp",
+      "dynamic-programming",
+      "matrix",
+      "table",
+      "memoization",
+      "subproblems"
+    ],
+    "minSeconds": 12
+  },
+  "GraphTraversal": {
+    "description": "An animated graph algorithm walkthrough. Node states (unvisited/frontier/visited/settled) and edge states (traversed/relaxed/MST/rejected) update per step. Supports DFS, BFS, Dijkstra, Bellman-Ford, topological sort, Prim's and Kruskal's MST.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "algorithm": {
+          "type": "string",
+          "enum": [
+            "dfs",
+            "bfs",
+            "dijkstra",
+            "bellman-ford",
+            "topo-sort",
+            "mst-prim",
+            "mst-kruskal"
+          ]
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "weight": {
+                "type": "number"
+              },
+              "directed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "start": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "visit",
+                  "enqueue",
+                  "relax",
+                  "settle",
+                  "mst-select",
+                  "mst-reject",
+                  "topo-emit"
+                ]
+              },
+              "node": {
+                "type": "string"
+              },
+              "edge": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              },
+              "distance": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "showDistanceTable": {
+          "type": "boolean"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "nodes",
+        "edges"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a graph algorithm being traced — DFS/BFS traversal, shortest path (Dijkstra/Bellman-Ford), MST, or topological sort",
+    "tags": [
+      "graph",
+      "traversal",
+      "dfs",
+      "bfs",
+      "dijkstra",
+      "bellman-ford",
+      "shortest-path",
+      "mst",
+      "topological"
+    ],
+    "minSeconds": 12
+  },
+  "RecursionTree": {
+    "description": "An animated recursion tree. Nodes grow in DFS order, then unwind with return values. Supports backtracking pruning (red dead-ends, green success paths) and memoization (memo-hit nodes stay collapsed).",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "root": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "pruning": {
+          "type": "boolean"
+        },
+        "showReturns": {
+          "type": "boolean"
+        },
+        "memoized": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "root"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "__schema0": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "returns": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "pruned": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a recursive call tree, backtracking search, or memoization pattern being walked through",
+    "tags": [
+      "recursion",
+      "tree",
+      "backtracking",
+      "memoization",
+      "call-stack"
+    ],
+    "minSeconds": 12
   }
 }

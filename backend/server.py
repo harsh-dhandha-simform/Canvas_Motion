@@ -15,6 +15,7 @@ Usage:
 
 import json
 import logging
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -29,6 +30,7 @@ if str(_BACKEND_DIR) not in sys.path:
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from config import GROQ_MODEL, GROQ_FALLBACK_MODEL
@@ -45,6 +47,31 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger("server")
+
+# ---------------------------------------------------------------------------
+# Helper: re-generate examples.generated.ts after every successful pipeline run
+# so the Remotion studio HMR picks up new compositions without a manual restart.
+# ---------------------------------------------------------------------------
+
+_FRONTEND_DIR = _BACKEND_DIR.parent / "frontend"
+
+def _regen_examples_ts() -> None:
+    """Run `npm run register-examples` in the frontend directory."""
+    try:
+        result = subprocess.run(
+            ["npm", "run", "register-examples"],
+            cwd=str(_FRONTEND_DIR),
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode == 0:
+            logger.info("🔄 examples.generated.ts refreshed — Remotion HMR will pick up new composition")
+        else:
+            logger.warning("register-examples exited %d: %s", result.returncode, result.stderr[:300])
+    except Exception as exc:
+        logger.warning("Could not regenerate examples.generated.ts: %s", exc)
+
 
 # ---------------------------------------------------------------------------
 # Note: Remotion best-practice knowledge is no longer injected into agents.
@@ -71,6 +98,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount audio folder so Remotion can fetch the TTS mp3s
+audio_dir = _BACKEND_DIR / "audio"
+audio_dir.mkdir(exist_ok=True)
+app.mount("/audio", StaticFiles(directory=str(audio_dir)), name="audio")
+
 # ---------------------------------------------------------------------------
 # Pydantic request / response models
 # ---------------------------------------------------------------------------
@@ -78,7 +110,7 @@ app.add_middleware(
 class GenerateScriptRequest(BaseModel):
     topic: str = Field(..., description="Subject of the educational video")
     context: Optional[str] = Field(None, description="Additional context or constraints")
-    duration_seconds: int = Field(60, ge=10, le=300, description="Target video length in seconds")
+    duration_seconds: int = Field(60, ge=10, le=600, description="Target video length in seconds")
     style: str = Field("educational", description="educational | explainer | tutorial")
     force_restart: bool = Field(False, description="Clear checkpoints and regenerate from scratch")
     enable_audio: bool = Field(False, description="Generate Deepgram TTS audio")
@@ -280,18 +312,14 @@ def generate_script(req: GenerateScriptRequest):
                 detail=f"Assembler output missing required field: '{field}'",
             )
 
-    # Last-resort frame-sum correction (Pydantic validation already ran inside assembler_node)
-    actual_total = sum(s.get("duration_frames", 0) for s in script.get("scenes", []))
-    if actual_total != total_frames:
-        logger.warning("Frame sum %d ≠ expected %d — correcting last scene", actual_total, total_frames)
-        scenes = script["scenes"]
-        if scenes:
-            scenes[-1]["duration_frames"] = max(30, scenes[-1]["duration_frames"] + (total_frames - actual_total))
+    # (Frame-sum correction hack removed to let natural narration-driven timing win)
 
     # Persist generated script to shared/examples/<slug>.json
     try:
         written_path = write_example_script(script, req.topic)
         logger.info("💾 Saved to %s", written_path)
+        # Re-run register-examples so the Remotion studio picks up the new composition via HMR
+        _regen_examples_ts()
     except Exception as exc:
         logger.warning("Could not write example script: %s", exc)
 

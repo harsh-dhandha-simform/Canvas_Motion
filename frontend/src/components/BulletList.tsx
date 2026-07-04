@@ -27,6 +27,8 @@ export const BulletList: React.FC<BulletListProps> = ({
 }) => {
   const frame = useCurrentFrame();
 
+  const safeItems = items ?? [];
+
   return (
     <div className={`flex flex-col h-full w-full justify-center p-16 ${align === "center" ? "items-center text-center" : "items-start text-left"}`}>
       <h2
@@ -39,7 +41,7 @@ export const BulletList: React.FC<BulletListProps> = ({
         {title}
       </h2>
       <ul className={`flex flex-col gap-6 w-full max-w-4xl ${align === "center" ? "items-center" : "items-start"}`}>
-        {items.map((item, index) => {
+        {safeItems.map((item, index) => {
           const itemFrame = frame - index * 8; // stagger
           const opacity = interpolate(itemFrame, [0, 15], [0, 1], {
             easing: Easing.bezier(0.16, 1, 0.3, 1),

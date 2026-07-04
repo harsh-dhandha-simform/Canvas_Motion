@@ -9,13 +9,44 @@ This provides the exact timing needed for Remotion's frame-accurate captions.
 """
 import logging
 import httpx
+import re
 from pathlib import Path
 from config import DEEPGRAM_API_KEY, AUDIO_DIR
 
 logger = logging.getLogger(__name__)
 
-DEEPGRAM_TTS_URL = "https://api.deepgram.com/v1/speak?model=aura-asteria-en"
+DEEPGRAM_TTS_BASE_URL = "https://api.deepgram.com/v1/speak"
+DEEPGRAM_VOICES = [
+    "aura-2-neptune-en",
+    "aura-2-selene-en",
+    "aura-2-jupiter-en",
+    "aura-2-orion-en",
+    "aura-2-odysseus-en"
+]
 DEEPGRAM_STT_URL = "https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true"
+
+def chunk_text(text: str, max_length: int = 1800) -> list[str]:
+    """Split text into chunks by sentence, ensuring no chunk exceeds max_length."""
+    sentences = re.split(r'(?<=[.!?]) +', text)
+    chunks = []
+    current = ""
+    for sentence in sentences:
+        if len(current) + len(sentence) < max_length:
+            current += sentence + " "
+        else:
+            if current:
+                chunks.append(current.strip())
+            # Fallback if a single sentence is larger than max_length
+            if len(sentence) > max_length:
+                for i in range(0, len(sentence), max_length):
+                    chunks.append(sentence[i:i+max_length])
+                current = ""
+            else:
+                current = sentence + " "
+    if current:
+        chunks.append(current.strip())
+    return [c for c in chunks if c.strip()]
+
 
 
 def generate_audio_and_timestamps(text: str, slug: str) -> tuple[str, list[dict]]:
@@ -49,27 +80,42 @@ def generate_audio_and_timestamps(text: str, slug: str) -> tuple[str, list[dict]
     
     # 1. Generate TTS audio
     logger.info(f"Generating TTS audio for slug '{slug}' (length: {len(text)} chars)")
-    try:
-        with httpx.Client(timeout=30.0) as client:
-            response = client.post(
-                DEEPGRAM_TTS_URL,
-                headers=headers,
-                json={"text": text}
-            )
-            response.raise_for_status()
-            
-            with open(audio_path, "wb") as f:
-                f.write(response.content)
-            
-            logger.info(f"Saved audio to {audio_path}")
-    except Exception as e:
-        logger.error(f"Failed to generate TTS audio: {e}")
+    
+    text_chunks = chunk_text(text, 1800)
+    tts_success = False
+    
+    with httpx.Client(timeout=60.0) as client:
+        for voice in DEEPGRAM_VOICES:
+            url = f"{DEEPGRAM_TTS_BASE_URL}?model={voice}"
+            try:
+                audio_fragments = []
+                for idx, chunk in enumerate(text_chunks):
+                    logger.info(f"Generating TTS chunk {idx+1}/{len(text_chunks)} with '{voice}'...")
+                    response = client.post(
+                        url,
+                        headers=headers,
+                        json={"text": chunk}
+                    )
+                    response.raise_for_status()
+                    audio_fragments.append(response.content)
+                
+                with open(audio_path, "wb") as f:
+                    f.write(b"".join(audio_fragments))
+                
+                logger.info(f"Saved concatenated audio to {audio_path} using voice '{voice}'")
+                tts_success = True
+                break
+            except Exception as e:
+                logger.warning(f"Failed to generate TTS audio with voice '{voice}': {e}. Trying next fallback...")
+                
+    if not tts_success:
+        logger.error("All TTS voice fallbacks exhausted. Audio generation failed.")
         return "", []
 
     # 2. Get STT word timestamps
     logger.info(f"Fetching STT timestamps for slug '{slug}'")
     try:
-        with httpx.Client(timeout=30.0) as client:
+        with httpx.Client(timeout=120.0) as client:
             with open(audio_path, "rb") as audio_file:
                 stt_response = client.post(
                     DEEPGRAM_STT_URL,

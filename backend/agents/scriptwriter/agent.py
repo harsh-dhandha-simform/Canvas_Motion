@@ -43,9 +43,18 @@ Every number you state must be defensible (a real benchmark or spec). No placeho
 NARRATION_RULES = """
 ## NARRATION (one per scene — this is shown on screen as the explanation)
 
-2-4 sentences that actually TEACH the scene's subtopic(s):
-  1. the problem / why it exists, 2. how the mechanism works at implementation level,
-  3. a real system that uses it, 4. the trade-off or failure mode.
+EVERY single scene MUST have narration. This is critical. 
+The audio for the entire video comes directly from the combined narration. 
+If a scene has empty narration, there will be dead silence during that scene.
+
+1. Scene 0 (Hook): 2-3 sentences introducing the topic and why it matters.
+2. Middle Scenes: 3-5 sentences that actually TEACH the scene's subtopic(s):
+   - the problem / why it exists
+   - how the mechanism works at implementation level
+   - a real system that uses it
+   - the trade-off or failure mode
+3. Last Scene (Outro): 2-3 sentences summarizing the key takeaways.
+
 Be concrete and specific — name real systems and real numbers. No filler.
 """.strip()
 
@@ -84,6 +93,26 @@ Output ONLY a single JSON object — no prose, no markdown fences.
 
 Fill data ONLY for the content panel areas given to you. Match each component's schema exactly.
 Write narration for EVERY scene (including the intro/outro title scenes). Return ONLY valid JSON.
+
+## OUTPUT FORMAT
+Return a JSON object with this EXACT structure (N scenes in order, 0-indexed):
+{{
+  "scenes": [
+    {{
+      "narration": "...",
+      "panels": {{
+        "<area_name>": {{ <component data matching schema> }},
+        "<area_name2>": {{ <component data matching schema> }}
+      }}
+    }},
+    ...
+  ]
+}}
+
+CRITICAL: The "panels" object MUST contain an entry for EVERY content panel area listed for that scene.
+If a scene has no content panels (e.g. intro/outro with only an AnimatedTitle), include that
+AnimatedTitle data in panels too since AnimatedTitle is content-owned.
+Do NOT output "panels": {{}} for any scene that has content panels.
 """.strip()
 
 
@@ -103,20 +132,24 @@ def run_agent(plan: dict, syllabus: dict) -> dict:
             f"{by_id[sid].get('title')}: {by_id[sid].get('teaching_goal','')}"
             for sid in sc.get("covers", []) if sid in by_id
         )
-        cp = "; ".join(f"{a}={t}" for a, t in cpanels) or "(none — narration only)"
+        if cpanels:
+            cp = "; ".join(f'"{a}" → {t}' for a, t in cpanels)
+        else:
+            cp = "(none — narration only)"
         scene_lines.append(
             f"  Scene {sc.get('index')} [{sc.get('title')}] — {sc.get('subtitle','')}\n"
             f"      teaches: {goals or '(intro/outro)'}\n"
-            f"      content panels: {cp}"
+            f"      FILL THESE content panel areas: {cp}"
         )
 
     user_message = (
         f"Topic: {syllabus.get('topic')}  (depth: {syllabus.get('depth_level')})\n\n"
-        f"Scenes (fill data only for the content panels; write narration for all):\n"
+        f"Produce exactly {len(scenes)} scenes in order. For each scene, write narration AND fill ALL listed content panel areas:\n"
         + "\n".join(scene_lines)
         + "\n\nContent component schemas you must satisfy:\n"
         + (_schema_reference(types) or "(no content components)")
-        + "\n\nReturn only JSON."
+        + "\n\nReturn only JSON. The 'scenes' array MUST have exactly "
+        + f"{len(scenes)} elements."
     )
 
     raw = chat_completion(
@@ -131,6 +164,32 @@ def run_agent(plan: dict, syllabus: dict) -> dict:
 
     raw_dict: dict = parse_json_robust(raw, label=AGENT_NAME)
     script = ScriptOutput.model_validate(raw_dict)
+
+    # Validate that content panels are actually filled
+    expected_content = {}
+    for sc in scenes:
+        idx = sc.get("index", 0)
+        expected_content[idx] = [(p.get("area"), p.get("type")) for p in sc.get("panels", [])
+                                  if data_owner(p.get("type", "")) == "content"]
+
+    empty_scenes = []
+    for i, scene in enumerate(script.scenes):
+        idx = scenes[i].get("index", i) if i < len(scenes) else i
+        expected = expected_content.get(idx, [])
+        if expected and not scene.panels:
+            empty_scenes.append(i)
+            logger.warning(
+                "[%s] Scene %d has %d expected content panels but returned empty panels dict! "
+                "Expected: %s",
+                AGENT_NAME, i, len(expected), expected
+            )
+
+    if empty_scenes:
+        logger.warning(
+            "[%s] ⚠️ %d/%d scenes have missing panel data. "
+            "This will cause empty components in the final video.",
+            AGENT_NAME, len(empty_scenes), len(script.scenes)
+        )
 
     logger.info("[%s] ✅ Script generated for %d scenes (%d content panels)",
                 AGENT_NAME, len(script.scenes), len(content))

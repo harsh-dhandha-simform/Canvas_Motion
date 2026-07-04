@@ -1,0 +1,327 @@
+{
+  "title": "Dijkstra's shortest path algorithm",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": {
+    "primary": "#10b981",
+    "secondary": "#38bdf8",
+    "accent": "#fb923c",
+    "background": "#0a0f1e",
+    "font": "Outfit"
+  },
+  "voiceover": {
+    "provider": "deepgram",
+    "captions": [
+      {
+        "text": "Ekstra's algorithm endures because a single greedy invariant,",
+        "startMs": 399,
+        "endMs": 3860,
+        "timestampMs": 399,
+        "confidence": null
+      },
+      {
+        "text": "settle the nearest, trust its final, is provably",
+        "startMs": 4240,
+        "endMs": 7779,
+        "timestampMs": 4240,
+        "confidence": null
+      },
+      {
+        "text": "correct whenever weights stay nonnegative. Remember, it's two",
+        "startMs": 7839,
+        "endMs": 12639,
+        "timestampMs": 7839,
+        "confidence": null
+      },
+      {
+        "text": "limits, negative edges, demand, dull and Ford, and",
+        "startMs": 12639,
+        "endMs": 17425,
+        "timestampMs": 12639,
+        "confidence": null
+      },
+      {
+        "text": "single target queries, at scale demand, a star,",
+        "startMs": 17425,
+        "endMs": 21125,
+        "timestampMs": 17425,
+        "confidence": null
+      },
+      {
+        "text": "or contraction hierarchies. Master the relaxation loop and",
+        "startMs": 21185,
+        "endMs": 25830,
+        "timestampMs": 21185,
+        "confidence": null
+      },
+      {
+        "text": "the heap trade off, and you understand the",
+        "startMs": 25830,
+        "endMs": 28470,
+        "timestampMs": 25830,
+        "confidence": null
+      },
+      {
+        "text": "primitive that quietly routes both your packets and",
+        "startMs": 28470,
+        "endMs": 31510,
+        "timestampMs": 28470,
+        "confidence": null
+      },
+      {
+        "text": "your commute.",
+        "startMs": 31510,
+        "endMs": 32250,
+        "timestampMs": 31510,
+        "confidence": null
+      }
+    ]
+  },
+  "audio_url": "/audio/dijkstra-s-shortest-path-algorithm-60s.mp3",
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full",
+      "title": "One Invariant, Sixty Years of Impact",
+      "subtitle": "Greedy, provable, and everywhere",
+      "duration_frames": 756,
+      "transition": "none",
+      "narration": "Dijkstra's algorithm endures because a single greedy invariant — settle the nearest, trust it's final — is provably correct whenever weights stay non-negative. Remember its two limits: negative edges demand Bellman-Ford, and single-target queries at scale demand A* or contraction hierarchies. Master the relaxation loop and the heap trade-off, and you understand the primitive that quietly routes both your packets and your commute.",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "One Invariant, Sixty Years of Impact",
+            "subtitle": "Greedy, provable, and everywhere",
+            "accentColor": "#38bdf8",
+            "align": "center"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-2",
+      "layout": "title-main-sidebar",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 444,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "main",
+          "type": "GraphTraversal",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "algorithm": "dfs",
+            "nodes": [],
+            "edges": [],
+            "title": ""
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "",
+            "items": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-3",
+      "layout": "title-left-right",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 360,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "left",
+          "type": "EquationDerivation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "steps": [
+              {
+                "tokens": []
+              }
+            ],
+            "title": ""
+          }
+        },
+        {
+          "area": "right",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "body": "",
+            "title": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-4",
+      "layout": "title-main-sidebar",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 282,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "main",
+          "type": "StepFlow",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "title": "",
+            "steps": []
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "MathFormula",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "",
+            "tokens": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-5",
+      "layout": "title-left-right",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 504,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "left",
+          "type": "GraphTraversal",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "algorithm": "dfs",
+            "nodes": [],
+            "edges": [],
+            "title": ""
+          }
+        },
+        {
+          "area": "right",
+          "type": "DPTableVisualizer",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "rows": 0,
+            "cols": 0,
+            "fills": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-6",
+      "layout": "title-main-sidebar",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 294,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "main",
+          "type": "BarChart",
+          "size_ratio": 2,
+          "delay_frames": 0,
+          "data": {
+            "bars": [
+              {
+                "label": "",
+                "value": 0
+              }
+            ]
+          }
+        },
+        {
+          "area": "sidebar",
+          "type": "BulletList",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "",
+            "items": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-7",
+      "layout": "title-left-right",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 300,
+      "transition": "fade",
+      "narration": "",
+      "panels": [
+        {
+          "area": "left",
+          "type": "ComparisonCard",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": "",
+            "pros": [],
+            "cons": []
+          }
+        },
+        {
+          "area": "right",
+          "type": "CalloutAnnotation",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "body": "",
+            "title": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-8",
+      "layout": "full",
+      "title": "",
+      "subtitle": "",
+      "duration_frames": 120,
+      "transition": "none",
+      "narration": "",
+      "panels": [
+        {
+          "area": "panel",
+          "type": "AnimatedTitle",
+          "size_ratio": 1,
+          "delay_frames": 0,
+          "data": {
+            "title": ""
+          }
+        }
+      ]
+    }
+  ]
+}
