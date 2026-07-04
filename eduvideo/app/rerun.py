@@ -33,6 +33,9 @@ _STAGE_ARTIFACTS: dict[str, list[str]] = {
 
 
 def main() -> None:
+    from app.logging_config import setup_logging
+
+    setup_logging()
     parser = argparse.ArgumentParser(description="Re-run the eduvideo pipeline from a given stage.")
     parser.add_argument("job_id")
     parser.add_argument("--from", dest="from_stage", required=True, choices=STAGE_NAMES)

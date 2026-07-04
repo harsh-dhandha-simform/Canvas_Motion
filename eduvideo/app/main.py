@@ -15,9 +15,12 @@ from app.clients.llm import LLMClient
 from app.clients.tts import TTSClient
 from app.config import get_settings
 from app.jobs import create_job, job_dir_for, read_manifest
+from app.logging_config import setup_logging
 from app.orchestrator import run_pipeline
 from app.schemas.input import JobInput
 from app.schemas.manifest import JobManifest
+
+setup_logging()
 
 app = FastAPI(title="EduVideo")
 
