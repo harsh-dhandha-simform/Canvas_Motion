@@ -23,7 +23,7 @@ class PanelBlueprint(BaseModel):
 
     area: str    # "panel" | "left" | "right" | "main" | "sidebar"
     type: str = Field(description="The component ID (e.g. 'BulletList', 'ArchitectureDiagram')")
-    size_ratio: int = Field(default=1, description="Relative width proportion for grid layouts")
+    size_ratio: float = Field(default=1.0, description="Relative width proportion for grid layouts")
     delay_frames: int = Field(default=0, description="Delay in frames before this component appears in the scene")
     # data is omitted; that is populated by Scriptwriter/VisualArchitect
 

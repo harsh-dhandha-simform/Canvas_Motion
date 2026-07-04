@@ -4,6 +4,7 @@ import {
 } from "remotion";
 import { z } from "zod";
 import { useTheme } from "../ThemeContext";
+import { usePanelSize } from "../PanelSizeContext";
 import { mix, stepAt, resolveSteps } from "./_shared/anim";
 import { generateGraphSteps } from "./GraphTraversal.steps";
 
@@ -59,7 +60,8 @@ export const GraphTraversal: React.FC<GraphTraversalProps> = ({
   steps: explicitSteps, showDistanceTable, speed = 1, accentColor,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const { fps } = useVideoConfig();
+  const { width, height } = usePanelSize();
   const theme = useTheme();
   const accent = accentColor ?? theme.accent;
 

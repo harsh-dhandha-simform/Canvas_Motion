@@ -23,6 +23,8 @@ import { ThemeProvider, Theme, useTheme } from "./ThemeContext";
 import { COMPONENT_REGISTRY, SceneType } from "./registry";
 import { Background } from "./components/Background";
 import { CaptionLayer } from "./components/CaptionLayer";
+import { PanelSizeProvider } from "./PanelSizeContext";
+import { DESIGN_W, computeFractions, cellWidths } from "./layout";
 
 const DIAGRAM_TYPES = new Set([
   "ArchitectureDiagram",
@@ -246,10 +248,12 @@ const SceneHeader: React.FC<{ title: string; subtitle?: string }> = ({
 // Panel renderer — wraps one component in its grid area
 // ---------------------------------------------------------------------------
 
-const PanelCell: React.FC<{ panel: Panel; gridArea: string }> = ({
-  panel,
-  gridArea,
-}) => {
+const PanelCell: React.FC<{
+  panel: Panel;
+  gridArea: string;
+  cellW: number;
+  cellH: number;
+}> = ({ panel, gridArea, cellW, cellH }) => {
   const theme = useTheme();
   const Component = COMPONENT_REGISTRY[panel.type as SceneType];
 
@@ -288,6 +292,13 @@ const PanelCell: React.FC<{ panel: Panel; gridArea: string }> = ({
   const AnyComponent = Component as React.FC<Record<string, unknown>>;
   const { style, ...componentProps } = safeProps;
 
+  // Render the component at the 1920-wide design canvas, then uniformly scale it
+  // to the cell. designH is over-sized so the scaled box exactly fills the cell
+  // height → fills the cell with no letterbox; a full-width cell gives scale≈1
+  // (no change from before). transformOrigin top-left keeps the fit exact.
+  const scale = cellW > 0 ? cellW / DESIGN_W : 1;
+  const designH = scale > 0 ? cellH / scale : cellH;
+
   return (
     <div
       style={{
@@ -297,7 +308,21 @@ const PanelCell: React.FC<{ panel: Panel; gridArea: string }> = ({
         ...((style as React.CSSProperties) || {}),
       }}
     >
-      <AnyComponent {...componentProps} />
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: DESIGN_W,
+          height: designH,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+        }}
+      >
+        <PanelSizeProvider size={{ width: DESIGN_W, height: designH }}>
+          <AnyComponent {...componentProps} />
+        </PanelSizeProvider>
+      </div>
     </div>
   );
 };
@@ -325,18 +350,17 @@ const SceneWrapper: React.FC<{
   const contentH = config.hasHeader ? videoHeight - HEADER_H : videoHeight;
   const hasDiagram = panels.some((p) => DIAGRAM_TYPES.has(p.type));
 
-  let dynamicColumns = config.gridTemplateColumns;
-  if (config.gridTemplateAreas) {
-    const rowStr = config.gridTemplateAreas.replace(/"/g, "").trim();
-    const areaNames = rowStr.split(/\s+/);
-    if (areaNames.length > 1) {
-      const fractions = areaNames.map((areaName) => {
-        const p = panels.find((p) => p.area === areaName);
-        return p?.size_ratio ? `${p.size_ratio}fr` : "1fr";
-      });
-      dynamicColumns = fractions.join(" ");
-    }
-  }
+  // Column fractions per grid area (honors explicit size_ratio, else infers from
+  // component category — see layout.ts) and the deterministic per-area pixel width
+  // (gap is 0) so each panel can scale its component to fit without a ResizeObserver.
+  const rowStr = config.gridTemplateAreas.replace(/"/g, "").trim();
+  const areaNames = rowStr.split(/\s+/);
+  const frByArea = computeFractions(areaNames, panels);
+  const dynamicColumns =
+    areaNames.length > 1
+      ? areaNames.map((a) => `${frByArea[a]}fr`).join(" ")
+      : config.gridTemplateColumns;
+  const cellWByArea = cellWidths(areaNames, frByArea, videoWidth);
 
   return (
     <AbsoluteFill>
@@ -371,7 +395,12 @@ const SceneWrapper: React.FC<{
               }
               layout="none"
             >
-              <PanelCell panel={panel} gridArea={panel.area} />
+              <PanelCell
+                panel={panel}
+                gridArea={panel.area}
+                cellW={cellWByArea[panel.area] ?? videoWidth}
+                cellH={contentH}
+              />
             </Sequence>
           ))}
         </div>

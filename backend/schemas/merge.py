@@ -14,7 +14,7 @@ class MergedPanel(BaseModel):
 
     area: str
     type: str
-    size_ratio: int = 1
+    size_ratio: float = 1.0
     delay_frames: Optional[int] = None
     data: dict[str, Any] = Field(default_factory=dict)
 

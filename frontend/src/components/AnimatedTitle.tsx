@@ -5,8 +5,9 @@
  * Uses relative sizing based on video height instead of hardcoded pixels.
  */
 import React from "react";
-import { interpolate, Easing, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, Easing, useCurrentFrame } from "remotion";
 import { z } from "zod";
+import { usePanelSize } from "../PanelSizeContext";
 
 export const AnimatedTitleSchema = z.object({
   title: z.string(),
@@ -33,7 +34,7 @@ export const AnimatedTitle: React.FC<AnimatedTitleProps> = ({
   className,
 }) => {
   const frame = useCurrentFrame();
-  const { height, width } = useVideoConfig();
+  const { height, width } = usePanelSize();
 
   // Entry animation
   const opacity = interpolate(frame, [0, 25], [0, 1], {

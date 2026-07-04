@@ -31,6 +31,22 @@ LAYOUT_AREAS = {
     "title-main-sidebar": ["main", "sidebar"],
 }
 
+# Default width weight per component category, used when the LLM omits size_ratio
+# (mirrors the frontend fallback in DynamicVideo.tsx). Visual-heavy components get
+# more width when placed next to text so multi-panel scenes aren't a rigid 50/50.
+_CATEGORY_WEIGHT = {
+    "title": 1.0, "text": 1.0, "list": 1.0, "code": 1.0, "math": 1.0,
+    "chart": 1.3, "timeline": 1.3,
+    "network-diagram": 1.8, "state-tree": 1.8, "sequence": 1.8, "algorithm": 1.8,
+}
+
+
+def _infer_ratio(ptype: str) -> float:
+    """Sensible default width weight from the component's catalog category."""
+    cat = get_catalog().get(ptype, {}).get("category", "")
+    return _CATEGORY_WEIGHT.get(cat, 1.0)
+
+
 SYSTEM_PROMPT = """
 You are a Creative Director for in-depth technical education videos for senior engineers.
 You are given a teaching syllabus (subtopics) and, for each subtopic, a SHORTLIST of components you
@@ -65,7 +81,10 @@ A scene's panels[].area values MUST exactly match the chosen layout's areas.
    (the staples AnimatedTitle / TypewriterText / BulletList / CalloutAnnotation are always allowed).
 3. STRUCTURE: scene 0 role="hook" layout="full" (AnimatedTitle); last scene role="outro" layout="full" (AnimatedTitle).
    All middle scenes use a header layout (title-left-right / title-main-sidebar / title-content).
-4. SIZING: Assign a size_ratio (integer) to each panel to dynamically size them relative to each other in multi-panel layouts. For example, if a diagram is complex, give it size_ratio: 2 and the text size_ratio: 1 so the diagram gets 2/3 of the screen width. Default to 1.
+4. SIZING: give each panel a `size_ratio` (number) setting its relative WIDTH in a multi-panel layout.
+   Make the visual/diagram wider than its text — e.g. a diagram `size_ratio: 1.8` beside text `size_ratio: 1`
+   gives the diagram ~64% of the width. Charts ~1.3 vs text 1. If omitted, a sensible default is inferred
+   from the component's category.
 5. TEXTUAL EXPLANATION: every middle scene must include at least one text/list component
    (BulletList, CalloutAnnotation, NumberedList, StepFlow, TwoColumnLayout, QuoteCard) so the idea is explained in words,
    not only shown as a diagram.
@@ -164,10 +183,14 @@ def _normalize_plan(plan: dict, syllabus: dict) -> dict:
         panels = sc.get("panels") or []
         fixed = []
         for area, panel in zip(required, panels):
-            fixed.append({"area": area, "type": (panel or {}).get("type", "BulletList"), "size_ratio": (panel or {}).get("size_ratio", 1)})
+            ptype = (panel or {}).get("type", "BulletList")
+            ratio = (panel or {}).get("size_ratio")
+            if ratio is None:
+                ratio = _infer_ratio(ptype)  # infer from category when the LLM omits it
+            fixed.append({"area": area, "type": ptype, "size_ratio": ratio})
         # if LLM gave fewer panels than the layout needs, fill remaining areas with a text panel
         for area in required[len(fixed):]:
-            fixed.append({"area": area, "type": "BulletList", "size_ratio": 1})
+            fixed.append({"area": area, "type": "BulletList", "size_ratio": _infer_ratio("BulletList")})
         sc["panels"] = fixed
         sc.setdefault("covers", [])
 

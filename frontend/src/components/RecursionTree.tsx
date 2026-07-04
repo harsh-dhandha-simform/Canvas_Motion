@@ -4,6 +4,7 @@ import {
 } from "remotion";
 import { z } from "zod";
 import { useTheme } from "../ThemeContext";
+import { usePanelSize } from "../PanelSizeContext";
 import { mix } from "./_shared/anim";
 import { flattenTree } from "./RecursionTree.steps";
 
@@ -38,7 +39,8 @@ export const RecursionTree: React.FC<RecursionTreeProps> = ({
   speed = 1, accentColor,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, width: videoWidth, height: videoHeight } = useVideoConfig();
+  const { fps } = useVideoConfig();
+  const { width: videoWidth, height: videoHeight } = usePanelSize();
   const theme = useTheme();
   const accent = accentColor ?? theme.accent;
 
