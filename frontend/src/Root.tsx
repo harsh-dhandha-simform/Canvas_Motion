@@ -9,6 +9,7 @@ import "./index.css";
 import { Composition } from "remotion";
 import { DynamicVideo, VideoScriptProps } from "./DynamicVideo";
 import { EXAMPLE_SCRIPTS } from "./generated/examples.generated";
+import { SortingVisualizer } from "./components/SortingVisualizer";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -32,6 +33,20 @@ export const RemotionRoot: React.FC = () => {
         );
       })}
 
+      <Composition
+        id="preview-SortingVisualizer"
+        component={SortingVisualizer}
+        durationInFrames={30 * 15}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          title: "Bubble sort",
+          algorithm: "bubble" as const,
+          values: [8, 3, 5, 1, 7, 2, 6, 4],
+          showComparisonCounter: true,
+        }}
+      />
     </>
   );
 };

@@ -40,6 +40,7 @@ import { NumberedList, NumberedListSchema } from "./components/NumberedList";
 import { GlossaryCards, GlossaryCardsSchema } from "./components/GlossaryCards";
 import { FlowDiagram, FlowDiagramSchema } from "./components/FlowDiagram";
 import { CalloutAnnotation, CalloutAnnotationSchema } from "./components/CalloutAnnotation";
+import { SortingVisualizer, SortingVisualizerSchema } from "./components/SortingVisualizer";
 
 export const COMPONENT_REGISTRY = {
   AnimatedTitle,
@@ -70,6 +71,7 @@ export const COMPONENT_REGISTRY = {
   GlossaryCards,
   FlowDiagram,
   CalloutAnnotation,
+  SortingVisualizer,
 } as const;
 
 export const COMPONENT_SCHEMAS = {
@@ -101,6 +103,7 @@ export const COMPONENT_SCHEMAS = {
   GlossaryCards: GlossaryCardsSchema,
   FlowDiagram: FlowDiagramSchema,
   CalloutAnnotation: CalloutAnnotationSchema,
+  SortingVisualizer: SortingVisualizerSchema,
 } as const;
 
 // Zod v4 ships a native JSON-Schema converter. The old `zod-to-json-schema`
@@ -172,6 +175,13 @@ export const COMPONENT_META: Record<SceneType, ComponentMeta> = {
   TreeHierarchy: { category: "state-tree", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "hierarchical structure (B-tree, DNS, file system, org)", tags: ["tree", "hierarchy", "b-tree", "dns", "recursion"], minSeconds: 8 },
   FlowDiagram: { category: "state-tree", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "branching workflow with decisions (if/else logic)", tags: ["flowchart", "branching", "decision", "workflow", "algorithm"], minSeconds: 9 },
   TimelineFlow: { category: "timeline", dataOwner: "visual", bestAreas: ["main", "panel"], useWhen: "chronological history with real dates and events", tags: ["timeline", "history", "chronology", "roadmap", "events"], minSeconds: 8 },
+  SortingVisualizer: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a sorting algorithm being walked through, or comparing sort algorithms visually",
+    tags: ["sort", "algorithm", "swap", "comparison", "complexity", "bubble", "merge", "quick", "heap", "radix"],
+    minSeconds: 10,
+  },
 };
 
 export const COMPONENT_CATALOG = {
@@ -286,6 +296,10 @@ export const COMPONENT_CATALOG = {
   CalloutAnnotation: {
     description: "A highlighted callout box with corner brackets, a side arrow, and optional bullet points. Use to emphasize a key insight or definition against a darker background.",
     schema: toJsonSchema(CalloutAnnotationSchema, "CalloutAnnotationProps"),
+  },
+  SortingVisualizer: {
+    description: "An animated sorting-algorithm walkthrough. Bars represent values; steps compare, swap, partition, set, or merge-write to visualise bubble / merge / quick / heap / radix / counting sort.",
+    schema: toJsonSchema(SortingVisualizerSchema, "SortingVisualizerProps"),
   },
 };
 
