@@ -88,9 +88,12 @@ export const ArrayAlgorithm: React.FC<ArrayAlgorithmProps> = ({
     });
   }
 
-  // For binary-search: excluded region opacity
+  // For binary-search: excluded region opacity (prev → current boundaries)
   const isBinary = mode === "binary-search";
-  const L = current.pointers.L, R = current.pointers.R;
+  const nowL = current.pointers.L;
+  const nowR = current.pointers.R;
+  const prevL = prev?.pointers.L ?? nowL;
+  const prevR = prev?.pointers.R ?? nowR;
 
   // Sliding-window box
   const wStart = pointerPositions.start;
@@ -133,7 +136,10 @@ export const ArrayAlgorithm: React.FC<ArrayAlgorithmProps> = ({
         {/* Cells */}
         <div style={{ display: "flex", gap, position: "relative", zIndex: 2 }}>
           {values.map((v, i) => {
-            const excluded = isBinary && (i < L || i > R);
+            const prevExcluded = isBinary && (i < prevL || i > prevR);
+            const nowExcluded  = isBinary && (i < nowL  || i > nowR);
+            const fromOp = prevExcluded ? 0.3 : 1;
+            const toOp   = nowExcluded  ? 0.3 : 1;
             const isFound = current.result === "found" && (
               (mode === "binary-search" && i === current.pointers.M) ||
               (mode === "two-pointer" && (i === current.pointers.i || i === current.pointers.j))
@@ -146,9 +152,11 @@ export const ArrayAlgorithm: React.FC<ArrayAlgorithmProps> = ({
                 border: `2px solid ${isFound ? accent : "#334155"}`,
                 borderRadius: 8,
                 color: "#f1f5f9", fontSize: 28, fontWeight: 700,
-                opacity: excluded ? interpolate(progress, [0, 1], [1, 0.3], {
-                  extrapolateLeft: "clamp", extrapolateRight: "clamp",
-                }) : 1,
+                opacity: isBinary
+                  ? interpolate(progress, [0, 1], [fromOp, toOp], {
+                      extrapolateLeft: "clamp", extrapolateRight: "clamp",
+                    })
+                  : 1,
                 boxShadow: isFound ? `0 0 30px ${accent}80` : undefined,
                 position: "relative",
               }}>
@@ -179,11 +187,17 @@ export const ArrayAlgorithm: React.FC<ArrayAlgorithmProps> = ({
           ))}
         </div>
 
-        {/* Running window sum */}
-        {mode === "sliding-window" && typeof current.windowSum === "number" && (
+        {/* Running window sum — floats above the sliding-window overlay */}
+        {mode === "sliding-window" && typeof current.windowSum === "number" && wStart !== undefined && wEnd !== undefined && (
           <div style={{
+            position: "absolute",
+            top: `calc(50% - ${cellW / 2 + 60}px)`,
+            left: `calc(50% + ${((wStart + wEnd) / 2 - values.length / 2 + 0.5) * (cellW + gap)}px)`,
+            translate: "-50% 0",
             fontSize: 28, fontWeight: 800, color: accent,
             textShadow: `0 0 20px ${accent}80`,
+            fontFamily: `${theme.font}, sans-serif`,
+            zIndex: 3,
           }}>
             sum = {current.windowSum}
           </div>

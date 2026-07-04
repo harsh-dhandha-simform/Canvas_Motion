@@ -30,10 +30,12 @@ function binarySearch(arr: number[], target: number): ArrayStep[] {
     }
     if (arr[M] < target) {
       L = M + 1;
-      steps.push({ pointers: { L, M: Math.floor((L + R) / 2), R }, result: "narrow-right" });
+      const nextM = Math.max(L, Math.min(R, Math.floor((L + R) / 2)));
+      steps.push({ pointers: { L, M: nextM, R }, result: "narrow-right" });
     } else {
       R = M - 1;
-      steps.push({ pointers: { L, M: Math.floor((L + R) / 2), R }, result: "narrow-left" });
+      const nextM = Math.max(L, Math.min(R, Math.floor((L + R) / 2)));
+      steps.push({ pointers: { L, M: nextM, R }, result: "narrow-left" });
     }
   }
   return steps;
