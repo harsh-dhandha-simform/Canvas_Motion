@@ -1,0 +1,2865 @@
+{
+  "AnimatedTitle": {
+    "description": "A large title with an optional subtitle and an animated underline. Good for intros and transitions.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "center",
+            "left"
+          ]
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "category": "title",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel"
+    ],
+    "useWhen": "scene 0 hook or final outro — a dramatic title with stakes",
+    "tags": [
+      "title",
+      "intro",
+      "outro",
+      "hook"
+    ],
+    "minSeconds": 4
+  },
+  "ComparisonCard": {
+    "description": "A card displaying a side-by-side comparison with pros and cons. Good for evaluating options.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "pros": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "visibleCount": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "title",
+        "pros",
+        "cons"
+      ],
+      "additionalProperties": false
+    },
+    "category": "list",
+    "dataOwner": "content",
+    "bestAreas": [
+      "main",
+      "left"
+    ],
+    "useWhen": "head-to-head pros vs cons of one subject",
+    "tags": [
+      "comparison",
+      "pros",
+      "cons",
+      "tradeoffs"
+    ],
+    "minSeconds": 8
+  },
+  "BulletList": {
+    "description": "A bulleted or numbered list with staggered reveal animation.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "numbered": {
+          "type": "boolean"
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center"
+          ]
+        }
+      },
+      "required": [
+        "title",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "category": "list",
+    "dataOwner": "content",
+    "bestAreas": [
+      "left",
+      "right",
+      "sidebar"
+    ],
+    "useWhen": "5-7 specific claims, each with a number or system name",
+    "tags": [
+      "list",
+      "points",
+      "facts",
+      "explanation"
+    ],
+    "minSeconds": 7
+  },
+  "StepFlow": {
+    "description": "A horizontal step-by-step flow diagram with an animated connector line.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "steps"
+      ],
+      "additionalProperties": false
+    },
+    "category": "list",
+    "dataOwner": "content",
+    "bestAreas": [
+      "left",
+      "main"
+    ],
+    "useWhen": "4-6 sequential steps, each starting with an action verb",
+    "tags": [
+      "process",
+      "steps",
+      "sequence",
+      "workflow"
+    ],
+    "minSeconds": 7
+  },
+  "StatCallout": {
+    "description": "A large statistic callout with an animated counting number.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "suffix": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "category": "chart",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "sidebar",
+      "right"
+    ],
+    "useWhen": "one surprising real-world number",
+    "tags": [
+      "stat",
+      "metric",
+      "number",
+      "benchmark"
+    ],
+    "minSeconds": 4
+  },
+  "ArchitectureDiagram": {
+    "description": "Renders an architecture diagram with servers, databases, and load balancers connected by animated data streams and arrows. Specify nodes and connections.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "server",
+                  "loadBalancer",
+                  "database",
+                  "client"
+                ]
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "label": {
+                "type": "string"
+              },
+              "metrics": {
+                "type": "object",
+                "properties": {
+                  "cpu": {
+                    "type": "string"
+                  },
+                  "ram": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "fromId": {
+                "type": "string"
+              },
+              "toId": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "stream",
+                  "arrow"
+                ]
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "fromId",
+              "toId",
+              "type"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "category": "network-diagram",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "right"
+    ],
+    "useWhen": "system topology with servers, DBs, load balancers",
+    "tags": [
+      "architecture",
+      "topology",
+      "system",
+      "infrastructure",
+      "diagram"
+    ],
+    "minSeconds": 9
+  },
+  "SplitScreen": {
+    "description": "A layout scene showing a title, bullet points, code snippets, and optional media on the right side. Great for explaining technical concepts.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "bullets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "codeSnippet": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "language"
+          ],
+          "additionalProperties": false
+        },
+        "mediaUrl": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "category": "code",
+    "dataOwner": "content",
+    "bestAreas": [
+      "main"
+    ],
+    "useWhen": "text bullets and a code snippet together",
+    "tags": [
+      "code",
+      "hybrid",
+      "text"
+    ],
+    "minSeconds": 8
+  },
+  "TypewriterText": {
+    "description": "Animated typewriter effect with a blinking cursor. Reveals one or more lines of text character by character. Great for code reveals or dramatic text.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "fontSize": {
+          "type": "number"
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "charPerFrame": {
+          "type": "number"
+        },
+        "showCursor": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "lines"
+      ],
+      "additionalProperties": false
+    },
+    "category": "title",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel"
+    ],
+    "useWhen": "billboard-style dramatic 2-3 line statement",
+    "tags": [
+      "dramatic",
+      "statement",
+      "reveal",
+      "billboard"
+    ],
+    "minSeconds": 4
+  },
+  "TimelineFlow": {
+    "description": "An animated vertical or horizontal timeline with events appearing in staggered sequence. Use for history, roadmaps, or step-by-step processes.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "year": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "highlight": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "year",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "vertical",
+            "horizontal"
+          ]
+        }
+      },
+      "required": [
+        "events"
+      ],
+      "additionalProperties": false
+    },
+    "category": "timeline",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "chronological history with real dates and events",
+    "tags": [
+      "timeline",
+      "history",
+      "chronology",
+      "roadmap",
+      "events"
+    ],
+    "minSeconds": 8
+  },
+  "QuoteCard": {
+    "description": "A full-screen animated pull quote with an optional highlight sweep on key words and author attribution. Great for testimonials and impactful statements.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "quote": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "highlightWords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center"
+          ]
+        }
+      },
+      "required": [
+        "quote"
+      ],
+      "additionalProperties": false
+    },
+    "category": "text",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "a real verbatim quote from a paper, talk, or engineer",
+    "tags": [
+      "quote",
+      "authority",
+      "citation"
+    ],
+    "minSeconds": 5
+  },
+  "CodeBlock": {
+    "description": "A macOS-style code window with syntax highlighting, line numbers, and optional line-by-line reveal animation. Ideal for showing code examples.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "revealMode": {
+          "type": "string",
+          "enum": [
+            "lines",
+            "chars",
+            "instant"
+          ]
+        },
+        "highlightLines": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "fontSize": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "additionalProperties": false
+    },
+    "category": "code",
+    "dataOwner": "content",
+    "bestAreas": [
+      "right",
+      "main",
+      "sidebar"
+    ],
+    "useWhen": "10-18 lines of real production code",
+    "tags": [
+      "code",
+      "implementation",
+      "config",
+      "snippet"
+    ],
+    "minSeconds": 8
+  },
+  "TwoColumnLayout": {
+    "description": "A two-column comparison layout with an animated center divider. Each column has a heading and bullet points that slide in from opposite sides.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "left": {
+          "type": "object",
+          "properties": {
+            "heading": {
+              "type": "string"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "color": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "heading",
+            "points"
+          ],
+          "additionalProperties": false
+        },
+        "right": {
+          "type": "object",
+          "properties": {
+            "heading": {
+              "type": "string"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "color": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "heading",
+            "points"
+          ],
+          "additionalProperties": false
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "dividerLabel": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "left",
+        "right"
+      ],
+      "additionalProperties": false
+    },
+    "category": "list",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "parallel comparison of two subjects (before/after, X vs Y)",
+    "tags": [
+      "comparison",
+      "parallel",
+      "before-after",
+      "two-column"
+    ],
+    "minSeconds": 8
+  },
+  "BarChart": {
+    "description": "An animated bar chart with vertical or horizontal layout. Bars grow in with spring physics and values count up from 0. Use for data comparisons.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "bars": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              },
+              "color": {
+                "type": "string"
+              },
+              "sublabel": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "label",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "showValues": {
+          "type": "boolean"
+        },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "vertical",
+            "horizontal"
+          ]
+        }
+      },
+      "required": [
+        "bars"
+      ],
+      "additionalProperties": false
+    },
+    "category": "chart",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "right",
+      "sidebar"
+    ],
+    "useWhen": "compare 4-6 real numeric values",
+    "tags": [
+      "chart",
+      "comparison",
+      "benchmark",
+      "metrics",
+      "latency",
+      "throughput"
+    ],
+    "minSeconds": 7
+  },
+  "PacketFlow": {
+    "description": "An animated network topology where data packets travel along edges between nodes. Nodes are positioned by x/y percentage coordinates. Ideal for showing network protocols, request routing, TCP handshakes, and distributed system data flows.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "client",
+                  "server",
+                  "database",
+                  "router",
+                  "cdn"
+                ]
+              },
+              "sublabel": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "packetInterval": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "additionalProperties": false
+    },
+    "category": "network-diagram",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "data packets traveling a network (protocols, routing)",
+    "tags": [
+      "network",
+      "packet",
+      "protocol",
+      "routing",
+      "tcp"
+    ],
+    "minSeconds": 9
+  },
+  "HttpExchange": {
+    "description": "A side-by-side HTTP request and response viewer with line-by-line animated reveal. Shows method, path, headers, and body for both request and response. Great for explaining APIs, REST calls, and HTTP protocol details.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "PATCH"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "requestHeaders": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "requestBody": {
+          "type": "string"
+        },
+        "statusCode": {
+          "type": "number"
+        },
+        "statusText": {
+          "type": "string"
+        },
+        "responseHeaders": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "responseBody": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "category": "code",
+    "dataOwner": "content",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "an HTTP request/response pair (REST, API, protocol)",
+    "tags": [
+      "http",
+      "api",
+      "rest",
+      "request",
+      "protocol"
+    ],
+    "minSeconds": 9
+  },
+  "HashRing": {
+    "description": "A consistent hashing ring with virtual nodes, server placement, and animated key lookups. Use for distributed caches, sharded databases, CDNs, and any consistent-hashing explanation.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "servers": {
+          "minItems": 2,
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "virtualNodesPerServer": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 64
+        },
+        "lookupKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ticks": {
+          "type": "number",
+          "minimum": 24,
+          "maximum": 360
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "showLegend": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "servers"
+      ],
+      "additionalProperties": false
+    },
+    "category": "network-diagram",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "consistent hashing, sharding, CDN/cache placement",
+    "tags": [
+      "hashing",
+      "sharding",
+      "cache",
+      "distributed",
+      "ring"
+    ],
+    "minSeconds": 10
+  },
+  "StateMachine": {
+    "description": "An animated finite-state machine with state boxes, labeled transition arrows, and a pulsing active state. Use for protocol diagrams (TCP handshake, Raft consensus), cache coherence, and workflow states.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "fromId": {
+                "type": "string"
+              },
+              "toId": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "highlight": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "fromId",
+              "toId",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "activeStateId": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "states",
+        "transitions"
+      ],
+      "additionalProperties": false
+    },
+    "category": "state-tree",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "finite states and transitions (protocols, FSMs)",
+    "tags": [
+      "state-machine",
+      "fsm",
+      "protocol",
+      "transitions",
+      "raft"
+    ],
+    "minSeconds": 9
+  },
+  "TreeHierarchy": {
+    "description": "A top-down tree diagram with auto-laid-out nodes and curved connectors. Use for B-trees, DNS hierarchy, recursion trees, file systems, org charts, and classification.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "root": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "children": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "color": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "label",
+                  "children"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "label",
+            "children"
+          ],
+          "additionalProperties": false
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "down",
+            "right"
+          ]
+        }
+      },
+      "required": [
+        "root"
+      ],
+      "additionalProperties": false
+    },
+    "category": "state-tree",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "hierarchical structure (B-tree, DNS, file system, org)",
+    "tags": [
+      "tree",
+      "hierarchy",
+      "b-tree",
+      "dns",
+      "recursion"
+    ],
+    "minSeconds": 8
+  },
+  "SequenceDiagram": {
+    "description": "A UML-style sequence diagram with actor lifelines and time-ordered request/response arrows. Use for API flows, microservice communication, and authentication sequences.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "actors": {
+          "minItems": 2,
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "fromIdx": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "toIdx": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "label": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "sync",
+                  "return",
+                  "async"
+                ]
+              },
+              "active": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "fromIdx",
+              "toIdx",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "activations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "actorIdx": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "startMessage": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "endMessage": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "actorIdx",
+              "startMessage",
+              "endMessage"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "actors",
+        "messages"
+      ],
+      "additionalProperties": false
+    },
+    "category": "sequence",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "time-ordered messages between actors/services",
+    "tags": [
+      "sequence",
+      "messages",
+      "api-flow",
+      "microservice",
+      "auth"
+    ],
+    "minSeconds": 9
+  },
+  "LineChart": {
+    "description": "An animated multi-series line chart with optional area fill, grid lines, and legend. Lines draw in over time. Use for trends, growth curves, latency vs load, and any time-series comparison.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "xLabels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "series": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "fill": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "values"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "yLabel": {
+          "type": "string"
+        },
+        "xLabel": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "showLegend": {
+          "type": "boolean"
+        },
+        "highlightIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "xLabels",
+        "series"
+      ],
+      "additionalProperties": false
+    },
+    "category": "chart",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "right"
+    ],
+    "useWhen": "trends over time, growth curves, latency vs load",
+    "tags": [
+      "chart",
+      "trend",
+      "time-series",
+      "growth",
+      "curve"
+    ],
+    "minSeconds": 8
+  },
+  "MathFormula": {
+    "description": "A centered formula display with token-based rendering for variables, numbers, fractions, exponents, subscripts, square roots, and sums. Use for Big-O notation, equations, and math derivations.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "tokens": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "text"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "var"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "num"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "op"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "frac"
+                  },
+                  "numerator": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "denominator": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "numerator",
+                  "denominator"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "sup"
+                  },
+                  "base": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "exponent": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "base",
+                  "exponent"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "sub"
+                  },
+                  "base": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "subscript": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "base",
+                  "subscript"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "sqrt"
+                  },
+                  "body": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "body"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "sum"
+                  },
+                  "lower": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "upper": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "body": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "lower",
+                  "upper",
+                  "body"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "space"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "description": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tokens"
+      ],
+      "additionalProperties": false
+    },
+    "category": "math",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "a single key equation or Big-O expression",
+    "tags": [
+      "math",
+      "formula",
+      "equation",
+      "big-o",
+      "notation"
+    ],
+    "minSeconds": 6
+  },
+  "EquationDerivation": {
+    "description": "A vertical stack of formula steps connected by arrows, with optional justifications. Each step is a complete formula that can highlight independently. Use for proof walks and algebraic transformations.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "tokens": {
+                "type": "array",
+                "items": {}
+              },
+              "highlight": {
+                "type": "boolean"
+              },
+              "final": {
+                "type": "boolean"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tokens"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "steps"
+      ],
+      "additionalProperties": false
+    },
+    "category": "math",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "a multi-step proof or algebraic derivation",
+    "tags": [
+      "math",
+      "proof",
+      "derivation",
+      "steps"
+    ],
+    "minSeconds": 10
+  },
+  "TerminalCLI": {
+    "description": "An animated terminal/CLI window that types a command then streams output line by line. Themes: dark, matrix, amber. Use for tutorials, debugging flows, and showing command output.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "output": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "typingCommand": {
+          "type": "boolean"
+        },
+        "outputLineDelay": {
+          "type": "number"
+        },
+        "typingSpeed": {
+          "type": "number"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "highlightLines": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "theme": {
+          "type": "string",
+          "enum": [
+            "dark",
+            "matrix",
+            "amber"
+          ]
+        }
+      },
+      "required": [
+        "command",
+        "output"
+      ],
+      "additionalProperties": false
+    },
+    "category": "code",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "a command plus its streamed terminal output",
+    "tags": [
+      "terminal",
+      "cli",
+      "command",
+      "shell",
+      "debug"
+    ],
+    "minSeconds": 9
+  },
+  "PieChart": {
+    "description": "An animated pie or donut chart with a sweeping reveal, percentage labels, an optional center label, and a side legend with values. Use for proportional breakdowns.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "slices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              },
+              "color": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "label",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "centerLabel": {
+          "type": "string"
+        },
+        "centerValue": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "pie",
+            "donut"
+          ]
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "showLegend": {
+          "type": "boolean"
+        },
+        "highlightIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "slices"
+      ],
+      "additionalProperties": false
+    },
+    "category": "chart",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "proportional breakdown or traffic split",
+    "tags": [
+      "chart",
+      "proportion",
+      "breakdown",
+      "share",
+      "split"
+    ],
+    "minSeconds": 7
+  },
+  "NumberedList": {
+    "description": "A list of numbered cards with large colored badges, headings, and descriptions. Stack (vertical) or grid (2-column) layout. Use for ranked steps, principles, and ordered concepts.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "heading": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "heading"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "stack",
+            "grid"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "category": "list",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "ranked principles or ordered top-N items",
+    "tags": [
+      "ranked",
+      "ordered",
+      "principles",
+      "steps"
+    ],
+    "minSeconds": 8
+  },
+  "GlossaryCards": {
+    "description": "A grid of term/definition cards with colored icon tiles. Auto-detects 2- or 3-column layout. Use for vocabulary sections, acronym glossaries, and concept maps.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "terms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "term": {
+                "type": "string"
+              },
+              "definition": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "term",
+              "definition"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "grid": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "2x2",
+            "2x3",
+            "3x2",
+            "3x3"
+          ]
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "terms"
+      ],
+      "additionalProperties": false
+    },
+    "category": "list",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "vocabulary, acronym glossary, or concept map",
+    "tags": [
+      "glossary",
+      "terms",
+      "vocabulary",
+      "definitions"
+    ],
+    "minSeconds": 8
+  },
+  "FlowDiagram": {
+    "description": "A branching flow diagram with process (rectangle), decision (diamond), and start/end (pill) shapes connected by labeled arrows. Use for workflows, conditional logic, and algorithms with branching.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "process",
+                  "decision",
+                  "start",
+                  "end"
+                ]
+              },
+              "description": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "fromId": {
+                "type": "string"
+              },
+              "toId": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "active": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "fromId",
+              "toId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "additionalProperties": false
+    },
+    "category": "state-tree",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "branching workflow with decisions (if/else logic)",
+    "tags": [
+      "flowchart",
+      "branching",
+      "decision",
+      "workflow",
+      "algorithm"
+    ],
+    "minSeconds": 9
+  },
+  "CalloutAnnotation": {
+    "description": "A highlighted callout box with corner brackets, a side arrow, and optional bullet points. Use to emphasize a key insight or definition against a darker background.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "bullets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "position": {
+          "type": "string",
+          "enum": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ]
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "category": "text",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel",
+      "main",
+      "sidebar"
+    ],
+    "useWhen": "emphasize a key insight or definition in prose",
+    "tags": [
+      "insight",
+      "definition",
+      "takeaway",
+      "explanation",
+      "note"
+    ],
+    "minSeconds": 5
+  },
+  "SortingVisualizer": {
+    "description": "An animated sorting-algorithm walkthrough. Bars represent values; steps compare, swap, partition, set, or merge-write to visualise bubble / merge / quick / heap / radix / counting sort.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "algorithm": {
+          "type": "string",
+          "enum": [
+            "bubble",
+            "merge",
+            "quick",
+            "heap",
+            "radix",
+            "counting"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "compare",
+                  "swap",
+                  "set",
+                  "partition",
+                  "merge-write"
+                ]
+              },
+              "indices": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "writeValue": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "indices"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "showComparisonCounter": {
+          "type": "boolean"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a sorting algorithm being walked through, or comparing sort algorithms visually",
+    "tags": [
+      "sort",
+      "algorithm",
+      "swap",
+      "comparison",
+      "complexity",
+      "bubble",
+      "merge",
+      "quick",
+      "heap",
+      "radix"
+    ],
+    "minSeconds": 10
+  },
+  "LinearStructure": {
+    "description": "An animated linear data structure — array, stack, queue, deque, or linked list — with push/pop/enqueue/dequeue/insert/delete motion. Cells shift, fade, and translate to visualise each operation.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "array",
+            "stack",
+            "queue",
+            "deque",
+            "linked-list"
+          ]
+        },
+        "initial": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "push",
+                  "pop",
+                  "enqueue",
+                  "dequeue",
+                  "push-front",
+                  "push-back",
+                  "pop-front",
+                  "pop-back",
+                  "insert-at",
+                  "delete-at",
+                  "read"
+                ]
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "index": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "showIndices": {
+          "type": "boolean"
+        },
+        "showHeadTail": {
+          "type": "boolean"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "initial",
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "a linear data structure — array, stack, queue, deque, or linked list — being mutated by a sequence of operations",
+    "tags": [
+      "array",
+      "stack",
+      "queue",
+      "deque",
+      "linked-list",
+      "data-structure",
+      "push",
+      "pop"
+    ],
+    "minSeconds": 8
+  },
+  "ArrayAlgorithm": {
+    "description": "An animated array walkthrough with pointer overlays. Modes: binary-search (L/M/R), sliding-window (start/end + running sum), two-pointer (i/j).",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "binary-search",
+            "sliding-window",
+            "two-pointer"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "windowSize": {
+          "type": "number"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pointers": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "windowSum": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string"
+              },
+              "result": {
+                "type": "string",
+                "enum": [
+                  "found",
+                  "narrow-left",
+                  "narrow-right",
+                  "expand",
+                  "shrink",
+                  "advance"
+                ]
+              }
+            },
+            "required": [
+              "pointers"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "an array-scan algorithm — binary search, sliding window, or two-pointer technique",
+    "tags": [
+      "array",
+      "pointer",
+      "binary-search",
+      "sliding-window",
+      "two-pointer"
+    ],
+    "minSeconds": 8
+  },
+  "DPTableVisualizer": {
+    "description": "An animated 2D DP table. Cells fill in order with dependency arrows from prior cells; optional final path traces the optimal answer.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "rows": {
+          "type": "number"
+        },
+        "cols": {
+          "type": "number"
+        },
+        "rowLabels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "colLabels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "row": {
+                "type": "number"
+              },
+              "col": {
+                "type": "number"
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "row": {
+                      "type": "number"
+                    },
+                    "col": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "row",
+                    "col"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "row",
+              "col",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "highlightPath": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "row": {
+                "type": "number"
+              },
+              "col": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "row",
+              "col"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rows",
+        "cols",
+        "fills"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a 2D DP table being filled cell-by-cell, or a matrix-based algorithm (LCS, edit distance, Floyd-Warshall, knapsack)",
+    "tags": [
+      "dp",
+      "dynamic-programming",
+      "matrix",
+      "table",
+      "memoization",
+      "subproblems"
+    ],
+    "minSeconds": 12
+  },
+  "GraphTraversal": {
+    "description": "An animated graph algorithm walkthrough. Node states (unvisited/frontier/visited/settled) and edge states (traversed/relaxed/MST/rejected) update per step. Supports DFS, BFS, Dijkstra, Bellman-Ford, topological sort, Prim's and Kruskal's MST.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "algorithm": {
+          "type": "string",
+          "enum": [
+            "dfs",
+            "bfs",
+            "dijkstra",
+            "bellman-ford",
+            "topo-sort",
+            "mst-prim",
+            "mst-kruskal"
+          ]
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "weight": {
+                "type": "number"
+              },
+              "directed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "start": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "visit",
+                  "enqueue",
+                  "relax",
+                  "settle",
+                  "mst-select",
+                  "mst-reject",
+                  "topo-emit"
+                ]
+              },
+              "node": {
+                "type": "string"
+              },
+              "edge": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              },
+              "distance": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "showDistanceTable": {
+          "type": "boolean"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "nodes",
+        "edges"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a graph algorithm being traced — DFS/BFS traversal, shortest path (Dijkstra/Bellman-Ford), MST, or topological sort",
+    "tags": [
+      "graph",
+      "traversal",
+      "dfs",
+      "bfs",
+      "dijkstra",
+      "bellman-ford",
+      "shortest-path",
+      "mst",
+      "topological"
+    ],
+    "minSeconds": 12
+  },
+  "RecursionTree": {
+    "description": "An animated recursion tree. Nodes grow in DFS order, then unwind with return values. Supports backtracking pruning (red dead-ends, green success paths) and memoization (memo-hit nodes stay collapsed).",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "root": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "pruning": {
+          "type": "boolean"
+        },
+        "showReturns": {
+          "type": "boolean"
+        },
+        "memoized": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "root"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "__schema0": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "returns": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "pruned": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a recursive call tree, backtracking search, or memoization pattern being walked through",
+    "tags": [
+      "recursion",
+      "tree",
+      "backtracking",
+      "memoization",
+      "call-stack"
+    ],
+    "minSeconds": 12
+  }
+}
