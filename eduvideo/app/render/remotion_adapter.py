@@ -13,6 +13,7 @@ orchestrator.py never needs to know which engine ran.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import uuid
@@ -52,17 +53,24 @@ def render(job_dir: Path, renderer_dir: Path, timeout_seconds: float) -> None:
     plan_path.write_text(json.dumps(remotion_plan, indent=2), encoding="utf-8")
 
     output_path = job_dir / "rendered.mp4"
+    cmd = [
+        "npx",
+        "remotion",
+        "render",
+        "src/index.ts",
+        "EduVideo",
+        str(output_path.resolve()),
+        f"--props={plan_path.resolve()}",
+    ]
+    # Use a provided Chrome instead of Remotion's auto-downloaded headless shell when
+    # REMOTION_BROWSER_EXECUTABLE is set — required in sandboxed/corporate environments
+    # where the runtime can't reach Remotion's chromium download host.
+    browser = os.environ.get("REMOTION_BROWSER_EXECUTABLE", "").strip()
+    if browser:
+        cmd.append(f"--browser-executable={browser}")
     try:
         result = subprocess.run(
-            [
-                "npx",
-                "remotion",
-                "render",
-                "src/index.ts",
-                "EduVideo",
-                str(output_path.resolve()),
-                f"--props={plan_path.resolve()}",
-            ],
+            cmd,
             cwd=str(renderer_dir),
             capture_output=True,
             text=True,
