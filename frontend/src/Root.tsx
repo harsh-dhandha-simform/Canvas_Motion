@@ -14,6 +14,7 @@ import { LinearStructure } from "./components/LinearStructure";
 import { ArrayAlgorithm } from "./components/ArrayAlgorithm";
 import { DPTableVisualizer } from "./components/DPTableVisualizer";
 import { GraphTraversal } from "./components/GraphTraversal";
+import { RecursionTree } from "./components/RecursionTree";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -141,6 +142,41 @@ export const RemotionRoot: React.FC = () => {
           ],
           start: "A",
           showDistanceTable: true,
+        }}
+      />
+      <Composition
+        id="preview-RecursionTree"
+        component={RecursionTree}
+        durationInFrames={30 * 20}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          title: "fib(4) with memoisation",
+          root: {
+            label: "fib(4)",
+            returns: 3,
+            children: [
+              {
+                label: "fib(3)",
+                returns: 2,
+                children: [
+                  {
+                    label: "fib(2)",
+                    returns: 1,
+                    children: [
+                      { label: "fib(1)", returns: 1 },
+                      { label: "fib(0)", returns: 0 },
+                    ],
+                  },
+                  { label: "fib(1)", returns: 1 },
+                ],
+              },
+              { label: "fib(2)", returns: 1 },
+            ],
+          },
+          showReturns: true,
+          memoized: ["fib(2)"],
         }}
       />
     </>

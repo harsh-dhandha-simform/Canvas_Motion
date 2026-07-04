@@ -45,6 +45,7 @@ import { LinearStructure, LinearStructureSchema } from "./components/LinearStruc
 import { ArrayAlgorithm, ArrayAlgorithmSchema } from "./components/ArrayAlgorithm";
 import { DPTableVisualizer, DPTableVisualizerSchema } from "./components/DPTableVisualizer";
 import { GraphTraversal, GraphTraversalSchema } from "./components/GraphTraversal";
+import { RecursionTree, RecursionTreeSchema } from "./components/RecursionTree";
 
 export const COMPONENT_REGISTRY = {
   AnimatedTitle,
@@ -80,6 +81,7 @@ export const COMPONENT_REGISTRY = {
   ArrayAlgorithm,
   DPTableVisualizer,
   GraphTraversal,
+  RecursionTree,
 } as const;
 
 export const COMPONENT_SCHEMAS = {
@@ -116,6 +118,7 @@ export const COMPONENT_SCHEMAS = {
   ArrayAlgorithm: ArrayAlgorithmSchema,
   DPTableVisualizer: DPTableVisualizerSchema,
   GraphTraversal: GraphTraversalSchema,
+  RecursionTree: RecursionTreeSchema,
 } as const;
 
 // Zod v4 ships a native JSON-Schema converter. The old `zod-to-json-schema`
@@ -220,6 +223,13 @@ export const COMPONENT_META: Record<SceneType, ComponentMeta> = {
     bestAreas: ["main", "panel"],
     useWhen: "a graph algorithm being traced — DFS/BFS traversal, shortest path (Dijkstra/Bellman-Ford), MST, or topological sort",
     tags: ["graph", "traversal", "dfs", "bfs", "dijkstra", "bellman-ford", "shortest-path", "mst", "topological"],
+    minSeconds: 12,
+  },
+  RecursionTree: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a recursive call tree, backtracking search, or memoization pattern being walked through",
+    tags: ["recursion", "tree", "backtracking", "memoization", "call-stack"],
     minSeconds: 12,
   },
 };
@@ -356,6 +366,10 @@ export const COMPONENT_CATALOG = {
   GraphTraversal: {
     description: "An animated graph algorithm walkthrough. Node states (unvisited/frontier/visited/settled) and edge states (traversed/relaxed/MST/rejected) update per step. Supports DFS, BFS, Dijkstra, Bellman-Ford, topological sort, Prim's and Kruskal's MST.",
     schema: toJsonSchema(GraphTraversalSchema, "GraphTraversalProps"),
+  },
+  RecursionTree: {
+    description: "An animated recursion tree. Nodes grow in DFS order, then unwind with return values. Supports backtracking pruning (red dead-ends, green success paths) and memoization (memo-hit nodes stay collapsed).",
+    schema: toJsonSchema(RecursionTreeSchema, "RecursionTreeProps"),
   },
 };
 
