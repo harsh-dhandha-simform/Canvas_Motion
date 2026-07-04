@@ -17,17 +17,22 @@ import shutil
 from app.jobs import job_dir_for
 from app.orchestrator import STAGE_NAMES, run_pipeline_from
 
+# Artifact(s) each stage owns — deleted (from --from onward) before re-running so the
+# immutable writes succeed again. Graph stages persist via app/engine/persistence.py;
+# their names mirror app/engine/nodes.py + the agent node.py files.
 _STAGE_ARTIFACTS: dict[str, list[str]] = {
-    "content_analysis": ["content_analysis.json"],
-    "script": ["script.json"],
-    "storyboard": ["storyboard.json"],
-    "voiceover": ["voiceover.mp3", "timings.json"],
-    "subtitles": ["subtitles.json", "scene_timings.json"],
+    "researcher": ["syllabus.json"],
+    "director": ["plan.json"],
+    "scriptwriter": ["script.json"],
+    "visual_architect": ["story.json"],
+    "merge": ["merge.json"],
+    "validator": ["validation.json"],
+    "voiceover": ["voiceover.mp3", "voiceover.json"],
+    "assembler": ["video_script.json", "scenes_timed.json"],
     "concept_spine": ["concepts.json"],
-    "video_plan": ["video_plan.json"],
     "interactions": ["interactions.json"],
     "validate": ["validation_errors.json"],
-    "render": ["rendered.mp4", "render.log"],
+    "render": ["rendered.mp4", "render.log", "remotion_plan.json"],
     "player": ["player"],
 }
 
