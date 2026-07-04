@@ -45,6 +45,31 @@ import { ArrayAlgorithm, ArrayAlgorithmSchema } from "./components/ArrayAlgorith
 import { DPTableVisualizer, DPTableVisualizerSchema } from "./components/DPTableVisualizer";
 import { GraphTraversal, GraphTraversalSchema } from "./components/GraphTraversal";
 import { RecursionTree, RecursionTreeSchema } from "./components/RecursionTree";
+import { HeapVisualizer, HeapVisualizerSchema } from "./components/HeapVisualizer";
+import { HashTable, HashTableSchema } from "./components/HashTable";
+import { TrieVisualizer, TrieVisualizerSchema } from "./components/TrieVisualizer";
+import { UnionFind, UnionFindSchema } from "./components/UnionFind";
+import { BSTOperations, BSTOperationsSchema } from "./components/BSTOperations";
+import { SegmentTree, SegmentTreeSchema } from "./components/SegmentTree";
+import { FenwickTree, FenwickTreeSchema } from "./components/FenwickTree";
+import { RedBlackTree, RedBlackTreeSchema } from "./components/RedBlackTree";
+import { BTreeVisualizer, BTreeVisualizerSchema } from "./components/BTreeVisualizer";
+import { SkipList, SkipListSchema } from "./components/SkipList";
+import { LRUCache, LRUCacheSchema } from "./components/LRUCache";
+import { MonotonicStack, MonotonicStackSchema } from "./components/MonotonicStack";
+import { AStarPathfinding, AStarPathfindingSchema } from "./components/AStarPathfinding";
+import { StringMatching, StringMatchingSchema } from "./components/StringMatching";
+import { BacktrackingGrid, BacktrackingGridSchema } from "./components/BacktrackingGrid";
+import { BloomFilter, BloomFilterSchema } from "./components/BloomFilter";
+import { SieveOfEratosthenes, SieveOfEratosthenesSchema } from "./components/SieveOfEratosthenes";
+import { FlowNetwork, FlowNetworkSchema } from "./components/FlowNetwork";
+import { QuadTree, QuadTreeSchema } from "./components/QuadTree";
+import { KDTree, KDTreeSchema } from "./components/KDTree";
+import { StronglyConnectedComponents, StronglyConnectedComponentsSchema } from "./components/StronglyConnectedComponents";
+import { GraphColoring, GraphColoringSchema } from "./components/GraphColoring";
+import { SuffixArray, SuffixArraySchema } from "./components/SuffixArray";
+import { IntervalScheduling, IntervalSchedulingSchema } from "./components/IntervalScheduling";
+import { BitManipulation, BitManipulationSchema } from "./components/BitManipulation";
 
 export const COMPONENT_REGISTRY = {
   AnimatedTitle,
@@ -81,6 +106,31 @@ export const COMPONENT_REGISTRY = {
   DPTableVisualizer,
   GraphTraversal,
   RecursionTree,
+  HeapVisualizer,
+  HashTable,
+  TrieVisualizer,
+  UnionFind,
+  BSTOperations,
+  SegmentTree,
+  FenwickTree,
+  RedBlackTree,
+  BTreeVisualizer,
+  SkipList,
+  LRUCache,
+  MonotonicStack,
+  AStarPathfinding,
+  StringMatching,
+  BacktrackingGrid,
+  BloomFilter,
+  SieveOfEratosthenes,
+  FlowNetwork,
+  QuadTree,
+  KDTree,
+  StronglyConnectedComponents,
+  GraphColoring,
+  SuffixArray,
+  IntervalScheduling,
+  BitManipulation,
 } as const;
 
 export const COMPONENT_SCHEMAS = {
@@ -118,6 +168,31 @@ export const COMPONENT_SCHEMAS = {
   DPTableVisualizer: DPTableVisualizerSchema,
   GraphTraversal: GraphTraversalSchema,
   RecursionTree: RecursionTreeSchema,
+  HeapVisualizer: HeapVisualizerSchema,
+  HashTable: HashTableSchema,
+  TrieVisualizer: TrieVisualizerSchema,
+  UnionFind: UnionFindSchema,
+  BSTOperations: BSTOperationsSchema,
+  SegmentTree: SegmentTreeSchema,
+  FenwickTree: FenwickTreeSchema,
+  RedBlackTree: RedBlackTreeSchema,
+  BTreeVisualizer: BTreeVisualizerSchema,
+  SkipList: SkipListSchema,
+  LRUCache: LRUCacheSchema,
+  MonotonicStack: MonotonicStackSchema,
+  AStarPathfinding: AStarPathfindingSchema,
+  StringMatching: StringMatchingSchema,
+  BacktrackingGrid: BacktrackingGridSchema,
+  BloomFilter: BloomFilterSchema,
+  SieveOfEratosthenes: SieveOfEratosthenesSchema,
+  FlowNetwork: FlowNetworkSchema,
+  QuadTree: QuadTreeSchema,
+  KDTree: KDTreeSchema,
+  StronglyConnectedComponents: StronglyConnectedComponentsSchema,
+  GraphColoring: GraphColoringSchema,
+  SuffixArray: SuffixArraySchema,
+  IntervalScheduling: IntervalSchedulingSchema,
+  BitManipulation: BitManipulationSchema,
 } as const;
 
 import { toJSONSchema } from "zod";
@@ -237,6 +312,181 @@ export const COMPONENT_META: Record<SceneType, ComponentMeta> = {
     useWhen: "a recursive call tree, backtracking search, or memoization pattern being walked through",
     tags: ["recursion", "tree", "backtracking", "memoization", "call-stack"],
     minSeconds: 12,
+  },
+  HeapVisualizer: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a binary heap / priority queue being built or mutated — insert (sift-up), extract-min/max (sift-down), heapsort",
+    tags: ["heap", "priority-queue", "binary-heap", "sift", "heapsort", "min-heap", "max-heap"],
+    minSeconds: 11,
+  },
+  HashTable: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a hash table with a hash function and collision resolution — separate chaining or open-addressing (linear probing)",
+    tags: ["hash-table", "hashing", "collision", "chaining", "open-addressing", "probing", "buckets"],
+    minSeconds: 11,
+  },
+  TrieVisualizer: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a trie / prefix tree — inserting words and searching words or prefixes character by character",
+    tags: ["trie", "prefix-tree", "string", "autocomplete", "search", "prefix"],
+    minSeconds: 11,
+  },
+  UnionFind: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a disjoint-set / union-find structure — union, find, union-by-rank and path compression (e.g. Kruskal's MST, connectivity)",
+    tags: ["union-find", "disjoint-set", "dsu", "connectivity", "path-compression", "union-by-rank", "kruskal"],
+    minSeconds: 10,
+  },
+  BSTOperations: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a binary search tree being mutated — insert, search, delete, and optional AVL self-balancing rotations",
+    tags: ["bst", "binary-search-tree", "avl", "rotation", "self-balancing", "insert", "delete"],
+    minSeconds: 12,
+  },
+  SegmentTree: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a segment tree answering range sum/min/max queries and point updates over an array",
+    tags: ["segment-tree", "range-query", "range-sum", "range-min", "point-update", "divide-and-conquer"],
+    minSeconds: 12,
+  },
+  FenwickTree: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a Fenwick tree / binary indexed tree doing prefix-sum queries and updates via i ± (i & -i)",
+    tags: ["fenwick-tree", "binary-indexed-tree", "bit", "prefix-sum", "lowbit", "range-query"],
+    minSeconds: 11,
+  },
+  RedBlackTree: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a red-black tree insertion with recoloring and rotations to stay balanced",
+    tags: ["red-black-tree", "rbtree", "balanced-bst", "recolor", "rotation", "self-balancing"],
+    minSeconds: 12,
+  },
+  BTreeVisualizer: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a B-tree / B+ tree with multi-key nodes splitting on overflow as keys are inserted (databases, filesystems)",
+    tags: ["b-tree", "b+tree", "multiway-tree", "split", "database-index", "order"],
+    minSeconds: 12,
+  },
+  SkipList: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a skip list search or insert walking express lanes (walk right, drop down) across levels",
+    tags: ["skip-list", "probabilistic", "levels", "express-lane", "search", "ordered"],
+    minSeconds: 11,
+  },
+  LRUCache: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "an LRU cache with a hash map + doubly-linked list — get/put, move-to-front, and eviction of the least-recently-used entry",
+    tags: ["lru", "cache", "eviction", "doubly-linked-list", "hash-map", "capacity"],
+    minSeconds: 11,
+  },
+  MonotonicStack: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a monotonic stack computing next/previous greater or smaller element for each array entry",
+    tags: ["monotonic-stack", "next-greater-element", "stack", "sliding", "invariant"],
+    minSeconds: 10,
+  },
+  AStarPathfinding: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "A* pathfinding on a grid with obstacles — open/closed sets and g/h/f costs guiding to the goal",
+    tags: ["a-star", "astar", "pathfinding", "grid", "heuristic", "shortest-path", "search"],
+    minSeconds: 12,
+  },
+  StringMatching: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a substring-search algorithm sliding a pattern over text — KMP, Rabin-Karp, or naive",
+    tags: ["string-matching", "kmp", "rabin-karp", "pattern-search", "substring", "rolling-hash"],
+    minSeconds: 11,
+  },
+  BacktrackingGrid: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a backtracking search on a board — N-Queens placing, detecting conflicts, and backtracking",
+    tags: ["backtracking", "n-queens", "constraint", "search", "recursion", "board"],
+    minSeconds: 12,
+  },
+  BloomFilter: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a Bloom filter — a bit array with k hash functions, insert setting bits, query returning maybe/definitely-not (probabilistic membership)",
+    tags: ["bloom-filter", "probabilistic", "hashing", "bit-array", "membership", "false-positive"],
+    minSeconds: 11,
+  },
+  SieveOfEratosthenes: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "the Sieve of Eratosthenes — crossing out multiples of each prime on a number grid to find all primes up to n",
+    tags: ["sieve", "eratosthenes", "primes", "number-theory", "crossing-out", "grid"],
+    minSeconds: 11,
+  },
+  FlowNetwork: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a maximum-flow computation — Ford-Fulkerson / Edmonds-Karp augmenting paths with edge flow/capacity and residuals",
+    tags: ["max-flow", "min-cut", "edmonds-karp", "ford-fulkerson", "augmenting-path", "network-flow", "capacity"],
+    minSeconds: 13,
+  },
+  QuadTree: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a point quadtree — a 2D region recursively subdividing into quadrants as points exceed a node's capacity (spatial indexing)",
+    tags: ["quadtree", "spatial", "subdivision", "2d", "points", "collision", "spatial-index"],
+    minSeconds: 12,
+  },
+  KDTree: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a 2D k-d tree — alternating x/y splits partitioning the plane (nearest-neighbour, range search)",
+    tags: ["kd-tree", "spatial", "nearest-neighbour", "partition", "2d", "binary-space-partition"],
+    minSeconds: 12,
+  },
+  StronglyConnectedComponents: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "Tarjan's strongly-connected-components — DFS with index/low-link values and a stack, closing SCCs on a directed graph",
+    tags: ["scc", "tarjan", "strongly-connected", "low-link", "directed-graph", "dfs", "components"],
+    minSeconds: 13,
+  },
+  GraphColoring: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "greedy graph coloring — assigning each vertex the smallest color not used by its neighbours",
+    tags: ["graph-coloring", "greedy", "chromatic", "conflict", "vertex-coloring", "scheduling"],
+    minSeconds: 11,
+  },
+  SuffixArray: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a suffix array — sorting a string's suffixes and binary-searching a pattern against them",
+    tags: ["suffix-array", "string", "sorting", "binary-search", "substring", "pattern"],
+    minSeconds: 12,
+  },
+  IntervalScheduling: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "greedy interval scheduling / activity selection — sort by end time and pick non-overlapping intervals on a timeline",
+    tags: ["interval-scheduling", "activity-selection", "greedy", "intervals", "timeline", "overlap"],
+    minSeconds: 11,
+  },
+  BitManipulation: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "bit-level operations on a binary value — AND/OR/XOR/shift, set/clear/toggle a bit, NOT, popcount",
+    tags: ["bit-manipulation", "bitwise", "and", "or", "xor", "shift", "popcount", "binary"],
+    minSeconds: 10,
   },
 };
 
@@ -376,6 +626,106 @@ export const COMPONENT_CATALOG = {
   RecursionTree: {
     description: "An animated recursion tree. Nodes grow in DFS order, then unwind with return values. Supports backtracking pruning (red dead-ends, green success paths) and memoization (memo-hit nodes stay collapsed).",
     schema: toJsonSchema(RecursionTreeSchema, "RecursionTreeProps"),
+  },
+  HeapVisualizer: {
+    description: "An animated binary heap (min or max) drawn as a complete tree with an optional array view. Give `initial` values and `operations` (insert / extract); it walks the sift-up and sift-down compares and swaps automatically.",
+    schema: toJsonSchema(HeapVisualizerSchema, "HeapVisualizerProps"),
+  },
+  HashTable: {
+    description: "An animated hash table showing the hash function h(key) and collision resolution. Choose `strategy` \"chaining\" or \"open-addressing\"; give `operations` (insert / lookup / delete) and it animates hashing, probing, placement, hits and misses.",
+    schema: toJsonSchema(HashTableSchema, "HashTableProps"),
+  },
+  TrieVisualizer: {
+    description: "An animated trie / prefix tree. Give `operations` (insert / search / prefix); nodes appear as words are inserted and searches trace the path character by character, ending in a hit (green) or miss (red).",
+    schema: toJsonSchema(TrieVisualizerSchema, "TrieVisualizerProps"),
+  },
+  UnionFind: {
+    description: "An animated disjoint-set (union-find). Elements sit in a fixed row and parent-pointer arrows change as sets merge. Give `elements` and `operations` (union / find); supports union-by-rank and path compression.",
+    schema: toJsonSchema(UnionFindSchema, "UnionFindProps"),
+  },
+  BSTOperations: {
+    description: "An animated binary search tree. Give `initial` values and `operations` (insert / search / delete); nodes tween into place, comparisons highlight the path, and with `balance:\"avl\"` it performs and animates rotations to self-balance.",
+    schema: toJsonSchema(BSTOperationsSchema, "BSTOperationsProps"),
+  },
+  SegmentTree: {
+    description: "An animated segment tree over an array. Nodes cover ranges; `operations` run range queries (sum/min/max) highlighting full-cover vs partial nodes, and point updates propagating leaf→root. Set `op` to the aggregate.",
+    schema: toJsonSchema(SegmentTreeSchema, "SegmentTreeProps"),
+  },
+  FenwickTree: {
+    description: "An animated Fenwick tree (binary indexed tree) with the logical array and the BIT array. Updates walk i += i&-i and prefix-sum queries walk i -= i&-i, shown with index-jump arcs and a running sum.",
+    schema: toJsonSchema(FenwickTreeSchema, "FenwickTreeProps"),
+  },
+  RedBlackTree: {
+    description: "An animated red-black tree. Give `values` to insert; nodes are colored red/black, and the tree recolors and rotates to restore the red-black properties after each insertion.",
+    schema: toJsonSchema(RedBlackTreeSchema, "RedBlackTreeProps"),
+  },
+  BTreeVisualizer: {
+    description: "An animated B-tree of a given `order`. Keys insert into multi-key leaf nodes; when a node overflows it splits and promotes the median upward, cascading toward the root. Good for database indexes and filesystems.",
+    schema: toJsonSchema(BTreeVisualizerSchema, "BTreeVisualizerProps"),
+  },
+  SkipList: {
+    description: "An animated skip list with express lanes. `operations` (insert / search) walk right on a level then drop down to lower levels. Heights are deterministic (from the value or an explicit level).",
+    schema: toJsonSchema(SkipListSchema, "SkipListProps"),
+  },
+  LRUCache: {
+    description: "An animated LRU cache as an ordered list from most- to least-recently-used. `operations` (get / put) move entries to the front on access and evict the tail when over `capacity`.",
+    schema: toJsonSchema(LRUCacheSchema, "LRUCacheProps"),
+  },
+  MonotonicStack: {
+    description: "An animated monotonic stack computing the next/previous greater or smaller element (set `variant`). Shows the scan, the stack contents, pops, and the resulting answer array.",
+    schema: toJsonSchema(MonotonicStackSchema, "MonotonicStackProps"),
+  },
+  AStarPathfinding: {
+    description: "An animated A* search on a grid with walls. Cells show g and f costs; the open (frontier) and closed sets fill in until the goal is reached and the shortest path is traced. Set `heuristic` to manhattan or euclidean.",
+    schema: toJsonSchema(AStarPathfindingSchema, "AStarPathfindingProps"),
+  },
+  StringMatching: {
+    description: "An animated substring search sliding a `pattern` over `text`. Supports naive, KMP (LPS jumps), and Rabin-Karp (rolling hash); highlights each comparison and every match found.",
+    schema: toJsonSchema(StringMatchingSchema, "StringMatchingProps"),
+  },
+  BacktrackingGrid: {
+    description: "An animated N-Queens backtracking search. Queens are placed row by row; conflicts are shown against attacking queens and the search backtracks from dead ends until a full solution is found.",
+    schema: toJsonSchema(BacktrackingGridSchema, "BacktrackingGridProps"),
+  },
+  BloomFilter: {
+    description: "An animated Bloom filter — a bit array with k hash functions. Insert sets k bits; query checks them and reports \"possibly present\" (all set) or \"definitely not present\" (any clear), demonstrating false positives.",
+    schema: toJsonSchema(BloomFilterSchema, "BloomFilterProps"),
+  },
+  SieveOfEratosthenes: {
+    description: "An animated Sieve of Eratosthenes on a number grid. Each prime is highlighted and its multiples are crossed out; the numbers left standing are the primes up to n.",
+    schema: toJsonSchema(SieveOfEratosthenesSchema, "SieveOfEratosthenesProps"),
+  },
+  FlowNetwork: {
+    description: "An animated maximum-flow computation (Edmonds-Karp). Nodes are placed by x/y percent; BFS finds augmenting paths, edges show flow/capacity, and the running max-flow value updates until no path remains.",
+    schema: toJsonSchema(FlowNetworkSchema, "FlowNetworkProps"),
+  },
+  QuadTree: {
+    description: "An animated point quadtree over the unit square. Points insert one by one; when a leaf exceeds capacity it subdivides into four quadrants, showing spatial partitioning.",
+    schema: toJsonSchema(QuadTreeSchema, "QuadTreeProps"),
+  },
+  KDTree: {
+    description: "An animated 2D k-d tree. Points insert with alternating x/y splits; each split draws a line across its region, partitioning the plane. Vertical lines are x-splits, horizontal lines are y-splits.",
+    schema: toJsonSchema(KDTreeSchema, "KDTreeProps"),
+  },
+  StronglyConnectedComponents: {
+    description: "An animated Tarjan's SCC algorithm on a directed graph. Nodes show index/low-link values, a stack tracks the current path, and strongly connected components are colored as they close.",
+    schema: toJsonSchema(StronglyConnectedComponentsSchema, "StronglyConnectedComponentsProps"),
+  },
+  GraphColoring: {
+    description: "An animated greedy vertex coloring. Each vertex is assigned the smallest color not used by its already-colored neighbours; a legend shows the palette and the total colors used.",
+    schema: toJsonSchema(GraphColoringSchema, "GraphColoringProps"),
+  },
+  SuffixArray: {
+    description: "An animated suffix array. All suffixes of a string are listed, sorted lexicographically (the suffix array), then a pattern is located with binary search showing L/M/R pointers.",
+    schema: toJsonSchema(SuffixArraySchema, "SuffixArrayProps"),
+  },
+  IntervalScheduling: {
+    description: "An animated greedy interval scheduling (activity selection). Intervals are sorted by end time and shown on a timeline; non-overlapping ones are selected (green) and overlapping ones rejected (red).",
+    schema: toJsonSchema(IntervalSchedulingSchema, "IntervalSchedulingProps"),
+  },
+  BitManipulation: {
+    description: "An animated bit-manipulation walkthrough on a fixed-width binary value. Applies AND/OR/XOR with a mask, left/right shifts, set/clear/toggle a bit, NOT, and popcount, highlighting the bits that change.",
+    schema: toJsonSchema(BitManipulationSchema, "BitManipulationProps"),
   },
 };
 

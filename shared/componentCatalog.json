@@ -2861,5 +2861,1841 @@
       "call-stack"
     ],
     "minSeconds": 12
+  },
+  "HeapVisualizer": {
+    "description": "An animated binary heap (min or max) drawn as a complete tree with an optional array view. Give `initial` values and `operations` (insert / extract); it walks the sift-up and sift-down compares and swaps automatically.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "min",
+            "max"
+          ]
+        },
+        "initial": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "insert"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "op",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "extract"
+                  }
+                },
+                "required": [
+                  "op"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "showArray": {
+          "type": "boolean"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "initial"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a binary heap / priority queue being built or mutated — insert (sift-up), extract-min/max (sift-down), heapsort",
+    "tags": [
+      "heap",
+      "priority-queue",
+      "binary-heap",
+      "sift",
+      "heapsort",
+      "min-heap",
+      "max-heap"
+    ],
+    "minSeconds": 11
+  },
+  "HashTable": {
+    "description": "An animated hash table showing the hash function h(key) and collision resolution. Choose `strategy` \"chaining\" or \"open-addressing\"; give `operations` (insert / lookup / delete) and it animates hashing, probing, placement, hits and misses.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "buckets": {
+          "type": "number"
+        },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "chaining",
+            "open-addressing"
+          ]
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "lookup",
+                  "delete"
+                ]
+              },
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "key"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a hash table with a hash function and collision resolution — separate chaining or open-addressing (linear probing)",
+    "tags": [
+      "hash-table",
+      "hashing",
+      "collision",
+      "chaining",
+      "open-addressing",
+      "probing",
+      "buckets"
+    ],
+    "minSeconds": 11
+  },
+  "TrieVisualizer": {
+    "description": "An animated trie / prefix tree. Give `operations` (insert / search / prefix); nodes appear as words are inserted and searches trace the path character by character, ending in a hit (green) or miss (red).",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "search",
+                  "prefix"
+                ]
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "word"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a trie / prefix tree — inserting words and searching words or prefixes character by character",
+    "tags": [
+      "trie",
+      "prefix-tree",
+      "string",
+      "autocomplete",
+      "search",
+      "prefix"
+    ],
+    "minSeconds": 11
+  },
+  "UnionFind": {
+    "description": "An animated disjoint-set (union-find). Elements sit in a fixed row and parent-pointer arrows change as sets merge. Give `elements` and `operations` (union / find); supports union-by-rank and path compression.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "union"
+                  },
+                  "a": {
+                    "type": "string"
+                  },
+                  "b": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "a",
+                  "b"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "find"
+                  },
+                  "a": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "a"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "byRank": {
+          "type": "boolean"
+        },
+        "pathCompression": {
+          "type": "boolean"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "elements",
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a disjoint-set / union-find structure — union, find, union-by-rank and path compression (e.g. Kruskal's MST, connectivity)",
+    "tags": [
+      "union-find",
+      "disjoint-set",
+      "dsu",
+      "connectivity",
+      "path-compression",
+      "union-by-rank",
+      "kruskal"
+    ],
+    "minSeconds": 10
+  },
+  "BSTOperations": {
+    "description": "An animated binary search tree. Give `initial` values and `operations` (insert / search / delete); nodes tween into place, comparisons highlight the path, and with `balance:\"avl\"` it performs and animates rotations to self-balance.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "initial": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "search",
+                  "delete"
+                ]
+              },
+              "value": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "op",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "balance": {
+          "type": "string",
+          "enum": [
+            "none",
+            "avl"
+          ]
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "initial",
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a binary search tree being mutated — insert, search, delete, and optional AVL self-balancing rotations",
+    "tags": [
+      "bst",
+      "binary-search-tree",
+      "avl",
+      "rotation",
+      "self-balancing",
+      "insert",
+      "delete"
+    ],
+    "minSeconds": 12
+  },
+  "SegmentTree": {
+    "description": "An animated segment tree over an array. Nodes cover ranges; `operations` run range queries (sum/min/max) highlighting full-cover vs partial nodes, and point updates propagating leaf→root. Set `op` to the aggregate.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "op": {
+          "type": "string",
+          "enum": [
+            "sum",
+            "min",
+            "max"
+          ]
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "query"
+                  },
+                  "lo": {
+                    "type": "number"
+                  },
+                  "hi": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "op",
+                  "lo",
+                  "hi"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "update"
+                  },
+                  "index": {
+                    "type": "number"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "op",
+                  "index",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "values",
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a segment tree answering range sum/min/max queries and point updates over an array",
+    "tags": [
+      "segment-tree",
+      "range-query",
+      "range-sum",
+      "range-min",
+      "point-update",
+      "divide-and-conquer"
+    ],
+    "minSeconds": 12
+  },
+  "FenwickTree": {
+    "description": "An animated Fenwick tree (binary indexed tree) with the logical array and the BIT array. Updates walk i += i&-i and prefix-sum queries walk i -= i&-i, shown with index-jump arcs and a running sum.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "update"
+                  },
+                  "index": {
+                    "type": "number"
+                  },
+                  "delta": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "op",
+                  "index",
+                  "delta"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "prefixSum"
+                  },
+                  "index": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "op",
+                  "index"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "values",
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a Fenwick tree / binary indexed tree doing prefix-sum queries and updates via i ± (i & -i)",
+    "tags": [
+      "fenwick-tree",
+      "binary-indexed-tree",
+      "bit",
+      "prefix-sum",
+      "lowbit",
+      "range-query"
+    ],
+    "minSeconds": 11
+  },
+  "RedBlackTree": {
+    "description": "An animated red-black tree. Give `values` to insert; nodes are colored red/black, and the tree recolors and rotates to restore the red-black properties after each insertion.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a red-black tree insertion with recoloring and rotations to stay balanced",
+    "tags": [
+      "red-black-tree",
+      "rbtree",
+      "balanced-bst",
+      "recolor",
+      "rotation",
+      "self-balancing"
+    ],
+    "minSeconds": 12
+  },
+  "BTreeVisualizer": {
+    "description": "An animated B-tree of a given `order`. Keys insert into multi-key leaf nodes; when a node overflows it splits and promotes the median upward, cascading toward the root. Good for database indexes and filesystems.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "order": {
+          "type": "number"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a B-tree / B+ tree with multi-key nodes splitting on overflow as keys are inserted (databases, filesystems)",
+    "tags": [
+      "b-tree",
+      "b+tree",
+      "multiway-tree",
+      "split",
+      "database-index",
+      "order"
+    ],
+    "minSeconds": 12
+  },
+  "SkipList": {
+    "description": "An animated skip list with express lanes. `operations` (insert / search) walk right on a level then drop down to lower levels. Heights are deterministic (from the value or an explicit level).",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "insert"
+                  },
+                  "value": {
+                    "type": "number"
+                  },
+                  "level": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "op",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "search"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "op",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "maxLevel": {
+          "type": "number"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a skip list search or insert walking express lanes (walk right, drop down) across levels",
+    "tags": [
+      "skip-list",
+      "probabilistic",
+      "levels",
+      "express-lane",
+      "search",
+      "ordered"
+    ],
+    "minSeconds": 11
+  },
+  "LRUCache": {
+    "description": "An animated LRU cache as an ordered list from most- to least-recently-used. `operations` (get / put) move entries to the front on access and evict the tail when over `capacity`.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "capacity": {
+          "type": "number"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "get"
+                  },
+                  "key": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "key"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "put"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "key",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "capacity",
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "an LRU cache with a hash map + doubly-linked list — get/put, move-to-front, and eviction of the least-recently-used entry",
+    "tags": [
+      "lru",
+      "cache",
+      "eviction",
+      "doubly-linked-list",
+      "hash-map",
+      "capacity"
+    ],
+    "minSeconds": 11
+  },
+  "MonotonicStack": {
+    "description": "An animated monotonic stack computing the next/previous greater or smaller element (set `variant`). Shows the scan, the stack contents, pops, and the resulting answer array.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "next-greater",
+            "next-smaller",
+            "prev-greater",
+            "prev-smaller"
+          ]
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a monotonic stack computing next/previous greater or smaller element for each array entry",
+    "tags": [
+      "monotonic-stack",
+      "next-greater-element",
+      "stack",
+      "sliding",
+      "invariant"
+    ],
+    "minSeconds": 10
+  },
+  "AStarPathfinding": {
+    "description": "An animated A* search on a grid with walls. Cells show g and f costs; the open (frontier) and closed sets fill in until the goal is reached and the shortest path is traced. Set `heuristic` to manhattan or euclidean.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "rows": {
+          "type": "number"
+        },
+        "cols": {
+          "type": "number"
+        },
+        "walls": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "start": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "goal": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "heuristic": {
+          "type": "string",
+          "enum": [
+            "manhattan",
+            "euclidean"
+          ]
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rows",
+        "cols",
+        "start",
+        "goal"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "A* pathfinding on a grid with obstacles — open/closed sets and g/h/f costs guiding to the goal",
+    "tags": [
+      "a-star",
+      "astar",
+      "pathfinding",
+      "grid",
+      "heuristic",
+      "shortest-path",
+      "search"
+    ],
+    "minSeconds": 12
+  },
+  "StringMatching": {
+    "description": "An animated substring search sliding a `pattern` over `text`. Supports naive, KMP (LPS jumps), and Rabin-Karp (rolling hash); highlights each comparison and every match found.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "algorithm": {
+          "type": "string",
+          "enum": [
+            "naive",
+            "kmp",
+            "rabin-karp"
+          ]
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "pattern"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a substring-search algorithm sliding a pattern over text — KMP, Rabin-Karp, or naive",
+    "tags": [
+      "string-matching",
+      "kmp",
+      "rabin-karp",
+      "pattern-search",
+      "substring",
+      "rolling-hash"
+    ],
+    "minSeconds": 11
+  },
+  "BacktrackingGrid": {
+    "description": "An animated N-Queens backtracking search. Queens are placed row by row; conflicts are shown against attacking queens and the search backtracks from dead ends until a full solution is found.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "puzzle": {
+          "type": "string",
+          "enum": [
+            "n-queens"
+          ]
+        },
+        "n": {
+          "type": "number"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a backtracking search on a board — N-Queens placing, detecting conflicts, and backtracking",
+    "tags": [
+      "backtracking",
+      "n-queens",
+      "constraint",
+      "search",
+      "recursion",
+      "board"
+    ],
+    "minSeconds": 12
+  },
+  "BloomFilter": {
+    "description": "An animated Bloom filter — a bit array with k hash functions. Insert sets k bits; query checks them and reports \"possibly present\" (all set) or \"definitely not present\" (any clear), demonstrating false positives.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "size": {
+          "type": "number"
+        },
+        "k": {
+          "type": "number"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "query"
+                ]
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "key"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a Bloom filter — a bit array with k hash functions, insert setting bits, query returning maybe/definitely-not (probabilistic membership)",
+    "tags": [
+      "bloom-filter",
+      "probabilistic",
+      "hashing",
+      "bit-array",
+      "membership",
+      "false-positive"
+    ],
+    "minSeconds": 11
+  },
+  "SieveOfEratosthenes": {
+    "description": "An animated Sieve of Eratosthenes on a number grid. Each prime is highlighted and its multiples are crossed out; the numbers left standing are the primes up to n.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "n": {
+          "type": "number"
+        },
+        "cols": {
+          "type": "number"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "the Sieve of Eratosthenes — crossing out multiples of each prime on a number grid to find all primes up to n",
+    "tags": [
+      "sieve",
+      "eratosthenes",
+      "primes",
+      "number-theory",
+      "crossing-out",
+      "grid"
+    ],
+    "minSeconds": 11
+  },
+  "FlowNetwork": {
+    "description": "An animated maximum-flow computation (Edmonds-Karp). Nodes are placed by x/y percent; BFS finds augmenting paths, edges show flow/capacity, and the running max-flow value updates until no path remains.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "capacity": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "capacity"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "source": {
+          "type": "string"
+        },
+        "sink": {
+          "type": "string"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "nodes",
+        "edges",
+        "source",
+        "sink"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a maximum-flow computation — Ford-Fulkerson / Edmonds-Karp augmenting paths with edge flow/capacity and residuals",
+    "tags": [
+      "max-flow",
+      "min-cut",
+      "edmonds-karp",
+      "ford-fulkerson",
+      "augmenting-path",
+      "network-flow",
+      "capacity"
+    ],
+    "minSeconds": 13
+  },
+  "QuadTree": {
+    "description": "An animated point quadtree over the unit square. Points insert one by one; when a leaf exceeds capacity it subdivides into four quadrants, showing spatial partitioning.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "capacity": {
+          "type": "number"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "points"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a point quadtree — a 2D region recursively subdividing into quadrants as points exceed a node's capacity (spatial indexing)",
+    "tags": [
+      "quadtree",
+      "spatial",
+      "subdivision",
+      "2d",
+      "points",
+      "collision",
+      "spatial-index"
+    ],
+    "minSeconds": 12
+  },
+  "KDTree": {
+    "description": "An animated 2D k-d tree. Points insert with alternating x/y splits; each split draws a line across its region, partitioning the plane. Vertical lines are x-splits, horizontal lines are y-splits.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "points"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a 2D k-d tree — alternating x/y splits partitioning the plane (nearest-neighbour, range search)",
+    "tags": [
+      "kd-tree",
+      "spatial",
+      "nearest-neighbour",
+      "partition",
+      "2d",
+      "binary-space-partition"
+    ],
+    "minSeconds": 12
+  },
+  "StronglyConnectedComponents": {
+    "description": "An animated Tarjan's SCC algorithm on a directed graph. Nodes show index/low-link values, a stack tracks the current path, and strongly connected components are colored as they close.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "Tarjan's strongly-connected-components — DFS with index/low-link values and a stack, closing SCCs on a directed graph",
+    "tags": [
+      "scc",
+      "tarjan",
+      "strongly-connected",
+      "low-link",
+      "directed-graph",
+      "dfs",
+      "components"
+    ],
+    "minSeconds": 13
+  },
+  "GraphColoring": {
+    "description": "An animated greedy vertex coloring. Each vertex is assigned the smallest color not used by its already-colored neighbours; a legend shows the palette and the total colors used.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "greedy graph coloring — assigning each vertex the smallest color not used by its neighbours",
+    "tags": [
+      "graph-coloring",
+      "greedy",
+      "chromatic",
+      "conflict",
+      "vertex-coloring",
+      "scheduling"
+    ],
+    "minSeconds": 11
+  },
+  "SuffixArray": {
+    "description": "An animated suffix array. All suffixes of a string are listed, sorted lexicographically (the suffix array), then a pattern is located with binary search showing L/M/R pointers.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "pattern"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a suffix array — sorting a string's suffixes and binary-searching a pattern against them",
+    "tags": [
+      "suffix-array",
+      "string",
+      "sorting",
+      "binary-search",
+      "substring",
+      "pattern"
+    ],
+    "minSeconds": 12
+  },
+  "IntervalScheduling": {
+    "description": "An animated greedy interval scheduling (activity selection). Intervals are sorted by end time and shown on a timeline; non-overlapping ones are selected (green) and overlapping ones rejected (red).",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "intervals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "number"
+              },
+              "end": {
+                "type": "number"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "intervals"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "greedy interval scheduling / activity selection — sort by end time and pick non-overlapping intervals on a timeline",
+    "tags": [
+      "interval-scheduling",
+      "activity-selection",
+      "greedy",
+      "intervals",
+      "timeline",
+      "overlap"
+    ],
+    "minSeconds": 11
+  },
+  "BitManipulation": {
+    "description": "An animated bit-manipulation walkthrough on a fixed-width binary value. Applies AND/OR/XOR with a mask, left/right shifts, set/clear/toggle a bit, NOT, and popcount, highlighting the bits that change.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "enum": [
+                      "and",
+                      "or",
+                      "xor"
+                    ]
+                  },
+                  "mask": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "op",
+                  "mask"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "enum": [
+                      "shl",
+                      "shr"
+                    ]
+                  },
+                  "by": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "op",
+                  "by"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "enum": [
+                      "set",
+                      "clear",
+                      "toggle"
+                    ]
+                  },
+                  "bit": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "op",
+                  "bit"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "not"
+                  }
+                },
+                "required": [
+                  "op"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "popcount"
+                  }
+                },
+                "required": [
+                  "op"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "speed": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "bit-level operations on a binary value — AND/OR/XOR/shift, set/clear/toggle a bit, NOT, popcount",
+    "tags": [
+      "bit-manipulation",
+      "bitwise",
+      "and",
+      "or",
+      "xor",
+      "shift",
+      "popcount",
+      "binary"
+    ],
+    "minSeconds": 10
   }
 }
