@@ -55,9 +55,14 @@ export const RecursionTree: React.FC<RecursionTreeProps> = ({
 
   const nodeById = new Map(flat.map(n => [n.id, n]));
 
+  const parentIds = React.useMemo(
+    () => new Set(flat.map(n => n.parentId).filter((p): p is string => !!p)),
+    [flat]
+  );
+
   // Convert percentage-based x/y to pixel values for SVG transforms
   const toPixelX = (pct: number) => (pct / 100) * videoWidth;
-  const toPixelY = (pct: number) => (pct / 100) * videoHeight;
+  const toPixelY = (pct: number) => (pct / 100) * (videoHeight - 60);
 
   return (
     <div style={{
@@ -72,7 +77,7 @@ export const RecursionTree: React.FC<RecursionTreeProps> = ({
         }}>{title}</h2>
       )}
 
-      <svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
+      <svg width="100%" height="100%" style={{ position: "absolute", inset: 0, marginTop: 60 }}>
         {/* Edges (drawn before their child appears) */}
         {flat.map((n, i) => {
           if (!n.parentId) return null;
@@ -117,13 +122,11 @@ export const RecursionTree: React.FC<RecursionTreeProps> = ({
             { extrapolateLeft: "clamp", extrapolateRight: "clamp",
               easing: Easing.bezier(0.2, 1.4, 0.6, 1) }
           );
-          const scale = interpolate(enter, [0, 1], [0, 1], {
-            extrapolateLeft: "clamp", extrapolateRight: "clamp",
-          });
+          const scale = enter;
 
           let fill = "#1e293b";
           let border = "#334155";
-          const isLeaf = !flat.some(x => x.parentId === n.id);
+          const isLeaf = !parentIds.has(n.id);
           if (pruning && n.pruned) { fill = mix("#1e293b", "#ef4444", 0.4); border = "#ef4444"; }
           else if (n.memoized) { fill = mix("#1e293b", theme.primary, 0.4); border = theme.primary; }
           else if (isLeaf && pruning && !n.pruned) { fill = mix("#1e293b", accent, 0.5); border = accent; }
