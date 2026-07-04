@@ -70,6 +70,36 @@ class TTSClient:
             f"Deepgram speak API call failed after {_MAX_ATTEMPTS} attempts: {last_exc}"
         ) from last_exc
 
+    def transcribe(self, audio_bytes: bytes) -> list[dict]:
+        """Real word-level timings via Deepgram Nova-2 STT (the /v1/speak TTS API does
+        not return timings). Returns words [{word, start, end, punctuated_word}], or []
+        on any failure — the caller (voiceover_node) falls back to estimate timing and
+        never blocks the render."""
+        if not self._settings.deepgram_configured:
+            return []
+        url = "https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true"
+        headers = {
+            "Authorization": f"Token {self._settings.deepgram_api_key.strip()}",
+            "Content-Type": "audio/mpeg",
+        }
+        for attempt in range(1, _MAX_ATTEMPTS + 1):
+            try:
+                with span("tts.transcribe", chars=len(audio_bytes)) as obs:
+                    resp = httpx.post(url, headers=headers, content=audio_bytes, timeout=120.0)
+                    resp.raise_for_status()
+                    result = resp.json()
+                    words = result["results"]["channels"][0]["alternatives"][0].get("words", [])
+                    obs.update(output=f"{len(words)} words")
+                    return words
+            except httpx.TransportError:
+                if attempt < _MAX_ATTEMPTS:
+                    time.sleep(_RETRY_BACKOFF_SECONDS * attempt)
+                    continue
+                return []
+            except Exception:
+                return []
+        return []
+
     def _estimate_timings(self, text: str) -> list[dict]:
         chars_per_second = self._settings.config.tts.words_per_minute * 6 / 60  # ~6 chars/word incl. space
         segments = [s.strip() for s in text.replace("\n", " ").split(". ") if s.strip()]
