@@ -22,6 +22,7 @@ class VideoConfig(BaseModel):
     background_color: str = "#f8fafc"
     font_family: str = "Inter"
     default_scene_duration_sec: float = 3.0
+    default_duration_seconds: int = 120  # total video length when JobInput.durationSec is unset
 
 
 class LLMConfig(BaseModel):
@@ -126,6 +127,12 @@ class Settings(BaseSettings):
     @property
     def langfuse_enabled(self) -> bool:
         return bool(self.langfuse_public_key and self.langfuse_secret_key)
+
+    @property
+    def catalog_path(self) -> Path:
+        """The component catalog JSON generated from renderer_remotion/src/registry.ts
+        (`npm run catalog`); read by app/engine/catalog.py."""
+        return BASE_DIR / "shared" / "componentCatalog.json"
 
 
 @lru_cache

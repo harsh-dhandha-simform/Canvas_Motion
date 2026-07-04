@@ -53,6 +53,21 @@ def read_artifact(job_dir: Path, name: str, model_cls: type[ModelT]) -> ModelT:
     return model_cls.model_validate(data)
 
 
+def write_json_artifact(job_dir: Path, name: str, data: dict, overwrite: bool = False) -> Path:
+    """Immutable raw-dict artifact write (the LangGraph engine nodes deal in plain
+    dicts, not Pydantic models). Same immutability rule as write_artifact."""
+    path = _artifact_path(job_dir, name)
+    if path.exists() and not overwrite:
+        raise FileExistsError(f"artifact '{name}' already exists at {path} (pipeline stages are immutable)")
+    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return path
+
+
+def read_json_artifact(job_dir: Path, name: str) -> dict | None:
+    path = _artifact_path(job_dir, name)
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+
 def read_manifest(job_dir: Path) -> JobManifest:
     return read_artifact(job_dir, "job", JobManifest)
 
