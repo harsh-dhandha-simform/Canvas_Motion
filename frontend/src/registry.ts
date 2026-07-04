@@ -41,6 +41,7 @@ import { GlossaryCards, GlossaryCardsSchema } from "./components/GlossaryCards";
 import { FlowDiagram, FlowDiagramSchema } from "./components/FlowDiagram";
 import { CalloutAnnotation, CalloutAnnotationSchema } from "./components/CalloutAnnotation";
 import { SortingVisualizer, SortingVisualizerSchema } from "./components/SortingVisualizer";
+import { LinearStructure, LinearStructureSchema } from "./components/LinearStructure";
 
 export const COMPONENT_REGISTRY = {
   AnimatedTitle,
@@ -72,6 +73,7 @@ export const COMPONENT_REGISTRY = {
   FlowDiagram,
   CalloutAnnotation,
   SortingVisualizer,
+  LinearStructure,
 } as const;
 
 export const COMPONENT_SCHEMAS = {
@@ -104,6 +106,7 @@ export const COMPONENT_SCHEMAS = {
   FlowDiagram: FlowDiagramSchema,
   CalloutAnnotation: CalloutAnnotationSchema,
   SortingVisualizer: SortingVisualizerSchema,
+  LinearStructure: LinearStructureSchema,
 } as const;
 
 // Zod v4 ships a native JSON-Schema converter. The old `zod-to-json-schema`
@@ -181,6 +184,13 @@ export const COMPONENT_META: Record<SceneType, ComponentMeta> = {
     useWhen: "a sorting algorithm being walked through, or comparing sort algorithms visually",
     tags: ["sort", "algorithm", "swap", "comparison", "complexity", "bubble", "merge", "quick", "heap", "radix"],
     minSeconds: 10,
+  },
+  LinearStructure: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["panel", "main"],
+    useWhen: "a linear data structure — array, stack, queue, deque, or linked list — being mutated by a sequence of operations",
+    tags: ["array", "stack", "queue", "deque", "linked-list", "data-structure", "push", "pop"],
+    minSeconds: 8,
   },
 };
 
@@ -300,6 +310,10 @@ export const COMPONENT_CATALOG = {
   SortingVisualizer: {
     description: "An animated sorting-algorithm walkthrough. Bars represent values; steps compare, swap, partition, set, or merge-write to visualise bubble / merge / quick / heap / radix / counting sort.",
     schema: toJsonSchema(SortingVisualizerSchema, "SortingVisualizerProps"),
+  },
+  LinearStructure: {
+    description: "An animated linear data structure — array, stack, queue, deque, or linked list — with push/pop/enqueue/dequeue/insert/delete motion. Cells shift, fade, and translate to visualise each operation.",
+    schema: toJsonSchema(LinearStructureSchema, "LinearStructureProps"),
   },
 };
 
