@@ -1,7 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 3301
+/***/ 3323
 (__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -76,1537 +76,6 @@ const ThemeProvider = ({ theme, children }) => {
   const merged = { ...DEFAULT_THEME, ...theme };
   return /* @__PURE__ */ (0,jsx_runtime.jsx)(ThemeContext.Provider, { value: merged, children });
 };
-
-;// ./node_modules/zod-to-json-schema/dist/esm/Options.js
-const ignoreOverride = Symbol("Let zodToJsonSchema decide on which parser to use");
-const jsonDescription = (jsonSchema, def) => {
-    if (def.description) {
-        try {
-            return {
-                ...jsonSchema,
-                ...JSON.parse(def.description),
-            };
-        }
-        catch { }
-    }
-    return jsonSchema;
-};
-const defaultOptions = {
-    name: undefined,
-    $refStrategy: "root",
-    basePath: ["#"],
-    effectStrategy: "input",
-    pipeStrategy: "all",
-    dateStrategy: "format:date-time",
-    mapStrategy: "entries",
-    removeAdditionalStrategy: "passthrough",
-    allowedAdditionalProperties: true,
-    rejectedAdditionalProperties: false,
-    definitionPath: "definitions",
-    target: "jsonSchema7",
-    strictUnions: false,
-    definitions: {},
-    errorMessages: false,
-    markdownDescription: false,
-    patternStrategy: "escape",
-    applyRegexFlags: false,
-    emailStrategy: "format:email",
-    base64Strategy: "contentEncoding:base64",
-    nameStrategy: "ref",
-    openAiAnyTypeName: "OpenAiAnyType"
-};
-const getDefaultOptions = (options) => (typeof options === "string"
-    ? {
-        ...defaultOptions,
-        name: options,
-    }
-    : {
-        ...defaultOptions,
-        ...options,
-    });
-
-;// ./node_modules/zod-to-json-schema/dist/esm/Refs.js
-
-const getRefs = (options) => {
-    const _options = getDefaultOptions(options);
-    const currentPath = _options.name !== undefined
-        ? [..._options.basePath, _options.definitionPath, _options.name]
-        : _options.basePath;
-    return {
-        ..._options,
-        flags: { hasReferencedOpenAiAnyType: false },
-        currentPath: currentPath,
-        propertyPath: undefined,
-        seen: new Map(Object.entries(_options.definitions).map(([name, def]) => [
-            def._def,
-            {
-                def: def._def,
-                path: [..._options.basePath, _options.definitionPath, name],
-                // Resolution of references will be forced even though seen, so it's ok that the schema is undefined here for now.
-                jsonSchema: undefined,
-            },
-        ])),
-    };
-};
-
-// EXTERNAL MODULE: ./node_modules/zod/v3/index.js + 8 modules
-var v3 = __webpack_require__(3161);
-;// ./node_modules/zod-to-json-schema/dist/esm/getRelativePath.js
-const getRelativePath = (pathA, pathB) => {
-    let i = 0;
-    for (; i < pathA.length && i < pathB.length; i++) {
-        if (pathA[i] !== pathB[i])
-            break;
-    }
-    return [(pathA.length - i).toString(), ...pathB.slice(i)].join("/");
-};
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/any.js
-
-function parseAnyDef(refs) {
-    if (refs.target !== "openAi") {
-        return {};
-    }
-    const anyDefinitionPath = [
-        ...refs.basePath,
-        refs.definitionPath,
-        refs.openAiAnyTypeName,
-    ];
-    refs.flags.hasReferencedOpenAiAnyType = true;
-    return {
-        $ref: refs.$refStrategy === "relative"
-            ? getRelativePath(anyDefinitionPath, refs.currentPath)
-            : anyDefinitionPath.join("/"),
-    };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/errorMessages.js
-function addErrorMessage(res, key, errorMessage, refs) {
-    if (!refs?.errorMessages)
-        return;
-    if (errorMessage) {
-        res.errorMessage = {
-            ...res.errorMessage,
-            [key]: errorMessage,
-        };
-    }
-}
-function setResponseValueAndErrors(res, key, value, errorMessage, refs) {
-    res[key] = value;
-    addErrorMessage(res, key, errorMessage, refs);
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/array.js
-
-
-
-function parseArrayDef(def, refs) {
-    const res = {
-        type: "array",
-    };
-    if (def.type?._def &&
-        def.type?._def?.typeName !== v3.ZodFirstPartyTypeKind.ZodAny) {
-        res.items = parseDef(def.type._def, {
-            ...refs,
-            currentPath: [...refs.currentPath, "items"],
-        });
-    }
-    if (def.minLength) {
-        setResponseValueAndErrors(res, "minItems", def.minLength.value, def.minLength.message, refs);
-    }
-    if (def.maxLength) {
-        setResponseValueAndErrors(res, "maxItems", def.maxLength.value, def.maxLength.message, refs);
-    }
-    if (def.exactLength) {
-        setResponseValueAndErrors(res, "minItems", def.exactLength.value, def.exactLength.message, refs);
-        setResponseValueAndErrors(res, "maxItems", def.exactLength.value, def.exactLength.message, refs);
-    }
-    return res;
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/bigint.js
-
-function parseBigintDef(def, refs) {
-    const res = {
-        type: "integer",
-        format: "int64",
-    };
-    if (!def.checks)
-        return res;
-    for (const check of def.checks) {
-        switch (check.kind) {
-            case "min":
-                if (refs.target === "jsonSchema7") {
-                    if (check.inclusive) {
-                        setResponseValueAndErrors(res, "minimum", check.value, check.message, refs);
-                    }
-                    else {
-                        setResponseValueAndErrors(res, "exclusiveMinimum", check.value, check.message, refs);
-                    }
-                }
-                else {
-                    if (!check.inclusive) {
-                        res.exclusiveMinimum = true;
-                    }
-                    setResponseValueAndErrors(res, "minimum", check.value, check.message, refs);
-                }
-                break;
-            case "max":
-                if (refs.target === "jsonSchema7") {
-                    if (check.inclusive) {
-                        setResponseValueAndErrors(res, "maximum", check.value, check.message, refs);
-                    }
-                    else {
-                        setResponseValueAndErrors(res, "exclusiveMaximum", check.value, check.message, refs);
-                    }
-                }
-                else {
-                    if (!check.inclusive) {
-                        res.exclusiveMaximum = true;
-                    }
-                    setResponseValueAndErrors(res, "maximum", check.value, check.message, refs);
-                }
-                break;
-            case "multipleOf":
-                setResponseValueAndErrors(res, "multipleOf", check.value, check.message, refs);
-                break;
-        }
-    }
-    return res;
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/boolean.js
-function parseBooleanDef() {
-    return {
-        type: "boolean",
-    };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/branded.js
-
-function parseBrandedDef(_def, refs) {
-    return parseDef(_def.type._def, refs);
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/catch.js
-
-const parseCatchDef = (def, refs) => {
-    return parseDef(def.innerType._def, refs);
-};
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/date.js
-
-function parseDateDef(def, refs, overrideDateStrategy) {
-    const strategy = overrideDateStrategy ?? refs.dateStrategy;
-    if (Array.isArray(strategy)) {
-        return {
-            anyOf: strategy.map((item, i) => parseDateDef(def, refs, item)),
-        };
-    }
-    switch (strategy) {
-        case "string":
-        case "format:date-time":
-            return {
-                type: "string",
-                format: "date-time",
-            };
-        case "format:date":
-            return {
-                type: "string",
-                format: "date",
-            };
-        case "integer":
-            return integerDateParser(def, refs);
-    }
-}
-const integerDateParser = (def, refs) => {
-    const res = {
-        type: "integer",
-        format: "unix-time",
-    };
-    if (refs.target === "openApi3") {
-        return res;
-    }
-    for (const check of def.checks) {
-        switch (check.kind) {
-            case "min":
-                setResponseValueAndErrors(res, "minimum", check.value, // This is in milliseconds
-                check.message, refs);
-                break;
-            case "max":
-                setResponseValueAndErrors(res, "maximum", check.value, // This is in milliseconds
-                check.message, refs);
-                break;
-        }
-    }
-    return res;
-};
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/default.js
-
-function parseDefaultDef(_def, refs) {
-    return {
-        ...parseDef(_def.innerType._def, refs),
-        default: _def.defaultValue(),
-    };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/effects.js
-
-
-function parseEffectsDef(_def, refs) {
-    return refs.effectStrategy === "input"
-        ? parseDef(_def.schema._def, refs)
-        : parseAnyDef(refs);
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/enum.js
-function parseEnumDef(def) {
-    return {
-        type: "string",
-        enum: Array.from(def.values),
-    };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/intersection.js
-
-const isJsonSchema7AllOfType = (type) => {
-    if ("type" in type && type.type === "string")
-        return false;
-    return "allOf" in type;
-};
-function parseIntersectionDef(def, refs) {
-    const allOf = [
-        parseDef(def.left._def, {
-            ...refs,
-            currentPath: [...refs.currentPath, "allOf", "0"],
-        }),
-        parseDef(def.right._def, {
-            ...refs,
-            currentPath: [...refs.currentPath, "allOf", "1"],
-        }),
-    ].filter((x) => !!x);
-    let unevaluatedProperties = refs.target === "jsonSchema2019-09"
-        ? { unevaluatedProperties: false }
-        : undefined;
-    const mergedAllOf = [];
-    // If either of the schemas is an allOf, merge them into a single allOf
-    allOf.forEach((schema) => {
-        if (isJsonSchema7AllOfType(schema)) {
-            mergedAllOf.push(...schema.allOf);
-            if (schema.unevaluatedProperties === undefined) {
-                // If one of the schemas has no unevaluatedProperties set,
-                // the merged schema should also have no unevaluatedProperties set
-                unevaluatedProperties = undefined;
-            }
-        }
-        else {
-            let nestedSchema = schema;
-            if ("additionalProperties" in schema &&
-                schema.additionalProperties === false) {
-                const { additionalProperties, ...rest } = schema;
-                nestedSchema = rest;
-            }
-            else {
-                // As soon as one of the schemas has additionalProperties set not to false, we allow unevaluatedProperties
-                unevaluatedProperties = undefined;
-            }
-            mergedAllOf.push(nestedSchema);
-        }
-    });
-    return mergedAllOf.length
-        ? {
-            allOf: mergedAllOf,
-            ...unevaluatedProperties,
-        }
-        : undefined;
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/literal.js
-function parseLiteralDef(def, refs) {
-    const parsedType = typeof def.value;
-    if (parsedType !== "bigint" &&
-        parsedType !== "number" &&
-        parsedType !== "boolean" &&
-        parsedType !== "string") {
-        return {
-            type: Array.isArray(def.value) ? "array" : "object",
-        };
-    }
-    if (refs.target === "openApi3") {
-        return {
-            type: parsedType === "bigint" ? "integer" : parsedType,
-            enum: [def.value],
-        };
-    }
-    return {
-        type: parsedType === "bigint" ? "integer" : parsedType,
-        const: def.value,
-    };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/string.js
-
-let emojiRegex = undefined;
-/**
- * Generated from the regular expressions found here as of 2024-05-22:
- * https://github.com/colinhacks/zod/blob/master/src/types.ts.
- *
- * Expressions with /i flag have been changed accordingly.
- */
-const zodPatterns = {
-    /**
-     * `c` was changed to `[cC]` to replicate /i flag
-     */
-    cuid: /^[cC][^\s-]{8,}$/,
-    cuid2: /^[0-9a-z]+$/,
-    ulid: /^[0-9A-HJKMNP-TV-Z]{26}$/,
-    /**
-     * `a-z` was added to replicate /i flag
-     */
-    email: /^(?!\.)(?!.*\.\.)([a-zA-Z0-9_'+\-\.]*)[a-zA-Z0-9_+-]@([a-zA-Z0-9][a-zA-Z0-9\-]*\.)+[a-zA-Z]{2,}$/,
-    /**
-     * Constructed a valid Unicode RegExp
-     *
-     * Lazily instantiate since this type of regex isn't supported
-     * in all envs (e.g. React Native).
-     *
-     * See:
-     * https://github.com/colinhacks/zod/issues/2433
-     * Fix in Zod:
-     * https://github.com/colinhacks/zod/commit/9340fd51e48576a75adc919bff65dbc4a5d4c99b
-     */
-    emoji: () => {
-        if (emojiRegex === undefined) {
-            emojiRegex = RegExp("^(\\p{Extended_Pictographic}|\\p{Emoji_Component})+$", "u");
-        }
-        return emojiRegex;
-    },
-    /**
-     * Unused
-     */
-    uuid: /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/,
-    /**
-     * Unused
-     */
-    ipv4: /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/,
-    ipv4Cidr: /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/(3[0-2]|[12]?[0-9])$/,
-    /**
-     * Unused
-     */
-    ipv6: /^(([a-f0-9]{1,4}:){7}|::([a-f0-9]{1,4}:){0,6}|([a-f0-9]{1,4}:){1}:([a-f0-9]{1,4}:){0,5}|([a-f0-9]{1,4}:){2}:([a-f0-9]{1,4}:){0,4}|([a-f0-9]{1,4}:){3}:([a-f0-9]{1,4}:){0,3}|([a-f0-9]{1,4}:){4}:([a-f0-9]{1,4}:){0,2}|([a-f0-9]{1,4}:){5}:([a-f0-9]{1,4}:){0,1})([a-f0-9]{1,4}|(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2})))$/,
-    ipv6Cidr: /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/,
-    base64: /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/,
-    base64url: /^([0-9a-zA-Z-_]{4})*(([0-9a-zA-Z-_]{2}(==)?)|([0-9a-zA-Z-_]{3}(=)?))?$/,
-    nanoid: /^[a-zA-Z0-9_-]{21}$/,
-    jwt: /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/,
-};
-function parseStringDef(def, refs) {
-    const res = {
-        type: "string",
-    };
-    if (def.checks) {
-        for (const check of def.checks) {
-            switch (check.kind) {
-                case "min":
-                    setResponseValueAndErrors(res, "minLength", typeof res.minLength === "number"
-                        ? Math.max(res.minLength, check.value)
-                        : check.value, check.message, refs);
-                    break;
-                case "max":
-                    setResponseValueAndErrors(res, "maxLength", typeof res.maxLength === "number"
-                        ? Math.min(res.maxLength, check.value)
-                        : check.value, check.message, refs);
-                    break;
-                case "email":
-                    switch (refs.emailStrategy) {
-                        case "format:email":
-                            addFormat(res, "email", check.message, refs);
-                            break;
-                        case "format:idn-email":
-                            addFormat(res, "idn-email", check.message, refs);
-                            break;
-                        case "pattern:zod":
-                            addPattern(res, zodPatterns.email, check.message, refs);
-                            break;
-                    }
-                    break;
-                case "url":
-                    addFormat(res, "uri", check.message, refs);
-                    break;
-                case "uuid":
-                    addFormat(res, "uuid", check.message, refs);
-                    break;
-                case "regex":
-                    addPattern(res, check.regex, check.message, refs);
-                    break;
-                case "cuid":
-                    addPattern(res, zodPatterns.cuid, check.message, refs);
-                    break;
-                case "cuid2":
-                    addPattern(res, zodPatterns.cuid2, check.message, refs);
-                    break;
-                case "startsWith":
-                    addPattern(res, RegExp(`^${escapeLiteralCheckValue(check.value, refs)}`), check.message, refs);
-                    break;
-                case "endsWith":
-                    addPattern(res, RegExp(`${escapeLiteralCheckValue(check.value, refs)}$`), check.message, refs);
-                    break;
-                case "datetime":
-                    addFormat(res, "date-time", check.message, refs);
-                    break;
-                case "date":
-                    addFormat(res, "date", check.message, refs);
-                    break;
-                case "time":
-                    addFormat(res, "time", check.message, refs);
-                    break;
-                case "duration":
-                    addFormat(res, "duration", check.message, refs);
-                    break;
-                case "length":
-                    setResponseValueAndErrors(res, "minLength", typeof res.minLength === "number"
-                        ? Math.max(res.minLength, check.value)
-                        : check.value, check.message, refs);
-                    setResponseValueAndErrors(res, "maxLength", typeof res.maxLength === "number"
-                        ? Math.min(res.maxLength, check.value)
-                        : check.value, check.message, refs);
-                    break;
-                case "includes": {
-                    addPattern(res, RegExp(escapeLiteralCheckValue(check.value, refs)), check.message, refs);
-                    break;
-                }
-                case "ip": {
-                    if (check.version !== "v6") {
-                        addFormat(res, "ipv4", check.message, refs);
-                    }
-                    if (check.version !== "v4") {
-                        addFormat(res, "ipv6", check.message, refs);
-                    }
-                    break;
-                }
-                case "base64url":
-                    addPattern(res, zodPatterns.base64url, check.message, refs);
-                    break;
-                case "jwt":
-                    addPattern(res, zodPatterns.jwt, check.message, refs);
-                    break;
-                case "cidr": {
-                    if (check.version !== "v6") {
-                        addPattern(res, zodPatterns.ipv4Cidr, check.message, refs);
-                    }
-                    if (check.version !== "v4") {
-                        addPattern(res, zodPatterns.ipv6Cidr, check.message, refs);
-                    }
-                    break;
-                }
-                case "emoji":
-                    addPattern(res, zodPatterns.emoji(), check.message, refs);
-                    break;
-                case "ulid": {
-                    addPattern(res, zodPatterns.ulid, check.message, refs);
-                    break;
-                }
-                case "base64": {
-                    switch (refs.base64Strategy) {
-                        case "format:binary": {
-                            addFormat(res, "binary", check.message, refs);
-                            break;
-                        }
-                        case "contentEncoding:base64": {
-                            setResponseValueAndErrors(res, "contentEncoding", "base64", check.message, refs);
-                            break;
-                        }
-                        case "pattern:zod": {
-                            addPattern(res, zodPatterns.base64, check.message, refs);
-                            break;
-                        }
-                    }
-                    break;
-                }
-                case "nanoid": {
-                    addPattern(res, zodPatterns.nanoid, check.message, refs);
-                }
-                case "toLowerCase":
-                case "toUpperCase":
-                case "trim":
-                    break;
-                default:
-                    ((_) => { })(check);
-            }
-        }
-    }
-    return res;
-}
-function escapeLiteralCheckValue(literal, refs) {
-    return refs.patternStrategy === "escape"
-        ? escapeNonAlphaNumeric(literal)
-        : literal;
-}
-const ALPHA_NUMERIC = new Set("ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvxyz0123456789");
-function escapeNonAlphaNumeric(source) {
-    let result = "";
-    for (let i = 0; i < source.length; i++) {
-        if (!ALPHA_NUMERIC.has(source[i])) {
-            result += "\\";
-        }
-        result += source[i];
-    }
-    return result;
-}
-// Adds a "format" keyword to the schema. If a format exists, both formats will be joined in an allOf-node, along with subsequent ones.
-function addFormat(schema, value, message, refs) {
-    if (schema.format || schema.anyOf?.some((x) => x.format)) {
-        if (!schema.anyOf) {
-            schema.anyOf = [];
-        }
-        if (schema.format) {
-            schema.anyOf.push({
-                format: schema.format,
-                ...(schema.errorMessage &&
-                    refs.errorMessages && {
-                    errorMessage: { format: schema.errorMessage.format },
-                }),
-            });
-            delete schema.format;
-            if (schema.errorMessage) {
-                delete schema.errorMessage.format;
-                if (Object.keys(schema.errorMessage).length === 0) {
-                    delete schema.errorMessage;
-                }
-            }
-        }
-        schema.anyOf.push({
-            format: value,
-            ...(message &&
-                refs.errorMessages && { errorMessage: { format: message } }),
-        });
-    }
-    else {
-        setResponseValueAndErrors(schema, "format", value, message, refs);
-    }
-}
-// Adds a "pattern" keyword to the schema. If a pattern exists, both patterns will be joined in an allOf-node, along with subsequent ones.
-function addPattern(schema, regex, message, refs) {
-    if (schema.pattern || schema.allOf?.some((x) => x.pattern)) {
-        if (!schema.allOf) {
-            schema.allOf = [];
-        }
-        if (schema.pattern) {
-            schema.allOf.push({
-                pattern: schema.pattern,
-                ...(schema.errorMessage &&
-                    refs.errorMessages && {
-                    errorMessage: { pattern: schema.errorMessage.pattern },
-                }),
-            });
-            delete schema.pattern;
-            if (schema.errorMessage) {
-                delete schema.errorMessage.pattern;
-                if (Object.keys(schema.errorMessage).length === 0) {
-                    delete schema.errorMessage;
-                }
-            }
-        }
-        schema.allOf.push({
-            pattern: stringifyRegExpWithFlags(regex, refs),
-            ...(message &&
-                refs.errorMessages && { errorMessage: { pattern: message } }),
-        });
-    }
-    else {
-        setResponseValueAndErrors(schema, "pattern", stringifyRegExpWithFlags(regex, refs), message, refs);
-    }
-}
-// Mutate z.string.regex() in a best attempt to accommodate for regex flags when applyRegexFlags is true
-function stringifyRegExpWithFlags(regex, refs) {
-    if (!refs.applyRegexFlags || !regex.flags) {
-        return regex.source;
-    }
-    // Currently handled flags
-    const flags = {
-        i: regex.flags.includes("i"),
-        m: regex.flags.includes("m"),
-        s: regex.flags.includes("s"), // `.` matches newlines
-    };
-    // The general principle here is to step through each character, one at a time, applying mutations as flags require. We keep track when the current character is escaped, and when it's inside a group /like [this]/ or (also) a range like /[a-z]/. The following is fairly brittle imperative code; edit at your peril!
-    const source = flags.i ? regex.source.toLowerCase() : regex.source;
-    let pattern = "";
-    let isEscaped = false;
-    let inCharGroup = false;
-    let inCharRange = false;
-    for (let i = 0; i < source.length; i++) {
-        if (isEscaped) {
-            pattern += source[i];
-            isEscaped = false;
-            continue;
-        }
-        if (flags.i) {
-            if (inCharGroup) {
-                if (source[i].match(/[a-z]/)) {
-                    if (inCharRange) {
-                        pattern += source[i];
-                        pattern += `${source[i - 2]}-${source[i]}`.toUpperCase();
-                        inCharRange = false;
-                    }
-                    else if (source[i + 1] === "-" && source[i + 2]?.match(/[a-z]/)) {
-                        pattern += source[i];
-                        inCharRange = true;
-                    }
-                    else {
-                        pattern += `${source[i]}${source[i].toUpperCase()}`;
-                    }
-                    continue;
-                }
-            }
-            else if (source[i].match(/[a-z]/)) {
-                pattern += `[${source[i]}${source[i].toUpperCase()}]`;
-                continue;
-            }
-        }
-        if (flags.m) {
-            if (source[i] === "^") {
-                pattern += `(^|(?<=[\r\n]))`;
-                continue;
-            }
-            else if (source[i] === "$") {
-                pattern += `($|(?=[\r\n]))`;
-                continue;
-            }
-        }
-        if (flags.s && source[i] === ".") {
-            pattern += inCharGroup ? `${source[i]}\r\n` : `[${source[i]}\r\n]`;
-            continue;
-        }
-        pattern += source[i];
-        if (source[i] === "\\") {
-            isEscaped = true;
-        }
-        else if (inCharGroup && source[i] === "]") {
-            inCharGroup = false;
-        }
-        else if (!inCharGroup && source[i] === "[") {
-            inCharGroup = true;
-        }
-    }
-    try {
-        new RegExp(pattern);
-    }
-    catch {
-        console.warn(`Could not convert regex pattern at ${refs.currentPath.join("/")} to a flag-independent form! Falling back to the flag-ignorant source`);
-        return regex.source;
-    }
-    return pattern;
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/record.js
-
-
-
-
-
-function parseRecordDef(def, refs) {
-    if (refs.target === "openAi") {
-        console.warn("Warning: OpenAI may not support records in schemas! Try an array of key-value pairs instead.");
-    }
-    if (refs.target === "openApi3" &&
-        def.keyType?._def.typeName === v3.ZodFirstPartyTypeKind.ZodEnum) {
-        return {
-            type: "object",
-            required: def.keyType._def.values,
-            properties: def.keyType._def.values.reduce((acc, key) => ({
-                ...acc,
-                [key]: parseDef(def.valueType._def, {
-                    ...refs,
-                    currentPath: [...refs.currentPath, "properties", key],
-                }) ?? parseAnyDef(refs),
-            }), {}),
-            additionalProperties: refs.rejectedAdditionalProperties,
-        };
-    }
-    const schema = {
-        type: "object",
-        additionalProperties: parseDef(def.valueType._def, {
-            ...refs,
-            currentPath: [...refs.currentPath, "additionalProperties"],
-        }) ?? refs.allowedAdditionalProperties,
-    };
-    if (refs.target === "openApi3") {
-        return schema;
-    }
-    if (def.keyType?._def.typeName === v3.ZodFirstPartyTypeKind.ZodString &&
-        def.keyType._def.checks?.length) {
-        const { type, ...keyType } = parseStringDef(def.keyType._def, refs);
-        return {
-            ...schema,
-            propertyNames: keyType,
-        };
-    }
-    else if (def.keyType?._def.typeName === v3.ZodFirstPartyTypeKind.ZodEnum) {
-        return {
-            ...schema,
-            propertyNames: {
-                enum: def.keyType._def.values,
-            },
-        };
-    }
-    else if (def.keyType?._def.typeName === v3.ZodFirstPartyTypeKind.ZodBranded &&
-        def.keyType._def.type._def.typeName === v3.ZodFirstPartyTypeKind.ZodString &&
-        def.keyType._def.type._def.checks?.length) {
-        const { type, ...keyType } = parseBrandedDef(def.keyType._def, refs);
-        return {
-            ...schema,
-            propertyNames: keyType,
-        };
-    }
-    return schema;
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/map.js
-
-
-
-function parseMapDef(def, refs) {
-    if (refs.mapStrategy === "record") {
-        return parseRecordDef(def, refs);
-    }
-    const keys = parseDef(def.keyType._def, {
-        ...refs,
-        currentPath: [...refs.currentPath, "items", "items", "0"],
-    }) || parseAnyDef(refs);
-    const values = parseDef(def.valueType._def, {
-        ...refs,
-        currentPath: [...refs.currentPath, "items", "items", "1"],
-    }) || parseAnyDef(refs);
-    return {
-        type: "array",
-        maxItems: 125,
-        items: {
-            type: "array",
-            items: [keys, values],
-            minItems: 2,
-            maxItems: 2,
-        },
-    };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/nativeEnum.js
-function parseNativeEnumDef(def) {
-    const object = def.values;
-    const actualKeys = Object.keys(def.values).filter((key) => {
-        return typeof object[object[key]] !== "number";
-    });
-    const actualValues = actualKeys.map((key) => object[key]);
-    const parsedTypes = Array.from(new Set(actualValues.map((values) => typeof values)));
-    return {
-        type: parsedTypes.length === 1
-            ? parsedTypes[0] === "string"
-                ? "string"
-                : "number"
-            : ["string", "number"],
-        enum: actualValues,
-    };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/never.js
-
-function parseNeverDef(refs) {
-    return refs.target === "openAi"
-        ? undefined
-        : {
-            not: parseAnyDef({
-                ...refs,
-                currentPath: [...refs.currentPath, "not"],
-            }),
-        };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/null.js
-function parseNullDef(refs) {
-    return refs.target === "openApi3"
-        ? {
-            enum: ["null"],
-            nullable: true,
-        }
-        : {
-            type: "null",
-        };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/union.js
-
-const primitiveMappings = {
-    ZodString: "string",
-    ZodNumber: "number",
-    ZodBigInt: "integer",
-    ZodBoolean: "boolean",
-    ZodNull: "null",
-};
-function parseUnionDef(def, refs) {
-    if (refs.target === "openApi3")
-        return asAnyOf(def, refs);
-    const options = def.options instanceof Map ? Array.from(def.options.values()) : def.options;
-    // This blocks tries to look ahead a bit to produce nicer looking schemas with type array instead of anyOf.
-    if (options.every((x) => x._def.typeName in primitiveMappings &&
-        (!x._def.checks || !x._def.checks.length))) {
-        // all types in union are primitive and lack checks, so might as well squash into {type: [...]}
-        const types = options.reduce((types, x) => {
-            const type = primitiveMappings[x._def.typeName]; //Can be safely casted due to row 43
-            return type && !types.includes(type) ? [...types, type] : types;
-        }, []);
-        return {
-            type: types.length > 1 ? types : types[0],
-        };
-    }
-    else if (options.every((x) => x._def.typeName === "ZodLiteral" && !x.description)) {
-        // all options literals
-        const types = options.reduce((acc, x) => {
-            const type = typeof x._def.value;
-            switch (type) {
-                case "string":
-                case "number":
-                case "boolean":
-                    return [...acc, type];
-                case "bigint":
-                    return [...acc, "integer"];
-                case "object":
-                    if (x._def.value === null)
-                        return [...acc, "null"];
-                case "symbol":
-                case "undefined":
-                case "function":
-                default:
-                    return acc;
-            }
-        }, []);
-        if (types.length === options.length) {
-            // all the literals are primitive, as far as null can be considered primitive
-            const uniqueTypes = types.filter((x, i, a) => a.indexOf(x) === i);
-            return {
-                type: uniqueTypes.length > 1 ? uniqueTypes : uniqueTypes[0],
-                enum: options.reduce((acc, x) => {
-                    return acc.includes(x._def.value) ? acc : [...acc, x._def.value];
-                }, []),
-            };
-        }
-    }
-    else if (options.every((x) => x._def.typeName === "ZodEnum")) {
-        return {
-            type: "string",
-            enum: options.reduce((acc, x) => [
-                ...acc,
-                ...x._def.values.filter((x) => !acc.includes(x)),
-            ], []),
-        };
-    }
-    return asAnyOf(def, refs);
-}
-const asAnyOf = (def, refs) => {
-    const anyOf = (def.options instanceof Map
-        ? Array.from(def.options.values())
-        : def.options)
-        .map((x, i) => parseDef(x._def, {
-        ...refs,
-        currentPath: [...refs.currentPath, "anyOf", `${i}`],
-    }))
-        .filter((x) => !!x &&
-        (!refs.strictUnions ||
-            (typeof x === "object" && Object.keys(x).length > 0)));
-    return anyOf.length ? { anyOf } : undefined;
-};
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/nullable.js
-
-
-function parseNullableDef(def, refs) {
-    if (["ZodString", "ZodNumber", "ZodBigInt", "ZodBoolean", "ZodNull"].includes(def.innerType._def.typeName) &&
-        (!def.innerType._def.checks || !def.innerType._def.checks.length)) {
-        if (refs.target === "openApi3") {
-            return {
-                type: primitiveMappings[def.innerType._def.typeName],
-                nullable: true,
-            };
-        }
-        return {
-            type: [
-                primitiveMappings[def.innerType._def.typeName],
-                "null",
-            ],
-        };
-    }
-    if (refs.target === "openApi3") {
-        const base = parseDef(def.innerType._def, {
-            ...refs,
-            currentPath: [...refs.currentPath],
-        });
-        if (base && "$ref" in base)
-            return { allOf: [base], nullable: true };
-        return base && { ...base, nullable: true };
-    }
-    const base = parseDef(def.innerType._def, {
-        ...refs,
-        currentPath: [...refs.currentPath, "anyOf", "0"],
-    });
-    return base && { anyOf: [base, { type: "null" }] };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/number.js
-
-function parseNumberDef(def, refs) {
-    const res = {
-        type: "number",
-    };
-    if (!def.checks)
-        return res;
-    for (const check of def.checks) {
-        switch (check.kind) {
-            case "int":
-                res.type = "integer";
-                addErrorMessage(res, "type", check.message, refs);
-                break;
-            case "min":
-                if (refs.target === "jsonSchema7") {
-                    if (check.inclusive) {
-                        setResponseValueAndErrors(res, "minimum", check.value, check.message, refs);
-                    }
-                    else {
-                        setResponseValueAndErrors(res, "exclusiveMinimum", check.value, check.message, refs);
-                    }
-                }
-                else {
-                    if (!check.inclusive) {
-                        res.exclusiveMinimum = true;
-                    }
-                    setResponseValueAndErrors(res, "minimum", check.value, check.message, refs);
-                }
-                break;
-            case "max":
-                if (refs.target === "jsonSchema7") {
-                    if (check.inclusive) {
-                        setResponseValueAndErrors(res, "maximum", check.value, check.message, refs);
-                    }
-                    else {
-                        setResponseValueAndErrors(res, "exclusiveMaximum", check.value, check.message, refs);
-                    }
-                }
-                else {
-                    if (!check.inclusive) {
-                        res.exclusiveMaximum = true;
-                    }
-                    setResponseValueAndErrors(res, "maximum", check.value, check.message, refs);
-                }
-                break;
-            case "multipleOf":
-                setResponseValueAndErrors(res, "multipleOf", check.value, check.message, refs);
-                break;
-        }
-    }
-    return res;
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/object.js
-
-function parseObjectDef(def, refs) {
-    const forceOptionalIntoNullable = refs.target === "openAi";
-    const result = {
-        type: "object",
-        properties: {},
-    };
-    const required = [];
-    const shape = def.shape();
-    for (const propName in shape) {
-        let propDef = shape[propName];
-        if (propDef === undefined || propDef._def === undefined) {
-            continue;
-        }
-        let propOptional = safeIsOptional(propDef);
-        if (propOptional && forceOptionalIntoNullable) {
-            if (propDef._def.typeName === "ZodOptional") {
-                propDef = propDef._def.innerType;
-            }
-            if (!propDef.isNullable()) {
-                propDef = propDef.nullable();
-            }
-            propOptional = false;
-        }
-        const parsedDef = parseDef(propDef._def, {
-            ...refs,
-            currentPath: [...refs.currentPath, "properties", propName],
-            propertyPath: [...refs.currentPath, "properties", propName],
-        });
-        if (parsedDef === undefined) {
-            continue;
-        }
-        result.properties[propName] = parsedDef;
-        if (!propOptional) {
-            required.push(propName);
-        }
-    }
-    if (required.length) {
-        result.required = required;
-    }
-    const additionalProperties = decideAdditionalProperties(def, refs);
-    if (additionalProperties !== undefined) {
-        result.additionalProperties = additionalProperties;
-    }
-    return result;
-}
-function decideAdditionalProperties(def, refs) {
-    if (def.catchall._def.typeName !== "ZodNever") {
-        return parseDef(def.catchall._def, {
-            ...refs,
-            currentPath: [...refs.currentPath, "additionalProperties"],
-        });
-    }
-    switch (def.unknownKeys) {
-        case "passthrough":
-            return refs.allowedAdditionalProperties;
-        case "strict":
-            return refs.rejectedAdditionalProperties;
-        case "strip":
-            return refs.removeAdditionalStrategy === "strict"
-                ? refs.allowedAdditionalProperties
-                : refs.rejectedAdditionalProperties;
-    }
-}
-function safeIsOptional(schema) {
-    try {
-        return schema.isOptional();
-    }
-    catch {
-        return true;
-    }
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/optional.js
-
-
-const parseOptionalDef = (def, refs) => {
-    if (refs.currentPath.toString() === refs.propertyPath?.toString()) {
-        return parseDef(def.innerType._def, refs);
-    }
-    const innerSchema = parseDef(def.innerType._def, {
-        ...refs,
-        currentPath: [...refs.currentPath, "anyOf", "1"],
-    });
-    return innerSchema
-        ? {
-            anyOf: [
-                {
-                    not: parseAnyDef(refs),
-                },
-                innerSchema,
-            ],
-        }
-        : parseAnyDef(refs);
-};
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/pipeline.js
-
-const parsePipelineDef = (def, refs) => {
-    if (refs.pipeStrategy === "input") {
-        return parseDef(def.in._def, refs);
-    }
-    else if (refs.pipeStrategy === "output") {
-        return parseDef(def.out._def, refs);
-    }
-    const a = parseDef(def.in._def, {
-        ...refs,
-        currentPath: [...refs.currentPath, "allOf", "0"],
-    });
-    const b = parseDef(def.out._def, {
-        ...refs,
-        currentPath: [...refs.currentPath, "allOf", a ? "1" : "0"],
-    });
-    return {
-        allOf: [a, b].filter((x) => x !== undefined),
-    };
-};
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/promise.js
-
-function parsePromiseDef(def, refs) {
-    return parseDef(def.type._def, refs);
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/set.js
-
-
-function parseSetDef(def, refs) {
-    const items = parseDef(def.valueType._def, {
-        ...refs,
-        currentPath: [...refs.currentPath, "items"],
-    });
-    const schema = {
-        type: "array",
-        uniqueItems: true,
-        items,
-    };
-    if (def.minSize) {
-        setResponseValueAndErrors(schema, "minItems", def.minSize.value, def.minSize.message, refs);
-    }
-    if (def.maxSize) {
-        setResponseValueAndErrors(schema, "maxItems", def.maxSize.value, def.maxSize.message, refs);
-    }
-    return schema;
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/tuple.js
-
-function parseTupleDef(def, refs) {
-    if (def.rest) {
-        return {
-            type: "array",
-            minItems: def.items.length,
-            items: def.items
-                .map((x, i) => parseDef(x._def, {
-                ...refs,
-                currentPath: [...refs.currentPath, "items", `${i}`],
-            }))
-                .reduce((acc, x) => (x === undefined ? acc : [...acc, x]), []),
-            additionalItems: parseDef(def.rest._def, {
-                ...refs,
-                currentPath: [...refs.currentPath, "additionalItems"],
-            }),
-        };
-    }
-    else {
-        return {
-            type: "array",
-            minItems: def.items.length,
-            maxItems: def.items.length,
-            items: def.items
-                .map((x, i) => parseDef(x._def, {
-                ...refs,
-                currentPath: [...refs.currentPath, "items", `${i}`],
-            }))
-                .reduce((acc, x) => (x === undefined ? acc : [...acc, x]), []),
-        };
-    }
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/undefined.js
-
-function parseUndefinedDef(refs) {
-    return {
-        not: parseAnyDef(refs),
-    };
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/unknown.js
-
-function parseUnknownDef(refs) {
-    return parseAnyDef(refs);
-}
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parsers/readonly.js
-
-const parseReadonlyDef = (def, refs) => {
-    return parseDef(def.innerType._def, refs);
-};
-
-;// ./node_modules/zod-to-json-schema/dist/esm/selectParser.js
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const selectParser = (def, typeName, refs) => {
-    switch (typeName) {
-        case v3.ZodFirstPartyTypeKind.ZodString:
-            return parseStringDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodNumber:
-            return parseNumberDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodObject:
-            return parseObjectDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodBigInt:
-            return parseBigintDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodBoolean:
-            return parseBooleanDef();
-        case v3.ZodFirstPartyTypeKind.ZodDate:
-            return parseDateDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodUndefined:
-            return parseUndefinedDef(refs);
-        case v3.ZodFirstPartyTypeKind.ZodNull:
-            return parseNullDef(refs);
-        case v3.ZodFirstPartyTypeKind.ZodArray:
-            return parseArrayDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodUnion:
-        case v3.ZodFirstPartyTypeKind.ZodDiscriminatedUnion:
-            return parseUnionDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodIntersection:
-            return parseIntersectionDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodTuple:
-            return parseTupleDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodRecord:
-            return parseRecordDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodLiteral:
-            return parseLiteralDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodEnum:
-            return parseEnumDef(def);
-        case v3.ZodFirstPartyTypeKind.ZodNativeEnum:
-            return parseNativeEnumDef(def);
-        case v3.ZodFirstPartyTypeKind.ZodNullable:
-            return parseNullableDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodOptional:
-            return parseOptionalDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodMap:
-            return parseMapDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodSet:
-            return parseSetDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodLazy:
-            return () => def.getter()._def;
-        case v3.ZodFirstPartyTypeKind.ZodPromise:
-            return parsePromiseDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodNaN:
-        case v3.ZodFirstPartyTypeKind.ZodNever:
-            return parseNeverDef(refs);
-        case v3.ZodFirstPartyTypeKind.ZodEffects:
-            return parseEffectsDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodAny:
-            return parseAnyDef(refs);
-        case v3.ZodFirstPartyTypeKind.ZodUnknown:
-            return parseUnknownDef(refs);
-        case v3.ZodFirstPartyTypeKind.ZodDefault:
-            return parseDefaultDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodBranded:
-            return parseBrandedDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodReadonly:
-            return parseReadonlyDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodCatch:
-            return parseCatchDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodPipeline:
-            return parsePipelineDef(def, refs);
-        case v3.ZodFirstPartyTypeKind.ZodFunction:
-        case v3.ZodFirstPartyTypeKind.ZodVoid:
-        case v3.ZodFirstPartyTypeKind.ZodSymbol:
-            return undefined;
-        default:
-            return ((_) => undefined)(typeName);
-    }
-};
-
-;// ./node_modules/zod-to-json-schema/dist/esm/parseDef.js
-
-
-
-
-function parseDef(def, refs, forceResolution = false) {
-    const seenItem = refs.seen.get(def);
-    if (refs.override) {
-        const overrideResult = refs.override?.(def, refs, seenItem, forceResolution);
-        if (overrideResult !== ignoreOverride) {
-            return overrideResult;
-        }
-    }
-    if (seenItem && !forceResolution) {
-        const seenSchema = get$ref(seenItem, refs);
-        if (seenSchema !== undefined) {
-            return seenSchema;
-        }
-    }
-    const newItem = { def, path: refs.currentPath, jsonSchema: undefined };
-    refs.seen.set(def, newItem);
-    const jsonSchemaOrGetter = selectParser(def, def.typeName, refs);
-    // If the return was a function, then the inner definition needs to be extracted before a call to parseDef (recursive)
-    const jsonSchema = typeof jsonSchemaOrGetter === "function"
-        ? parseDef(jsonSchemaOrGetter(), refs)
-        : jsonSchemaOrGetter;
-    if (jsonSchema) {
-        addMeta(def, refs, jsonSchema);
-    }
-    if (refs.postProcess) {
-        const postProcessResult = refs.postProcess(jsonSchema, def, refs);
-        newItem.jsonSchema = jsonSchema;
-        return postProcessResult;
-    }
-    newItem.jsonSchema = jsonSchema;
-    return jsonSchema;
-}
-const get$ref = (item, refs) => {
-    switch (refs.$refStrategy) {
-        case "root":
-            return { $ref: item.path.join("/") };
-        case "relative":
-            return { $ref: getRelativePath(refs.currentPath, item.path) };
-        case "none":
-        case "seen": {
-            if (item.path.length < refs.currentPath.length &&
-                item.path.every((value, index) => refs.currentPath[index] === value)) {
-                console.warn(`Recursive reference detected at ${refs.currentPath.join("/")}! Defaulting to any`);
-                return parseAnyDef(refs);
-            }
-            return refs.$refStrategy === "seen" ? parseAnyDef(refs) : undefined;
-        }
-    }
-};
-const addMeta = (def, refs, jsonSchema) => {
-    if (def.description) {
-        jsonSchema.description = def.description;
-        if (refs.markdownDescription) {
-            jsonSchema.markdownDescription = def.description;
-        }
-    }
-    return jsonSchema;
-};
-
-;// ./node_modules/zod-to-json-schema/dist/esm/zodToJsonSchema.js
-
-
-
-const zodToJsonSchema = (schema, options) => {
-    const refs = getRefs(options);
-    let definitions = typeof options === "object" && options.definitions
-        ? Object.entries(options.definitions).reduce((acc, [name, schema]) => ({
-            ...acc,
-            [name]: parseDef(schema._def, {
-                ...refs,
-                currentPath: [...refs.basePath, refs.definitionPath, name],
-            }, true) ?? parseAnyDef(refs),
-        }), {})
-        : undefined;
-    const name = typeof options === "string"
-        ? options
-        : options?.nameStrategy === "title"
-            ? undefined
-            : options?.name;
-    const main = parseDef(schema._def, name === undefined
-        ? refs
-        : {
-            ...refs,
-            currentPath: [...refs.basePath, refs.definitionPath, name],
-        }, false) ?? parseAnyDef(refs);
-    const title = typeof options === "object" &&
-        options.name !== undefined &&
-        options.nameStrategy === "title"
-        ? options.name
-        : undefined;
-    if (title !== undefined) {
-        main.title = title;
-    }
-    if (refs.flags.hasReferencedOpenAiAnyType) {
-        if (!definitions) {
-            definitions = {};
-        }
-        if (!definitions[refs.openAiAnyTypeName]) {
-            definitions[refs.openAiAnyTypeName] = {
-                // Skipping "object" as no properties can be defined and additionalProperties must be "false"
-                type: ["string", "number", "integer", "boolean", "array", "null"],
-                items: {
-                    $ref: refs.$refStrategy === "relative"
-                        ? "1"
-                        : [
-                            ...refs.basePath,
-                            refs.definitionPath,
-                            refs.openAiAnyTypeName,
-                        ].join("/"),
-                },
-            };
-        }
-    }
-    const combined = name === undefined
-        ? definitions
-            ? {
-                ...main,
-                [refs.definitionPath]: definitions,
-            }
-            : main
-        : {
-            $ref: [
-                ...(refs.$refStrategy === "relative" ? [] : refs.basePath),
-                refs.definitionPath,
-                name,
-            ].join("/"),
-            [refs.definitionPath]: {
-                ...definitions,
-                [name]: main,
-            },
-        };
-    if (refs.target === "jsonSchema7") {
-        combined.$schema = "http://json-schema.org/draft-07/schema#";
-    }
-    else if (refs.target === "jsonSchema2019-09" || refs.target === "openAi") {
-        combined.$schema = "https://json-schema.org/draft/2019-09/schema#";
-    }
-    if (refs.target === "openAi" &&
-        ("anyOf" in combined ||
-            "oneOf" in combined ||
-            "allOf" in combined ||
-            ("type" in combined && Array.isArray(combined.type)))) {
-        console.warn("Warning: OpenAI may not support schemas with unions as roots! Try wrapping it in an object property.");
-    }
-    return combined;
-};
-
-
-;// ./node_modules/zod-to-json-schema/dist/esm/index.js
-/* unused harmony import specifier */ var esm_zodToJsonSchema;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* harmony default export */ const dist_esm = ((/* unused pure expression or super */ null && (esm_zodToJsonSchema)));
 
 // EXTERNAL MODULE: ./node_modules/zod/v4/classic/external.js + 74 modules
 var external = __webpack_require__(2069);
@@ -1919,74 +388,279 @@ const BulletList = ({
   ] });
 };
 
+;// ./src/hooks/useContainerScale.ts
+
+
+function useContainerScale(refCanvasW = 1920, refCanvasH = 1080, minScaleFloor = 0.25) {
+  const containerRef = (0,react.useRef)(null);
+  const [dimensions, setDimensions] = (0,react.useState)({ width: refCanvasW, height: refCanvasH });
+  (0,react.useEffect)(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      if (!entries || entries.length === 0) return;
+      const { width, height } = entries[0].contentRect;
+      if (width > 0 && height > 0) {
+        setDimensions({ width, height });
+      }
+    });
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+  const scaleState = (0,react.useMemo)(() => {
+    const { width, height } = dimensions;
+    const scaleX = width / refCanvasW;
+    const scaleY = height / refCanvasH;
+    const scale = Math.min(scaleX, scaleY);
+    const overflow = scale < minScaleFloor;
+    return {
+      width,
+      height,
+      scaleX,
+      scaleY,
+      scale,
+      overflow
+    };
+  }, [dimensions, refCanvasW, refCanvasH, minScaleFloor]);
+  return {
+    ref: containerRef,
+    ...scaleState
+  };
+}
+
 ;// ./src/components/StepFlow.tsx
+
 
 
 
 
 const StepFlowSchema = external.object({
   title: external.string(),
-  steps: external.array(external.string()),
-  accentColor: external.string().optional()
+  steps: external.array(
+    external.object({
+      label: external.string(),
+      description: external.string().optional()
+    })
+  ),
+  accentColor: external.string().optional(),
+  layout: external["enum"](["horizontal", "vertical"]).optional()
 });
 const StepFlow = ({
   title,
   steps,
-  accentColor = "#38BDF8"
+  accentColor = "#38BDF8",
+  layout = "horizontal"
 }) => {
   const frame = (0,esm.useCurrentFrame)();
-  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { className: "flex flex-col h-full w-full items-center justify-center p-16", children: [
-    /* @__PURE__ */ (0,jsx_runtime.jsx)("h2", { className: "text-5xl font-black text-white mb-16 tracking-tight text-center", children: title }),
-    /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { className: "flex flex-row justify-between w-full max-w-5xl items-center relative", children: [
-      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { className: "absolute top-1/2 left-0 right-0 h-1 bg-slate-800 -translate-y-1/2 -z-10" }),
-      /* @__PURE__ */ (0,jsx_runtime.jsx)(
-        "div",
-        {
-          className: "absolute top-1/2 left-0 h-1 -translate-y-1/2 -z-10",
-          style: {
-            backgroundColor: accentColor,
-            width: `${(0,esm.interpolate)(frame, [10, 60], [0, 100], { extrapolateRight: "clamp", extrapolateLeft: "clamp" })}%`,
-            boxShadow: `0 0 10px ${accentColor}`
+  const { fps } = (0,esm.useVideoConfig)();
+  const { ref, scale } = useContainerScale();
+  const isVertical = layout === "vertical";
+  const stepSprings = steps.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - i * 15,
+      fps,
+      config: { damping: 14, stiffness: 120 },
+      durationInFrames: 30
+    })
+  );
+  const connectorProgress = (0,esm.interpolate)(
+    frame,
+    [10, 10 + steps.length * 15],
+    [0, 100],
+    { extrapolateRight: "clamp", extrapolateLeft: "clamp" }
+  );
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      ref,
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        padding: "60px 80px",
+        boxSizing: "border-box"
+      },
+      children: [
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontFamily: "Inter, sans-serif",
+              fontSize: "48px",
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              marginBottom: isVertical ? "40px" : "60px",
+              textAlign: "center"
+            },
+            children: title
           }
-        }
-      ),
-      steps.map((step, index) => {
-        const itemFrame = frame - index * 15;
-        const opacity = (0,esm.interpolate)(itemFrame, [0, 15], [0, 1], {
-          easing: esm.Easing.bezier(0.16, 1, 0.3, 1),
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp"
-        });
-        const scale = (0,esm.interpolate)(itemFrame, [0, 15], [0.5, 1], {
-          easing: esm.Easing.bezier(0.16, 1, 0.3, 1),
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp"
-        });
-        return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)(
           "div",
           {
             style: {
-              opacity,
-              transform: `scale(${scale})`
+              position: "relative",
+              display: "flex",
+              flexDirection: isVertical ? "column" : "row",
+              justifyContent: "space-between",
+              alignItems: isVertical ? "flex-start" : "center",
+              width: "100%",
+              maxWidth: "1100px",
+              flex: 1,
+              transform: `scale(${scale})`,
+              transformOrigin: "center center",
+              paddingLeft: isVertical ? "40px" : 0
             },
-            className: "flex flex-col items-center gap-4 w-48 text-center",
             children: [
-              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              isVertical ? /* @__PURE__ */ (0,jsx_runtime.jsx)(
                 "div",
                 {
-                  className: "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black text-slate-900 bg-white border-4",
-                  style: { borderColor: accentColor, boxShadow: `0 0 20px ${accentColor}88` },
-                  children: index + 1
+                  style: {
+                    position: "absolute",
+                    left: "28px",
+                    top: 0,
+                    bottom: 0,
+                    width: "4px",
+                    backgroundColor: "#1e293b",
+                    zIndex: -1
+                  }
+                }
+              ) : /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "div",
+                {
+                  style: {
+                    position: "absolute",
+                    top: "32px",
+                    left: 0,
+                    right: 0,
+                    height: "4px",
+                    backgroundColor: "#1e293b",
+                    zIndex: -1
+                  }
                 }
               ),
-              /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { className: "text-xl font-bold text-slate-200", children: step })
+              isVertical ? /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "div",
+                {
+                  style: {
+                    position: "absolute",
+                    left: "28px",
+                    top: 0,
+                    height: `${connectorProgress}%`,
+                    width: "4px",
+                    backgroundColor: accentColor,
+                    boxShadow: `0 0 10px ${accentColor}`,
+                    zIndex: -1
+                  }
+                }
+              ) : /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "div",
+                {
+                  style: {
+                    position: "absolute",
+                    top: "32px",
+                    left: 0,
+                    width: `${connectorProgress}%`,
+                    height: "4px",
+                    backgroundColor: accentColor,
+                    boxShadow: `0 0 10px ${accentColor}`,
+                    zIndex: -1
+                  }
+                }
+              ),
+              steps.map((step, index) => {
+                const sp = stepSprings[index];
+                const opacity = sp;
+                const scaleVal = (0,esm.interpolate)(sp, [0, 1], [0.6, 1]);
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                  "div",
+                  {
+                    style: {
+                      opacity,
+                      transform: `scale(${scaleVal})`,
+                      display: "flex",
+                      flexDirection: isVertical ? "row" : "column",
+                      alignItems: isVertical ? "center" : "center",
+                      gap: isVertical ? "24px" : "16px",
+                      textAlign: isVertical ? "left" : "center",
+                      width: isVertical ? "100%" : `${100 / steps.length}%`,
+                      paddingBottom: isVertical ? "30px" : 0
+                    },
+                    children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "div",
+                        {
+                          style: {
+                            width: "60px",
+                            height: "60px",
+                            borderRadius: "50%",
+                            backgroundColor: "#ffffff",
+                            border: `4px solid ${accentColor}`,
+                            boxShadow: `0 0 20px ${accentColor}88`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "24px",
+                            fontWeight: 900,
+                            color: "#0f172a",
+                            flexShrink: 0
+                          },
+                          children: index + 1
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                        "div",
+                        {
+                          style: {
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "4px",
+                            maxWidth: isVertical ? "800px" : "180px"
+                          },
+                          children: [
+                            /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                              "span",
+                              {
+                                style: {
+                                  fontSize: "20px",
+                                  fontWeight: "bold",
+                                  color: "#f1f5f9",
+                                  fontFamily: "Inter, sans-serif"
+                                },
+                                children: step.label
+                              }
+                            ),
+                            step.description && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                              "span",
+                              {
+                                style: {
+                                  fontSize: "14px",
+                                  color: "#94a3b8",
+                                  fontFamily: "Inter, sans-serif",
+                                  lineHeight: 1.4
+                                },
+                                children: step.description
+                              }
+                            )
+                          ]
+                        }
+                      )
+                    ]
+                  },
+                  index
+                );
+              })
             ]
-          },
-          index
-        );
-      })
-    ] })
-  ] });
+          }
+        )
+      ]
+    }
+  );
 };
 
 ;// ./src/components/StatCallout.tsx
@@ -4077,12 +2751,13 @@ const BarChart = ({
 
 
 
+
 const PacketNodeSchema = external.object({
   id: external.string(),
   label: external.string(),
   x: external.number(),
   y: external.number(),
-  type: external["enum"](["client", "server", "database", "router", "cdn"]).optional(),
+  type: external["enum"](["client", "server", "database", "router", "cdn", "queue", "broker"]).optional(),
   sublabel: external.string().optional()
 });
 const PacketEdgeSchema = external.object({
@@ -4107,14 +2782,18 @@ const TYPE_COLOR = {
   server: "#10b981",
   database: "#f59e0b",
   router: "#22d3ee",
-  cdn: "#8b5cf6"
+  cdn: "#8b5cf6",
+  queue: "#f472b6",
+  broker: "#a78bfa"
 };
 const TYPE_SYMBOL = {
   client: "\u25C9",
   server: "\u25A3",
   database: "\u2B1F",
   router: "\u25C8",
-  cdn: "\u25CE"
+  cdn: "\u25CE",
+  queue: "\u25A4",
+  broker: "\u29C7"
 };
 const PacketFlow = ({
   title,
@@ -4124,230 +2803,240 @@ const PacketFlow = ({
   packetInterval = 18
 }) => {
   const frame = (0,esm.useCurrentFrame)();
+  const { ref, scale } = useContainerScale();
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
   const titleOpacity = (0,esm.interpolate)(frame, [0, 20], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp"
   });
-  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { position: "relative", width: "100%", height: "100%", overflow: "hidden" }, children: [
-    title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
-      "div",
-      {
-        style: {
-          position: "absolute",
-          top: 36,
-          left: 0,
-          right: 0,
-          textAlign: "center",
-          zIndex: 2,
-          opacity: titleOpacity
-        },
-        children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
-          "h2",
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      ref,
+      style: { position: "relative", width: "100%", height: "100%", overflow: "hidden" },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "div",
           {
             style: {
-              color: "#f1f5f9",
-              fontSize: 52,
-              fontWeight: 800,
-              margin: 0,
-              letterSpacing: "-0.02em"
+              position: "absolute",
+              top: 36,
+              left: 0,
+              right: 0,
+              textAlign: "center",
+              zIndex: 2,
+              opacity: titleOpacity
             },
-            children: title
+            children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+              "h2",
+              {
+                style: {
+                  color: "#f1f5f9",
+                  fontSize: 52,
+                  fontWeight: 800,
+                  margin: 0,
+                  letterSpacing: "-0.02em"
+                },
+                children: title
+              }
+            )
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "svg",
+          {
+            style: {
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              overflow: "visible",
+              transform: `scale(${scale})`,
+              transformOrigin: "center center"
+            },
+            viewBox: `0 0 ${PacketFlow_LW} ${PacketFlow_LH}`,
+            preserveAspectRatio: "xMidYMid meet",
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)("defs", { children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "pf-glow", x: "-60%", y: "-60%", width: "220%", height: "220%", children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "12", result: "coloredBlur" }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "coloredBlur" }),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "pf-node-shadow", x: "-40%", y: "-40%", width: "180%", height: "180%", children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "7", result: "coloredBlur" }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "coloredBlur" }),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+                  ] })
+                ] })
+              ] }),
+              edges.map((edge, ei) => {
+                const from = nodeMap.get(edge.from);
+                const to = nodeMap.get(edge.to);
+                if (!from || !to) return null;
+                const x1 = from.x / 100 * PacketFlow_LW;
+                const y1 = from.y / 100 * PacketFlow_LH;
+                const x2 = to.x / 100 * PacketFlow_LW;
+                const y2 = to.y / 100 * PacketFlow_LH;
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const len = Math.sqrt(dx * dx + dy * dy);
+                const edgeColor = edge.color || accentColor;
+                const edgeDelay = ei * 10;
+                const lineProgress = (0,esm.interpolate)(frame, [edgeDelay, edgeDelay + 28], [0, 1], {
+                  easing: esm.Easing.out(esm.Easing.cubic),
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp"
+                });
+                const packets = Array.from({ length: PACKETS_PER_EDGE }, (_, pi) => {
+                  const pStart = edgeDelay + 35 + pi * packetInterval;
+                  const t = (0,esm.interpolate)(frame, [pStart, pStart + PACKET_DURATION], [0, 1], {
+                    easing: esm.Easing.inOut(esm.Easing.quad),
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp"
+                  });
+                  if (t <= 0 || t >= 1) return null;
+                  return { t, key: pi, color: edgeColor };
+                });
+                const labelReveal = (0,esm.interpolate)(frame, [edgeDelay + 15, edgeDelay + 30], [0, 1], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp"
+                });
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "line",
+                    {
+                      x1,
+                      y1,
+                      x2,
+                      y2,
+                      stroke: "#1e293b",
+                      strokeWidth: 6,
+                      strokeLinecap: "round"
+                    }
+                  ),
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "line",
+                    {
+                      x1,
+                      y1,
+                      x2,
+                      y2,
+                      stroke: edgeColor,
+                      strokeWidth: 3,
+                      strokeLinecap: "round",
+                      strokeDasharray: len,
+                      strokeDashoffset: len * (1 - lineProgress),
+                      opacity: 0.55
+                    }
+                  ),
+                  packets.map((p) => {
+                    if (!p) return null;
+                    const px = x1 + dx * p.t;
+                    const py = y1 + dy * p.t;
+                    return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { filter: "url(#pf-glow)", children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 16, fill: p.color, opacity: 0.3 }),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 9, fill: p.color }),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 4, fill: "white", opacity: 0.9 })
+                    ] }, `pkt-${ei}-${p.key}`);
+                  }),
+                  edge.label && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "text",
+                    {
+                      x: (x1 + x2) / 2,
+                      y: (y1 + y2) / 2 - 22,
+                      fill: edgeColor,
+                      fontSize: 28,
+                      fontWeight: "600",
+                      textAnchor: "middle",
+                      opacity: labelReveal,
+                      style: { fontFamily: "Inter, sans-serif" },
+                      children: edge.label
+                    }
+                  )
+                ] }, `edge-${ei}`);
+              }),
+              nodes.map((node, ni) => {
+                const cx = node.x / 100 * PacketFlow_LW;
+                const cy = node.y / 100 * PacketFlow_LH;
+                const delay = ni * 12;
+                const color = TYPE_COLOR[node.type || "server"] || accentColor;
+                const symbol = TYPE_SYMBOL[node.type || "server"] || "\u25C9";
+                const scaleVal = (0,esm.interpolate)(frame, [delay, delay + 20], [0, 1], {
+                  easing: esm.Easing.bezier(0.34, 1.56, 0.64, 1),
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp"
+                });
+                const labelOpacity = (0,esm.interpolate)(frame, [delay + 10, delay + 25], [0, 1], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp"
+                });
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${cx},${cy}) scale(${scaleVal})`, children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { r: 66, fill: "none", stroke: color, strokeWidth: 1.5, opacity: 0.2 }),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "circle",
+                      {
+                        r: 50,
+                        fill: "#0f1729",
+                        stroke: color,
+                        strokeWidth: 3,
+                        filter: "url(#pf-node-shadow)"
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { r: 46, fill: `${color}14` }),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        y: 14,
+                        textAnchor: "middle",
+                        fill: color,
+                        fontSize: 38,
+                        fontWeight: "900",
+                        style: { fontFamily: "Inter, sans-serif" },
+                        children: symbol
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "text",
+                    {
+                      x: cx,
+                      y: cy + 70,
+                      textAnchor: "middle",
+                      fill: "white",
+                      fontSize: 30,
+                      fontWeight: 700,
+                      opacity: labelOpacity,
+                      style: { fontFamily: "Inter, sans-serif" },
+                      children: node.label
+                    }
+                  ),
+                  node.sublabel && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "text",
+                    {
+                      x: cx,
+                      y: cy + 102,
+                      textAnchor: "middle",
+                      fill: "#64748b",
+                      fontSize: 22,
+                      fontWeight: 500,
+                      opacity: labelOpacity,
+                      style: { fontFamily: "Inter, sans-serif" },
+                      children: node.sublabel
+                    }
+                  )
+                ] }, `node-${ni}`);
+              })
+            ]
           }
         )
-      }
-    ),
-    /* @__PURE__ */ (0,jsx_runtime.jsxs)(
-      "svg",
-      {
-        style: {
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          overflow: "visible"
-        },
-        viewBox: `0 0 ${PacketFlow_LW} ${PacketFlow_LH}`,
-        preserveAspectRatio: "none",
-        children: [
-          /* @__PURE__ */ (0,jsx_runtime.jsxs)("defs", { children: [
-            /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "pf-glow", x: "-60%", y: "-60%", width: "220%", height: "220%", children: [
-              /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "12", result: "coloredBlur" }),
-              /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
-                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "coloredBlur" }),
-                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
-              ] })
-            ] }),
-            /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "pf-node-shadow", x: "-40%", y: "-40%", width: "180%", height: "180%", children: [
-              /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "7", result: "coloredBlur" }),
-              /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
-                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "coloredBlur" }),
-                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
-              ] })
-            ] })
-          ] }),
-          edges.map((edge, ei) => {
-            const from = nodeMap.get(edge.from);
-            const to = nodeMap.get(edge.to);
-            if (!from || !to) return null;
-            const x1 = from.x / 100 * PacketFlow_LW;
-            const y1 = from.y / 100 * PacketFlow_LH;
-            const x2 = to.x / 100 * PacketFlow_LW;
-            const y2 = to.y / 100 * PacketFlow_LH;
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const len = Math.sqrt(dx * dx + dy * dy);
-            const edgeColor = edge.color || accentColor;
-            const edgeDelay = ei * 10;
-            const lineProgress = (0,esm.interpolate)(frame, [edgeDelay, edgeDelay + 28], [0, 1], {
-              easing: esm.Easing.out(esm.Easing.cubic),
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp"
-            });
-            const packets = Array.from({ length: PACKETS_PER_EDGE }, (_, pi) => {
-              const pStart = edgeDelay + 35 + pi * packetInterval;
-              const t = (0,esm.interpolate)(frame, [pStart, pStart + PACKET_DURATION], [0, 1], {
-                easing: esm.Easing.inOut(esm.Easing.quad),
-                extrapolateLeft: "clamp",
-                extrapolateRight: "clamp"
-              });
-              if (t <= 0 || t >= 1) return null;
-              return { t, key: pi, color: edgeColor };
-            });
-            const labelReveal = (0,esm.interpolate)(frame, [edgeDelay + 15, edgeDelay + 30], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp"
-            });
-            return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
-              /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                "line",
-                {
-                  x1,
-                  y1,
-                  x2,
-                  y2,
-                  stroke: "#1e293b",
-                  strokeWidth: 6,
-                  strokeLinecap: "round"
-                }
-              ),
-              /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                "line",
-                {
-                  x1,
-                  y1,
-                  x2,
-                  y2,
-                  stroke: edgeColor,
-                  strokeWidth: 3,
-                  strokeLinecap: "round",
-                  strokeDasharray: len,
-                  strokeDashoffset: len * (1 - lineProgress),
-                  opacity: 0.55
-                }
-              ),
-              packets.map((p) => {
-                if (!p) return null;
-                const px = x1 + dx * p.t;
-                const py = y1 + dy * p.t;
-                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { filter: "url(#pf-glow)", children: [
-                  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 16, fill: p.color, opacity: 0.3 }),
-                  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 9, fill: p.color }),
-                  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 4, fill: "white", opacity: 0.9 })
-                ] }, `pkt-${ei}-${p.key}`);
-              }),
-              edge.label && /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                "text",
-                {
-                  x: (x1 + x2) / 2,
-                  y: (y1 + y2) / 2 - 22,
-                  fill: edgeColor,
-                  fontSize: 28,
-                  fontWeight: "600",
-                  textAnchor: "middle",
-                  opacity: labelReveal,
-                  style: { fontFamily: "Inter, sans-serif" },
-                  children: edge.label
-                }
-              )
-            ] }, `edge-${ei}`);
-          }),
-          nodes.map((node, ni) => {
-            const cx = node.x / 100 * PacketFlow_LW;
-            const cy = node.y / 100 * PacketFlow_LH;
-            const delay = ni * 12;
-            const color = TYPE_COLOR[node.type || "server"] || accentColor;
-            const symbol = TYPE_SYMBOL[node.type || "server"] || "\u25C9";
-            const scale = (0,esm.interpolate)(frame, [delay, delay + 20], [0, 1], {
-              easing: esm.Easing.bezier(0.34, 1.56, 0.64, 1),
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp"
-            });
-            const labelOpacity = (0,esm.interpolate)(frame, [delay + 10, delay + 25], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp"
-            });
-            return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
-              /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${cx},${cy}) scale(${scale})`, children: [
-                /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { r: 66, fill: "none", stroke: color, strokeWidth: 1.5, opacity: 0.2 }),
-                /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                  "circle",
-                  {
-                    r: 50,
-                    fill: "#0f172a",
-                    stroke: color,
-                    strokeWidth: 3,
-                    filter: "url(#pf-node-shadow)"
-                  }
-                ),
-                /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { r: 46, fill: `${color}14` }),
-                /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                  "text",
-                  {
-                    y: 14,
-                    textAnchor: "middle",
-                    fill: color,
-                    fontSize: 38,
-                    fontWeight: "900",
-                    style: { fontFamily: "Inter, sans-serif" },
-                    children: symbol
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                "text",
-                {
-                  x: cx,
-                  y: cy + 70,
-                  textAnchor: "middle",
-                  fill: "white",
-                  fontSize: 30,
-                  fontWeight: "700",
-                  opacity: labelOpacity,
-                  style: { fontFamily: "Inter, sans-serif" },
-                  children: node.label
-                }
-              ),
-              node.sublabel && /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                "text",
-                {
-                  x: cx,
-                  y: cy + 102,
-                  textAnchor: "middle",
-                  fill: "#64748b",
-                  fontSize: 22,
-                  fontWeight: "500",
-                  opacity: labelOpacity,
-                  style: { fontFamily: "Inter, sans-serif" },
-                  children: node.sublabel
-                }
-              )
-            ] }, `node-${ni}`);
-          })
-        ]
-      }
-    )
-  ] });
+      ]
+    }
+  );
 };
 
 ;// ./src/components/HttpExchange.tsx
@@ -4587,18 +3276,17 @@ const HttpExchange = ({
 
 
 
+
 const HashRingSchema = external.object({
   title: external.string().optional(),
-  /** Physical server names — each gets a color from the palette. */
   servers: external.array(external.string()).min(2).max(6),
-  /** Virtual-node count per server (controls how evenly keys distribute). */
   virtualNodesPerServer: external.number().min(2).max(64).optional(),
-  /** Optional lookup keys to highlight — they sweep around the ring to the next server clockwise. */
   lookupKeys: external.array(external.string()).optional(),
-  /** Total tick marks around the ring (key-space granularity). */
   ticks: external.number().min(24).max(360).optional(),
   accentColor: external.string().optional(),
-  showLegend: external.boolean().optional()
+  showLegend: external.boolean().optional(),
+  centerLabel: external.string().optional(),
+  centerSubLabel: external.string().optional()
 });
 const SERVER_PALETTE = [
   "#38BDF8",
@@ -4621,13 +3309,16 @@ const HashRing = ({
   lookupKeys = [],
   ticks = 96,
   accentColor = "#38BDF8",
-  showLegend = true
+  showLegend = true,
+  centerLabel = "HASH RING",
+  centerSubLabel = "0 ... 2\xB3\xB2 \u2212 1"
 }) => {
   const frame = (0,esm.useCurrentFrame)();
   const { fps } = (0,esm.useVideoConfig)();
-  const cx = 1180;
+  const { ref, scale } = useContainerScale();
+  const cx = 960;
   const cy = 540;
-  const radius = 360;
+  const radius = 300;
   const ringStroke = 2;
   const rng = (seed) => {
     let s = seed;
@@ -4648,8 +3339,7 @@ const HashRing = ({
       vnodes.push({
         serverIdx: sIdx,
         angle: rand() * Math.PI * 2,
-        // Offset slightly inside/outside ring for visual stacking
-        r: radius + (v % 2 === 0 ? -22 : 22)
+        r: radius + (v % 2 === 0 ? -18 : 18)
       });
     }
   });
@@ -4680,6 +3370,7 @@ const HashRing = ({
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
     "div",
     {
+      ref,
       style: {
         width: "100%",
         height: "100%",
@@ -4700,7 +3391,8 @@ const HashRing = ({
               letterSpacing: "-0.02em",
               margin: 0,
               marginBottom: 12,
-              opacity: titleOpacity
+              opacity: titleOpacity,
+              textAlign: "center"
             },
             children: title
           }
@@ -4712,7 +3404,9 @@ const HashRing = ({
               color: "#94a3b8",
               fontSize: 18,
               margin: 0,
-              opacity: titleOpacity
+              opacity: titleOpacity,
+              textAlign: "center",
+              marginBottom: 12
             },
             children: "Keys and servers are hashed onto the ring; each key walks clockwise to the next server."
           }
@@ -4724,7 +3418,12 @@ const HashRing = ({
               width: "100%",
               height: "100%",
               viewBox: "0 0 1920 1080",
-              style: { position: "absolute", inset: 0 },
+              style: {
+                position: "absolute",
+                inset: 0,
+                transform: `scale(${scale})`,
+                transformOrigin: "center center"
+              },
               children: [
                 /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "hash-ring-glow", x: "-20%", y: "-20%", width: "140%", height: "140%", children: [
                   /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "4" }),
@@ -4788,7 +3487,7 @@ const HashRing = ({
                     fontSize: 16,
                     fontFamily: "Fira Code, monospace",
                     opacity: titleOpacity,
-                    children: "HASH RING"
+                    children: centerLabel
                   }
                 ),
                 /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -4801,7 +3500,7 @@ const HashRing = ({
                     fontSize: 14,
                     fontFamily: "Fira Code, monospace",
                     opacity: titleOpacity,
-                    children: "0 ... 2\xB3\xB2 \u2212 1"
+                    children: centerSubLabel
                   }
                 ),
                 vnodes.map((v, i) => {
@@ -4836,11 +3535,11 @@ const HashRing = ({
                   const color = SERVER_PALETTE[sIdx % SERVER_PALETTE.length];
                   const sp = serverSprings[sIdx];
                   const labelOpacity = sp;
-                  const scale = (0,esm.interpolate)(sp, [0, 1], [0.7, 1]);
+                  const scaleVal = (0,esm.interpolate)(sp, [0, 1], [0.7, 1]);
                   return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
                     "g",
                     {
-                      transform: `translate(${x}, ${y}) scale(${scale})`,
+                      transform: `translate(${x}, ${y}) scale(${scaleVal})`,
                       style: { opacity: labelOpacity, transformOrigin: `${x}px ${y}px` },
                       children: [
                         /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -4987,8 +3686,8 @@ const HashRing = ({
             {
               style: {
                 position: "absolute",
-                left: 80,
-                top: 160,
+                left: 0,
+                top: 0,
                 display: "flex",
                 flexDirection: "column",
                 gap: 12,
@@ -5066,29 +3765,27 @@ const HashRing = ({
 
 
 
+
 const StateMachineSchema = external.object({
   title: external.string().optional(),
-  /** State nodes. */
   states: external.array(
     external.object({
       id: external.string(),
       label: external.string(),
       color: external.string().optional(),
-      /** Optional description that appears under the label. */
       description: external.string().optional()
     })
   ),
-  /** Directed transitions between states. */
   transitions: external.array(
     external.object({
       fromId: external.string(),
       toId: external.string(),
       label: external.string(),
-      /** Optional: highlight this transition (color pulses, others fade). */
-      highlight: external.boolean().optional()
+      highlight: external.boolean().optional(),
+      guard: external.string().optional(),
+      action: external.string().optional()
     })
   ),
-  /** Optional id of the state to start "active" — pulses in primary color. */
   activeStateId: external.string().optional(),
   accentColor: external.string().optional()
 });
@@ -5121,6 +3818,7 @@ const StateMachine = ({
 }) => {
   const frame = (0,esm.useCurrentFrame)();
   const { fps } = (0,esm.useVideoConfig)();
+  const { ref, scale } = useContainerScale();
   const positions = layoutStates(states.length);
   const stateById = new Map(states.map((s, i) => [s.id, { ...s, ...positions[i] }]));
   const titleOpacity = (0,esm.interpolate)(frame, [0, 20], [0, 1], {
@@ -5149,6 +3847,7 @@ const StateMachine = ({
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
     "div",
     {
+      ref,
       style: {
         width: "100%",
         height: "100%",
@@ -5195,7 +3894,12 @@ const StateMachine = ({
             width: "100%",
             height: "100%",
             viewBox: "0 0 1920 1080",
-            style: { position: "absolute", inset: 0 },
+            style: {
+              position: "absolute",
+              inset: 0,
+              transform: `scale(${scale})`,
+              transformOrigin: "center center"
+            },
             children: [
               /* @__PURE__ */ (0,jsx_runtime.jsxs)("defs", { children: [
                 /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -5290,6 +3994,12 @@ const StateMachine = ({
                 const dashOffset = pathLen * (1 - sp);
                 const labelX = midX + perpX * 0.6;
                 const labelY = midY + perpY * 0.6;
+                const lines = [t.label];
+                if (t.guard) lines.push(`[${t.guard}]`);
+                if (t.action) lines.push(`/ ${t.action}`);
+                const maxLen = Math.max(...lines.map((l) => l.length));
+                const boxW = Math.max(72, maxLen * 11);
+                const boxH = lines.length * 20 + 8;
                 return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity, children: [
                   /* @__PURE__ */ (0,jsx_runtime.jsx)(
                     "path",
@@ -5309,29 +4019,49 @@ const StateMachine = ({
                     /* @__PURE__ */ (0,jsx_runtime.jsx)(
                       "rect",
                       {
-                        x: -Math.max(36, t.label.length * 5.5),
-                        y: -12,
-                        width: Math.max(72, t.label.length * 11),
-                        height: 24,
+                        x: -boxW / 2,
+                        y: -boxH / 2,
+                        width: boxW,
+                        height: boxH,
                         rx: 6,
                         fill: "#0f1729",
                         stroke: isActive ? color : "#334155",
                         strokeWidth: 1.5
                       }
                     ),
-                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                      "text",
-                      {
-                        x: 0,
-                        y: 4,
-                        textAnchor: "middle",
-                        fill: isActive ? color : "#cbd5e1",
-                        fontSize: 13,
-                        fontWeight: 700,
-                        fontFamily: "Fira Code, monospace",
-                        children: t.label
+                    lines.map((line, lineIdx) => {
+                      const isFirst = lineIdx === 0;
+                      const isGuard = line.startsWith("[");
+                      const isAction = line.startsWith("/");
+                      let fill = "#cbd5e1";
+                      let fontSize = 13;
+                      let fontWeight = "700";
+                      if (isFirst) {
+                        fill = isActive ? color : "#cbd5e1";
+                      } else if (isGuard) {
+                        fill = "#64748b";
+                        fontSize = 11;
+                        fontWeight = "500";
+                      } else if (isAction) {
+                        fill = accentColor;
+                        fontSize = 11;
+                        fontWeight = "600";
                       }
-                    )
+                      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "text",
+                        {
+                          x: 0,
+                          y: -boxH / 2 + 16 + lineIdx * 19,
+                          textAnchor: "middle",
+                          fill,
+                          fontSize,
+                          fontWeight,
+                          fontFamily: "Fira Code, monospace",
+                          children: line
+                        },
+                        lineIdx
+                      );
+                    })
                   ] })
                 ] }, `t-${i}`);
               }),
@@ -5340,12 +4070,12 @@ const StateMachine = ({
                 const sp = stateSprings[i];
                 const isActive = s.id === activeStateId;
                 const baseColor = s.color || STATE_PALETTE[i % STATE_PALETTE.length];
-                const scale = (0,esm.interpolate)(sp, [0, 1], [0.6, 1]);
+                const scaleVal = (0,esm.interpolate)(sp, [0, 1], [0.6, 1]);
                 const opacity = sp;
                 return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
                   "g",
                   {
-                    transform: `translate(${pos.x}, ${pos.y}) scale(${scale})`,
+                    transform: `translate(${pos.x}, ${pos.y}) scale(${scaleVal})`,
                     style: { opacity, transformOrigin: `${pos.x}px ${pos.y}px` },
                     children: [
                       /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -5670,23 +4400,20 @@ const TreeHierarchy = ({
 
 
 
+
 const SequenceDiagramSchema = external.object({
   title: external.string().optional(),
-  /** Actors (lifelines) shown at the top, evenly distributed across the canvas. */
   actors: external.array(external.string()).min(2).max(6),
-  /** Time-ordered messages. Each goes from one actor to another. */
   messages: external.array(
     external.object({
       fromIdx: external.number().int().min(0),
       toIdx: external.number().int().min(0),
       label: external.string(),
-      /** Sync = solid arrow, return = dashed arrow. */
       kind: external["enum"](["sync", "return", "async"]).optional(),
-      /** If true, the message gets a special highlight color (latest event). */
-      active: external.boolean().optional()
+      active: external.boolean().optional(),
+      delayMs: external.number().optional()
     })
   ),
-  /** Optional activation notes — start/end index of message that "activates" each actor. */
   activations: external.array(
     external.object({
       actorIdx: external.number().int().min(0),
@@ -5714,12 +4441,22 @@ const SequenceDiagram = ({
 }) => {
   const frame = (0,esm.useCurrentFrame)();
   const { fps } = (0,esm.useVideoConfig)();
+  const { ref, scale } = useContainerScale();
   const STAGE_LEFT = 140;
   const STAGE_RIGHT = 1820;
   const ACTOR_Y = 110;
   const MSG_START_Y = 200;
   const MSG_GAP = 56;
-  const bottom = MSG_START_Y + messages.length * MSG_GAP + 40;
+  const messageYs = [];
+  let currentY = MSG_START_Y;
+  const maxDelay = Math.max(...messages.map((m) => m.delayMs || 0), 1);
+  messages.forEach((msg) => {
+    messageYs.push(currentY);
+    const delay = msg.delayMs || 0;
+    const factor = delay > 0 ? 1 + delay / maxDelay * 1.5 : 1;
+    currentY += MSG_GAP * factor;
+  });
+  const bottom = currentY + 40;
   const actorX = (i) => STAGE_LEFT + (STAGE_RIGHT - STAGE_LEFT) * i / (actors.length - 1);
   const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
     extrapolateLeft: "clamp",
@@ -5727,15 +4464,12 @@ const SequenceDiagram = ({
     easing: esm.Easing.out(esm.Easing.cubic)
   });
   const actorSprings = actors.map(
-    (_actor, i) => (
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      (0,esm.spring)({
-        frame,
-        fps,
-        config: { damping: 14, stiffness: 140 },
-        durationInFrames: 30
-      })
-    )
+    (_actor, i) => (0,esm.spring)({
+      frame,
+      fps,
+      config: { damping: 14, stiffness: 140 },
+      durationInFrames: 30
+    })
   );
   const messageSprings = messages.map(
     (_, i) => (0,esm.spring)({
@@ -5748,6 +4482,7 @@ const SequenceDiagram = ({
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
     "div",
     {
+      ref,
       style: {
         width: "100%",
         height: "100%",
@@ -5780,7 +4515,12 @@ const SequenceDiagram = ({
             height: "100%",
             viewBox: `0 0 1920 ${bottom}`,
             preserveAspectRatio: "xMidYMid meet",
-            style: { position: "absolute", inset: 0 },
+            style: {
+              position: "absolute",
+              inset: 0,
+              transform: `scale(${scale})`,
+              transformOrigin: "center top"
+            },
             children: [
               /* @__PURE__ */ (0,jsx_runtime.jsxs)("defs", { children: [
                 /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -5845,11 +4585,11 @@ const SequenceDiagram = ({
                 const x = actorX(i);
                 const sp = actorSprings[i];
                 const color = ACTOR_PALETTE[i % ACTOR_PALETTE.length];
-                const scale = (0,esm.interpolate)(sp, [0, 1], [0.7, 1]);
+                const scaleVal = (0,esm.interpolate)(sp, [0, 1], [0.7, 1]);
                 return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
                   "g",
                   {
-                    transform: `translate(${x}, ${ACTOR_Y}) scale(${scale})`,
+                    transform: `translate(${x}, ${ACTOR_Y}) scale(${scaleVal})`,
                     style: { opacity: sp, transformOrigin: `${x}px ${ACTOR_Y}px` },
                     children: [
                       /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -5886,8 +4626,8 @@ const SequenceDiagram = ({
               }),
               activations.map((act, i) => {
                 const x = actorX(act.actorIdx);
-                const y1 = MSG_START_Y + act.startMessage * MSG_GAP - 12;
-                const y2 = MSG_START_Y + act.endMessage * MSG_GAP + 12;
+                const y1 = messageYs[act.startMessage] - 12;
+                const y2 = messageYs[act.endMessage] + 12;
                 const sp = Math.min(
                   messageSprings[act.startMessage] ?? 0,
                   messageSprings[act.endMessage] ?? 0
@@ -5920,7 +4660,8 @@ const SequenceDiagram = ({
                 ] }, `act-${i}`);
               }),
               messages.map((msg, i) => {
-                const y = MSG_START_Y + i * MSG_GAP;
+                const y = messageYs[i];
+                const nextY = messageYs[i + 1] ?? y;
                 const fromX = actorX(msg.fromIdx);
                 const toX = actorX(msg.toIdx);
                 const sp = messageSprings[i];
@@ -5946,48 +4687,70 @@ const SequenceDiagram = ({
                       strokeDasharray: stroke,
                       markerEnd: marker,
                       opacity: isReturn ? 0.75 : 1,
-                      style: {
-                        filter: isActive ? `drop-shadow(0 0 6px ${color})` : void 0
-                      }
+                      style: { filter: isActive ? `drop-shadow(0 0 6px ${color})` : void 0 }
                     }
                   ),
-                  /* @__PURE__ */ (0,jsx_runtime.jsxs)(
-                    "g",
-                    {
-                      transform: `translate(${(x1 + x2) / 2}, ${y - 18})`,
-                      style: {
-                        opacity: sp
-                      },
-                      children: [
-                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                          "rect",
-                          {
-                            x: -Math.max(40, msg.label.length * 5.5),
-                            y: -12,
-                            width: Math.max(80, msg.label.length * 11),
-                            height: 22,
-                            rx: 6,
-                            fill: "#0f1729",
-                            stroke: color,
-                            strokeWidth: 1.5
-                          }
-                        ),
-                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                          "text",
-                          {
-                            x: 0,
-                            y: 4,
-                            textAnchor: "middle",
-                            fill: color,
-                            fontSize: 12,
-                            fontWeight: 700,
-                            fontFamily: "Fira Code, monospace",
-                            children: msg.label
-                          }
-                        )
-                      ]
-                    }
-                  )
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${(x1 + x2) / 2}, ${y - 18})`, children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "rect",
+                      {
+                        x: -Math.max(40, msg.label.length * 5.5),
+                        y: -12,
+                        width: Math.max(80, msg.label.length * 11),
+                        height: 22,
+                        rx: 6,
+                        fill: "#0f1729",
+                        stroke: color,
+                        strokeWidth: 1.5
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x: 0,
+                        y: 4,
+                        textAnchor: "middle",
+                        fill: color,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        fontFamily: "Fira Code, monospace",
+                        children: msg.label
+                      }
+                    )
+                  ] }),
+                  msg.delayMs !== void 0 && msg.delayMs > 0 && nextY > y && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${(fromX + toX) / 2}, ${(y + nextY) / 2})`, children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "rect",
+                      {
+                        x: -45,
+                        y: -10,
+                        width: 90,
+                        height: 20,
+                        rx: 4,
+                        fill: "#1e293b",
+                        stroke: "#475569",
+                        strokeWidth: 1,
+                        opacity: 0.8
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                      "text",
+                      {
+                        x: 0,
+                        y: 4,
+                        textAnchor: "middle",
+                        fill: "#94a3b8",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        fontFamily: "Fira Code, monospace",
+                        children: [
+                          "\u23F1 ",
+                          msg.delayMs,
+                          "ms"
+                        ]
+                      }
+                    )
+                  ] })
                 ] }, `msg-${i}`);
               })
             ]
@@ -6003,28 +4766,22 @@ const SequenceDiagram = ({
 
 
 
+
 const LineChartSchema = external.object({
   title: external.string().optional(),
-  /** X-axis tick labels (e.g. years, request rates). */
   xLabels: external.array(external.string()),
-  /** Each series is one line. */
   series: external.array(
     external.object({
       name: external.string(),
       color: external.string().optional(),
-      /** Y values, one per xLabel. */
       values: external.array(external.number()),
-      /** If true, draw area fill under the line. */
       fill: external.boolean().optional()
     })
   ),
-  /** Optional Y-axis label. */
   yLabel: external.string().optional(),
-  /** Optional X-axis label. */
   xLabel: external.string().optional(),
   accentColor: external.string().optional(),
   showLegend: external.boolean().optional(),
-  /** Optional highlight index — that xLabel point gets a special marker. */
   highlightIndex: external.number().int().min(0).optional()
 });
 const SERIES_PALETTE = [
@@ -6047,6 +4804,7 @@ const LineChart = ({
 }) => {
   const frame = (0,esm.useCurrentFrame)();
   const { fps } = (0,esm.useVideoConfig)();
+  const { ref, scale } = useContainerScale();
   const PAD_L = 140;
   const PAD_R = 80;
   const PAD_T = 130;
@@ -6085,6 +4843,7 @@ const LineChart = ({
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
     "div",
     {
+      ref,
       style: {
         width: "100%",
         height: "100%",
@@ -6105,7 +4864,8 @@ const LineChart = ({
               letterSpacing: "-0.02em",
               margin: 0,
               marginBottom: 8,
-              opacity: titleOpacity
+              opacity: titleOpacity,
+              textAlign: "center"
             },
             children: title
           }
@@ -6125,7 +4885,12 @@ const LineChart = ({
                   width: "100%",
                   height: "100%",
                   viewBox: "0 0 1920 1080",
-                  style: { position: "absolute", inset: 0 },
+                  style: {
+                    position: "absolute",
+                    inset: 0,
+                    transform: `scale(${scale})`,
+                    transformOrigin: "center center"
+                  },
                   children: [
                     yTicks.map((tick, i) => /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
                       /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -7394,9 +6159,9 @@ const TerminalCLI = ({
 
 
 
+
 const PieChartSchema = external.object({
   title: external.string().optional(),
-  /** Each slice. Values are normalized to sum to 100%. */
   slices: external.array(
     external.object({
       label: external.string(),
@@ -7404,14 +6169,11 @@ const PieChartSchema = external.object({
       color: external.string().optional()
     })
   ),
-  /** Optional center label (for a donut). */
   centerLabel: external.string().optional(),
   centerValue: external.string().optional(),
-  /** Layout variant. */
   variant: external["enum"](["pie", "donut"]).optional(),
   accentColor: external.string().optional(),
   showLegend: external.boolean().optional(),
-  /** Optional slice index to highlight (gets a "explode" offset). */
   highlightIndex: external.number().int().min(0).optional()
 });
 const SLICE_PALETTE = [
@@ -7436,8 +6198,9 @@ const PieChart = ({
 }) => {
   const frame = (0,esm.useCurrentFrame)();
   const { fps } = (0,esm.useVideoConfig)();
+  const { ref, scale } = useContainerScale();
   const total = slices.reduce((s, x) => s + x.value, 0) || 1;
-  const cx = 800;
+  const cx = 960;
   const cy = 540;
   const radius = 280;
   const innerR = variant === "donut" ? radius * 0.55 : 0;
@@ -7480,6 +6243,7 @@ const PieChart = ({
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
     "div",
     {
+      ref,
       style: {
         width: "100%",
         height: "100%",
@@ -7501,96 +6265,108 @@ const PieChart = ({
                 letterSpacing: "-0.02em",
                 margin: 0,
                 marginBottom: 8,
-                opacity: titleOpacity
+                opacity: titleOpacity,
+                textAlign: "center"
               },
               children: title
             }
           ),
-          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100% - 60px)" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("svg", { width: 700, height: 700, viewBox: "0 0 1600 1080", children: [
-            /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "pie-glow", x: "-20%", y: "-20%", width: "140%", height: "140%", children: [
-              /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "3" }),
-              /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
-                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", {}),
-                /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
-              ] })
-            ] }) }),
-            sliceProgress.map(({ slice, start, end, idx }) => {
-              const color = slice.color || SLICE_PALETTE[idx % SLICE_PALETTE.length];
-              const sliceReveal = Math.max(0, Math.min(reveal - start, end - start));
-              if (sliceReveal <= 0) return null;
-              const a2 = start + sliceReveal;
-              const ex = explode(idx);
-              const midA = (start + a2) / 2 - Math.PI / 2;
-              const dx = Math.cos(midA) * ex;
-              const dy = Math.sin(midA) * ex;
-              return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
-                "g",
-                {
-                  transform: `translate(${dx}, ${dy})`,
-                  style: { filter: `drop-shadow(0 0 8px ${color}66)` },
-                  children: [
-                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                      "path",
-                      {
-                        d: annularSector(start - Math.PI / 2, a2 - Math.PI / 2),
-                        fill: color,
-                        stroke: "#0f1729",
-                        strokeWidth: 2
-                      }
-                    ),
-                    sliceReveal / (end - start) > 0.6 && end - start > 0.35 && /* @__PURE__ */ (0,jsx_runtime.jsxs)(
-                      "text",
-                      {
-                        x: cx + Math.cos(midA) * (radius * 0.7) + dx,
-                        y: cy + Math.sin(midA) * (radius * 0.7) + dy + 6,
-                        textAnchor: "middle",
-                        fill: "#0f1729",
-                        fontSize: 20,
-                        fontWeight: 900,
-                        fontFamily: "Inter, sans-serif",
-                        children: [
-                          Math.round(slice.value / total * 100),
-                          "%"
-                        ]
-                      }
-                    )
-                  ]
-                },
-                idx
-              );
-            }),
-            variant === "donut" && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
-              /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                "text",
-                {
-                  x: cx,
-                  y: cy - 12,
-                  textAnchor: "middle",
-                  fill: "#94a3b8",
-                  fontSize: 16,
-                  fontFamily: "Inter, sans-serif",
-                  fontWeight: 700,
-                  letterSpacing: "0.15em",
-                  textLength: centerLabel ? void 0 : 0,
-                  children: centerLabel || ""
-                }
-              ),
-              centerValue && /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                "text",
-                {
-                  x: cx,
-                  y: cy + 22,
-                  textAnchor: "middle",
-                  fill: accentColor,
-                  fontSize: 42,
-                  fontFamily: "Inter, sans-serif",
-                  fontWeight: 900,
-                  style: { filter: `drop-shadow(0 0 8px ${accentColor})` },
-                  children: centerValue
-                }
-              )
-            ] })
-          ] }) })
+          /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100% - 60px)" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+            "svg",
+            {
+              width: 700,
+              height: 700,
+              viewBox: "0 0 1920 1080",
+              style: {
+                transform: `scale(${scale})`,
+                transformOrigin: "center center"
+              },
+              children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "pie-glow", x: "-20%", y: "-20%", width: "140%", height: "140%", children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "3" }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", {}),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+                  ] })
+                ] }) }),
+                sliceProgress.map(({ slice, start, end, idx }) => {
+                  const color = slice.color || SLICE_PALETTE[idx % SLICE_PALETTE.length];
+                  const sliceReveal = Math.max(0, Math.min(reveal - start, end - start));
+                  if (sliceReveal <= 0) return null;
+                  const a2 = start + sliceReveal;
+                  const ex = explode(idx);
+                  const midA = (start + a2) / 2 - Math.PI / 2;
+                  const dx = Math.cos(midA) * ex;
+                  const dy = Math.sin(midA) * ex;
+                  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                    "g",
+                    {
+                      transform: `translate(${dx}, ${dy})`,
+                      style: { filter: `drop-shadow(0 0 8px ${color}66)` },
+                      children: [
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "path",
+                          {
+                            d: annularSector(start - Math.PI / 2, a2 - Math.PI / 2),
+                            fill: color,
+                            stroke: "#0f1729",
+                            strokeWidth: 2
+                          }
+                        ),
+                        sliceReveal / (end - start) > 0.6 && end - start > 0.35 && /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                          "text",
+                          {
+                            x: cx + Math.cos(midA) * (radius * 0.7) + dx,
+                            y: cy + Math.sin(midA) * (radius * 0.7) + dy + 6,
+                            textAnchor: "middle",
+                            fill: "#0f1729",
+                            fontSize: 20,
+                            fontWeight: 900,
+                            fontFamily: "Inter, sans-serif",
+                            children: [
+                              Math.round(slice.value / total * 100),
+                              "%"
+                            ]
+                          }
+                        )
+                      ]
+                    },
+                    idx
+                  );
+                }),
+                variant === "donut" && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "text",
+                    {
+                      x: cx,
+                      y: cy - 12,
+                      textAnchor: "middle",
+                      fill: "#94a3b8",
+                      fontSize: 16,
+                      fontFamily: "Inter, sans-serif",
+                      fontWeight: 700,
+                      letterSpacing: "0.15em",
+                      children: centerLabel || ""
+                    }
+                  ),
+                  centerValue && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "text",
+                    {
+                      x: cx,
+                      y: cy + 22,
+                      textAnchor: "middle",
+                      fill: accentColor,
+                      fontSize: 42,
+                      fontFamily: "Inter, sans-serif",
+                      fontWeight: 900,
+                      style: { filter: `drop-shadow(0 0 8px ${accentColor})` },
+                      children: centerValue
+                    }
+                  )
+                ] })
+              ]
+            }
+          ) })
         ] }),
         showLegend && /* @__PURE__ */ (0,jsx_runtime.jsxs)(
           "div",
@@ -7651,27 +6427,7 @@ const PieChart = ({
                           }
                         }
                       ),
-                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                        "div",
-                        {
-                          style: {
-                            display: "flex",
-                            flexDirection: "column",
-                            flex: 1
-                          },
-                          children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
-                            "span",
-                            {
-                              style: {
-                                color: "#f1f5f9",
-                                fontSize: 20,
-                                fontWeight: 700
-                              },
-                              children: s.label
-                            }
-                          )
-                        }
-                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", flexDirection: "column", flex: 1 }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: "#f1f5f9", fontSize: 20, fontWeight: 700 }, children: s.label }) }),
                       /* @__PURE__ */ (0,jsx_runtime.jsxs)(
                         "span",
                         {
@@ -8073,26 +6829,23 @@ const GlossaryCards = ({
 
 
 
+
 const FlowDiagramSchema = external.object({
   title: external.string().optional(),
-  /** Nodes in the flow. */
   nodes: external.array(
     external.object({
       id: external.string(),
       label: external.string(),
-      /** "process" | "decision" | "start" | "end" */
       kind: external["enum"](["process", "decision", "start", "end"]).optional(),
       description: external.string().optional(),
       color: external.string().optional()
     })
   ),
-  /** Directed connections between nodes. */
   edges: external.array(
     external.object({
       fromId: external.string(),
       toId: external.string(),
       label: external.string().optional(),
-      /** If true, the edge is highlighted (latest/active flow). */
       active: external.boolean().optional()
     })
   ),
@@ -8170,6 +6923,7 @@ const FlowDiagram = ({
 }) => {
   const frame = (0,esm.useCurrentFrame)();
   const { fps } = (0,esm.useVideoConfig)();
+  const { ref, scale } = useContainerScale();
   const { positions } = layout(nodes, edges);
   const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
     extrapolateLeft: "clamp",
@@ -8200,13 +6954,13 @@ const FlowDiagram = ({
   const renderShape = (n, x, y) => {
     const sp = nodeSprings.get(n.id) || 0;
     const color = n.color || KIND_COLORS[n.kind || "process"];
-    const scale = (0,esm.interpolate)(sp, [0, 1], [0.6, 1]);
+    const scaleVal = (0,esm.interpolate)(sp, [0, 1], [0.6, 1]);
     const shape = KIND_SHAPES[n.kind || "process"];
     if (shape === "diamond") {
       return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
         "g",
         {
-          transform: `translate(${x}, ${y}) scale(${scale})`,
+          transform: `translate(${x}, ${y}) scale(${scaleVal})`,
           style: { opacity: sp, transformOrigin: `${x}px ${y}px` },
           children: [
             /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -8241,7 +6995,7 @@ const FlowDiagram = ({
       return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
         "g",
         {
-          transform: `translate(${x}, ${y}) scale(${scale})`,
+          transform: `translate(${x}, ${y}) scale(${scaleVal})`,
           style: { opacity: sp, transformOrigin: `${x}px ${y}px` },
           children: [
             /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -8280,7 +7034,7 @@ const FlowDiagram = ({
     return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
       "g",
       {
-        transform: `translate(${x}, ${y}) scale(${scale})`,
+        transform: `translate(${x}, ${y}) scale(${scaleVal})`,
         style: { opacity: sp, transformOrigin: `${x}px ${y}px` },
         children: [
           /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -8329,6 +7083,7 @@ const FlowDiagram = ({
   return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
     "div",
     {
+      ref,
       style: {
         width: "100%",
         height: "100%",
@@ -8375,7 +7130,12 @@ const FlowDiagram = ({
             width: "100%",
             height: "100%",
             viewBox: "0 0 1920 1080",
-            style: { position: "absolute", inset: 0 },
+            style: {
+              position: "absolute",
+              inset: 0,
+              transform: `scale(${scale})`,
+              transformOrigin: "center center"
+            },
             children: [
               /* @__PURE__ */ (0,jsx_runtime.jsxs)("defs", { children: [
                 /* @__PURE__ */ (0,jsx_runtime.jsx)(
@@ -8437,9 +7197,7 @@ const FlowDiagram = ({
                       strokeDasharray: pathLen,
                       strokeDashoffset: pathLen * (1 - sp),
                       markerEnd: isActive ? "url(#flow-arrow-active)" : "url(#flow-arrow)",
-                      style: {
-                        filter: isActive ? `drop-shadow(0 0 6px ${color})` : void 0
-                      }
+                      style: { filter: isActive ? `drop-shadow(0 0 6px ${color})` : void 0 }
                     }
                   ),
                   e.label && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${midX}, ${midY - 8})`, children: [
@@ -8781,7 +7539,1396 @@ const CalloutAnnotation = ({
   );
 };
 
+;// ./src/components/QueueFlow.tsx
+
+
+
+
+
+const QueueFlowSchema = external.object({
+  title: external.string().optional(),
+  producers: external.array(external.object({ id: external.string(), label: external.string() })),
+  queueLabel: external.string(),
+  queueCapacity: external.number().optional(),
+  consumers: external.array(external.object({ id: external.string(), label: external.string() })),
+  messages: external.array(
+    external.object({
+      id: external.string(),
+      color: external.string().optional(),
+      label: external.string().optional()
+    })
+  ).optional(),
+  accentColor: external.string().optional(),
+  variant: external["enum"](["fifo", "priority", "pub-sub"]).optional()
+});
+const QueueFlow = ({
+  title,
+  producers,
+  queueLabel,
+  consumers,
+  messages = [],
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const { ref, scale } = useContainerScale();
+  const LW = 1920;
+  const LH = 1080;
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const leftX = 260;
+  const queueX = 960;
+  const rightX = 1660;
+  const prodSprings = producers.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - i * 8,
+      fps,
+      config: { damping: 12, stiffness: 120 },
+      durationInFrames: 30
+    })
+  );
+  const queueSpring = (0,esm.spring)({
+    frame: frame - 15,
+    fps,
+    config: { damping: 12, stiffness: 120 },
+    durationInFrames: 30
+  });
+  const consSprings = consumers.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (20 + i * 8),
+      fps,
+      config: { damping: 12, stiffness: 120 },
+      durationInFrames: 30
+    })
+  );
+  const packets = Array.from({ length: 6 }, (_, idx) => {
+    const loopDuration = 90;
+    const offset = idx * 15;
+    const progress = (frame + offset) % loopDuration / loopDuration;
+    return { id: idx, progress };
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      ref,
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 48,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 24,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { flex: 1, position: "relative" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "svg",
+          {
+            width: "100%",
+            height: "100%",
+            viewBox: `0 0 ${LW} ${LH}`,
+            style: {
+              position: "absolute",
+              inset: 0,
+              transform: `scale(${scale})`,
+              transformOrigin: "center center"
+            },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "q-glow", x: "-30%", y: "-30%", width: "160%", height: "160%", children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "8", result: "blur" }),
+                /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "blur" }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+                ] })
+              ] }) }),
+              producers.map((_, idx) => {
+                const py = LH / 2 + (idx - (producers.length - 1) / 2) * 160;
+                return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "path",
+                  {
+                    d: `M ${leftX} ${py} Q ${(leftX + queueX) / 2} ${py}, ${queueX - 220} ${LH / 2}`,
+                    fill: "none",
+                    stroke: "#1e293b",
+                    strokeWidth: 5,
+                    strokeLinecap: "round"
+                  },
+                  `p-track-${idx}`
+                );
+              }),
+              consumers.map((_, idx) => {
+                const cy = LH / 2 + (idx - (consumers.length - 1) / 2) * 160;
+                return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                  "path",
+                  {
+                    d: `M ${queueX + 220} ${LH / 2} Q ${(queueX + rightX) / 2} ${cy}, ${rightX} ${cy}`,
+                    fill: "none",
+                    stroke: "#1e293b",
+                    strokeWidth: 5,
+                    strokeLinecap: "round"
+                  },
+                  `c-track-${idx}`
+                );
+              }),
+              packets.map((pkt) => {
+                let px = 0;
+                let py = 0;
+                if (pkt.progress < 0.5) {
+                  const localProg = pkt.progress / 0.5;
+                  const sourceIdx = pkt.id % producers.length;
+                  const sourceY = LH / 2 + (sourceIdx - (producers.length - 1) / 2) * 160;
+                  const x1 = leftX;
+                  const y1 = sourceY;
+                  const x2 = queueX - 220;
+                  const y2 = LH / 2;
+                  px = x1 + (x2 - x1) * localProg;
+                  py = y1 + (y2 - y1) * localProg;
+                } else {
+                  const localProg = (pkt.progress - 0.5) / 0.5;
+                  const destIdx = pkt.id % consumers.length;
+                  const destY = LH / 2 + (destIdx - (consumers.length - 1) / 2) * 160;
+                  const x1 = queueX + 220;
+                  const y1 = LH / 2;
+                  const x2 = rightX;
+                  const y2 = destY;
+                  px = x1 + (x2 - x1) * localProg;
+                  py = y1 + (y2 - y1) * localProg;
+                }
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { filter: "url(#q-glow)", children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 12, fill: accentColor }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("circle", { cx: px, cy: py, r: 5, fill: "white" })
+                ] }, `pkt-${pkt.id}`);
+              }),
+              producers.map((prod, idx) => {
+                const py = LH / 2 + (idx - (producers.length - 1) / 2) * 160;
+                const sp = prodSprings[idx];
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                  "g",
+                  {
+                    transform: `translate(${leftX}, ${py}) scale(${sp})`,
+                    style: { opacity: sp },
+                    children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "rect",
+                        {
+                          x: -120,
+                          y: -45,
+                          width: 240,
+                          height: 90,
+                          rx: 12,
+                          fill: "#0f172a",
+                          stroke: "#a78bfa",
+                          strokeWidth: 2.5
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "text",
+                        {
+                          x: 0,
+                          y: 8,
+                          textAnchor: "middle",
+                          fill: "#f1f5f9",
+                          fontSize: 20,
+                          fontWeight: 800,
+                          children: prod.label
+                        }
+                      )
+                    ]
+                  },
+                  prod.id
+                );
+              }),
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "g",
+                {
+                  transform: `translate(${queueX}, ${LH / 2}) scale(${queueSpring})`,
+                  style: { opacity: queueSpring },
+                  children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "rect",
+                      {
+                        x: -220,
+                        y: -100,
+                        width: 440,
+                        height: 200,
+                        rx: 16,
+                        fill: "#0b0f19",
+                        stroke: accentColor,
+                        strokeWidth: 3,
+                        style: { filter: `drop-shadow(0 0 16px ${accentColor}44)` }
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "rect",
+                      {
+                        x: -200,
+                        y: -70,
+                        width: 400,
+                        height: 140,
+                        rx: 10,
+                        fill: "#0f172a",
+                        stroke: "#1e293b",
+                        strokeWidth: 2
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x: 0,
+                        y: -120,
+                        textAnchor: "middle",
+                        fill: accentColor,
+                        fontSize: 24,
+                        fontWeight: 900,
+                        letterSpacing: "0.1em",
+                        children: queueLabel.toUpperCase()
+                      }
+                    ),
+                    messages.length > 0 ? messages.slice(0, 5).map((msg, idx) => {
+                      const itemColor = msg.color || accentColor;
+                      const itemX = -150 + idx * 75;
+                      return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${itemX}, 0)`, children: [
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "rect",
+                          {
+                            x: -28,
+                            y: -40,
+                            width: 56,
+                            height: 80,
+                            rx: 8,
+                            fill: "#1e293b",
+                            stroke: itemColor,
+                            strokeWidth: 2
+                          }
+                        ),
+                        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "text",
+                          {
+                            x: 0,
+                            y: 6,
+                            textAnchor: "middle",
+                            fill: itemColor,
+                            fontSize: 14,
+                            fontWeight: 800,
+                            children: msg.label || `M${idx + 1}`
+                          }
+                        )
+                      ] }, msg.id);
+                    }) : (
+                      // Default generic backlog representations
+                      Array.from({ length: 4 }).map((_, idx) => {
+                        const itemX = -135 + idx * 90;
+                        return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                          "rect",
+                          {
+                            x: itemX - 25,
+                            y: -30,
+                            width: 50,
+                            height: 60,
+                            rx: 6,
+                            fill: `${accentColor}18`,
+                            stroke: accentColor,
+                            strokeWidth: 2.5,
+                            strokeDasharray: "4 4"
+                          },
+                          `def-item-${idx}`
+                        );
+                      })
+                    )
+                  ]
+                }
+              ),
+              consumers.map((cons, idx) => {
+                const cy = LH / 2 + (idx - (consumers.length - 1) / 2) * 160;
+                const sp = consSprings[idx];
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                  "g",
+                  {
+                    transform: `translate(${rightX}, ${cy}) scale(${sp})`,
+                    style: { opacity: sp },
+                    children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "rect",
+                        {
+                          x: -120,
+                          y: -45,
+                          width: 240,
+                          height: 90,
+                          rx: 12,
+                          fill: "#0f172a",
+                          stroke: "#34d399",
+                          strokeWidth: 2.5
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "text",
+                        {
+                          x: 0,
+                          y: 8,
+                          textAnchor: "middle",
+                          fill: "#f1f5f9",
+                          fontSize: 20,
+                          fontWeight: 800,
+                          children: cons.label
+                        }
+                      )
+                    ]
+                  },
+                  cons.id
+                );
+              })
+            ]
+          }
+        ) })
+      ]
+    }
+  );
+};
+
+;// ./src/components/TradeoffMatrix.tsx
+
+
+
+
+
+const TradeoffMatrixSchema = external.object({
+  title: external.string().optional(),
+  rows: external.array(
+    external.object({
+      label: external.string(),
+      color: external.string().optional()
+    })
+  ),
+  columns: external.array(
+    external.object({
+      label: external.string()
+    })
+  ),
+  cells: external.array(
+    external.object({
+      rowIdx: external.number(),
+      colIdx: external.number(),
+      value: external["enum"](["high", "medium", "low", "yes", "no", "partial"]),
+      note: external.string().optional()
+    })
+  ),
+  accentColor: external.string().optional()
+});
+const VALUE_COLORS = {
+  high: "#34d399",
+  yes: "#34d399",
+  medium: "#f59e0b",
+  partial: "#f59e0b",
+  low: "#ef4444",
+  no: "#ef4444"
+};
+const TradeoffMatrix = ({
+  title,
+  rows,
+  columns,
+  cells,
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { ref, scale } = useContainerScale();
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const cellMap = /* @__PURE__ */ new Map();
+  cells.forEach((c) => {
+    cellMap.set(`${c.rowIdx}-${c.colIdx}`, c);
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      ref,
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 48,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 32,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transform: `scale(${scale})`,
+              transformOrigin: "center center"
+            },
+            children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+              "table",
+              {
+                style: {
+                  borderCollapse: "separate",
+                  borderSpacing: "12px 12px",
+                  width: "100%",
+                  maxWidth: "1400px",
+                  fontSize: "20px"
+                },
+                children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("tr", { children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("th", { style: { minWidth: "220px" } }),
+                    columns.map((col, colIdx) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "th",
+                      {
+                        style: {
+                          color: "#94a3b8",
+                          fontWeight: 800,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          padding: "16px",
+                          textAlign: "center",
+                          borderBottom: `2.5px solid ${accentColor}33`
+                        },
+                        children: col.label
+                      },
+                      `col-${colIdx}`
+                    ))
+                  ] }) }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("tbody", { children: rows.map((row, rowIdx) => {
+                    const rowRevealFrame = 15 + rowIdx * 12;
+                    const rowOpacity = (0,esm.interpolate)(frame, [rowRevealFrame, rowRevealFrame + 15], [0, 1], {
+                      extrapolateLeft: "clamp",
+                      extrapolateRight: "clamp",
+                      easing: esm.Easing.out(esm.Easing.cubic)
+                    });
+                    const rowTranslateY = (0,esm.interpolate)(frame, [rowRevealFrame, rowRevealFrame + 15], [20, 0], {
+                      extrapolateLeft: "clamp",
+                      extrapolateRight: "clamp",
+                      easing: esm.Easing.out(esm.Easing.cubic)
+                    });
+                    return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                      "tr",
+                      {
+                        style: {
+                          opacity: rowOpacity,
+                          transform: `translateY(${rowTranslateY}px)`
+                        },
+                        children: [
+                          /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                            "td",
+                            {
+                              style: {
+                                fontWeight: 900,
+                                color: row.color || "#f1f5f9",
+                                padding: "20px",
+                                background: "rgba(255, 255, 255, 0.02)",
+                                border: "1px solid rgba(255, 255, 255, 0.05)",
+                                borderRadius: "12px"
+                              },
+                              children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: "10px" }, children: [
+                                /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                                  "span",
+                                  {
+                                    style: {
+                                      width: "8px",
+                                      height: "8px",
+                                      borderRadius: "50%",
+                                      backgroundColor: row.color || accentColor,
+                                      display: "inline-block"
+                                    }
+                                  }
+                                ),
+                                row.label
+                              ] })
+                            }
+                          ),
+                          columns.map((_, colIdx) => {
+                            const cell = cellMap.get(`${rowIdx}-${colIdx}`);
+                            if (!cell) {
+                              return /* @__PURE__ */ (0,jsx_runtime.jsx)("td", {}, `cell-${rowIdx}-${colIdx}`);
+                            }
+                            const valColor = VALUE_COLORS[cell.value] || "#cbd5e1";
+                            return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                              "td",
+                              {
+                                style: {
+                                  textAlign: "center",
+                                  padding: "16px",
+                                  background: "#0b0f19",
+                                  border: `1px solid ${valColor}22`,
+                                  borderRadius: "12px",
+                                  boxShadow: `inset 0 0 12px ${valColor}0b`
+                                },
+                                children: [
+                                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                                    "span",
+                                    {
+                                      style: {
+                                        display: "inline-block",
+                                        padding: "6px 18px",
+                                        borderRadius: "8px",
+                                        fontSize: "16px",
+                                        fontWeight: 900,
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.05em",
+                                        backgroundColor: `${valColor}18`,
+                                        color: valColor,
+                                        border: `1.5px solid ${valColor}33`,
+                                        boxShadow: `0 0 10px ${valColor}11`
+                                      },
+                                      children: cell.value
+                                    }
+                                  ),
+                                  cell.note && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                                    "div",
+                                    {
+                                      style: {
+                                        fontSize: "12px",
+                                        color: "#64748b",
+                                        marginTop: "8px",
+                                        fontFamily: "monospace"
+                                      },
+                                      children: cell.note
+                                    }
+                                  )
+                                ]
+                              },
+                              `cell-${rowIdx}-${colIdx}`
+                            );
+                          })
+                        ]
+                      },
+                      `row-${rowIdx}`
+                    );
+                  }) })
+                ]
+              }
+            )
+          }
+        )
+      ]
+    }
+  );
+};
+
+;// ./src/components/BeforeAfterTransform.tsx
+
+
+
+
+
+const BeforeAfterTransformSchema = external.object({
+  title: external.string().optional(),
+  before: external.object({
+    label: external.string(),
+    content: external.array(external.string()),
+    color: external.string().optional()
+  }),
+  after: external.object({
+    label: external.string(),
+    content: external.array(external.string()),
+    color: external.string().optional()
+  }),
+  transformLabel: external.string().optional(),
+  accentColor: external.string().optional()
+});
+const BeforeAfterTransform = ({
+  title,
+  before,
+  after,
+  transformLabel = "Transform",
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { ref, scale } = useContainerScale();
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const beforeColor = before.color || "#ef4444";
+  const afterColor = after.color || "#34d399";
+  const beforeReveal = (0,esm.interpolate)(frame, [8, 35], [0, 1], {
+    easing: esm.Easing.out(esm.Easing.cubic),
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const arrowReveal = (0,esm.interpolate)(frame, [32, 50], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const afterReveal = (0,esm.interpolate)(frame, [45, 72], [0, 1], {
+    easing: esm.Easing.out(esm.Easing.cubic),
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      ref,
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 48,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 32,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "div",
+          {
+            style: {
+              flex: 1,
+              display: "flex",
+              gap: "28px",
+              alignItems: "stretch",
+              transform: `scale(${scale})`,
+              transformOrigin: "center center"
+            },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "div",
+                {
+                  style: {
+                    flex: 1,
+                    background: "#0a0f1e",
+                    border: `2px solid ${beforeColor}40`,
+                    borderRadius: 18,
+                    padding: "32px",
+                    boxShadow: `0 0 50px ${beforeColor}12`,
+                    opacity: beforeReveal,
+                    transform: `translateY(${(0,esm.interpolate)(beforeReveal, [0, 1], [24, 0])}px)`,
+                    display: "flex",
+                    flexDirection: "column"
+                  },
+                  children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "span",
+                      {
+                        style: {
+                          background: `${beforeColor}20`,
+                          color: beforeColor,
+                          padding: "5px 18px",
+                          borderRadius: 8,
+                          fontSize: 18,
+                          fontWeight: 800,
+                          border: `1.5px solid ${beforeColor}50`,
+                          fontFamily: "monospace"
+                        },
+                        children: before.label
+                      }
+                    ) }),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { height: 1, background: `${beforeColor}20`, marginBottom: 20 } }),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", flexDirection: "column", gap: "12px" }, children: before.content.map((line, idx) => {
+                      const lineReveal = (0,esm.interpolate)(beforeReveal, [idx * 0.05, idx * 0.05 + 0.15], [0, 1], {
+                        extrapolateLeft: "clamp",
+                        extrapolateRight: "clamp"
+                      });
+                      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "div",
+                        {
+                          style: {
+                            opacity: lineReveal,
+                            transform: `translateX(${(0,esm.interpolate)(lineReveal, [0, 1], [15, 0])}px)`,
+                            fontFamily: "monospace",
+                            fontSize: "20px",
+                            color: "#cbd5e1"
+                          },
+                          children: line
+                        },
+                        idx
+                      );
+                    }) })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "div",
+                {
+                  style: {
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 12,
+                    opacity: arrowReveal,
+                    width: "120px",
+                    flexShrink: 0
+                  },
+                  children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "span",
+                      {
+                        style: {
+                          background: `${accentColor}18`,
+                          color: accentColor,
+                          padding: "6px 14px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: 800,
+                          fontFamily: "monospace",
+                          textAlign: "center",
+                          border: `1px solid ${accentColor}33`,
+                          whiteSpace: "nowrap"
+                        },
+                        children: transformLabel
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("span", { style: { color: accentColor, fontSize: 44, lineHeight: 1 }, children: "\u2192" })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                "div",
+                {
+                  style: {
+                    flex: 1,
+                    background: "#0a0f1e",
+                    border: `2px solid ${afterColor}40`,
+                    borderRadius: 18,
+                    padding: "32px",
+                    boxShadow: `0 0 50px ${afterColor}12`,
+                    opacity: afterReveal,
+                    transform: `translateY(${(0,esm.interpolate)(afterReveal, [0, 1], [24, 0])}px)`,
+                    display: "flex",
+                    flexDirection: "column"
+                  },
+                  children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "span",
+                      {
+                        style: {
+                          background: `${afterColor}20`,
+                          color: afterColor,
+                          padding: "5px 18px",
+                          borderRadius: 8,
+                          fontSize: 18,
+                          fontWeight: 800,
+                          border: `1.5px solid ${afterColor}50`,
+                          fontFamily: "monospace"
+                        },
+                        children: after.label
+                      }
+                    ) }),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { height: 1, background: `${afterColor}20`, marginBottom: 20 } }),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { display: "flex", flexDirection: "column", gap: "12px" }, children: after.content.map((line, idx) => {
+                      const lineReveal = (0,esm.interpolate)(afterReveal, [idx * 0.05, idx * 0.05 + 0.15], [0, 1], {
+                        extrapolateLeft: "clamp",
+                        extrapolateRight: "clamp"
+                      });
+                      return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "div",
+                        {
+                          style: {
+                            opacity: lineReveal,
+                            transform: `translateX(${(0,esm.interpolate)(lineReveal, [0, 1], [15, 0])}px)`,
+                            fontFamily: "monospace",
+                            fontSize: "20px",
+                            color: "#cbd5e1"
+                          },
+                          children: line
+                        },
+                        idx
+                      );
+                    }) })
+                  ]
+                }
+              )
+            ]
+          }
+        )
+      ]
+    }
+  );
+};
+
+;// ./src/components/RetrySequence.tsx
+
+
+
+
+
+const RetrySequenceSchema = external.object({
+  title: external.string().optional(),
+  attempts: external.array(
+    external.object({
+      attemptNumber: external.number(),
+      delayMs: external.number(),
+      // Width of delay gap (proportional)
+      outcome: external["enum"](["fail", "success", "timeout"]),
+      label: external.string().optional()
+    })
+  ),
+  maxAttempts: external.number().optional(),
+  accentColor: external.string().optional()
+});
+const OUTCOME_COLORS = {
+  fail: "#ef4444",
+  timeout: "#f59e0b",
+  success: "#34d399"
+};
+const OUTCOME_SYMBOLS = {
+  fail: "\u2717",
+  timeout: "\u23F1",
+  success: "\u2713"
+};
+const RetrySequence = ({
+  title,
+  attempts,
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const { ref, scale } = useContainerScale();
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp"
+  });
+  const totalDelay = attempts.reduce((s, x) => s + x.delayMs, 0) || 1;
+  const startX = 150;
+  const totalWidth = 1620;
+  const attemptSprings = attempts.map(
+    (_, idx) => (0,esm.spring)({
+      frame: frame - (15 + idx * 18),
+      fps,
+      config: { damping: 14, stiffness: 120 },
+      durationInFrames: 30
+    })
+  );
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      ref,
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 48,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 32,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { flex: 1, position: "relative" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "svg",
+          {
+            width: "100%",
+            height: "100%",
+            viewBox: "0 0 1920 1080",
+            style: {
+              position: "absolute",
+              inset: 0,
+              transform: `scale(${scale})`,
+              transformOrigin: "center center"
+            },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0,jsx_runtime.jsxs)("filter", { id: "retry-glow", x: "-40%", y: "-40%", width: "180%", height: "180%", children: [
+                /* @__PURE__ */ (0,jsx_runtime.jsx)("feGaussianBlur", { stdDeviation: "8", result: "coloredBlur" }),
+                /* @__PURE__ */ (0,jsx_runtime.jsxs)("feMerge", { children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "coloredBlur" }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("feMergeNode", { in: "SourceGraphic" })
+                ] })
+              ] }) }),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "line",
+                {
+                  x1: startX,
+                  y1: 540,
+                  x2: startX + totalWidth,
+                  y2: 540,
+                  stroke: "#1e293b",
+                  strokeWidth: 6,
+                  strokeLinecap: "round"
+                }
+              ),
+              (() => {
+                let currentX = startX;
+                return attempts.map((attempt, idx) => {
+                  const sp = attemptSprings[idx];
+                  const outcomeColor = OUTCOME_COLORS[attempt.outcome];
+                  const symbol = OUTCOME_SYMBOLS[attempt.outcome];
+                  const x = currentX;
+                  const gapWidth = attempt.delayMs / totalDelay * (totalWidth - 200);
+                  currentX += gapWidth + 60;
+                  return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity: sp, children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "circle",
+                      {
+                        cx: x,
+                        cy: 540,
+                        r: 56,
+                        fill: "none",
+                        stroke: outcomeColor,
+                        strokeWidth: 1.5,
+                        opacity: 0.2
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "circle",
+                      {
+                        cx: x,
+                        cy: 540,
+                        r: 42,
+                        fill: "#0f172a",
+                        stroke: outcomeColor,
+                        strokeWidth: 3,
+                        style: { filter: `drop-shadow(0 0 10px ${outcomeColor}55)` }
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x,
+                        y: 551,
+                        textAnchor: "middle",
+                        fill: outcomeColor,
+                        fontSize: 36,
+                        fontWeight: 900,
+                        children: symbol
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x,
+                        y: 460,
+                        textAnchor: "middle",
+                        fill: "#f1f5f9",
+                        fontSize: 22,
+                        fontWeight: 800,
+                        children: attempt.label || `Attempt ${attempt.attemptNumber}`
+                      }
+                    ),
+                    idx < attempts.length - 1 && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "line",
+                      {
+                        x1: x + 42,
+                        y1: 540,
+                        x2: x + 42 + gapWidth * sp,
+                        y2: 540,
+                        stroke: sp > 0.8 ? outcomeColor : "#334155",
+                        strokeWidth: 4,
+                        strokeLinecap: "round"
+                      }
+                    ),
+                    idx < attempts.length - 1 && attempt.delayMs > 0 && /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${x + 42 + gapWidth / 2}, 600)`, opacity: sp, children: [
+                      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                        "rect",
+                        {
+                          x: -60,
+                          y: -18,
+                          width: 120,
+                          height: 32,
+                          rx: 6,
+                          fill: "#0b0f19",
+                          stroke: "#334155",
+                          strokeWidth: 1.5
+                        }
+                      ),
+                      /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                        "text",
+                        {
+                          x: 0,
+                          y: 4,
+                          textAnchor: "middle",
+                          fill: "#94a3b8",
+                          fontSize: 14,
+                          fontWeight: 700,
+                          fontFamily: "monospace",
+                          children: [
+                            "backoff ",
+                            attempt.delayMs,
+                            "ms"
+                          ]
+                        }
+                      )
+                    ] })
+                  ] }, idx);
+                });
+              })()
+            ]
+          }
+        ) })
+      ]
+    }
+  );
+};
+
+;// ./src/components/LoadPattern.tsx
+
+
+
+
+
+const LoadPatternSchema = external.object({
+  title: external.string().optional(),
+  series: external.array(
+    external.object({
+      label: external.string(),
+      color: external.string().optional(),
+      points: external.array(external.object({ t: external.number(), value: external.number() }))
+      // t: 0..100, value: 0..100
+    })
+  ),
+  annotations: external.array(
+    external.object({
+      t: external.number(),
+      label: external.string(),
+      color: external.string().optional()
+    })
+  ).optional(),
+  yLabel: external.string().optional(),
+  xLabel: external.string().optional(),
+  accentColor: external.string().optional()
+});
+const LoadPattern_SERIES_PALETTE = ["#38BDF8", "#a78bfa", "#f59e0b", "#34d399", "#f472b6"];
+const LoadPattern = ({
+  title,
+  series,
+  annotations = [],
+  yLabel = "Load",
+  xLabel = "Time",
+  accentColor = "#38BDF8"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const { ref, scale } = useContainerScale();
+  const PAD_L = 120;
+  const PAD_R = 120;
+  const PAD_T = 100;
+  const PAD_B = 120;
+  const CHART_W = 1920 - PAD_L - PAD_R;
+  const CHART_H = 1080 - PAD_T - PAD_B;
+  const titleOpacity = (0,esm.interpolate)(frame, [0, 18], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.out(esm.Easing.cubic)
+  });
+  const seriesSprings = series.map(
+    (_, i) => (0,esm.spring)({
+      frame: frame - (15 + i * 15),
+      fps,
+      config: { damping: 14, stiffness: 120 },
+      durationInFrames: 35
+    })
+  );
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+    "div",
+    {
+      ref,
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+        fontFamily: "Inter, sans-serif"
+      },
+      children: [
+        title && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+          "h2",
+          {
+            style: {
+              fontSize: 48,
+              fontWeight: 900,
+              color: "#f1f5f9",
+              letterSpacing: "-0.02em",
+              margin: 0,
+              marginBottom: 24,
+              opacity: titleOpacity,
+              textAlign: "center"
+            },
+            children: title
+          }
+        ),
+        /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { flex: 1, position: "relative" }, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+          "svg",
+          {
+            width: "100%",
+            height: "100%",
+            viewBox: "0 0 1920 1080",
+            style: {
+              position: "absolute",
+              inset: 0,
+              transform: `scale(${scale})`,
+              transformOrigin: "center center"
+            },
+            children: [
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "line",
+                {
+                  x1: PAD_L,
+                  y1: PAD_T,
+                  x2: PAD_L,
+                  y2: PAD_T + CHART_H,
+                  stroke: "#334155",
+                  strokeWidth: 3
+                }
+              ),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "line",
+                {
+                  x1: PAD_L,
+                  y1: PAD_T + CHART_H,
+                  x2: PAD_L + CHART_W,
+                  y2: PAD_T + CHART_H,
+                  stroke: "#334155",
+                  strokeWidth: 3
+                }
+              ),
+              [0, 25, 50, 75, 100].map((val) => {
+                const y = PAD_T + CHART_H - val / 100 * CHART_H;
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity: 0.35, children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "line",
+                    {
+                      x1: PAD_L,
+                      y1: y,
+                      x2: PAD_L + CHART_W,
+                      y2: y,
+                      stroke: "#475569",
+                      strokeWidth: 1.5,
+                      strokeDasharray: "6 6"
+                    }
+                  ),
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)(
+                    "text",
+                    {
+                      x: PAD_L - 16,
+                      y: y + 6,
+                      textAnchor: "end",
+                      fill: "#94a3b8",
+                      fontSize: 20,
+                      fontWeight: 600,
+                      children: [
+                        val,
+                        "%"
+                      ]
+                    }
+                  )
+                ] }, `y-grid-${val}`);
+              }),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "text",
+                {
+                  x: PAD_L - 80,
+                  y: PAD_T + CHART_H / 2,
+                  transform: `rotate(-90, ${PAD_L - 80}, ${PAD_T + CHART_H / 2})`,
+                  textAnchor: "middle",
+                  fill: "#94a3b8",
+                  fontSize: 24,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                  children: yLabel
+                }
+              ),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                "text",
+                {
+                  x: PAD_L + CHART_W / 2,
+                  y: PAD_T + CHART_H + 60,
+                  textAnchor: "middle",
+                  fill: "#94a3b8",
+                  fontSize: 24,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                  children: xLabel
+                }
+              ),
+              series.map((s, sIdx) => {
+                const color = s.color || LoadPattern_SERIES_PALETTE[sIdx % LoadPattern_SERIES_PALETTE.length];
+                const sp = seriesSprings[sIdx];
+                const pointsStr = s.points.map((p) => {
+                  const x = PAD_L + p.t / 100 * CHART_W;
+                  const y = PAD_T + CHART_H - p.value / 100 * CHART_H;
+                  return `${x},${y}`;
+                }).join(" ");
+                const pathLen = CHART_W * 1.5;
+                const dashOffset = pathLen * (1 - sp);
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity: sp, children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "polyline",
+                    {
+                      points: pointsStr,
+                      fill: "none",
+                      stroke: color,
+                      strokeWidth: 5,
+                      strokeLinecap: "round",
+                      strokeLinejoin: "round",
+                      strokeDasharray: pathLen,
+                      strokeDashoffset: dashOffset,
+                      style: { filter: `drop-shadow(0 0 8px ${color}66)` }
+                    }
+                  ),
+                  s.points.map((p, pIdx) => {
+                    const x = PAD_L + p.t / 100 * CHART_W;
+                    const y = PAD_T + CHART_H - p.value / 100 * CHART_H;
+                    return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "circle",
+                      {
+                        cx: x,
+                        cy: y,
+                        r: 7,
+                        fill: color,
+                        stroke: "#0f1729",
+                        strokeWidth: 2,
+                        opacity: sp
+                      },
+                      `pt-${sIdx}-${pIdx}`
+                    );
+                  })
+                ] }, `series-${sIdx}`);
+              }),
+              annotations.map((ann, aIdx) => {
+                const x = PAD_L + ann.t / 100 * CHART_W;
+                const color = ann.color || accentColor;
+                const annSpring = (0,esm.spring)({
+                  frame: frame - (40 + aIdx * 12),
+                  fps,
+                  config: { damping: 12, stiffness: 100 },
+                  durationInFrames: 30
+                });
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { opacity: annSpring, children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "line",
+                    {
+                      x1: x,
+                      y1: PAD_T,
+                      x2: x,
+                      y2: PAD_T + CHART_H,
+                      stroke: color,
+                      strokeWidth: 3,
+                      strokeDasharray: "6 6",
+                      style: { filter: `drop-shadow(0 0 4px ${color}aa)` }
+                    }
+                  ),
+                  /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(${x}, ${PAD_T - 30})`, children: [
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "rect",
+                      {
+                        x: -Math.max(60, ann.label.length * 6),
+                        y: -18,
+                        width: Math.max(120, ann.label.length * 12),
+                        height: 36,
+                        rx: 6,
+                        fill: "#1e293b",
+                        stroke: color,
+                        strokeWidth: 2
+                      }
+                    ),
+                    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                      "text",
+                      {
+                        x: 0,
+                        y: 6,
+                        textAnchor: "middle",
+                        fill: "#f1f5f9",
+                        fontSize: 13,
+                        fontWeight: 800,
+                        children: ann.label
+                      }
+                    )
+                  ] })
+                ] }, `ann-${aIdx}`);
+              }),
+              /* @__PURE__ */ (0,jsx_runtime.jsx)("g", { transform: `translate(${PAD_L + CHART_W - 320}, ${PAD_T + 40})`, children: series.map((s, sIdx) => {
+                const color = s.color || LoadPattern_SERIES_PALETTE[sIdx % LoadPattern_SERIES_PALETTE.length];
+                return /* @__PURE__ */ (0,jsx_runtime.jsxs)("g", { transform: `translate(0, ${sIdx * 35})`, children: [
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)("rect", { x: 0, y: -10, width: 24, height: 12, rx: 3, fill: color }),
+                  /* @__PURE__ */ (0,jsx_runtime.jsx)(
+                    "text",
+                    {
+                      x: 36,
+                      y: 2,
+                      fill: "#cbd5e1",
+                      fontSize: 18,
+                      fontWeight: 700,
+                      children: s.label
+                    }
+                  )
+                ] }, `leg-${sIdx}`);
+              }) })
+            ]
+          }
+        ) })
+      ]
+    }
+  );
+};
+
 ;// ./src/registry.ts
+
+
+
+
+
 
 
 
@@ -8840,7 +8987,12 @@ const COMPONENT_REGISTRY = {
   NumberedList: NumberedList,
   GlossaryCards: GlossaryCards,
   FlowDiagram: FlowDiagram,
-  CalloutAnnotation: CalloutAnnotation
+  CalloutAnnotation: CalloutAnnotation,
+  QueueFlow: QueueFlow,
+  TradeoffMatrix: TradeoffMatrix,
+  BeforeAfterTransform: BeforeAfterTransform,
+  RetrySequence: RetrySequence,
+  LoadPattern: LoadPattern
 };
 const COMPONENT_SCHEMAS = {
   AnimatedTitle: AnimatedTitleSchema,
@@ -8870,9 +9022,50 @@ const COMPONENT_SCHEMAS = {
   NumberedList: NumberedListSchema,
   GlossaryCards: GlossaryCardsSchema,
   FlowDiagram: FlowDiagramSchema,
-  CalloutAnnotation: CalloutAnnotationSchema
+  CalloutAnnotation: CalloutAnnotationSchema,
+  QueueFlow: QueueFlowSchema,
+  TradeoffMatrix: TradeoffMatrixSchema,
+  BeforeAfterTransform: BeforeAfterTransformSchema,
+  RetrySequence: RetrySequenceSchema,
+  LoadPattern: LoadPatternSchema
 };
-const toJsonSchema = (schema, name) => zodToJsonSchema(schema, name);
+const toJsonSchema = (schema, _name) => external.toJSONSchema(schema);
+const COMPONENT_META = {
+  AnimatedTitle: { category: "title", dataOwner: "content", bestAreas: ["panel"], useWhen: "scene 0 hook or final outro \u2014 a dramatic title with stakes", tags: ["title", "intro", "outro", "hook"], minSeconds: 4 },
+  TypewriterText: { category: "title", dataOwner: "content", bestAreas: ["panel"], useWhen: "billboard-style dramatic 2-3 line statement", tags: ["dramatic", "statement", "reveal", "billboard"], minSeconds: 4 },
+  QuoteCard: { category: "text", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "a real verbatim quote from a paper, talk, or engineer", tags: ["quote", "authority", "citation"], minSeconds: 5 },
+  CalloutAnnotation: { category: "text", dataOwner: "content", bestAreas: ["panel", "main", "sidebar"], useWhen: "emphasize a key insight or definition in prose", tags: ["insight", "definition", "takeaway", "explanation", "note"], minSeconds: 5 },
+  BulletList: { category: "list", dataOwner: "content", bestAreas: ["left", "right", "sidebar"], useWhen: "5-7 specific claims, each with a number or system name", tags: ["list", "points", "facts", "explanation"], minSeconds: 7 },
+  NumberedList: { category: "list", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "ranked principles or ordered top-N items", tags: ["ranked", "ordered", "principles", "steps"], minSeconds: 8 },
+  GlossaryCards: { category: "list", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "vocabulary, acronym glossary, or concept map", tags: ["glossary", "terms", "vocabulary", "definitions"], minSeconds: 8 },
+  StepFlow: { category: "list", dataOwner: "content", bestAreas: ["left", "main"], useWhen: "4-6 sequential steps, each starting with an action verb", tags: ["process", "steps", "sequence", "workflow"], minSeconds: 7 },
+  ComparisonCard: { category: "list", dataOwner: "content", bestAreas: ["main", "left"], useWhen: "head-to-head pros vs cons of one subject", tags: ["comparison", "pros", "cons", "tradeoffs"], minSeconds: 8 },
+  TwoColumnLayout: { category: "list", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "parallel comparison of two subjects (before/after, X vs Y)", tags: ["comparison", "parallel", "before-after", "two-column"], minSeconds: 8 },
+  SplitScreen: { category: "code", dataOwner: "content", bestAreas: ["main"], useWhen: "text bullets and a code snippet together", tags: ["code", "hybrid", "text"], minSeconds: 8 },
+  CodeBlock: { category: "code", dataOwner: "content", bestAreas: ["right", "main", "sidebar"], useWhen: "10-18 lines of real production code", tags: ["code", "implementation", "config", "snippet"], minSeconds: 8 },
+  TerminalCLI: { category: "code", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "a command plus its streamed terminal output", tags: ["terminal", "cli", "command", "shell", "debug"], minSeconds: 9 },
+  HttpExchange: { category: "code", dataOwner: "content", bestAreas: ["main", "panel"], useWhen: "an HTTP request/response pair (REST, API, protocol)", tags: ["http", "api", "rest", "request", "protocol"], minSeconds: 9 },
+  MathFormula: { category: "math", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "a single key equation or Big-O expression", tags: ["math", "formula", "equation", "big-o", "notation"], minSeconds: 6 },
+  EquationDerivation: { category: "math", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "a multi-step proof or algebraic derivation", tags: ["math", "proof", "derivation", "steps"], minSeconds: 10 },
+  StatCallout: { category: "chart", dataOwner: "visual", bestAreas: ["sidebar", "right"], useWhen: "one surprising real-world number", tags: ["stat", "metric", "number", "benchmark"], minSeconds: 4 },
+  BarChart: { category: "chart", dataOwner: "visual", bestAreas: ["right", "sidebar"], useWhen: "compare 4-6 real numeric values", tags: ["chart", "comparison", "benchmark", "metrics", "latency", "throughput"], minSeconds: 7 },
+  LineChart: { category: "chart", dataOwner: "visual", bestAreas: ["main", "right"], useWhen: "trends over time, growth curves, latency vs load", tags: ["chart", "trend", "time-series", "growth", "curve"], minSeconds: 8 },
+  PieChart: { category: "chart", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "proportional breakdown or traffic split", tags: ["chart", "proportion", "breakdown", "share", "split"], minSeconds: 7 },
+  ArchitectureDiagram: { category: "network-diagram", dataOwner: "visual", bestAreas: ["main", "right"], useWhen: "system topology with servers, DBs, load balancers", tags: ["architecture", "topology", "system", "infrastructure", "diagram"], minSeconds: 9 },
+  PacketFlow: { category: "network-diagram", dataOwner: "visual", bestAreas: ["main", "panel"], useWhen: "data packets traveling a network (protocols, routing)", tags: ["network", "packet", "protocol", "routing", "tcp"], minSeconds: 9 },
+  HashRing: { category: "network-diagram", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "consistent hashing, sharding, CDN/cache placement", tags: ["hashing", "sharding", "cache", "distributed", "ring"], minSeconds: 10 },
+  SequenceDiagram: { category: "sequence", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "time-ordered messages between actors/services", tags: ["sequence", "messages", "api-flow", "microservice", "auth"], minSeconds: 9 },
+  StateMachine: { category: "state-tree", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "finite states and transitions (protocols, FSMs)", tags: ["state-machine", "fsm", "protocol", "transitions", "raft"], minSeconds: 9 },
+  TreeHierarchy: { category: "state-tree", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "hierarchical structure (B-tree, DNS, file system, org)", tags: ["tree", "hierarchy", "b-tree", "dns", "recursion"], minSeconds: 8 },
+  FlowDiagram: { category: "state-tree", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "branching workflow with decisions (if/else logic)", tags: ["flowchart", "branching", "decision", "workflow", "algorithm"], minSeconds: 9 },
+  TimelineFlow: { category: "timeline", dataOwner: "visual", bestAreas: ["main", "panel"], useWhen: "chronological history with real dates and events", tags: ["timeline", "history", "chronology", "roadmap", "events"], minSeconds: 8 },
+  // 5 New Components Planning Meta
+  QueueFlow: { category: "network-diagram", dataOwner: "visual", bestAreas: ["main", "panel"], useWhen: "producer-consumer pattern, message queue, Kafka topic, SQS, event bus", tags: ["queue", "producers", "consumers", "message-queue", "kafka", "sqs", "rabbitmq"], minSeconds: 8 },
+  TradeoffMatrix: { category: "list", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "N-way tradeoff comparison across multiple criteria (CAP, databases)", tags: ["comparison", "matrix", "tradeoffs", "databases", "grid"], minSeconds: 8 },
+  BeforeAfterTransform: { category: "list", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "show data or state before and after a transformation (compaction, encoding)", tags: ["before-after", "transform", "compaction", "encoding", "state"], minSeconds: 8 },
+  RetrySequence: { category: "sequence", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "retry with backoff, circuit breaker, idempotency, delivery guarantees", tags: ["retry", "backoff", "timeout", "network", "exponential"], minSeconds: 8 },
+  LoadPattern: { category: "chart", dataOwner: "visual", bestAreas: ["main", "right"], useWhen: "traffic spike visualization, load test, traffic pattern, capacity planning", tags: ["traffic", "load", "spike", "time-series", "capacity"], minSeconds: 8 }
+};
 const COMPONENT_CATALOG = {
   AnimatedTitle: {
     description: "A large title with an optional subtitle and an animated underline. Good for intros and transitions.",
@@ -8985,7 +9178,155 @@ const COMPONENT_CATALOG = {
   CalloutAnnotation: {
     description: "A highlighted callout box with corner brackets, a side arrow, and optional bullet points. Use to emphasize a key insight or definition against a darker background.",
     schema: toJsonSchema(CalloutAnnotationSchema, "CalloutAnnotationProps")
+  },
+  // 5 New Components
+  QueueFlow: {
+    description: "A producer-consumer queue flow diagram showing message ingestion, queue buffer, and consumption.",
+    schema: toJsonSchema(QueueFlowSchema, "QueueFlowProps")
+  },
+  TradeoffMatrix: {
+    description: "An N-way tradeoff grid matrix comparing systems against multiple criteria.",
+    schema: toJsonSchema(TradeoffMatrixSchema, "TradeoffMatrixProps")
+  },
+  BeforeAfterTransform: {
+    description: "A side-by-side data transformation viewer demonstrating state before and after processing.",
+    schema: toJsonSchema(BeforeAfterTransformSchema, "BeforeAfterTransformProps")
+  },
+  RetrySequence: {
+    description: "A request retry attempt sequence chart with delay backoff bars.",
+    schema: toJsonSchema(RetrySequenceSchema, "RetrySequenceProps")
+  },
+  LoadPattern: {
+    description: "A multi-series chart representing traffic load patterns over time with annotated event markers.",
+    schema: toJsonSchema(LoadPatternSchema, "LoadPatternProps")
   }
+};
+
+;// ./src/components/Background.tsx
+
+
+
+
+const Background = ({
+  variant = "glow"
+}) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const theme = useTheme();
+  const gx = (0,esm.interpolate)(frame % 600, [0, 300, 600], [30, 70, 30]);
+  const gy = (0,esm.interpolate)(frame % 480, [0, 240, 480], [35, 65, 35]);
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm.AbsoluteFill, { style: { backgroundColor: theme.background, overflow: "hidden" }, children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      esm.AbsoluteFill,
+      {
+        style: {
+          background: `radial-gradient(circle at ${gx}% ${gy}%, ${theme.primary}22 0%, transparent 45%)`
+        }
+      }
+    ),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      esm.AbsoluteFill,
+      {
+        style: {
+          background: `radial-gradient(circle at ${100 - gx}% ${100 - gy}%, ${theme.secondary}18 0%, transparent 50%)`
+        }
+      }
+    ),
+    variant === "grid" && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      esm.AbsoluteFill,
+      {
+        style: {
+          backgroundImage: `linear-gradient(${theme.primary}0d 1px, transparent 1px), linear-gradient(90deg, ${theme.primary}0d 1px, transparent 1px)`,
+          backgroundSize: "64px 64px",
+          maskImage: "radial-gradient(circle at 50% 50%, black 30%, transparent 80%)"
+        }
+      }
+    ),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      esm.AbsoluteFill,
+      {
+        style: {
+          background: "radial-gradient(circle at 50% 50%, transparent 55%, rgba(0,0,0,0.35) 100%)"
+        }
+      }
+    )
+  ] });
+};
+
+;// ./src/components/CaptionLayer.tsx
+
+
+
+
+const CaptionLayer = ({ captions }) => {
+  const frame = (0,esm.useCurrentFrame)();
+  const { fps } = (0,esm.useVideoConfig)();
+  const theme = useTheme();
+  if (!captions || captions.length === 0) return null;
+  const ms = frame / fps * 1e3;
+  const active = captions.find((c) => ms >= c.startMs && ms < c.endMs);
+  if (!active) return null;
+  const localMs = ms - active.startMs;
+  const durMs = Math.max(1, active.endMs - active.startMs);
+  const localFrames = localMs / 1e3 * fps;
+  const durFrames = durMs / 1e3 * fps;
+  const fade = Math.min(6, durFrames / 3);
+  const opacity = (0,esm.interpolate)(
+    localFrames,
+    [0, fade, durFrames - fade, durFrames],
+    [0, 1, 1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: esm.Easing.out(esm.Easing.cubic) }
+  );
+  const translateY = (0,esm.interpolate)(localFrames, [0, 8], [12, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.bezier(0.16, 1, 0.3, 1)
+  });
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(
+    "div",
+    {
+      style: {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: 56,
+        display: "flex",
+        justifyContent: "center",
+        pointerEvents: "none",
+        opacity,
+        transform: `translateY(${translateY}px)`
+      },
+      children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "div",
+        {
+          style: {
+            maxWidth: "72%",
+            padding: "16px 30px",
+            borderRadius: 14,
+            background: "rgba(3, 7, 17, 0.72)",
+            backdropFilter: "blur(8px)",
+            border: `1px solid ${theme.primary}40`,
+            boxShadow: `0 8px 40px rgba(0,0,0,0.45)`,
+            borderLeft: `4px solid ${theme.accent}`
+          },
+          children: /* @__PURE__ */ (0,jsx_runtime.jsx)(
+            "span",
+            {
+              style: {
+                fontSize: 30,
+                lineHeight: 1.35,
+                fontWeight: 600,
+                color: "#f1f5f9",
+                textAlign: "center",
+                display: "block",
+                letterSpacing: "-0.01em"
+              },
+              children: active.text
+            }
+          )
+        }
+      )
+    }
+  );
 };
 
 ;// ./src/DynamicVideo.tsx
@@ -8994,6 +9335,17 @@ const COMPONENT_CATALOG = {
 
 
 
+
+
+const DIAGRAM_TYPES = /* @__PURE__ */ new Set([
+  "ArchitectureDiagram",
+  "PacketFlow",
+  "HashRing",
+  "StateMachine",
+  "TreeHierarchy",
+  "SequenceDiagram",
+  "FlowDiagram"
+]);
 function normaliseScene(scene) {
   if (scene.panels && scene.panels.length > 0) {
     return {
@@ -9134,6 +9486,7 @@ const PanelCell = ({
   panel,
   gridArea
 }) => {
+  const theme = useTheme();
   const Component = COMPONENT_REGISTRY[panel.type];
   const safeProps = Object.fromEntries(
     Object.entries(panel.data).map(([k, v]) => [
@@ -9141,6 +9494,9 @@ const PanelCell = ({
       v === null ? void 0 : v
     ])
   );
+  if (safeProps.accentColor == null) {
+    safeProps.accentColor = theme.primary;
+  }
   if (!Component) {
     return /* @__PURE__ */ (0,jsx_runtime.jsx)(
       "div",
@@ -9163,73 +9519,65 @@ const PanelCell = ({
   return /* @__PURE__ */ (0,jsx_runtime.jsx)("div", { style: { gridArea, position: "relative", overflow: "hidden" }, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(AnyComponent, { ...safeProps }) });
 };
 const TRANSITION_FRAMES = 15;
-const SceneWrapper = ({
-  scene,
-  background
-}) => {
+const SceneWrapper = ({ scene }) => {
   const { layout, title, panels } = normaliseScene(scene);
   const config = LAYOUTS[layout] ?? LAYOUTS["full"];
   const contentH = config.hasHeader ? CONTENT_H : 1080;
-  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(
-    esm.AbsoluteFill,
-    {
-      style: { backgroundColor: background, flexDirection: "column" },
-      children: [
-        config.hasHeader && /* @__PURE__ */ (0,jsx_runtime.jsx)(SceneHeader, { title, subtitle: scene.subtitle }),
-        /* @__PURE__ */ (0,jsx_runtime.jsx)(
-          "div",
-          {
-            style: {
-              flex: 1,
-              height: contentH,
-              display: "grid",
-              gridTemplateAreas: config.gridTemplateAreas,
-              gridTemplateColumns: config.gridTemplateColumns,
-              gridTemplateRows: config.gridTemplateRows,
-              gap: 0
-            },
-            children: panels.map((panel) => /* @__PURE__ */ (0,jsx_runtime.jsx)(PanelCell, { panel, gridArea: panel.area }, panel.area))
-          }
-        ),
-        scene.transition !== "none" && /* @__PURE__ */ (0,jsx_runtime.jsx)(
-          esm.Sequence,
-          {
-            from: scene.duration_frames - TRANSITION_FRAMES,
-            durationInFrames: TRANSITION_FRAMES,
-            layout: "none",
-            children: /* @__PURE__ */ (0,jsx_runtime.jsx)(TransitionOverlay, { transition: scene.transition })
-          }
-        )
-      ]
-    }
-  );
+  const hasDiagram = panels.some((p) => DIAGRAM_TYPES.has(p.type));
+  return /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm.AbsoluteFill, { children: [
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(Background, { variant: hasDiagram ? "grid" : "glow" }),
+    /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm.AbsoluteFill, { style: { flexDirection: "column", zIndex: 1 }, children: [
+      config.hasHeader && /* @__PURE__ */ (0,jsx_runtime.jsx)(SceneHeader, { title, subtitle: scene.subtitle }),
+      /* @__PURE__ */ (0,jsx_runtime.jsx)(
+        "div",
+        {
+          style: {
+            flex: 1,
+            height: contentH,
+            display: "grid",
+            gridTemplateAreas: config.gridTemplateAreas,
+            gridTemplateColumns: config.gridTemplateColumns,
+            gridTemplateRows: config.gridTemplateRows,
+            gap: 0
+          },
+          children: panels.map((panel) => /* @__PURE__ */ (0,jsx_runtime.jsx)(PanelCell, { panel, gridArea: panel.area }, panel.area))
+        }
+      )
+    ] }),
+    scene.transition !== "none" && /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      esm.Sequence,
+      {
+        from: scene.duration_frames - TRANSITION_FRAMES,
+        durationInFrames: TRANSITION_FRAMES,
+        layout: "none",
+        children: /* @__PURE__ */ (0,jsx_runtime.jsx)(TransitionOverlay, { transition: scene.transition })
+      }
+    )
+  ] });
 };
 const TransitionOverlay = ({
   transition
 }) => {
   const frame = (0,esm.useCurrentFrame)();
-  const { fps } = (0,esm.useVideoConfig)();
-  const progress = (0,esm.spring)({
-    frame,
-    fps,
-    config: { damping: 20, stiffness: 300 },
-    durationInFrames: TRANSITION_FRAMES
+  const theme = useTheme();
+  const p = (0,esm.interpolate)(frame, [0, TRANSITION_FRAMES], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: esm.Easing.bezier(0.65, 0, 0.35, 1)
   });
-  const fadeOpacity = (0,esm.interpolate)(
-    frame,
-    [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES],
-    [0, 1, 0],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp"
-    }
-  );
+  const panel = `linear-gradient(135deg, ${theme.background} 0%, ${theme.primary}cc 60%, ${theme.accent}aa 100%)`;
   if (transition === "fade") {
+    const fadeOpacity = (0,esm.interpolate)(
+      frame,
+      [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES],
+      [0, 0.95, 0],
+      { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+    );
     return /* @__PURE__ */ (0,jsx_runtime.jsx)(
       esm.AbsoluteFill,
       {
         style: {
-          backgroundColor: "#000",
+          background: panel,
           opacity: fadeOpacity,
           pointerEvents: "none"
         }
@@ -9241,9 +9589,8 @@ const TransitionOverlay = ({
       esm.AbsoluteFill,
       {
         style: {
-          backgroundColor: "#000",
-          opacity: 0.7,
-          transform: `translateX(${(0,esm.interpolate)(progress, [0, 1], [0, -100])}%)`,
+          background: panel,
+          transform: `translateX(${(0,esm.interpolate)(p, [0, 1], [100, 0])}%)`,
           pointerEvents: "none"
         }
       }
@@ -9254,22 +9601,27 @@ const TransitionOverlay = ({
       esm.AbsoluteFill,
       {
         style: {
-          backgroundColor: "#000",
-          opacity: 0.7,
-          transform: `translateY(${(0,esm.interpolate)(progress, [0, 1], [0, -100])}%)`,
+          background: panel,
+          transform: `translateY(${(0,esm.interpolate)(p, [0, 1], [100, 0])}%)`,
           pointerEvents: "none"
         }
       }
     );
   }
   if (transition === "zoom") {
+    const flash = (0,esm.interpolate)(
+      frame,
+      [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES],
+      [0, 0.85, 0],
+      { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+    );
     return /* @__PURE__ */ (0,jsx_runtime.jsx)(
       esm.AbsoluteFill,
       {
         style: {
-          backgroundColor: "#000",
-          opacity: fadeOpacity * 0.6,
-          transform: `scale(${(0,esm.interpolate)(progress, [0, 1], [1, 1.08])})`,
+          background: `radial-gradient(circle at 50% 50%, ${theme.accent}, ${theme.primary} 50%, ${theme.background} 100%)`,
+          opacity: flash,
+          transform: `scale(${(0,esm.interpolate)(p, [0, 1], [1, 1.12])})`,
           pointerEvents: "none"
         }
       }
@@ -9277,35 +9629,44 @@ const TransitionOverlay = ({
   }
   return null;
 };
-const DynamicVideo = ({ theme, scenes }) => {
+const DynamicVideo = ({
+  theme,
+  scenes,
+  voiceover
+}) => {
   let cursor = 0;
   const positioned = scenes.map((scene) => {
     const from = cursor;
     cursor += scene.duration_frames;
     return { scene, from };
   });
-  return /* @__PURE__ */ (0,jsx_runtime.jsx)(ThemeProvider, { theme, children: /* @__PURE__ */ (0,jsx_runtime.jsx)(esm.AbsoluteFill, { style: { backgroundColor: theme.background }, children: positioned.map(({ scene, from }) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
-    esm.Sequence,
-    {
-      from,
-      durationInFrames: scene.duration_frames,
-      premountFor: 30,
-      style: {
-        translate: "-19px 3.6px"
+  return /* @__PURE__ */ (0,jsx_runtime.jsx)(ThemeProvider, { theme, children: /* @__PURE__ */ (0,jsx_runtime.jsxs)(esm.AbsoluteFill, { style: { backgroundColor: theme.background }, children: [
+    positioned.map(({ scene, from }) => /* @__PURE__ */ (0,jsx_runtime.jsx)(
+      esm.Sequence,
+      {
+        from,
+        durationInFrames: scene.duration_frames,
+        premountFor: 30,
+        style: {
+          translate: "-23.8px -15.1px"
+        },
+        children: /* @__PURE__ */ (0,jsx_runtime.jsx)(SceneWrapper, { scene })
       },
-      children: /* @__PURE__ */ (0,jsx_runtime.jsx)(SceneWrapper, { scene, background: theme.background })
-    },
-    scene.id
-  )) }) });
+      scene.id
+    )),
+    /* @__PURE__ */ (0,jsx_runtime.jsx)(CaptionLayer, { captions: voiceover == null ? void 0 : voiceover.captions })
+  ] }) });
 };
 
 ;// ./src/generated/examples.generated.ts
 
 const EXAMPLE_SCRIPTS = {
+  "btree-indexes": __webpack_require__(1907),
   "client-server-architecture": __webpack_require__(1503),
   "create-an-interactive-presentation-on-client-server-communication-with-3-slides": __webpack_require__(1443),
   "full-showcase": __webpack_require__(5433),
   "horizontal-vs-vertical-scaling": __webpack_require__(7909),
+  "how-kubernetes-works": __webpack_require__(3754),
   "kubernetes": __webpack_require__(6684),
   "mock-all": __webpack_require__(1928),
   "scaling": __webpack_require__(8209),
@@ -9622,7 +9983,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
     --spacing: 0.25rem;
     --container-2xl: 42rem;
     --container-4xl: 56rem;
-    --container-5xl: 64rem;
     --text-xs: 0.75rem;
     --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
@@ -9827,6 +10187,9 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .absolute {
     position: absolute;
   }
+  .fixed {
+    position: fixed;
+  }
   .relative {
     position: relative;
   }
@@ -9838,18 +10201,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   }
   .end {
     inset-inline-end: var(--spacing);
-  }
-  .top-1\\/2 {
-    top: calc(1 / 2 * 100%);
-  }
-  .right-0 {
-    right: calc(var(--spacing) * 0);
-  }
-  .left-0 {
-    left: calc(var(--spacing) * 0);
-  }
-  .-z-10 {
-    z-index: calc(10 * -1);
   }
   .container {
     width: 100%;
@@ -9896,11 +10247,11 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .mb-12 {
     margin-bottom: calc(var(--spacing) * 12);
   }
-  .mb-16 {
-    margin-bottom: calc(var(--spacing) * 16);
-  }
   .block {
     display: block;
+  }
+  .contents {
+    display: contents;
   }
   .flex {
     display: flex;
@@ -9920,9 +10271,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .inline-flex {
     display: inline-flex;
   }
-  .h-1 {
-    height: calc(var(--spacing) * 1);
-  }
   .h-1\\.5 {
     height: calc(var(--spacing) * 1.5);
   }
@@ -9937,9 +10285,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   }
   .h-8 {
     height: calc(var(--spacing) * 8);
-  }
-  .h-16 {
-    height: calc(var(--spacing) * 16);
   }
   .h-\\[550px\\] {
     height: 550px;
@@ -9959,12 +10304,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .w-8 {
     width: calc(var(--spacing) * 8);
   }
-  .w-16 {
-    width: calc(var(--spacing) * 16);
-  }
-  .w-48 {
-    width: calc(var(--spacing) * 48);
-  }
   .w-72 {
     width: calc(var(--spacing) * 72);
   }
@@ -9980,9 +10319,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .max-w-4xl {
     max-width: var(--container-4xl);
   }
-  .max-w-5xl {
-    max-width: var(--container-5xl);
-  }
   .flex-1 {
     flex: 1;
   }
@@ -9992,10 +10328,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .grow {
     flex-grow: 1;
   }
-  .-translate-y-1\\/2 {
-    --tw-translate-y: calc(calc(1 / 2 * 100%) * -1);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
   }
@@ -10004,9 +10336,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   }
   .flex-col {
     flex-direction: column;
-  }
-  .flex-row {
-    flex-direction: row;
   }
   .items-center {
     align-items: center;
@@ -10079,10 +10408,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
     border-style: var(--tw-border-style);
     border-width: 2px;
   }
-  .border-4 {
-    border-style: var(--tw-border-style);
-    border-width: 4px;
-  }
   .border-t {
     border-top-style: var(--tw-border-style);
     border-top-width: 1px;
@@ -10119,9 +10444,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .border-slate-900 {
     border-color: var(--color-slate-900);
   }
-  .bg-slate-800 {
-    background-color: var(--color-slate-800);
-  }
   .bg-slate-900\\/90 {
     background-color: color-mix(in srgb, oklch(0.208 0.042 265.755) 90%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -10136,9 +10458,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-slate-950) 80%, transparent);
     }
-  }
-  .bg-white {
-    background-color: var(--color-white);
   }
   .p-2\\.5 {
     padding: calc(var(--spacing) * 2.5);
@@ -10213,10 +10532,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
     font-size: var(--text-sm);
     line-height: var(--tw-leading, var(--text-sm--line-height));
   }
-  .text-xl {
-    font-size: var(--text-xl);
-    line-height: var(--tw-leading, var(--text-xl--line-height));
-  }
   .text-xs {
     font-size: var(--text-xs);
     line-height: var(--tw-leading, var(--text-xs--line-height));
@@ -10280,9 +10595,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .text-slate-500 {
     color: var(--color-slate-500);
   }
-  .text-slate-900 {
-    color: var(--color-slate-900);
-  }
   .text-white {
     color: var(--color-white);
   }
@@ -10305,6 +10617,10 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   .ring {
     --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .outline {
+    outline-style: var(--tw-outline-style);
+    outline-width: 1px;
   }
   .blur {
     --tw-blur: blur(8px);
@@ -10376,21 +10692,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
       line-height: var(--tw-leading, var(--text-xl--line-height));
     }
   }
-}
-@property --tw-translate-x {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0;
-}
-@property --tw-translate-y {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0;
-}
-@property --tw-translate-z {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0;
 }
 @property --tw-rotate-x {
   syntax: "*";
@@ -10514,6 +10815,11 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
   inherits: false;
   initial-value: 0 0 #0000;
 }
+@property --tw-outline-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
 @property --tw-blur {
   syntax: "*";
   inherits: false;
@@ -10614,9 +10920,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
     *, ::before, ::after, ::backdrop {
-      --tw-translate-x: 0;
-      --tw-translate-y: 0;
-      --tw-translate-z: 0;
       --tw-rotate-x: initial;
       --tw-rotate-y: initial;
       --tw-rotate-z: initial;
@@ -10645,6 +10948,7 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
       --tw-ring-offset-width: 0px;
       --tw-ring-offset-color: #fff;
       --tw-ring-offset-shadow: 0 0 #0000;
+      --tw-outline-style: solid;
       --tw-blur: initial;
       --tw-brightness: initial;
       --tw-contrast: initial;
@@ -10672,7 +10976,7 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*! tailwindcss v4.2.0 | MIT License |
     }
   }
 }
-`, "",{"version":3,"sources":["webpack://./src/index.css"],"names":[],"mappings":"AAAA,gEAAgE;AAChE,iBAAiB;AACjB,yCAAyC;AACzC;EACE;IACE;6DACyD;IACzD;iDAC6C;IAC7C,6CAA6C;IAC7C,+CAA+C;IAC/C,2CAA2C;IAC3C,6CAA6C;IAC7C,6CAA6C;IAC7C,4CAA4C;IAC5C,6CAA6C;IAC7C,6CAA6C;IAC7C,6CAA6C;IAC7C,6CAA6C;IAC7C,mBAAmB;IACnB,kBAAkB;IAClB,sBAAsB;IACtB,sBAAsB;IACtB,sBAAsB;IACtB,kBAAkB;IAClB,sCAAsC;IACtC,mBAAmB;IACnB,0CAA0C;IAC1C,mBAAmB;IACnB,0CAA0C;IAC1C,kBAAkB;IAClB,yCAAyC;IACzC,kBAAkB;IAClB,sCAAsC;IACtC,oBAAoB;IACpB,2CAA2C;IAC3C,mBAAmB;IACnB,yCAAyC;IACzC,gBAAgB;IAChB,0BAA0B;IAC1B,mBAAmB;IACnB,0BAA0B;IAC1B,gBAAgB;IAChB,0BAA0B;IAC1B,gBAAgB;IAChB,0BAA0B;IAC1B,uBAAuB;IACvB,wBAAwB;IACxB,0BAA0B;IAC1B,sBAAsB;IACtB,wBAAwB;IACxB,wBAAwB;IACxB,qBAAqB;IACrB,wBAAwB;IACxB,oBAAoB;IACpB,mBAAmB;IACnB,kBAAkB;IAClB,oBAAoB;IACpB,gDAAgD;IAChD,sCAAsC;IACtC,eAAe;IACf,oCAAoC;IACpC,kEAAkE;IAClE,uCAAuC;IACvC,wEAAwE;IACxE;;KAEC;IACD,4CAA4C;IAC5C;;KAEC;IACD;;KAEC;EACH;AACF;AACA;EACE;IACE,sBAAsB;IACtB,SAAS;IACT,UAAU;IACV,eAAe;EACjB;EACA;IACE,gBAAgB;IAChB,8BAA8B;IAC9B,WAAW;IACX,6JAA6J;IAC7J,mEAAmE;IACnE,yEAAyE;IACzE,wCAAwC;EAC1C;EACA;IACE,oBAAoB;EACtB;EACA;IACE,SAAS;IACT,cAAc;IACd,qBAAqB;EACvB;EACA;IACE,yCAAyC;IACzC,iCAAiC;EACnC;EACA;IACE,kBAAkB;IAClB,oBAAoB;EACtB;EACA;IACE,cAAc;IACd,gCAAgC;IAChC,wBAAwB;EAC1B;EACA;IACE,mBAAmB;EACrB;EACA;IACE,kJAAkJ;IAClJ,0EAA0E;IAC1E,8EAA8E;IAC9E,cAAc;EAChB;EACA;IACE,cAAc;EAChB;EACA;IACE,cAAc;IACd,cAAc;IACd,kBAAkB;IAClB,wBAAwB;EAC1B;EACA;IACE,eAAe;EACjB;EACA;IACE,WAAW;EACb;EACA;IACE,cAAc;IACd,qBAAqB;IACrB,yBAAyB;EAC3B;EACA;IACE,aAAa;EACf;EACA;IACE,wBAAwB;EAC1B;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,cAAc;IACd,sBAAsB;EACxB;EACA;IACE,eAAe;IACf,YAAY;EACd;EACA;IACE,aAAa;IACb,8BAA8B;IAC9B,gCAAgC;IAChC,uBAAuB;IACvB,cAAc;IACd,gBAAgB;IAChB,6BAA6B;IAC7B,UAAU;EACZ;EACA;IACE,mBAAmB;EACrB;EACA;IACE,0BAA0B;EAC5B;EACA;IACE,sBAAsB;EACxB;EACA;IACE,UAAU;IACV,mBAAmB;IACnB;MACE,yDAAyD;IAC3D;EACF;EACA;IACE,gBAAgB;EAClB;EACA;IACE,wBAAwB;EAC1B;EACA;IACE,eAAe;IACf,mBAAmB;EACrB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,UAAU;EACZ;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,YAAY;EACd;EACA;IACE,wBAAwB;EAC1B;AACF;AACA;EACE;IACE,mBAAmB;EACrB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,kCAAkC;EACpC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,uBAAuB;EACzB;EACA;IACE,+BAA+B;EACjC;EACA;IACE,8BAA8B;EAChC;EACA;IACE,sBAAsB;EACxB;EACA;IACE,WAAW;IACX;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;EACF;EACA;IACE,sCAAsC;EACxC;EACA;IACE,oCAAoC;EACtC;EACA;IACE,sCAAsC;EACxC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,cAAc;EAChB;EACA;IACE,aAAa;EACf;EACA;IACE,aAAa;EACf;EACA;IACE,aAAa;EACf;EACA;IACE,eAAe;EACjB;EACA;IACE,qBAAqB;EACvB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,gCAAgC;EAClC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,aAAa;EACf;EACA;IACE,YAAY;EACd;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,YAAY;EACd;EACA;IACE,WAAW;EACb;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,OAAO;EACT;EACA;IACE,cAAc;EAChB;EACA;IACE,YAAY;EACd;EACA;IACE,+CAA+C;IAC/C,sDAAsD;EACxD;EACA;IACE,0GAA0G;EAC5G;EACA;IACE,gDAAgD;EAClD;EACA;IACE,sBAAsB;EACxB;EACA;IACE,mBAAmB;EACrB;EACA;IACE,mBAAmB;EACrB;EACA;IACE,uBAAuB;EACzB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,8BAA8B;EAChC;EACA;IACE,uBAAuB;EACzB;EACA;IACE,2BAA2B;EAC7B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,mCAAmC;EACrC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,wCAAwC;IACxC,qBAAqB;EACvB;EACA;IACE,2CAA2C;IAC3C,wBAAwB;EAC1B;EACA;IACE,2CAA2C;IAC3C,wBAAwB;EAC1B;EACA;IACE,oCAAoC;EACtC;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,oCAAoC;EACtC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,iFAAiF;IACjF;MACE,8EAA8E;IAChF;EACF;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,iFAAiF;IACjF;MACE,8EAA8E;IAChF;EACF;EACA;IACE,oCAAoC;EACtC;EACA;IACE,mCAAmC;EACrC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,qCAAqC;EACvC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,eAAe;EACjB;EACA;IACE,eAAe;EACjB;EACA;IACE,eAAe;EACjB;EACA;IACE,oCAAoC;IACpC,mCAAmC;EACrC;EACA;IACE,kCAAkC;IAClC,iCAAiC;EACnC;EACA;IACE,0CAA0C;IAC1C,qCAAqC;EACvC;EACA;IACE,yCAAyC;IACzC,oCAAoC;EACtC;EACA;IACE,qCAAqC;IACrC,sCAAsC;EACxC;EACA;IACE,oCAAoC;IACpC,qCAAqC;EACvC;EACA;IACE,oCAAoC;IACpC,qCAAqC;EACvC;EACA;IACE,qCAAqC;IACrC,sCAAsC;EACxC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,4BAA4B;EAC9B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,yBAAyB;EAC3B;EACA;IACE,8BAA8B;EAChC;EACA;IACE,yBAAyB;EAC3B;EACA;IACE,kBAAkB;EACpB;EACA;IACE,kCAAkC;IAClC,iJAAiJ;EACnJ;EACA;IACE,+BAA+B;EACjC;EACA;IACE,wHAAwH;IACxH,sIAAsI;EACxI;EACA;IACE,oBAAoB;IACpB,0LAA0L;EAC5L;EACA;IACE,8FAA8F;IAC9F,qDAAqD;IACrD,0LAA0L;EAC5L;EACA;IACE,8FAA8F;IAC9F,4CAA4C;IAC5C,0LAA0L;EAC5L;EACA;IACE,0LAA0L;EAC5L;EACA;IACE,wCAAwC;IACxC,wRAAwR;IACxR,gRAAgR;EAClR;EACA;IACE,yUAAyU;IACzU,qFAAqF;IACrF,2EAA2E;EAC7E;EACA;IACE,wBAAwB;IACxB,qFAAqF;IACrF,2EAA2E;EAC7E;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,0BAA0B;IAC1B,2CAA2C;EAC7C;EACA;IACE,yBAAyB;IACzB,iBAAiB;EACnB;EACA;IACE;MACE,0BAA0B;MAC1B,4DAA4D;IAC9D;EACF;EACA;IACE;MACE,0BAA0B;MAC1B,4DAA4D;IAC9D;EACF;EACA;IACE;MACE,yBAAyB;MACzB,2DAA2D;IAC7D;EACF;AACF;AACA;EACE,WAAW;EACX,eAAe;EACf,gBAAgB;AAClB;AACA;EACE,WAAW;EACX,eAAe;EACf,gBAAgB;AAClB;AACA;EACE,WAAW;EACX,eAAe;EACf,gBAAgB;AAClB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,oBAAoB;AACtB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,sBAAsB;EACtB,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,sBAAsB;EACtB,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,kBAAkB;EAClB,eAAe;EACf,kBAAkB;AACpB;AACA;EACE,WAAW;EACX,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,sBAAsB;EACtB,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE;IACE;MACE,mBAAmB;MACnB,mBAAmB;MACnB,mBAAmB;MACnB,sBAAsB;MACtB,sBAAsB;MACtB,sBAAsB;MACtB,oBAAoB;MACpB,oBAAoB;MACpB,wBAAwB;MACxB,qBAAqB;MACrB,yBAAyB;MACzB,sBAAsB;MACtB,qBAAqB;MACrB,0BAA0B;MAC1B,4BAA4B;MAC5B,6BAA6B;MAC7B,8BAA8B;MAC9B,sBAAsB;MACtB,0BAA0B;MAC1B,uBAAuB;MACvB,4BAA4B;MAC5B,gCAAgC;MAChC,6BAA6B;MAC7B,wBAAwB;MACxB,2BAA2B;MAC3B,8BAA8B;MAC9B,iCAAiC;MACjC,wBAAwB;MACxB,2BAA2B;MAC3B,4BAA4B;MAC5B,kCAAkC;MAClC,kBAAkB;MAClB,wBAAwB;MACxB,sBAAsB;MACtB,uBAAuB;MACvB,wBAAwB;MACxB,oBAAoB;MACpB,qBAAqB;MACrB,sBAAsB;MACtB,mBAAmB;MACnB,yBAAyB;MACzB,+BAA+B;MAC/B,4BAA4B;MAC5B,8BAA8B;MAC9B,2BAA2B;MAC3B,iCAAiC;MACjC,+BAA+B;MAC/B,gCAAgC;MAChC,iCAAiC;MACjC,6BAA6B;MAC7B,8BAA8B;MAC9B,+BAA+B;MAC/B,4BAA4B;MAC5B,sBAAsB;MACtB,kBAAkB;IACpB;EACF;AACF","sourcesContent":["/*! tailwindcss v4.2.0 | MIT License | https://tailwindcss.com */\n@layer properties;\n@layer theme, base, components, utilities;\n@layer theme {\n  :root, :host {\n    --font-sans: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\",\n      \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";\n    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,\n      \"Liberation Mono\", \"Courier New\", monospace;\n    --color-yellow-500: oklch(0.795 0.184 86.047);\n    --color-emerald-400: oklch(0.765 0.177 163.223);\n    --color-rose-400: oklch(0.712 0.194 13.428);\n    --color-slate-200: oklch(0.929 0.013 255.508);\n    --color-slate-300: oklch(0.869 0.022 252.894);\n    --color-slate-400: oklch(0.704 0.04 256.788);\n    --color-slate-500: oklch(0.554 0.046 257.417);\n    --color-slate-800: oklch(0.279 0.041 260.031);\n    --color-slate-900: oklch(0.208 0.042 265.755);\n    --color-slate-950: oklch(0.129 0.042 264.695);\n    --color-white: #fff;\n    --spacing: 0.25rem;\n    --container-2xl: 42rem;\n    --container-4xl: 56rem;\n    --container-5xl: 64rem;\n    --text-xs: 0.75rem;\n    --text-xs--line-height: calc(1 / 0.75);\n    --text-sm: 0.875rem;\n    --text-sm--line-height: calc(1.25 / 0.875);\n    --text-lg: 1.125rem;\n    --text-lg--line-height: calc(1.75 / 1.125);\n    --text-xl: 1.25rem;\n    --text-xl--line-height: calc(1.75 / 1.25);\n    --text-2xl: 1.5rem;\n    --text-2xl--line-height: calc(2 / 1.5);\n    --text-3xl: 1.875rem;\n    --text-3xl--line-height: calc(2.25 / 1.875);\n    --text-4xl: 2.25rem;\n    --text-4xl--line-height: calc(2.5 / 2.25);\n    --text-5xl: 3rem;\n    --text-5xl--line-height: 1;\n    --text-6xl: 3.75rem;\n    --text-6xl--line-height: 1;\n    --text-8xl: 6rem;\n    --text-8xl--line-height: 1;\n    --text-9xl: 8rem;\n    --text-9xl--line-height: 1;\n    --font-weight-bold: 700;\n    --font-weight-black: 900;\n    --tracking-tight: -0.025em;\n    --tracking-normal: 0em;\n    --tracking-wider: 0.05em;\n    --tracking-widest: 0.1em;\n    --leading-tight: 1.25;\n    --leading-relaxed: 1.625;\n    --radius-sm: 0.25rem;\n    --radius-lg: 0.5rem;\n    --radius-2xl: 1rem;\n    --radius-3xl: 1.5rem;\n    --drop-shadow-2xl: 0 25px 25px rgb(0 0 0 / 0.15);\n    --ease-out: cubic-bezier(0, 0, 0.2, 1);\n    --blur-lg: 16px;\n    --default-transition-duration: 150ms;\n    --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n    --default-font-family: var(--font-sans);\n    --default-font-feature-settings: var(--font-sans--font-feature-settings);\n    --default-font-variation-settings: var(\n      --font-sans--font-variation-settings\n    );\n    --default-mono-font-family: var(--font-mono);\n    --default-mono-font-feature-settings: var(\n      --font-mono--font-feature-settings\n    );\n    --default-mono-font-variation-settings: var(\n      --font-mono--font-variation-settings\n    );\n  }\n}\n@layer base {\n  *, ::after, ::before, ::backdrop, ::file-selector-button {\n    box-sizing: border-box;\n    margin: 0;\n    padding: 0;\n    border: 0 solid;\n  }\n  html, :host {\n    line-height: 1.5;\n    -webkit-text-size-adjust: 100%;\n    tab-size: 4;\n    font-family: var( --default-font-family, ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\" );\n    font-feature-settings: var(--default-font-feature-settings, normal);\n    font-variation-settings: var( --default-font-variation-settings, normal );\n    -webkit-tap-highlight-color: transparent;\n  }\n  body {\n    line-height: inherit;\n  }\n  hr {\n    height: 0;\n    color: inherit;\n    border-top-width: 1px;\n  }\n  abbr:where([title]) {\n    -webkit-text-decoration: underline dotted;\n    text-decoration: underline dotted;\n  }\n  h1, h2, h3, h4, h5, h6 {\n    font-size: inherit;\n    font-weight: inherit;\n  }\n  a {\n    color: inherit;\n    -webkit-text-decoration: inherit;\n    text-decoration: inherit;\n  }\n  b, strong {\n    font-weight: bolder;\n  }\n  code, kbd, samp, pre {\n    font-family: var( --default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace );\n    font-feature-settings: var( --default-mono-font-feature-settings, normal );\n    font-variation-settings: var( --default-mono-font-variation-settings, normal );\n    font-size: 1em;\n  }\n  small {\n    font-size: 80%;\n  }\n  sub, sup {\n    font-size: 75%;\n    line-height: 0;\n    position: relative;\n    vertical-align: baseline;\n  }\n  sub {\n    bottom: -0.25em;\n  }\n  sup {\n    top: -0.5em;\n  }\n  table {\n    text-indent: 0;\n    border-color: inherit;\n    border-collapse: collapse;\n  }\n  :-moz-focusring {\n    outline: auto;\n  }\n  progress {\n    vertical-align: baseline;\n  }\n  summary {\n    display: list-item;\n  }\n  ol, ul, menu {\n    list-style: none;\n  }\n  img, svg, video, canvas, audio, iframe, embed, object {\n    display: block;\n    vertical-align: middle;\n  }\n  img, video {\n    max-width: 100%;\n    height: auto;\n  }\n  button, input, select, optgroup, textarea, ::file-selector-button {\n    font: inherit;\n    font-feature-settings: inherit;\n    font-variation-settings: inherit;\n    letter-spacing: inherit;\n    color: inherit;\n    border-radius: 0;\n    background-color: transparent;\n    opacity: 1;\n  }\n  :where(select:is([multiple], [size])) optgroup {\n    font-weight: bolder;\n  }\n  :where(select:is([multiple], [size])) optgroup option {\n    padding-inline-start: 20px;\n  }\n  ::file-selector-button {\n    margin-inline-end: 4px;\n  }\n  ::placeholder {\n    opacity: 1;\n    color: currentColor;\n    @supports (color: color-mix(in lab, red, red)) {\n      color: color-mix(in oklab, currentColor 50%, transparent);\n    }\n  }\n  textarea {\n    resize: vertical;\n  }\n  ::-webkit-search-decoration {\n    -webkit-appearance: none;\n  }\n  ::-webkit-date-and-time-value {\n    min-height: 1lh;\n    text-align: inherit;\n  }\n  ::-webkit-datetime-edit {\n    display: inline-flex;\n  }\n  ::-webkit-datetime-edit-fields-wrapper {\n    padding: 0;\n  }\n  ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {\n    padding-block: 0;\n  }\n  :-moz-ui-invalid {\n    box-shadow: none;\n  }\n  button, input:where([type=\"button\"], [type=\"reset\"], [type=\"submit\"]), ::file-selector-button {\n    appearance: button;\n  }\n  ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {\n    height: auto;\n  }\n  [hidden]:where(:not([hidden=\"until-found\"])) {\n    display: none !important;\n  }\n}\n@layer utilities {\n  .visible {\n    visibility: visible;\n  }\n  .absolute {\n    position: absolute;\n  }\n  .relative {\n    position: relative;\n  }\n  .static {\n    position: static;\n  }\n  .start {\n    inset-inline-start: var(--spacing);\n  }\n  .end {\n    inset-inline-end: var(--spacing);\n  }\n  .top-1\\/2 {\n    top: calc(1 / 2 * 100%);\n  }\n  .right-0 {\n    right: calc(var(--spacing) * 0);\n  }\n  .left-0 {\n    left: calc(var(--spacing) * 0);\n  }\n  .-z-10 {\n    z-index: calc(10 * -1);\n  }\n  .container {\n    width: 100%;\n    @media (width >= 40rem) {\n      max-width: 40rem;\n    }\n    @media (width >= 48rem) {\n      max-width: 48rem;\n    }\n    @media (width >= 64rem) {\n      max-width: 64rem;\n    }\n    @media (width >= 80rem) {\n      max-width: 80rem;\n    }\n    @media (width >= 96rem) {\n      max-width: 96rem;\n    }\n  }\n  .mt-0\\.5 {\n    margin-top: calc(var(--spacing) * 0.5);\n  }\n  .mt-1 {\n    margin-top: calc(var(--spacing) * 1);\n  }\n  .mt-1\\.5 {\n    margin-top: calc(var(--spacing) * 1.5);\n  }\n  .mb-1 {\n    margin-bottom: calc(var(--spacing) * 1);\n  }\n  .mb-2 {\n    margin-bottom: calc(var(--spacing) * 2);\n  }\n  .mb-4 {\n    margin-bottom: calc(var(--spacing) * 4);\n  }\n  .mb-6 {\n    margin-bottom: calc(var(--spacing) * 6);\n  }\n  .mb-8 {\n    margin-bottom: calc(var(--spacing) * 8);\n  }\n  .mb-12 {\n    margin-bottom: calc(var(--spacing) * 12);\n  }\n  .mb-16 {\n    margin-bottom: calc(var(--spacing) * 16);\n  }\n  .block {\n    display: block;\n  }\n  .flex {\n    display: flex;\n  }\n  .grid {\n    display: grid;\n  }\n  .hidden {\n    display: none;\n  }\n  .inline {\n    display: inline;\n  }\n  .inline-block {\n    display: inline-block;\n  }\n  .inline-flex {\n    display: inline-flex;\n  }\n  .h-1 {\n    height: calc(var(--spacing) * 1);\n  }\n  .h-1\\.5 {\n    height: calc(var(--spacing) * 1.5);\n  }\n  .h-2\\.5 {\n    height: calc(var(--spacing) * 2.5);\n  }\n  .h-3\\.5 {\n    height: calc(var(--spacing) * 3.5);\n  }\n  .h-5 {\n    height: calc(var(--spacing) * 5);\n  }\n  .h-8 {\n    height: calc(var(--spacing) * 8);\n  }\n  .h-16 {\n    height: calc(var(--spacing) * 16);\n  }\n  .h-\\[550px\\] {\n    height: 550px;\n  }\n  .h-full {\n    height: 100%;\n  }\n  .w-2\\.5 {\n    width: calc(var(--spacing) * 2.5);\n  }\n  .w-3\\.5 {\n    width: calc(var(--spacing) * 3.5);\n  }\n  .w-5 {\n    width: calc(var(--spacing) * 5);\n  }\n  .w-8 {\n    width: calc(var(--spacing) * 8);\n  }\n  .w-16 {\n    width: calc(var(--spacing) * 16);\n  }\n  .w-48 {\n    width: calc(var(--spacing) * 48);\n  }\n  .w-72 {\n    width: calc(var(--spacing) * 72);\n  }\n  .w-\\[500px\\] {\n    width: 500px;\n  }\n  .w-full {\n    width: 100%;\n  }\n  .max-w-2xl {\n    max-width: var(--container-2xl);\n  }\n  .max-w-4xl {\n    max-width: var(--container-4xl);\n  }\n  .max-w-5xl {\n    max-width: var(--container-5xl);\n  }\n  .flex-1 {\n    flex: 1;\n  }\n  .shrink-0 {\n    flex-shrink: 0;\n  }\n  .grow {\n    flex-grow: 1;\n  }\n  .-translate-y-1\\/2 {\n    --tw-translate-y: calc(calc(1 / 2 * 100%) * -1);\n    translate: var(--tw-translate-x) var(--tw-translate-y);\n  }\n  .transform {\n    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);\n  }\n  .grid-cols-2 {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n  .flex-col {\n    flex-direction: column;\n  }\n  .flex-row {\n    flex-direction: row;\n  }\n  .items-center {\n    align-items: center;\n  }\n  .items-start {\n    align-items: flex-start;\n  }\n  .items-stretch {\n    align-items: stretch;\n  }\n  .justify-between {\n    justify-content: space-between;\n  }\n  .justify-center {\n    justify-content: center;\n  }\n  .justify-start {\n    justify-content: flex-start;\n  }\n  .gap-1 {\n    gap: calc(var(--spacing) * 1);\n  }\n  .gap-1\\.5 {\n    gap: calc(var(--spacing) * 1.5);\n  }\n  .gap-2 {\n    gap: calc(var(--spacing) * 2);\n  }\n  .gap-2\\.5 {\n    gap: calc(var(--spacing) * 2.5);\n  }\n  .gap-3 {\n    gap: calc(var(--spacing) * 3);\n  }\n  .gap-3\\.5 {\n    gap: calc(var(--spacing) * 3.5);\n  }\n  .gap-4 {\n    gap: calc(var(--spacing) * 4);\n  }\n  .gap-6 {\n    gap: calc(var(--spacing) * 6);\n  }\n  .overflow-hidden {\n    overflow: hidden;\n  }\n  .overflow-y-auto {\n    overflow-y: auto;\n  }\n  .rounded-2xl {\n    border-radius: var(--radius-2xl);\n  }\n  .rounded-3xl {\n    border-radius: var(--radius-3xl);\n  }\n  .rounded-full {\n    border-radius: calc(infinity * 1px);\n  }\n  .rounded-lg {\n    border-radius: var(--radius-lg);\n  }\n  .rounded-sm {\n    border-radius: var(--radius-sm);\n  }\n  .border {\n    border-style: var(--tw-border-style);\n    border-width: 1px;\n  }\n  .border-2 {\n    border-style: var(--tw-border-style);\n    border-width: 2px;\n  }\n  .border-4 {\n    border-style: var(--tw-border-style);\n    border-width: 4px;\n  }\n  .border-t {\n    border-top-style: var(--tw-border-style);\n    border-top-width: 1px;\n  }\n  .border-b {\n    border-bottom-style: var(--tw-border-style);\n    border-bottom-width: 1px;\n  }\n  .border-b-2 {\n    border-bottom-style: var(--tw-border-style);\n    border-bottom-width: 2px;\n  }\n  .border-slate-800 {\n    border-color: var(--color-slate-800);\n  }\n  .border-slate-800\\/40 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 40%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 40%, transparent);\n    }\n  }\n  .border-slate-800\\/50 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 50%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 50%, transparent);\n    }\n  }\n  .border-slate-800\\/60 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 60%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 60%, transparent);\n    }\n  }\n  .border-slate-900 {\n    border-color: var(--color-slate-900);\n  }\n  .bg-slate-800 {\n    background-color: var(--color-slate-800);\n  }\n  .bg-slate-900\\/90 {\n    background-color: color-mix(in srgb, oklch(0.208 0.042 265.755) 90%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      background-color: color-mix(in oklab, var(--color-slate-900) 90%, transparent);\n    }\n  }\n  .bg-slate-950 {\n    background-color: var(--color-slate-950);\n  }\n  .bg-slate-950\\/80 {\n    background-color: color-mix(in srgb, oklch(0.129 0.042 264.695) 80%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      background-color: color-mix(in oklab, var(--color-slate-950) 80%, transparent);\n    }\n  }\n  .bg-white {\n    background-color: var(--color-white);\n  }\n  .p-2\\.5 {\n    padding: calc(var(--spacing) * 2.5);\n  }\n  .p-3 {\n    padding: calc(var(--spacing) * 3);\n  }\n  .p-5 {\n    padding: calc(var(--spacing) * 5);\n  }\n  .p-8 {\n    padding: calc(var(--spacing) * 8);\n  }\n  .p-16 {\n    padding: calc(var(--spacing) * 16);\n  }\n  .py-1 {\n    padding-block: calc(var(--spacing) * 1);\n  }\n  .py-2 {\n    padding-block: calc(var(--spacing) * 2);\n  }\n  .pt-2\\.5 {\n    padding-top: calc(var(--spacing) * 2.5);\n  }\n  .pt-5 {\n    padding-top: calc(var(--spacing) * 5);\n  }\n  .pr-1 {\n    padding-right: calc(var(--spacing) * 1);\n  }\n  .pb-3 {\n    padding-bottom: calc(var(--spacing) * 3);\n  }\n  .pb-4 {\n    padding-bottom: calc(var(--spacing) * 4);\n  }\n  .text-center {\n    text-align: center;\n  }\n  .text-left {\n    text-align: left;\n  }\n  .font-mono {\n    font-family: var(--font-mono);\n  }\n  .text-2xl {\n    font-size: var(--text-2xl);\n    line-height: var(--tw-leading, var(--text-2xl--line-height));\n  }\n  .text-3xl {\n    font-size: var(--text-3xl);\n    line-height: var(--tw-leading, var(--text-3xl--line-height));\n  }\n  .text-4xl {\n    font-size: var(--text-4xl);\n    line-height: var(--tw-leading, var(--text-4xl--line-height));\n  }\n  .text-5xl {\n    font-size: var(--text-5xl);\n    line-height: var(--tw-leading, var(--text-5xl--line-height));\n  }\n  .text-8xl {\n    font-size: var(--text-8xl);\n    line-height: var(--tw-leading, var(--text-8xl--line-height));\n  }\n  .text-lg {\n    font-size: var(--text-lg);\n    line-height: var(--tw-leading, var(--text-lg--line-height));\n  }\n  .text-sm {\n    font-size: var(--text-sm);\n    line-height: var(--tw-leading, var(--text-sm--line-height));\n  }\n  .text-xl {\n    font-size: var(--text-xl);\n    line-height: var(--tw-leading, var(--text-xl--line-height));\n  }\n  .text-xs {\n    font-size: var(--text-xs);\n    line-height: var(--tw-leading, var(--text-xs--line-height));\n  }\n  .text-\\[10px\\] {\n    font-size: 10px;\n  }\n  .text-\\[11px\\] {\n    font-size: 11px;\n  }\n  .text-\\[15px\\] {\n    font-size: 15px;\n  }\n  .leading-relaxed {\n    --tw-leading: var(--leading-relaxed);\n    line-height: var(--leading-relaxed);\n  }\n  .leading-tight {\n    --tw-leading: var(--leading-tight);\n    line-height: var(--leading-tight);\n  }\n  .font-black {\n    --tw-font-weight: var(--font-weight-black);\n    font-weight: var(--font-weight-black);\n  }\n  .font-bold {\n    --tw-font-weight: var(--font-weight-bold);\n    font-weight: var(--font-weight-bold);\n  }\n  .tracking-normal {\n    --tw-tracking: var(--tracking-normal);\n    letter-spacing: var(--tracking-normal);\n  }\n  .tracking-tight {\n    --tw-tracking: var(--tracking-tight);\n    letter-spacing: var(--tracking-tight);\n  }\n  .tracking-wider {\n    --tw-tracking: var(--tracking-wider);\n    letter-spacing: var(--tracking-wider);\n  }\n  .tracking-widest {\n    --tw-tracking: var(--tracking-widest);\n    letter-spacing: var(--tracking-widest);\n  }\n  .text-emerald-400 {\n    color: var(--color-emerald-400);\n  }\n  .text-rose-400 {\n    color: var(--color-rose-400);\n  }\n  .text-slate-200 {\n    color: var(--color-slate-200);\n  }\n  .text-slate-300 {\n    color: var(--color-slate-300);\n  }\n  .text-slate-400 {\n    color: var(--color-slate-400);\n  }\n  .text-slate-500 {\n    color: var(--color-slate-500);\n  }\n  .text-slate-900 {\n    color: var(--color-slate-900);\n  }\n  .text-white {\n    color: var(--color-white);\n  }\n  .text-yellow-500 {\n    color: var(--color-yellow-500);\n  }\n  .uppercase {\n    text-transform: uppercase;\n  }\n  .italic {\n    font-style: italic;\n  }\n  .tabular-nums {\n    --tw-numeric-spacing: tabular-nums;\n    font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);\n  }\n  .underline {\n    text-decoration-line: underline;\n  }\n  .ring {\n    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);\n    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);\n  }\n  .blur {\n    --tw-blur: blur(8px);\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .drop-shadow-2xl {\n    --tw-drop-shadow-size: drop-shadow(0 25px 25px var(--tw-drop-shadow-color, rgb(0 0 0 / 0.15)));\n    --tw-drop-shadow: drop-shadow(var(--drop-shadow-2xl));\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .drop-shadow-\\[0_0_10px_rgba\\(56\\,189\\,248\\,0\\.2\\)\\] {\n    --tw-drop-shadow-size: drop-shadow(0 0 10px var(--tw-drop-shadow-color, rgba(56,189,248,0.2)));\n    --tw-drop-shadow: var(--tw-drop-shadow-size);\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .filter {\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .backdrop-blur-lg {\n    --tw-backdrop-blur: blur(var(--blur-lg));\n    -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);\n    backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);\n  }\n  .transition {\n    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;\n    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));\n    transition-duration: var(--tw-duration, var(--default-transition-duration));\n  }\n  .transition-all {\n    transition-property: all;\n    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));\n    transition-duration: var(--tw-duration, var(--default-transition-duration));\n  }\n  .duration-150 {\n    --tw-duration: 150ms;\n    transition-duration: 150ms;\n  }\n  .duration-300 {\n    --tw-duration: 300ms;\n    transition-duration: 300ms;\n  }\n  .duration-500 {\n    --tw-duration: 500ms;\n    transition-duration: 500ms;\n  }\n  .ease-out {\n    --tw-ease: var(--ease-out);\n    transition-timing-function: var(--ease-out);\n  }\n  .select-none {\n    -webkit-user-select: none;\n    user-select: none;\n  }\n  .md\\:text-6xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-6xl);\n      line-height: var(--tw-leading, var(--text-6xl--line-height));\n    }\n  }\n  .md\\:text-9xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-9xl);\n      line-height: var(--tw-leading, var(--text-9xl--line-height));\n    }\n  }\n  .md\\:text-xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-xl);\n      line-height: var(--tw-leading, var(--text-xl--line-height));\n    }\n  }\n}\n@property --tw-translate-x {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n@property --tw-translate-y {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n@property --tw-translate-z {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0;\n}\n@property --tw-rotate-x {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-rotate-y {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-rotate-z {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-skew-x {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-skew-y {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-border-style {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: solid;\n}\n@property --tw-leading {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-font-weight {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-tracking {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ordinal {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-slashed-zero {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-figure {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-spacing {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-fraction {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n@property --tw-inset-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-inset-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-inset-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n@property --tw-ring-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ring-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-inset-ring-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-inset-ring-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-ring-inset {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ring-offset-width {\n  syntax: \"<length>\";\n  inherits: false;\n  initial-value: 0px;\n}\n@property --tw-ring-offset-color {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: #fff;\n}\n@property --tw-ring-offset-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-blur {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-brightness {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-contrast {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-grayscale {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-hue-rotate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-invert {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-opacity {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-saturate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-sepia {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n@property --tw-drop-shadow-size {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-blur {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-brightness {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-contrast {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-grayscale {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-hue-rotate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-invert {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-opacity {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-saturate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-sepia {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-duration {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ease {\n  syntax: \"*\";\n  inherits: false;\n}\n@layer properties {\n  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {\n    *, ::before, ::after, ::backdrop {\n      --tw-translate-x: 0;\n      --tw-translate-y: 0;\n      --tw-translate-z: 0;\n      --tw-rotate-x: initial;\n      --tw-rotate-y: initial;\n      --tw-rotate-z: initial;\n      --tw-skew-x: initial;\n      --tw-skew-y: initial;\n      --tw-border-style: solid;\n      --tw-leading: initial;\n      --tw-font-weight: initial;\n      --tw-tracking: initial;\n      --tw-ordinal: initial;\n      --tw-slashed-zero: initial;\n      --tw-numeric-figure: initial;\n      --tw-numeric-spacing: initial;\n      --tw-numeric-fraction: initial;\n      --tw-shadow: 0 0 #0000;\n      --tw-shadow-color: initial;\n      --tw-shadow-alpha: 100%;\n      --tw-inset-shadow: 0 0 #0000;\n      --tw-inset-shadow-color: initial;\n      --tw-inset-shadow-alpha: 100%;\n      --tw-ring-color: initial;\n      --tw-ring-shadow: 0 0 #0000;\n      --tw-inset-ring-color: initial;\n      --tw-inset-ring-shadow: 0 0 #0000;\n      --tw-ring-inset: initial;\n      --tw-ring-offset-width: 0px;\n      --tw-ring-offset-color: #fff;\n      --tw-ring-offset-shadow: 0 0 #0000;\n      --tw-blur: initial;\n      --tw-brightness: initial;\n      --tw-contrast: initial;\n      --tw-grayscale: initial;\n      --tw-hue-rotate: initial;\n      --tw-invert: initial;\n      --tw-opacity: initial;\n      --tw-saturate: initial;\n      --tw-sepia: initial;\n      --tw-drop-shadow: initial;\n      --tw-drop-shadow-color: initial;\n      --tw-drop-shadow-alpha: 100%;\n      --tw-drop-shadow-size: initial;\n      --tw-backdrop-blur: initial;\n      --tw-backdrop-brightness: initial;\n      --tw-backdrop-contrast: initial;\n      --tw-backdrop-grayscale: initial;\n      --tw-backdrop-hue-rotate: initial;\n      --tw-backdrop-invert: initial;\n      --tw-backdrop-opacity: initial;\n      --tw-backdrop-saturate: initial;\n      --tw-backdrop-sepia: initial;\n      --tw-duration: initial;\n      --tw-ease: initial;\n    }\n  }\n}\n"],"sourceRoot":""}]);
+`, "",{"version":3,"sources":["webpack://./src/index.css"],"names":[],"mappings":"AAAA,gEAAgE;AAChE,iBAAiB;AACjB,yCAAyC;AACzC;EACE;IACE;6DACyD;IACzD;iDAC6C;IAC7C,6CAA6C;IAC7C,+CAA+C;IAC/C,2CAA2C;IAC3C,6CAA6C;IAC7C,6CAA6C;IAC7C,4CAA4C;IAC5C,6CAA6C;IAC7C,6CAA6C;IAC7C,6CAA6C;IAC7C,6CAA6C;IAC7C,mBAAmB;IACnB,kBAAkB;IAClB,sBAAsB;IACtB,sBAAsB;IACtB,kBAAkB;IAClB,sCAAsC;IACtC,mBAAmB;IACnB,0CAA0C;IAC1C,mBAAmB;IACnB,0CAA0C;IAC1C,kBAAkB;IAClB,yCAAyC;IACzC,kBAAkB;IAClB,sCAAsC;IACtC,oBAAoB;IACpB,2CAA2C;IAC3C,mBAAmB;IACnB,yCAAyC;IACzC,gBAAgB;IAChB,0BAA0B;IAC1B,mBAAmB;IACnB,0BAA0B;IAC1B,gBAAgB;IAChB,0BAA0B;IAC1B,gBAAgB;IAChB,0BAA0B;IAC1B,uBAAuB;IACvB,wBAAwB;IACxB,0BAA0B;IAC1B,sBAAsB;IACtB,wBAAwB;IACxB,wBAAwB;IACxB,qBAAqB;IACrB,wBAAwB;IACxB,oBAAoB;IACpB,mBAAmB;IACnB,kBAAkB;IAClB,oBAAoB;IACpB,gDAAgD;IAChD,sCAAsC;IACtC,eAAe;IACf,oCAAoC;IACpC,kEAAkE;IAClE,uCAAuC;IACvC,wEAAwE;IACxE;;KAEC;IACD,4CAA4C;IAC5C;;KAEC;IACD;;KAEC;EACH;AACF;AACA;EACE;IACE,sBAAsB;IACtB,SAAS;IACT,UAAU;IACV,eAAe;EACjB;EACA;IACE,gBAAgB;IAChB,8BAA8B;IAC9B,WAAW;IACX,6JAA6J;IAC7J,mEAAmE;IACnE,yEAAyE;IACzE,wCAAwC;EAC1C;EACA;IACE,oBAAoB;EACtB;EACA;IACE,SAAS;IACT,cAAc;IACd,qBAAqB;EACvB;EACA;IACE,yCAAyC;IACzC,iCAAiC;EACnC;EACA;IACE,kBAAkB;IAClB,oBAAoB;EACtB;EACA;IACE,cAAc;IACd,gCAAgC;IAChC,wBAAwB;EAC1B;EACA;IACE,mBAAmB;EACrB;EACA;IACE,kJAAkJ;IAClJ,0EAA0E;IAC1E,8EAA8E;IAC9E,cAAc;EAChB;EACA;IACE,cAAc;EAChB;EACA;IACE,cAAc;IACd,cAAc;IACd,kBAAkB;IAClB,wBAAwB;EAC1B;EACA;IACE,eAAe;EACjB;EACA;IACE,WAAW;EACb;EACA;IACE,cAAc;IACd,qBAAqB;IACrB,yBAAyB;EAC3B;EACA;IACE,aAAa;EACf;EACA;IACE,wBAAwB;EAC1B;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,cAAc;IACd,sBAAsB;EACxB;EACA;IACE,eAAe;IACf,YAAY;EACd;EACA;IACE,aAAa;IACb,8BAA8B;IAC9B,gCAAgC;IAChC,uBAAuB;IACvB,cAAc;IACd,gBAAgB;IAChB,6BAA6B;IAC7B,UAAU;EACZ;EACA;IACE,mBAAmB;EACrB;EACA;IACE,0BAA0B;EAC5B;EACA;IACE,sBAAsB;EACxB;EACA;IACE,UAAU;IACV,mBAAmB;IACnB;MACE,yDAAyD;IAC3D;EACF;EACA;IACE,gBAAgB;EAClB;EACA;IACE,wBAAwB;EAC1B;EACA;IACE,eAAe;IACf,mBAAmB;EACrB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,UAAU;EACZ;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,YAAY;EACd;EACA;IACE,wBAAwB;EAC1B;AACF;AACA;EACE;IACE,mBAAmB;EACrB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,eAAe;EACjB;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,kCAAkC;EACpC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,WAAW;IACX;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;IACA;MACE,gBAAgB;IAClB;EACF;EACA;IACE,sCAAsC;EACxC;EACA;IACE,oCAAoC;EACtC;EACA;IACE,sCAAsC;EACxC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,cAAc;EAChB;EACA;IACE,iBAAiB;EACnB;EACA;IACE,aAAa;EACf;EACA;IACE,aAAa;EACf;EACA;IACE,aAAa;EACf;EACA;IACE,eAAe;EACjB;EACA;IACE,qBAAqB;EACvB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,kCAAkC;EACpC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,aAAa;EACf;EACA;IACE,YAAY;EACd;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,YAAY;EACd;EACA;IACE,WAAW;EACb;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,OAAO;EACT;EACA;IACE,cAAc;EAChB;EACA;IACE,YAAY;EACd;EACA;IACE,0GAA0G;EAC5G;EACA;IACE,gDAAgD;EAClD;EACA;IACE,sBAAsB;EACxB;EACA;IACE,mBAAmB;EACrB;EACA;IACE,uBAAuB;EACzB;EACA;IACE,oBAAoB;EACtB;EACA;IACE,8BAA8B;EAChC;EACA;IACE,uBAAuB;EACzB;EACA;IACE,2BAA2B;EAC7B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,+BAA+B;EACjC;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,gCAAgC;EAClC;EACA;IACE,gCAAgC;EAClC;EACA;IACE,mCAAmC;EACrC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,oCAAoC;IACpC,iBAAiB;EACnB;EACA;IACE,wCAAwC;IACxC,qBAAqB;EACvB;EACA;IACE,2CAA2C;IAC3C,wBAAwB;EAC1B;EACA;IACE,2CAA2C;IAC3C,wBAAwB;EAC1B;EACA;IACE,oCAAoC;EACtC;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,6EAA6E;IAC7E;MACE,0EAA0E;IAC5E;EACF;EACA;IACE,oCAAoC;EACtC;EACA;IACE,iFAAiF;IACjF;MACE,8EAA8E;IAChF;EACF;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,iFAAiF;IACjF;MACE,8EAA8E;IAChF;EACF;EACA;IACE,mCAAmC;EACrC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,iCAAiC;EACnC;EACA;IACE,kCAAkC;EACpC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,qCAAqC;EACvC;EACA;IACE,uCAAuC;EACzC;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,wCAAwC;EAC1C;EACA;IACE,kBAAkB;EACpB;EACA;IACE,gBAAgB;EAClB;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,0BAA0B;IAC1B,4DAA4D;EAC9D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,yBAAyB;IACzB,2DAA2D;EAC7D;EACA;IACE,eAAe;EACjB;EACA;IACE,eAAe;EACjB;EACA;IACE,eAAe;EACjB;EACA;IACE,oCAAoC;IACpC,mCAAmC;EACrC;EACA;IACE,kCAAkC;IAClC,iCAAiC;EACnC;EACA;IACE,0CAA0C;IAC1C,qCAAqC;EACvC;EACA;IACE,yCAAyC;IACzC,oCAAoC;EACtC;EACA;IACE,qCAAqC;IACrC,sCAAsC;EACxC;EACA;IACE,oCAAoC;IACpC,qCAAqC;EACvC;EACA;IACE,oCAAoC;IACpC,qCAAqC;EACvC;EACA;IACE,qCAAqC;IACrC,sCAAsC;EACxC;EACA;IACE,+BAA+B;EACjC;EACA;IACE,4BAA4B;EAC9B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,6BAA6B;EAC/B;EACA;IACE,yBAAyB;EAC3B;EACA;IACE,8BAA8B;EAChC;EACA;IACE,yBAAyB;EAC3B;EACA;IACE,kBAAkB;EACpB;EACA;IACE,kCAAkC;IAClC,iJAAiJ;EACnJ;EACA;IACE,+BAA+B;EACjC;EACA;IACE,wHAAwH;IACxH,sIAAsI;EACxI;EACA;IACE,sCAAsC;IACtC,kBAAkB;EACpB;EACA;IACE,oBAAoB;IACpB,0LAA0L;EAC5L;EACA;IACE,8FAA8F;IAC9F,qDAAqD;IACrD,0LAA0L;EAC5L;EACA;IACE,8FAA8F;IAC9F,4CAA4C;IAC5C,0LAA0L;EAC5L;EACA;IACE,0LAA0L;EAC5L;EACA;IACE,wCAAwC;IACxC,wRAAwR;IACxR,gRAAgR;EAClR;EACA;IACE,yUAAyU;IACzU,qFAAqF;IACrF,2EAA2E;EAC7E;EACA;IACE,wBAAwB;IACxB,qFAAqF;IACrF,2EAA2E;EAC7E;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,oBAAoB;IACpB,0BAA0B;EAC5B;EACA;IACE,0BAA0B;IAC1B,2CAA2C;EAC7C;EACA;IACE,yBAAyB;IACzB,iBAAiB;EACnB;EACA;IACE;MACE,0BAA0B;MAC1B,4DAA4D;IAC9D;EACF;EACA;IACE;MACE,0BAA0B;MAC1B,4DAA4D;IAC9D;EACF;EACA;IACE;MACE,yBAAyB;MACzB,2DAA2D;IAC7D;EACF;AACF;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,oBAAoB;AACtB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,sBAAsB;EACtB,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,sBAAsB;EACtB,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,kBAAkB;EAClB,eAAe;EACf,kBAAkB;AACpB;AACA;EACE,WAAW;EACX,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;EACf,wBAAwB;AAC1B;AACA;EACE,WAAW;EACX,eAAe;EACf,oBAAoB;AACtB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,sBAAsB;EACtB,eAAe;EACf,mBAAmB;AACrB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE,WAAW;EACX,eAAe;AACjB;AACA;EACE;IACE;MACE,sBAAsB;MACtB,sBAAsB;MACtB,sBAAsB;MACtB,oBAAoB;MACpB,oBAAoB;MACpB,wBAAwB;MACxB,qBAAqB;MACrB,yBAAyB;MACzB,sBAAsB;MACtB,qBAAqB;MACrB,0BAA0B;MAC1B,4BAA4B;MAC5B,6BAA6B;MAC7B,8BAA8B;MAC9B,sBAAsB;MACtB,0BAA0B;MAC1B,uBAAuB;MACvB,4BAA4B;MAC5B,gCAAgC;MAChC,6BAA6B;MAC7B,wBAAwB;MACxB,2BAA2B;MAC3B,8BAA8B;MAC9B,iCAAiC;MACjC,wBAAwB;MACxB,2BAA2B;MAC3B,4BAA4B;MAC5B,kCAAkC;MAClC,yBAAyB;MACzB,kBAAkB;MAClB,wBAAwB;MACxB,sBAAsB;MACtB,uBAAuB;MACvB,wBAAwB;MACxB,oBAAoB;MACpB,qBAAqB;MACrB,sBAAsB;MACtB,mBAAmB;MACnB,yBAAyB;MACzB,+BAA+B;MAC/B,4BAA4B;MAC5B,8BAA8B;MAC9B,2BAA2B;MAC3B,iCAAiC;MACjC,+BAA+B;MAC/B,gCAAgC;MAChC,iCAAiC;MACjC,6BAA6B;MAC7B,8BAA8B;MAC9B,+BAA+B;MAC/B,4BAA4B;MAC5B,sBAAsB;MACtB,kBAAkB;IACpB;EACF;AACF","sourcesContent":["/*! tailwindcss v4.2.0 | MIT License | https://tailwindcss.com */\n@layer properties;\n@layer theme, base, components, utilities;\n@layer theme {\n  :root, :host {\n    --font-sans: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\",\n      \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";\n    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,\n      \"Liberation Mono\", \"Courier New\", monospace;\n    --color-yellow-500: oklch(0.795 0.184 86.047);\n    --color-emerald-400: oklch(0.765 0.177 163.223);\n    --color-rose-400: oklch(0.712 0.194 13.428);\n    --color-slate-200: oklch(0.929 0.013 255.508);\n    --color-slate-300: oklch(0.869 0.022 252.894);\n    --color-slate-400: oklch(0.704 0.04 256.788);\n    --color-slate-500: oklch(0.554 0.046 257.417);\n    --color-slate-800: oklch(0.279 0.041 260.031);\n    --color-slate-900: oklch(0.208 0.042 265.755);\n    --color-slate-950: oklch(0.129 0.042 264.695);\n    --color-white: #fff;\n    --spacing: 0.25rem;\n    --container-2xl: 42rem;\n    --container-4xl: 56rem;\n    --text-xs: 0.75rem;\n    --text-xs--line-height: calc(1 / 0.75);\n    --text-sm: 0.875rem;\n    --text-sm--line-height: calc(1.25 / 0.875);\n    --text-lg: 1.125rem;\n    --text-lg--line-height: calc(1.75 / 1.125);\n    --text-xl: 1.25rem;\n    --text-xl--line-height: calc(1.75 / 1.25);\n    --text-2xl: 1.5rem;\n    --text-2xl--line-height: calc(2 / 1.5);\n    --text-3xl: 1.875rem;\n    --text-3xl--line-height: calc(2.25 / 1.875);\n    --text-4xl: 2.25rem;\n    --text-4xl--line-height: calc(2.5 / 2.25);\n    --text-5xl: 3rem;\n    --text-5xl--line-height: 1;\n    --text-6xl: 3.75rem;\n    --text-6xl--line-height: 1;\n    --text-8xl: 6rem;\n    --text-8xl--line-height: 1;\n    --text-9xl: 8rem;\n    --text-9xl--line-height: 1;\n    --font-weight-bold: 700;\n    --font-weight-black: 900;\n    --tracking-tight: -0.025em;\n    --tracking-normal: 0em;\n    --tracking-wider: 0.05em;\n    --tracking-widest: 0.1em;\n    --leading-tight: 1.25;\n    --leading-relaxed: 1.625;\n    --radius-sm: 0.25rem;\n    --radius-lg: 0.5rem;\n    --radius-2xl: 1rem;\n    --radius-3xl: 1.5rem;\n    --drop-shadow-2xl: 0 25px 25px rgb(0 0 0 / 0.15);\n    --ease-out: cubic-bezier(0, 0, 0.2, 1);\n    --blur-lg: 16px;\n    --default-transition-duration: 150ms;\n    --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n    --default-font-family: var(--font-sans);\n    --default-font-feature-settings: var(--font-sans--font-feature-settings);\n    --default-font-variation-settings: var(\n      --font-sans--font-variation-settings\n    );\n    --default-mono-font-family: var(--font-mono);\n    --default-mono-font-feature-settings: var(\n      --font-mono--font-feature-settings\n    );\n    --default-mono-font-variation-settings: var(\n      --font-mono--font-variation-settings\n    );\n  }\n}\n@layer base {\n  *, ::after, ::before, ::backdrop, ::file-selector-button {\n    box-sizing: border-box;\n    margin: 0;\n    padding: 0;\n    border: 0 solid;\n  }\n  html, :host {\n    line-height: 1.5;\n    -webkit-text-size-adjust: 100%;\n    tab-size: 4;\n    font-family: var( --default-font-family, ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\" );\n    font-feature-settings: var(--default-font-feature-settings, normal);\n    font-variation-settings: var( --default-font-variation-settings, normal );\n    -webkit-tap-highlight-color: transparent;\n  }\n  body {\n    line-height: inherit;\n  }\n  hr {\n    height: 0;\n    color: inherit;\n    border-top-width: 1px;\n  }\n  abbr:where([title]) {\n    -webkit-text-decoration: underline dotted;\n    text-decoration: underline dotted;\n  }\n  h1, h2, h3, h4, h5, h6 {\n    font-size: inherit;\n    font-weight: inherit;\n  }\n  a {\n    color: inherit;\n    -webkit-text-decoration: inherit;\n    text-decoration: inherit;\n  }\n  b, strong {\n    font-weight: bolder;\n  }\n  code, kbd, samp, pre {\n    font-family: var( --default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace );\n    font-feature-settings: var( --default-mono-font-feature-settings, normal );\n    font-variation-settings: var( --default-mono-font-variation-settings, normal );\n    font-size: 1em;\n  }\n  small {\n    font-size: 80%;\n  }\n  sub, sup {\n    font-size: 75%;\n    line-height: 0;\n    position: relative;\n    vertical-align: baseline;\n  }\n  sub {\n    bottom: -0.25em;\n  }\n  sup {\n    top: -0.5em;\n  }\n  table {\n    text-indent: 0;\n    border-color: inherit;\n    border-collapse: collapse;\n  }\n  :-moz-focusring {\n    outline: auto;\n  }\n  progress {\n    vertical-align: baseline;\n  }\n  summary {\n    display: list-item;\n  }\n  ol, ul, menu {\n    list-style: none;\n  }\n  img, svg, video, canvas, audio, iframe, embed, object {\n    display: block;\n    vertical-align: middle;\n  }\n  img, video {\n    max-width: 100%;\n    height: auto;\n  }\n  button, input, select, optgroup, textarea, ::file-selector-button {\n    font: inherit;\n    font-feature-settings: inherit;\n    font-variation-settings: inherit;\n    letter-spacing: inherit;\n    color: inherit;\n    border-radius: 0;\n    background-color: transparent;\n    opacity: 1;\n  }\n  :where(select:is([multiple], [size])) optgroup {\n    font-weight: bolder;\n  }\n  :where(select:is([multiple], [size])) optgroup option {\n    padding-inline-start: 20px;\n  }\n  ::file-selector-button {\n    margin-inline-end: 4px;\n  }\n  ::placeholder {\n    opacity: 1;\n    color: currentColor;\n    @supports (color: color-mix(in lab, red, red)) {\n      color: color-mix(in oklab, currentColor 50%, transparent);\n    }\n  }\n  textarea {\n    resize: vertical;\n  }\n  ::-webkit-search-decoration {\n    -webkit-appearance: none;\n  }\n  ::-webkit-date-and-time-value {\n    min-height: 1lh;\n    text-align: inherit;\n  }\n  ::-webkit-datetime-edit {\n    display: inline-flex;\n  }\n  ::-webkit-datetime-edit-fields-wrapper {\n    padding: 0;\n  }\n  ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {\n    padding-block: 0;\n  }\n  :-moz-ui-invalid {\n    box-shadow: none;\n  }\n  button, input:where([type=\"button\"], [type=\"reset\"], [type=\"submit\"]), ::file-selector-button {\n    appearance: button;\n  }\n  ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {\n    height: auto;\n  }\n  [hidden]:where(:not([hidden=\"until-found\"])) {\n    display: none !important;\n  }\n}\n@layer utilities {\n  .visible {\n    visibility: visible;\n  }\n  .absolute {\n    position: absolute;\n  }\n  .fixed {\n    position: fixed;\n  }\n  .relative {\n    position: relative;\n  }\n  .static {\n    position: static;\n  }\n  .start {\n    inset-inline-start: var(--spacing);\n  }\n  .end {\n    inset-inline-end: var(--spacing);\n  }\n  .container {\n    width: 100%;\n    @media (width >= 40rem) {\n      max-width: 40rem;\n    }\n    @media (width >= 48rem) {\n      max-width: 48rem;\n    }\n    @media (width >= 64rem) {\n      max-width: 64rem;\n    }\n    @media (width >= 80rem) {\n      max-width: 80rem;\n    }\n    @media (width >= 96rem) {\n      max-width: 96rem;\n    }\n  }\n  .mt-0\\.5 {\n    margin-top: calc(var(--spacing) * 0.5);\n  }\n  .mt-1 {\n    margin-top: calc(var(--spacing) * 1);\n  }\n  .mt-1\\.5 {\n    margin-top: calc(var(--spacing) * 1.5);\n  }\n  .mb-1 {\n    margin-bottom: calc(var(--spacing) * 1);\n  }\n  .mb-2 {\n    margin-bottom: calc(var(--spacing) * 2);\n  }\n  .mb-4 {\n    margin-bottom: calc(var(--spacing) * 4);\n  }\n  .mb-6 {\n    margin-bottom: calc(var(--spacing) * 6);\n  }\n  .mb-8 {\n    margin-bottom: calc(var(--spacing) * 8);\n  }\n  .mb-12 {\n    margin-bottom: calc(var(--spacing) * 12);\n  }\n  .block {\n    display: block;\n  }\n  .contents {\n    display: contents;\n  }\n  .flex {\n    display: flex;\n  }\n  .grid {\n    display: grid;\n  }\n  .hidden {\n    display: none;\n  }\n  .inline {\n    display: inline;\n  }\n  .inline-block {\n    display: inline-block;\n  }\n  .inline-flex {\n    display: inline-flex;\n  }\n  .h-1\\.5 {\n    height: calc(var(--spacing) * 1.5);\n  }\n  .h-2\\.5 {\n    height: calc(var(--spacing) * 2.5);\n  }\n  .h-3\\.5 {\n    height: calc(var(--spacing) * 3.5);\n  }\n  .h-5 {\n    height: calc(var(--spacing) * 5);\n  }\n  .h-8 {\n    height: calc(var(--spacing) * 8);\n  }\n  .h-\\[550px\\] {\n    height: 550px;\n  }\n  .h-full {\n    height: 100%;\n  }\n  .w-2\\.5 {\n    width: calc(var(--spacing) * 2.5);\n  }\n  .w-3\\.5 {\n    width: calc(var(--spacing) * 3.5);\n  }\n  .w-5 {\n    width: calc(var(--spacing) * 5);\n  }\n  .w-8 {\n    width: calc(var(--spacing) * 8);\n  }\n  .w-72 {\n    width: calc(var(--spacing) * 72);\n  }\n  .w-\\[500px\\] {\n    width: 500px;\n  }\n  .w-full {\n    width: 100%;\n  }\n  .max-w-2xl {\n    max-width: var(--container-2xl);\n  }\n  .max-w-4xl {\n    max-width: var(--container-4xl);\n  }\n  .flex-1 {\n    flex: 1;\n  }\n  .shrink-0 {\n    flex-shrink: 0;\n  }\n  .grow {\n    flex-grow: 1;\n  }\n  .transform {\n    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);\n  }\n  .grid-cols-2 {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n  .flex-col {\n    flex-direction: column;\n  }\n  .items-center {\n    align-items: center;\n  }\n  .items-start {\n    align-items: flex-start;\n  }\n  .items-stretch {\n    align-items: stretch;\n  }\n  .justify-between {\n    justify-content: space-between;\n  }\n  .justify-center {\n    justify-content: center;\n  }\n  .justify-start {\n    justify-content: flex-start;\n  }\n  .gap-1 {\n    gap: calc(var(--spacing) * 1);\n  }\n  .gap-1\\.5 {\n    gap: calc(var(--spacing) * 1.5);\n  }\n  .gap-2 {\n    gap: calc(var(--spacing) * 2);\n  }\n  .gap-2\\.5 {\n    gap: calc(var(--spacing) * 2.5);\n  }\n  .gap-3 {\n    gap: calc(var(--spacing) * 3);\n  }\n  .gap-3\\.5 {\n    gap: calc(var(--spacing) * 3.5);\n  }\n  .gap-4 {\n    gap: calc(var(--spacing) * 4);\n  }\n  .gap-6 {\n    gap: calc(var(--spacing) * 6);\n  }\n  .overflow-hidden {\n    overflow: hidden;\n  }\n  .overflow-y-auto {\n    overflow-y: auto;\n  }\n  .rounded-2xl {\n    border-radius: var(--radius-2xl);\n  }\n  .rounded-3xl {\n    border-radius: var(--radius-3xl);\n  }\n  .rounded-full {\n    border-radius: calc(infinity * 1px);\n  }\n  .rounded-lg {\n    border-radius: var(--radius-lg);\n  }\n  .rounded-sm {\n    border-radius: var(--radius-sm);\n  }\n  .border {\n    border-style: var(--tw-border-style);\n    border-width: 1px;\n  }\n  .border-2 {\n    border-style: var(--tw-border-style);\n    border-width: 2px;\n  }\n  .border-t {\n    border-top-style: var(--tw-border-style);\n    border-top-width: 1px;\n  }\n  .border-b {\n    border-bottom-style: var(--tw-border-style);\n    border-bottom-width: 1px;\n  }\n  .border-b-2 {\n    border-bottom-style: var(--tw-border-style);\n    border-bottom-width: 2px;\n  }\n  .border-slate-800 {\n    border-color: var(--color-slate-800);\n  }\n  .border-slate-800\\/40 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 40%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 40%, transparent);\n    }\n  }\n  .border-slate-800\\/50 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 50%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 50%, transparent);\n    }\n  }\n  .border-slate-800\\/60 {\n    border-color: color-mix(in srgb, oklch(0.279 0.041 260.031) 60%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      border-color: color-mix(in oklab, var(--color-slate-800) 60%, transparent);\n    }\n  }\n  .border-slate-900 {\n    border-color: var(--color-slate-900);\n  }\n  .bg-slate-900\\/90 {\n    background-color: color-mix(in srgb, oklch(0.208 0.042 265.755) 90%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      background-color: color-mix(in oklab, var(--color-slate-900) 90%, transparent);\n    }\n  }\n  .bg-slate-950 {\n    background-color: var(--color-slate-950);\n  }\n  .bg-slate-950\\/80 {\n    background-color: color-mix(in srgb, oklch(0.129 0.042 264.695) 80%, transparent);\n    @supports (color: color-mix(in lab, red, red)) {\n      background-color: color-mix(in oklab, var(--color-slate-950) 80%, transparent);\n    }\n  }\n  .p-2\\.5 {\n    padding: calc(var(--spacing) * 2.5);\n  }\n  .p-3 {\n    padding: calc(var(--spacing) * 3);\n  }\n  .p-5 {\n    padding: calc(var(--spacing) * 5);\n  }\n  .p-8 {\n    padding: calc(var(--spacing) * 8);\n  }\n  .p-16 {\n    padding: calc(var(--spacing) * 16);\n  }\n  .py-1 {\n    padding-block: calc(var(--spacing) * 1);\n  }\n  .py-2 {\n    padding-block: calc(var(--spacing) * 2);\n  }\n  .pt-2\\.5 {\n    padding-top: calc(var(--spacing) * 2.5);\n  }\n  .pt-5 {\n    padding-top: calc(var(--spacing) * 5);\n  }\n  .pr-1 {\n    padding-right: calc(var(--spacing) * 1);\n  }\n  .pb-3 {\n    padding-bottom: calc(var(--spacing) * 3);\n  }\n  .pb-4 {\n    padding-bottom: calc(var(--spacing) * 4);\n  }\n  .text-center {\n    text-align: center;\n  }\n  .text-left {\n    text-align: left;\n  }\n  .font-mono {\n    font-family: var(--font-mono);\n  }\n  .text-2xl {\n    font-size: var(--text-2xl);\n    line-height: var(--tw-leading, var(--text-2xl--line-height));\n  }\n  .text-3xl {\n    font-size: var(--text-3xl);\n    line-height: var(--tw-leading, var(--text-3xl--line-height));\n  }\n  .text-4xl {\n    font-size: var(--text-4xl);\n    line-height: var(--tw-leading, var(--text-4xl--line-height));\n  }\n  .text-5xl {\n    font-size: var(--text-5xl);\n    line-height: var(--tw-leading, var(--text-5xl--line-height));\n  }\n  .text-8xl {\n    font-size: var(--text-8xl);\n    line-height: var(--tw-leading, var(--text-8xl--line-height));\n  }\n  .text-lg {\n    font-size: var(--text-lg);\n    line-height: var(--tw-leading, var(--text-lg--line-height));\n  }\n  .text-sm {\n    font-size: var(--text-sm);\n    line-height: var(--tw-leading, var(--text-sm--line-height));\n  }\n  .text-xs {\n    font-size: var(--text-xs);\n    line-height: var(--tw-leading, var(--text-xs--line-height));\n  }\n  .text-\\[10px\\] {\n    font-size: 10px;\n  }\n  .text-\\[11px\\] {\n    font-size: 11px;\n  }\n  .text-\\[15px\\] {\n    font-size: 15px;\n  }\n  .leading-relaxed {\n    --tw-leading: var(--leading-relaxed);\n    line-height: var(--leading-relaxed);\n  }\n  .leading-tight {\n    --tw-leading: var(--leading-tight);\n    line-height: var(--leading-tight);\n  }\n  .font-black {\n    --tw-font-weight: var(--font-weight-black);\n    font-weight: var(--font-weight-black);\n  }\n  .font-bold {\n    --tw-font-weight: var(--font-weight-bold);\n    font-weight: var(--font-weight-bold);\n  }\n  .tracking-normal {\n    --tw-tracking: var(--tracking-normal);\n    letter-spacing: var(--tracking-normal);\n  }\n  .tracking-tight {\n    --tw-tracking: var(--tracking-tight);\n    letter-spacing: var(--tracking-tight);\n  }\n  .tracking-wider {\n    --tw-tracking: var(--tracking-wider);\n    letter-spacing: var(--tracking-wider);\n  }\n  .tracking-widest {\n    --tw-tracking: var(--tracking-widest);\n    letter-spacing: var(--tracking-widest);\n  }\n  .text-emerald-400 {\n    color: var(--color-emerald-400);\n  }\n  .text-rose-400 {\n    color: var(--color-rose-400);\n  }\n  .text-slate-200 {\n    color: var(--color-slate-200);\n  }\n  .text-slate-300 {\n    color: var(--color-slate-300);\n  }\n  .text-slate-400 {\n    color: var(--color-slate-400);\n  }\n  .text-slate-500 {\n    color: var(--color-slate-500);\n  }\n  .text-white {\n    color: var(--color-white);\n  }\n  .text-yellow-500 {\n    color: var(--color-yellow-500);\n  }\n  .uppercase {\n    text-transform: uppercase;\n  }\n  .italic {\n    font-style: italic;\n  }\n  .tabular-nums {\n    --tw-numeric-spacing: tabular-nums;\n    font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);\n  }\n  .underline {\n    text-decoration-line: underline;\n  }\n  .ring {\n    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);\n    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);\n  }\n  .outline {\n    outline-style: var(--tw-outline-style);\n    outline-width: 1px;\n  }\n  .blur {\n    --tw-blur: blur(8px);\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .drop-shadow-2xl {\n    --tw-drop-shadow-size: drop-shadow(0 25px 25px var(--tw-drop-shadow-color, rgb(0 0 0 / 0.15)));\n    --tw-drop-shadow: drop-shadow(var(--drop-shadow-2xl));\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .drop-shadow-\\[0_0_10px_rgba\\(56\\,189\\,248\\,0\\.2\\)\\] {\n    --tw-drop-shadow-size: drop-shadow(0 0 10px var(--tw-drop-shadow-color, rgba(56,189,248,0.2)));\n    --tw-drop-shadow: var(--tw-drop-shadow-size);\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .filter {\n    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);\n  }\n  .backdrop-blur-lg {\n    --tw-backdrop-blur: blur(var(--blur-lg));\n    -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);\n    backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);\n  }\n  .transition {\n    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;\n    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));\n    transition-duration: var(--tw-duration, var(--default-transition-duration));\n  }\n  .transition-all {\n    transition-property: all;\n    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));\n    transition-duration: var(--tw-duration, var(--default-transition-duration));\n  }\n  .duration-150 {\n    --tw-duration: 150ms;\n    transition-duration: 150ms;\n  }\n  .duration-300 {\n    --tw-duration: 300ms;\n    transition-duration: 300ms;\n  }\n  .duration-500 {\n    --tw-duration: 500ms;\n    transition-duration: 500ms;\n  }\n  .ease-out {\n    --tw-ease: var(--ease-out);\n    transition-timing-function: var(--ease-out);\n  }\n  .select-none {\n    -webkit-user-select: none;\n    user-select: none;\n  }\n  .md\\:text-6xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-6xl);\n      line-height: var(--tw-leading, var(--text-6xl--line-height));\n    }\n  }\n  .md\\:text-9xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-9xl);\n      line-height: var(--tw-leading, var(--text-9xl--line-height));\n    }\n  }\n  .md\\:text-xl {\n    @media (width >= 48rem) {\n      font-size: var(--text-xl);\n      line-height: var(--tw-leading, var(--text-xl--line-height));\n    }\n  }\n}\n@property --tw-rotate-x {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-rotate-y {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-rotate-z {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-skew-x {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-skew-y {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-border-style {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: solid;\n}\n@property --tw-leading {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-font-weight {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-tracking {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ordinal {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-slashed-zero {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-figure {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-spacing {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-numeric-fraction {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n@property --tw-inset-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-inset-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-inset-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n@property --tw-ring-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ring-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-inset-ring-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-inset-ring-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-ring-inset {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ring-offset-width {\n  syntax: \"<length>\";\n  inherits: false;\n  initial-value: 0px;\n}\n@property --tw-ring-offset-color {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: #fff;\n}\n@property --tw-ring-offset-shadow {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: 0 0 #0000;\n}\n@property --tw-outline-style {\n  syntax: \"*\";\n  inherits: false;\n  initial-value: solid;\n}\n@property --tw-blur {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-brightness {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-contrast {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-grayscale {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-hue-rotate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-invert {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-opacity {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-saturate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-sepia {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow-color {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-drop-shadow-alpha {\n  syntax: \"<percentage>\";\n  inherits: false;\n  initial-value: 100%;\n}\n@property --tw-drop-shadow-size {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-blur {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-brightness {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-contrast {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-grayscale {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-hue-rotate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-invert {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-opacity {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-saturate {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-backdrop-sepia {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-duration {\n  syntax: \"*\";\n  inherits: false;\n}\n@property --tw-ease {\n  syntax: \"*\";\n  inherits: false;\n}\n@layer properties {\n  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {\n    *, ::before, ::after, ::backdrop {\n      --tw-rotate-x: initial;\n      --tw-rotate-y: initial;\n      --tw-rotate-z: initial;\n      --tw-skew-x: initial;\n      --tw-skew-y: initial;\n      --tw-border-style: solid;\n      --tw-leading: initial;\n      --tw-font-weight: initial;\n      --tw-tracking: initial;\n      --tw-ordinal: initial;\n      --tw-slashed-zero: initial;\n      --tw-numeric-figure: initial;\n      --tw-numeric-spacing: initial;\n      --tw-numeric-fraction: initial;\n      --tw-shadow: 0 0 #0000;\n      --tw-shadow-color: initial;\n      --tw-shadow-alpha: 100%;\n      --tw-inset-shadow: 0 0 #0000;\n      --tw-inset-shadow-color: initial;\n      --tw-inset-shadow-alpha: 100%;\n      --tw-ring-color: initial;\n      --tw-ring-shadow: 0 0 #0000;\n      --tw-inset-ring-color: initial;\n      --tw-inset-ring-shadow: 0 0 #0000;\n      --tw-ring-inset: initial;\n      --tw-ring-offset-width: 0px;\n      --tw-ring-offset-color: #fff;\n      --tw-ring-offset-shadow: 0 0 #0000;\n      --tw-outline-style: solid;\n      --tw-blur: initial;\n      --tw-brightness: initial;\n      --tw-contrast: initial;\n      --tw-grayscale: initial;\n      --tw-hue-rotate: initial;\n      --tw-invert: initial;\n      --tw-opacity: initial;\n      --tw-saturate: initial;\n      --tw-sepia: initial;\n      --tw-drop-shadow: initial;\n      --tw-drop-shadow-color: initial;\n      --tw-drop-shadow-alpha: 100%;\n      --tw-drop-shadow-size: initial;\n      --tw-backdrop-blur: initial;\n      --tw-backdrop-brightness: initial;\n      --tw-backdrop-contrast: initial;\n      --tw-backdrop-grayscale: initial;\n      --tw-backdrop-hue-rotate: initial;\n      --tw-backdrop-invert: initial;\n      --tw-backdrop-opacity: initial;\n      --tw-backdrop-saturate: initial;\n      --tw-backdrop-sepia: initial;\n      --tw-duration: initial;\n      --tw-ease: initial;\n    }\n  }\n}\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -42485,4464 +42789,6 @@ var NoReactInternals = {
 
 /***/ },
 
-/***/ 3161
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-// ESM COMPAT FLAG
-__webpack_require__.r(__webpack_exports__);
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  BRAND: () => (/* reexport */ BRAND),
-  DIRTY: () => (/* reexport */ DIRTY),
-  EMPTY_PATH: () => (/* reexport */ EMPTY_PATH),
-  INVALID: () => (/* reexport */ INVALID),
-  NEVER: () => (/* reexport */ NEVER),
-  OK: () => (/* reexport */ OK),
-  ParseStatus: () => (/* reexport */ ParseStatus),
-  Schema: () => (/* reexport */ ZodType),
-  ZodAny: () => (/* reexport */ ZodAny),
-  ZodArray: () => (/* reexport */ ZodArray),
-  ZodBigInt: () => (/* reexport */ ZodBigInt),
-  ZodBoolean: () => (/* reexport */ ZodBoolean),
-  ZodBranded: () => (/* reexport */ ZodBranded),
-  ZodCatch: () => (/* reexport */ ZodCatch),
-  ZodDate: () => (/* reexport */ ZodDate),
-  ZodDefault: () => (/* reexport */ ZodDefault),
-  ZodDiscriminatedUnion: () => (/* reexport */ ZodDiscriminatedUnion),
-  ZodEffects: () => (/* reexport */ ZodEffects),
-  ZodEnum: () => (/* reexport */ ZodEnum),
-  ZodError: () => (/* reexport */ ZodError),
-  ZodFirstPartyTypeKind: () => (/* reexport */ ZodFirstPartyTypeKind),
-  ZodFunction: () => (/* reexport */ ZodFunction),
-  ZodIntersection: () => (/* reexport */ ZodIntersection),
-  ZodIssueCode: () => (/* reexport */ ZodIssueCode),
-  ZodLazy: () => (/* reexport */ ZodLazy),
-  ZodLiteral: () => (/* reexport */ ZodLiteral),
-  ZodMap: () => (/* reexport */ ZodMap),
-  ZodNaN: () => (/* reexport */ ZodNaN),
-  ZodNativeEnum: () => (/* reexport */ ZodNativeEnum),
-  ZodNever: () => (/* reexport */ ZodNever),
-  ZodNull: () => (/* reexport */ ZodNull),
-  ZodNullable: () => (/* reexport */ ZodNullable),
-  ZodNumber: () => (/* reexport */ ZodNumber),
-  ZodObject: () => (/* reexport */ ZodObject),
-  ZodOptional: () => (/* reexport */ ZodOptional),
-  ZodParsedType: () => (/* reexport */ ZodParsedType),
-  ZodPipeline: () => (/* reexport */ ZodPipeline),
-  ZodPromise: () => (/* reexport */ ZodPromise),
-  ZodReadonly: () => (/* reexport */ ZodReadonly),
-  ZodRecord: () => (/* reexport */ ZodRecord),
-  ZodSchema: () => (/* reexport */ ZodType),
-  ZodSet: () => (/* reexport */ ZodSet),
-  ZodString: () => (/* reexport */ ZodString),
-  ZodSymbol: () => (/* reexport */ ZodSymbol),
-  ZodTransformer: () => (/* reexport */ ZodEffects),
-  ZodTuple: () => (/* reexport */ ZodTuple),
-  ZodType: () => (/* reexport */ ZodType),
-  ZodUndefined: () => (/* reexport */ ZodUndefined),
-  ZodUnion: () => (/* reexport */ ZodUnion),
-  ZodUnknown: () => (/* reexport */ ZodUnknown),
-  ZodVoid: () => (/* reexport */ ZodVoid),
-  addIssueToContext: () => (/* reexport */ addIssueToContext),
-  any: () => (/* reexport */ anyType),
-  array: () => (/* reexport */ arrayType),
-  bigint: () => (/* reexport */ bigIntType),
-  boolean: () => (/* reexport */ booleanType),
-  coerce: () => (/* reexport */ coerce),
-  custom: () => (/* reexport */ custom),
-  date: () => (/* reexport */ dateType),
-  datetimeRegex: () => (/* reexport */ datetimeRegex),
-  "default": () => (/* binding */ v3),
-  defaultErrorMap: () => (/* reexport */ en),
-  discriminatedUnion: () => (/* reexport */ discriminatedUnionType),
-  effect: () => (/* reexport */ effectsType),
-  "enum": () => (/* reexport */ enumType),
-  "function": () => (/* reexport */ functionType),
-  getErrorMap: () => (/* reexport */ getErrorMap),
-  getParsedType: () => (/* reexport */ getParsedType),
-  "instanceof": () => (/* reexport */ instanceOfType),
-  intersection: () => (/* reexport */ intersectionType),
-  isAborted: () => (/* reexport */ isAborted),
-  isAsync: () => (/* reexport */ isAsync),
-  isDirty: () => (/* reexport */ isDirty),
-  isValid: () => (/* reexport */ isValid),
-  late: () => (/* reexport */ late),
-  lazy: () => (/* reexport */ lazyType),
-  literal: () => (/* reexport */ literalType),
-  makeIssue: () => (/* reexport */ makeIssue),
-  map: () => (/* reexport */ mapType),
-  nan: () => (/* reexport */ nanType),
-  nativeEnum: () => (/* reexport */ nativeEnumType),
-  never: () => (/* reexport */ neverType),
-  "null": () => (/* reexport */ nullType),
-  nullable: () => (/* reexport */ nullableType),
-  number: () => (/* reexport */ numberType),
-  object: () => (/* reexport */ objectType),
-  objectUtil: () => (/* reexport */ objectUtil),
-  oboolean: () => (/* reexport */ oboolean),
-  onumber: () => (/* reexport */ onumber),
-  optional: () => (/* reexport */ optionalType),
-  ostring: () => (/* reexport */ ostring),
-  pipeline: () => (/* reexport */ pipelineType),
-  preprocess: () => (/* reexport */ preprocessType),
-  promise: () => (/* reexport */ promiseType),
-  quotelessJson: () => (/* reexport */ quotelessJson),
-  record: () => (/* reexport */ recordType),
-  set: () => (/* reexport */ setType),
-  setErrorMap: () => (/* reexport */ setErrorMap),
-  strictObject: () => (/* reexport */ strictObjectType),
-  string: () => (/* reexport */ stringType),
-  symbol: () => (/* reexport */ symbolType),
-  transformer: () => (/* reexport */ effectsType),
-  tuple: () => (/* reexport */ tupleType),
-  undefined: () => (/* reexport */ undefinedType),
-  union: () => (/* reexport */ unionType),
-  unknown: () => (/* reexport */ unknownType),
-  util: () => (/* reexport */ util),
-  "void": () => (/* reexport */ voidType),
-  z: () => (/* reexport */ external_namespaceObject)
-});
-
-// NAMESPACE OBJECT: ./node_modules/zod/v3/external.js
-var external_namespaceObject = {};
-__webpack_require__.r(external_namespaceObject);
-__webpack_require__.d(external_namespaceObject, {
-  BRAND: () => (BRAND),
-  DIRTY: () => (DIRTY),
-  EMPTY_PATH: () => (EMPTY_PATH),
-  INVALID: () => (INVALID),
-  NEVER: () => (NEVER),
-  OK: () => (OK),
-  ParseStatus: () => (ParseStatus),
-  Schema: () => (ZodType),
-  ZodAny: () => (ZodAny),
-  ZodArray: () => (ZodArray),
-  ZodBigInt: () => (ZodBigInt),
-  ZodBoolean: () => (ZodBoolean),
-  ZodBranded: () => (ZodBranded),
-  ZodCatch: () => (ZodCatch),
-  ZodDate: () => (ZodDate),
-  ZodDefault: () => (ZodDefault),
-  ZodDiscriminatedUnion: () => (ZodDiscriminatedUnion),
-  ZodEffects: () => (ZodEffects),
-  ZodEnum: () => (ZodEnum),
-  ZodError: () => (ZodError),
-  ZodFirstPartyTypeKind: () => (ZodFirstPartyTypeKind),
-  ZodFunction: () => (ZodFunction),
-  ZodIntersection: () => (ZodIntersection),
-  ZodIssueCode: () => (ZodIssueCode),
-  ZodLazy: () => (ZodLazy),
-  ZodLiteral: () => (ZodLiteral),
-  ZodMap: () => (ZodMap),
-  ZodNaN: () => (ZodNaN),
-  ZodNativeEnum: () => (ZodNativeEnum),
-  ZodNever: () => (ZodNever),
-  ZodNull: () => (ZodNull),
-  ZodNullable: () => (ZodNullable),
-  ZodNumber: () => (ZodNumber),
-  ZodObject: () => (ZodObject),
-  ZodOptional: () => (ZodOptional),
-  ZodParsedType: () => (ZodParsedType),
-  ZodPipeline: () => (ZodPipeline),
-  ZodPromise: () => (ZodPromise),
-  ZodReadonly: () => (ZodReadonly),
-  ZodRecord: () => (ZodRecord),
-  ZodSchema: () => (ZodType),
-  ZodSet: () => (ZodSet),
-  ZodString: () => (ZodString),
-  ZodSymbol: () => (ZodSymbol),
-  ZodTransformer: () => (ZodEffects),
-  ZodTuple: () => (ZodTuple),
-  ZodType: () => (ZodType),
-  ZodUndefined: () => (ZodUndefined),
-  ZodUnion: () => (ZodUnion),
-  ZodUnknown: () => (ZodUnknown),
-  ZodVoid: () => (ZodVoid),
-  addIssueToContext: () => (addIssueToContext),
-  any: () => (anyType),
-  array: () => (arrayType),
-  bigint: () => (bigIntType),
-  boolean: () => (booleanType),
-  coerce: () => (coerce),
-  custom: () => (custom),
-  date: () => (dateType),
-  datetimeRegex: () => (datetimeRegex),
-  defaultErrorMap: () => (en),
-  discriminatedUnion: () => (discriminatedUnionType),
-  effect: () => (effectsType),
-  "enum": () => (enumType),
-  "function": () => (functionType),
-  getErrorMap: () => (getErrorMap),
-  getParsedType: () => (getParsedType),
-  "instanceof": () => (instanceOfType),
-  intersection: () => (intersectionType),
-  isAborted: () => (isAborted),
-  isAsync: () => (isAsync),
-  isDirty: () => (isDirty),
-  isValid: () => (isValid),
-  late: () => (late),
-  lazy: () => (lazyType),
-  literal: () => (literalType),
-  makeIssue: () => (makeIssue),
-  map: () => (mapType),
-  nan: () => (nanType),
-  nativeEnum: () => (nativeEnumType),
-  never: () => (neverType),
-  "null": () => (nullType),
-  nullable: () => (nullableType),
-  number: () => (numberType),
-  object: () => (objectType),
-  objectUtil: () => (objectUtil),
-  oboolean: () => (oboolean),
-  onumber: () => (onumber),
-  optional: () => (optionalType),
-  ostring: () => (ostring),
-  pipeline: () => (pipelineType),
-  preprocess: () => (preprocessType),
-  promise: () => (promiseType),
-  quotelessJson: () => (quotelessJson),
-  record: () => (recordType),
-  set: () => (setType),
-  setErrorMap: () => (setErrorMap),
-  strictObject: () => (strictObjectType),
-  string: () => (stringType),
-  symbol: () => (symbolType),
-  transformer: () => (effectsType),
-  tuple: () => (tupleType),
-  undefined: () => (undefinedType),
-  union: () => (unionType),
-  unknown: () => (unknownType),
-  util: () => (util),
-  "void": () => (voidType)
-});
-
-;// ./node_modules/zod/v3/helpers/util.js
-var util;
-(function (util) {
-    util.assertEqual = (_) => { };
-    function assertIs(_arg) { }
-    util.assertIs = assertIs;
-    function assertNever(_x) {
-        throw new Error();
-    }
-    util.assertNever = assertNever;
-    util.arrayToEnum = (items) => {
-        const obj = {};
-        for (const item of items) {
-            obj[item] = item;
-        }
-        return obj;
-    };
-    util.getValidEnumValues = (obj) => {
-        const validKeys = util.objectKeys(obj).filter((k) => typeof obj[obj[k]] !== "number");
-        const filtered = {};
-        for (const k of validKeys) {
-            filtered[k] = obj[k];
-        }
-        return util.objectValues(filtered);
-    };
-    util.objectValues = (obj) => {
-        return util.objectKeys(obj).map(function (e) {
-            return obj[e];
-        });
-    };
-    util.objectKeys = typeof Object.keys === "function" // eslint-disable-line ban/ban
-        ? (obj) => Object.keys(obj) // eslint-disable-line ban/ban
-        : (object) => {
-            const keys = [];
-            for (const key in object) {
-                if (Object.prototype.hasOwnProperty.call(object, key)) {
-                    keys.push(key);
-                }
-            }
-            return keys;
-        };
-    util.find = (arr, checker) => {
-        for (const item of arr) {
-            if (checker(item))
-                return item;
-        }
-        return undefined;
-    };
-    util.isInteger = typeof Number.isInteger === "function"
-        ? (val) => Number.isInteger(val) // eslint-disable-line ban/ban
-        : (val) => typeof val === "number" && Number.isFinite(val) && Math.floor(val) === val;
-    function joinValues(array, separator = " | ") {
-        return array.map((val) => (typeof val === "string" ? `'${val}'` : val)).join(separator);
-    }
-    util.joinValues = joinValues;
-    util.jsonStringifyReplacer = (_, value) => {
-        if (typeof value === "bigint") {
-            return value.toString();
-        }
-        return value;
-    };
-})(util || (util = {}));
-var objectUtil;
-(function (objectUtil) {
-    objectUtil.mergeShapes = (first, second) => {
-        return {
-            ...first,
-            ...second, // second overwrites first
-        };
-    };
-})(objectUtil || (objectUtil = {}));
-const ZodParsedType = util.arrayToEnum([
-    "string",
-    "nan",
-    "number",
-    "integer",
-    "float",
-    "boolean",
-    "date",
-    "bigint",
-    "symbol",
-    "function",
-    "undefined",
-    "null",
-    "array",
-    "object",
-    "unknown",
-    "promise",
-    "void",
-    "never",
-    "map",
-    "set",
-]);
-const getParsedType = (data) => {
-    const t = typeof data;
-    switch (t) {
-        case "undefined":
-            return ZodParsedType.undefined;
-        case "string":
-            return ZodParsedType.string;
-        case "number":
-            return Number.isNaN(data) ? ZodParsedType.nan : ZodParsedType.number;
-        case "boolean":
-            return ZodParsedType.boolean;
-        case "function":
-            return ZodParsedType.function;
-        case "bigint":
-            return ZodParsedType.bigint;
-        case "symbol":
-            return ZodParsedType.symbol;
-        case "object":
-            if (Array.isArray(data)) {
-                return ZodParsedType.array;
-            }
-            if (data === null) {
-                return ZodParsedType.null;
-            }
-            if (data.then && typeof data.then === "function" && data.catch && typeof data.catch === "function") {
-                return ZodParsedType.promise;
-            }
-            if (typeof Map !== "undefined" && data instanceof Map) {
-                return ZodParsedType.map;
-            }
-            if (typeof Set !== "undefined" && data instanceof Set) {
-                return ZodParsedType.set;
-            }
-            if (typeof Date !== "undefined" && data instanceof Date) {
-                return ZodParsedType.date;
-            }
-            return ZodParsedType.object;
-        default:
-            return ZodParsedType.unknown;
-    }
-};
-
-;// ./node_modules/zod/v3/ZodError.js
-
-const ZodIssueCode = util.arrayToEnum([
-    "invalid_type",
-    "invalid_literal",
-    "custom",
-    "invalid_union",
-    "invalid_union_discriminator",
-    "invalid_enum_value",
-    "unrecognized_keys",
-    "invalid_arguments",
-    "invalid_return_type",
-    "invalid_date",
-    "invalid_string",
-    "too_small",
-    "too_big",
-    "invalid_intersection_types",
-    "not_multiple_of",
-    "not_finite",
-]);
-const quotelessJson = (obj) => {
-    const json = JSON.stringify(obj, null, 2);
-    return json.replace(/"([^"]+)":/g, "$1:");
-};
-class ZodError extends Error {
-    get errors() {
-        return this.issues;
-    }
-    constructor(issues) {
-        super();
-        this.issues = [];
-        this.addIssue = (sub) => {
-            this.issues = [...this.issues, sub];
-        };
-        this.addIssues = (subs = []) => {
-            this.issues = [...this.issues, ...subs];
-        };
-        const actualProto = new.target.prototype;
-        if (Object.setPrototypeOf) {
-            // eslint-disable-next-line ban/ban
-            Object.setPrototypeOf(this, actualProto);
-        }
-        else {
-            this.__proto__ = actualProto;
-        }
-        this.name = "ZodError";
-        this.issues = issues;
-    }
-    format(_mapper) {
-        const mapper = _mapper ||
-            function (issue) {
-                return issue.message;
-            };
-        const fieldErrors = { _errors: [] };
-        const processError = (error) => {
-            for (const issue of error.issues) {
-                if (issue.code === "invalid_union") {
-                    issue.unionErrors.map(processError);
-                }
-                else if (issue.code === "invalid_return_type") {
-                    processError(issue.returnTypeError);
-                }
-                else if (issue.code === "invalid_arguments") {
-                    processError(issue.argumentsError);
-                }
-                else if (issue.path.length === 0) {
-                    fieldErrors._errors.push(mapper(issue));
-                }
-                else {
-                    let curr = fieldErrors;
-                    let i = 0;
-                    while (i < issue.path.length) {
-                        const el = issue.path[i];
-                        const terminal = i === issue.path.length - 1;
-                        if (!terminal) {
-                            curr[el] = curr[el] || { _errors: [] };
-                            // if (typeof el === "string") {
-                            //   curr[el] = curr[el] || { _errors: [] };
-                            // } else if (typeof el === "number") {
-                            //   const errorArray: any = [];
-                            //   errorArray._errors = [];
-                            //   curr[el] = curr[el] || errorArray;
-                            // }
-                        }
-                        else {
-                            curr[el] = curr[el] || { _errors: [] };
-                            curr[el]._errors.push(mapper(issue));
-                        }
-                        curr = curr[el];
-                        i++;
-                    }
-                }
-            }
-        };
-        processError(this);
-        return fieldErrors;
-    }
-    static assert(value) {
-        if (!(value instanceof ZodError)) {
-            throw new Error(`Not a ZodError: ${value}`);
-        }
-    }
-    toString() {
-        return this.message;
-    }
-    get message() {
-        return JSON.stringify(this.issues, util.jsonStringifyReplacer, 2);
-    }
-    get isEmpty() {
-        return this.issues.length === 0;
-    }
-    flatten(mapper = (issue) => issue.message) {
-        const fieldErrors = Object.create(null);
-        const formErrors = [];
-        for (const sub of this.issues) {
-            if (sub.path.length > 0) {
-                const firstEl = sub.path[0];
-                fieldErrors[firstEl] = fieldErrors[firstEl] || [];
-                fieldErrors[firstEl].push(mapper(sub));
-            }
-            else {
-                formErrors.push(mapper(sub));
-            }
-        }
-        return { formErrors, fieldErrors };
-    }
-    get formErrors() {
-        return this.flatten();
-    }
-}
-ZodError.create = (issues) => {
-    const error = new ZodError(issues);
-    return error;
-};
-
-;// ./node_modules/zod/v3/locales/en.js
-
-
-const errorMap = (issue, _ctx) => {
-    let message;
-    switch (issue.code) {
-        case ZodIssueCode.invalid_type:
-            if (issue.received === ZodParsedType.undefined) {
-                message = "Required";
-            }
-            else {
-                message = `Expected ${issue.expected}, received ${issue.received}`;
-            }
-            break;
-        case ZodIssueCode.invalid_literal:
-            message = `Invalid literal value, expected ${JSON.stringify(issue.expected, util.jsonStringifyReplacer)}`;
-            break;
-        case ZodIssueCode.unrecognized_keys:
-            message = `Unrecognized key(s) in object: ${util.joinValues(issue.keys, ", ")}`;
-            break;
-        case ZodIssueCode.invalid_union:
-            message = `Invalid input`;
-            break;
-        case ZodIssueCode.invalid_union_discriminator:
-            message = `Invalid discriminator value. Expected ${util.joinValues(issue.options)}`;
-            break;
-        case ZodIssueCode.invalid_enum_value:
-            message = `Invalid enum value. Expected ${util.joinValues(issue.options)}, received '${issue.received}'`;
-            break;
-        case ZodIssueCode.invalid_arguments:
-            message = `Invalid function arguments`;
-            break;
-        case ZodIssueCode.invalid_return_type:
-            message = `Invalid function return type`;
-            break;
-        case ZodIssueCode.invalid_date:
-            message = `Invalid date`;
-            break;
-        case ZodIssueCode.invalid_string:
-            if (typeof issue.validation === "object") {
-                if ("includes" in issue.validation) {
-                    message = `Invalid input: must include "${issue.validation.includes}"`;
-                    if (typeof issue.validation.position === "number") {
-                        message = `${message} at one or more positions greater than or equal to ${issue.validation.position}`;
-                    }
-                }
-                else if ("startsWith" in issue.validation) {
-                    message = `Invalid input: must start with "${issue.validation.startsWith}"`;
-                }
-                else if ("endsWith" in issue.validation) {
-                    message = `Invalid input: must end with "${issue.validation.endsWith}"`;
-                }
-                else {
-                    util.assertNever(issue.validation);
-                }
-            }
-            else if (issue.validation !== "regex") {
-                message = `Invalid ${issue.validation}`;
-            }
-            else {
-                message = "Invalid";
-            }
-            break;
-        case ZodIssueCode.too_small:
-            if (issue.type === "array")
-                message = `Array must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `more than`} ${issue.minimum} element(s)`;
-            else if (issue.type === "string")
-                message = `String must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `over`} ${issue.minimum} character(s)`;
-            else if (issue.type === "number")
-                message = `Number must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${issue.minimum}`;
-            else if (issue.type === "bigint")
-                message = `Number must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${issue.minimum}`;
-            else if (issue.type === "date")
-                message = `Date must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${new Date(Number(issue.minimum))}`;
-            else
-                message = "Invalid input";
-            break;
-        case ZodIssueCode.too_big:
-            if (issue.type === "array")
-                message = `Array must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `less than`} ${issue.maximum} element(s)`;
-            else if (issue.type === "string")
-                message = `String must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `under`} ${issue.maximum} character(s)`;
-            else if (issue.type === "number")
-                message = `Number must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
-            else if (issue.type === "bigint")
-                message = `BigInt must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
-            else if (issue.type === "date")
-                message = `Date must be ${issue.exact ? `exactly` : issue.inclusive ? `smaller than or equal to` : `smaller than`} ${new Date(Number(issue.maximum))}`;
-            else
-                message = "Invalid input";
-            break;
-        case ZodIssueCode.custom:
-            message = `Invalid input`;
-            break;
-        case ZodIssueCode.invalid_intersection_types:
-            message = `Intersection results could not be merged`;
-            break;
-        case ZodIssueCode.not_multiple_of:
-            message = `Number must be a multiple of ${issue.multipleOf}`;
-            break;
-        case ZodIssueCode.not_finite:
-            message = "Number must be finite";
-            break;
-        default:
-            message = _ctx.defaultError;
-            util.assertNever(issue);
-    }
-    return { message };
-};
-/* harmony default export */ const en = (errorMap);
-
-;// ./node_modules/zod/v3/errors.js
-
-let overrideErrorMap = en;
-
-function setErrorMap(map) {
-    overrideErrorMap = map;
-}
-function getErrorMap() {
-    return overrideErrorMap;
-}
-
-;// ./node_modules/zod/v3/helpers/parseUtil.js
-
-
-const makeIssue = (params) => {
-    const { data, path, errorMaps, issueData } = params;
-    const fullPath = [...path, ...(issueData.path || [])];
-    const fullIssue = {
-        ...issueData,
-        path: fullPath,
-    };
-    if (issueData.message !== undefined) {
-        return {
-            ...issueData,
-            path: fullPath,
-            message: issueData.message,
-        };
-    }
-    let errorMessage = "";
-    const maps = errorMaps
-        .filter((m) => !!m)
-        .slice()
-        .reverse();
-    for (const map of maps) {
-        errorMessage = map(fullIssue, { data, defaultError: errorMessage }).message;
-    }
-    return {
-        ...issueData,
-        path: fullPath,
-        message: errorMessage,
-    };
-};
-const EMPTY_PATH = [];
-function addIssueToContext(ctx, issueData) {
-    const overrideMap = getErrorMap();
-    const issue = makeIssue({
-        issueData: issueData,
-        data: ctx.data,
-        path: ctx.path,
-        errorMaps: [
-            ctx.common.contextualErrorMap, // contextual error map is first priority
-            ctx.schemaErrorMap, // then schema-bound map if available
-            overrideMap, // then global override map
-            overrideMap === en ? undefined : en, // then global default map
-        ].filter((x) => !!x),
-    });
-    ctx.common.issues.push(issue);
-}
-class ParseStatus {
-    constructor() {
-        this.value = "valid";
-    }
-    dirty() {
-        if (this.value === "valid")
-            this.value = "dirty";
-    }
-    abort() {
-        if (this.value !== "aborted")
-            this.value = "aborted";
-    }
-    static mergeArray(status, results) {
-        const arrayValue = [];
-        for (const s of results) {
-            if (s.status === "aborted")
-                return INVALID;
-            if (s.status === "dirty")
-                status.dirty();
-            arrayValue.push(s.value);
-        }
-        return { status: status.value, value: arrayValue };
-    }
-    static async mergeObjectAsync(status, pairs) {
-        const syncPairs = [];
-        for (const pair of pairs) {
-            const key = await pair.key;
-            const value = await pair.value;
-            syncPairs.push({
-                key,
-                value,
-            });
-        }
-        return ParseStatus.mergeObjectSync(status, syncPairs);
-    }
-    static mergeObjectSync(status, pairs) {
-        const finalObject = {};
-        for (const pair of pairs) {
-            const { key, value } = pair;
-            if (key.status === "aborted")
-                return INVALID;
-            if (value.status === "aborted")
-                return INVALID;
-            if (key.status === "dirty")
-                status.dirty();
-            if (value.status === "dirty")
-                status.dirty();
-            if (key.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
-                finalObject[key.value] = value.value;
-            }
-        }
-        return { status: status.value, value: finalObject };
-    }
-}
-const INVALID = Object.freeze({
-    status: "aborted",
-});
-const DIRTY = (value) => ({ status: "dirty", value });
-const OK = (value) => ({ status: "valid", value });
-const isAborted = (x) => x.status === "aborted";
-const isDirty = (x) => x.status === "dirty";
-const isValid = (x) => x.status === "valid";
-const isAsync = (x) => typeof Promise !== "undefined" && x instanceof Promise;
-
-;// ./node_modules/zod/v3/helpers/errorUtil.js
-var errorUtil;
-(function (errorUtil) {
-    errorUtil.errToObj = (message) => typeof message === "string" ? { message } : message || {};
-    // biome-ignore lint:
-    errorUtil.toString = (message) => typeof message === "string" ? message : message?.message;
-})(errorUtil || (errorUtil = {}));
-
-;// ./node_modules/zod/v3/types.js
-
-
-
-
-
-class ParseInputLazyPath {
-    constructor(parent, value, path, key) {
-        this._cachedPath = [];
-        this.parent = parent;
-        this.data = value;
-        this._path = path;
-        this._key = key;
-    }
-    get path() {
-        if (!this._cachedPath.length) {
-            if (Array.isArray(this._key)) {
-                this._cachedPath.push(...this._path, ...this._key);
-            }
-            else {
-                this._cachedPath.push(...this._path, this._key);
-            }
-        }
-        return this._cachedPath;
-    }
-}
-const handleResult = (ctx, result) => {
-    if (isValid(result)) {
-        return { success: true, data: result.value };
-    }
-    else {
-        if (!ctx.common.issues.length) {
-            throw new Error("Validation failed but no issues detected.");
-        }
-        return {
-            success: false,
-            get error() {
-                if (this._error)
-                    return this._error;
-                const error = new ZodError(ctx.common.issues);
-                this._error = error;
-                return this._error;
-            },
-        };
-    }
-};
-function processCreateParams(params) {
-    if (!params)
-        return {};
-    const { errorMap, invalid_type_error, required_error, description } = params;
-    if (errorMap && (invalid_type_error || required_error)) {
-        throw new Error(`Can't use "invalid_type_error" or "required_error" in conjunction with custom error map.`);
-    }
-    if (errorMap)
-        return { errorMap: errorMap, description };
-    const customMap = (iss, ctx) => {
-        const { message } = params;
-        if (iss.code === "invalid_enum_value") {
-            return { message: message ?? ctx.defaultError };
-        }
-        if (typeof ctx.data === "undefined") {
-            return { message: message ?? required_error ?? ctx.defaultError };
-        }
-        if (iss.code !== "invalid_type")
-            return { message: ctx.defaultError };
-        return { message: message ?? invalid_type_error ?? ctx.defaultError };
-    };
-    return { errorMap: customMap, description };
-}
-class ZodType {
-    get description() {
-        return this._def.description;
-    }
-    _getType(input) {
-        return getParsedType(input.data);
-    }
-    _getOrReturnCtx(input, ctx) {
-        return (ctx || {
-            common: input.parent.common,
-            data: input.data,
-            parsedType: getParsedType(input.data),
-            schemaErrorMap: this._def.errorMap,
-            path: input.path,
-            parent: input.parent,
-        });
-    }
-    _processInputParams(input) {
-        return {
-            status: new ParseStatus(),
-            ctx: {
-                common: input.parent.common,
-                data: input.data,
-                parsedType: getParsedType(input.data),
-                schemaErrorMap: this._def.errorMap,
-                path: input.path,
-                parent: input.parent,
-            },
-        };
-    }
-    _parseSync(input) {
-        const result = this._parse(input);
-        if (isAsync(result)) {
-            throw new Error("Synchronous parse encountered promise.");
-        }
-        return result;
-    }
-    _parseAsync(input) {
-        const result = this._parse(input);
-        return Promise.resolve(result);
-    }
-    parse(data, params) {
-        const result = this.safeParse(data, params);
-        if (result.success)
-            return result.data;
-        throw result.error;
-    }
-    safeParse(data, params) {
-        const ctx = {
-            common: {
-                issues: [],
-                async: params?.async ?? false,
-                contextualErrorMap: params?.errorMap,
-            },
-            path: params?.path || [],
-            schemaErrorMap: this._def.errorMap,
-            parent: null,
-            data,
-            parsedType: getParsedType(data),
-        };
-        const result = this._parseSync({ data, path: ctx.path, parent: ctx });
-        return handleResult(ctx, result);
-    }
-    "~validate"(data) {
-        const ctx = {
-            common: {
-                issues: [],
-                async: !!this["~standard"].async,
-            },
-            path: [],
-            schemaErrorMap: this._def.errorMap,
-            parent: null,
-            data,
-            parsedType: getParsedType(data),
-        };
-        if (!this["~standard"].async) {
-            try {
-                const result = this._parseSync({ data, path: [], parent: ctx });
-                return isValid(result)
-                    ? {
-                        value: result.value,
-                    }
-                    : {
-                        issues: ctx.common.issues,
-                    };
-            }
-            catch (err) {
-                if (err?.message?.toLowerCase()?.includes("encountered")) {
-                    this["~standard"].async = true;
-                }
-                ctx.common = {
-                    issues: [],
-                    async: true,
-                };
-            }
-        }
-        return this._parseAsync({ data, path: [], parent: ctx }).then((result) => isValid(result)
-            ? {
-                value: result.value,
-            }
-            : {
-                issues: ctx.common.issues,
-            });
-    }
-    async parseAsync(data, params) {
-        const result = await this.safeParseAsync(data, params);
-        if (result.success)
-            return result.data;
-        throw result.error;
-    }
-    async safeParseAsync(data, params) {
-        const ctx = {
-            common: {
-                issues: [],
-                contextualErrorMap: params?.errorMap,
-                async: true,
-            },
-            path: params?.path || [],
-            schemaErrorMap: this._def.errorMap,
-            parent: null,
-            data,
-            parsedType: getParsedType(data),
-        };
-        const maybeAsyncResult = this._parse({ data, path: ctx.path, parent: ctx });
-        const result = await (isAsync(maybeAsyncResult) ? maybeAsyncResult : Promise.resolve(maybeAsyncResult));
-        return handleResult(ctx, result);
-    }
-    refine(check, message) {
-        const getIssueProperties = (val) => {
-            if (typeof message === "string" || typeof message === "undefined") {
-                return { message };
-            }
-            else if (typeof message === "function") {
-                return message(val);
-            }
-            else {
-                return message;
-            }
-        };
-        return this._refinement((val, ctx) => {
-            const result = check(val);
-            const setError = () => ctx.addIssue({
-                code: ZodIssueCode.custom,
-                ...getIssueProperties(val),
-            });
-            if (typeof Promise !== "undefined" && result instanceof Promise) {
-                return result.then((data) => {
-                    if (!data) {
-                        setError();
-                        return false;
-                    }
-                    else {
-                        return true;
-                    }
-                });
-            }
-            if (!result) {
-                setError();
-                return false;
-            }
-            else {
-                return true;
-            }
-        });
-    }
-    refinement(check, refinementData) {
-        return this._refinement((val, ctx) => {
-            if (!check(val)) {
-                ctx.addIssue(typeof refinementData === "function" ? refinementData(val, ctx) : refinementData);
-                return false;
-            }
-            else {
-                return true;
-            }
-        });
-    }
-    _refinement(refinement) {
-        return new ZodEffects({
-            schema: this,
-            typeName: ZodFirstPartyTypeKind.ZodEffects,
-            effect: { type: "refinement", refinement },
-        });
-    }
-    superRefine(refinement) {
-        return this._refinement(refinement);
-    }
-    constructor(def) {
-        /** Alias of safeParseAsync */
-        this.spa = this.safeParseAsync;
-        this._def = def;
-        this.parse = this.parse.bind(this);
-        this.safeParse = this.safeParse.bind(this);
-        this.parseAsync = this.parseAsync.bind(this);
-        this.safeParseAsync = this.safeParseAsync.bind(this);
-        this.spa = this.spa.bind(this);
-        this.refine = this.refine.bind(this);
-        this.refinement = this.refinement.bind(this);
-        this.superRefine = this.superRefine.bind(this);
-        this.optional = this.optional.bind(this);
-        this.nullable = this.nullable.bind(this);
-        this.nullish = this.nullish.bind(this);
-        this.array = this.array.bind(this);
-        this.promise = this.promise.bind(this);
-        this.or = this.or.bind(this);
-        this.and = this.and.bind(this);
-        this.transform = this.transform.bind(this);
-        this.brand = this.brand.bind(this);
-        this.default = this.default.bind(this);
-        this.catch = this.catch.bind(this);
-        this.describe = this.describe.bind(this);
-        this.pipe = this.pipe.bind(this);
-        this.readonly = this.readonly.bind(this);
-        this.isNullable = this.isNullable.bind(this);
-        this.isOptional = this.isOptional.bind(this);
-        this["~standard"] = {
-            version: 1,
-            vendor: "zod",
-            validate: (data) => this["~validate"](data),
-        };
-    }
-    optional() {
-        return ZodOptional.create(this, this._def);
-    }
-    nullable() {
-        return ZodNullable.create(this, this._def);
-    }
-    nullish() {
-        return this.nullable().optional();
-    }
-    array() {
-        return ZodArray.create(this);
-    }
-    promise() {
-        return ZodPromise.create(this, this._def);
-    }
-    or(option) {
-        return ZodUnion.create([this, option], this._def);
-    }
-    and(incoming) {
-        return ZodIntersection.create(this, incoming, this._def);
-    }
-    transform(transform) {
-        return new ZodEffects({
-            ...processCreateParams(this._def),
-            schema: this,
-            typeName: ZodFirstPartyTypeKind.ZodEffects,
-            effect: { type: "transform", transform },
-        });
-    }
-    default(def) {
-        const defaultValueFunc = typeof def === "function" ? def : () => def;
-        return new ZodDefault({
-            ...processCreateParams(this._def),
-            innerType: this,
-            defaultValue: defaultValueFunc,
-            typeName: ZodFirstPartyTypeKind.ZodDefault,
-        });
-    }
-    brand() {
-        return new ZodBranded({
-            typeName: ZodFirstPartyTypeKind.ZodBranded,
-            type: this,
-            ...processCreateParams(this._def),
-        });
-    }
-    catch(def) {
-        const catchValueFunc = typeof def === "function" ? def : () => def;
-        return new ZodCatch({
-            ...processCreateParams(this._def),
-            innerType: this,
-            catchValue: catchValueFunc,
-            typeName: ZodFirstPartyTypeKind.ZodCatch,
-        });
-    }
-    describe(description) {
-        const This = this.constructor;
-        return new This({
-            ...this._def,
-            description,
-        });
-    }
-    pipe(target) {
-        return ZodPipeline.create(this, target);
-    }
-    readonly() {
-        return ZodReadonly.create(this);
-    }
-    isOptional() {
-        return this.safeParse(undefined).success;
-    }
-    isNullable() {
-        return this.safeParse(null).success;
-    }
-}
-const cuidRegex = /^c[^\s-]{8,}$/i;
-const cuid2Regex = /^[0-9a-z]+$/;
-const ulidRegex = /^[0-9A-HJKMNP-TV-Z]{26}$/i;
-// const uuidRegex =
-//   /^([a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[a-f0-9]{4}-[a-f0-9]{12}|00000000-0000-0000-0000-000000000000)$/i;
-const uuidRegex = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
-const nanoidRegex = /^[a-z0-9_-]{21}$/i;
-const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/;
-const durationRegex = /^[-+]?P(?!$)(?:(?:[-+]?\d+Y)|(?:[-+]?\d+[.,]\d+Y$))?(?:(?:[-+]?\d+M)|(?:[-+]?\d+[.,]\d+M$))?(?:(?:[-+]?\d+W)|(?:[-+]?\d+[.,]\d+W$))?(?:(?:[-+]?\d+D)|(?:[-+]?\d+[.,]\d+D$))?(?:T(?=[\d+-])(?:(?:[-+]?\d+H)|(?:[-+]?\d+[.,]\d+H$))?(?:(?:[-+]?\d+M)|(?:[-+]?\d+[.,]\d+M$))?(?:[-+]?\d+(?:[.,]\d+)?S)?)??$/;
-// from https://stackoverflow.com/a/46181/1550155
-// old version: too slow, didn't support unicode
-// const emailRegex = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i;
-//old email regex
-// const emailRegex = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@((?!-)([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{1,})[^-<>()[\].,;:\s@"]$/i;
-// eslint-disable-next-line
-// const emailRegex =
-//   /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\])|(\[IPv6:(([a-f0-9]{1,4}:){7}|::([a-f0-9]{1,4}:){0,6}|([a-f0-9]{1,4}:){1}:([a-f0-9]{1,4}:){0,5}|([a-f0-9]{1,4}:){2}:([a-f0-9]{1,4}:){0,4}|([a-f0-9]{1,4}:){3}:([a-f0-9]{1,4}:){0,3}|([a-f0-9]{1,4}:){4}:([a-f0-9]{1,4}:){0,2}|([a-f0-9]{1,4}:){5}:([a-f0-9]{1,4}:){0,1})([a-f0-9]{1,4}|(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2})))\])|([A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])*(\.[A-Za-z]{2,})+))$/;
-// const emailRegex =
-//   /^[a-zA-Z0-9\.\!\#\$\%\&\'\*\+\/\=\?\^\_\`\{\|\}\~\-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-// const emailRegex =
-//   /^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/i;
-const emailRegex = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i;
-// const emailRegex =
-//   /^[a-z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9\-]+)*$/i;
-// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression
-const _emojiRegex = `^(\\p{Extended_Pictographic}|\\p{Emoji_Component})+$`;
-let emojiRegex;
-// faster, simpler, safer
-const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;
-const ipv4CidrRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/(3[0-2]|[12]?[0-9])$/;
-// const ipv6Regex =
-// /^(([a-f0-9]{1,4}:){7}|::([a-f0-9]{1,4}:){0,6}|([a-f0-9]{1,4}:){1}:([a-f0-9]{1,4}:){0,5}|([a-f0-9]{1,4}:){2}:([a-f0-9]{1,4}:){0,4}|([a-f0-9]{1,4}:){3}:([a-f0-9]{1,4}:){0,3}|([a-f0-9]{1,4}:){4}:([a-f0-9]{1,4}:){0,2}|([a-f0-9]{1,4}:){5}:([a-f0-9]{1,4}:){0,1})([a-f0-9]{1,4}|(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2})))$/;
-const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
-const ipv6CidrRegex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/;
-// https://stackoverflow.com/questions/7860392/determine-if-string-is-in-base64-using-javascript
-const base64Regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
-// https://base64.guru/standards/base64url
-const base64urlRegex = /^([0-9a-zA-Z-_]{4})*(([0-9a-zA-Z-_]{2}(==)?)|([0-9a-zA-Z-_]{3}(=)?))?$/;
-// simple
-// const dateRegexSource = `\\d{4}-\\d{2}-\\d{2}`;
-// no leap year validation
-// const dateRegexSource = `\\d{4}-((0[13578]|10|12)-31|(0[13-9]|1[0-2])-30|(0[1-9]|1[0-2])-(0[1-9]|1\\d|2\\d))`;
-// with leap year validation
-const dateRegexSource = `((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))`;
-const dateRegex = new RegExp(`^${dateRegexSource}$`);
-function timeRegexSource(args) {
-    let secondsRegexSource = `[0-5]\\d`;
-    if (args.precision) {
-        secondsRegexSource = `${secondsRegexSource}\\.\\d{${args.precision}}`;
-    }
-    else if (args.precision == null) {
-        secondsRegexSource = `${secondsRegexSource}(\\.\\d+)?`;
-    }
-    const secondsQuantifier = args.precision ? "+" : "?"; // require seconds if precision is nonzero
-    return `([01]\\d|2[0-3]):[0-5]\\d(:${secondsRegexSource})${secondsQuantifier}`;
-}
-function timeRegex(args) {
-    return new RegExp(`^${timeRegexSource(args)}$`);
-}
-// Adapted from https://stackoverflow.com/a/3143231
-function datetimeRegex(args) {
-    let regex = `${dateRegexSource}T${timeRegexSource(args)}`;
-    const opts = [];
-    opts.push(args.local ? `Z?` : `Z`);
-    if (args.offset)
-        opts.push(`([+-]\\d{2}:?\\d{2})`);
-    regex = `${regex}(${opts.join("|")})`;
-    return new RegExp(`^${regex}$`);
-}
-function isValidIP(ip, version) {
-    if ((version === "v4" || !version) && ipv4Regex.test(ip)) {
-        return true;
-    }
-    if ((version === "v6" || !version) && ipv6Regex.test(ip)) {
-        return true;
-    }
-    return false;
-}
-function isValidJWT(jwt, alg) {
-    if (!jwtRegex.test(jwt))
-        return false;
-    try {
-        const [header] = jwt.split(".");
-        if (!header)
-            return false;
-        // Convert base64url to base64
-        const base64 = header
-            .replace(/-/g, "+")
-            .replace(/_/g, "/")
-            .padEnd(header.length + ((4 - (header.length % 4)) % 4), "=");
-        // @ts-ignore
-        const decoded = JSON.parse(atob(base64));
-        if (typeof decoded !== "object" || decoded === null)
-            return false;
-        if ("typ" in decoded && decoded?.typ !== "JWT")
-            return false;
-        if (!decoded.alg)
-            return false;
-        if (alg && decoded.alg !== alg)
-            return false;
-        return true;
-    }
-    catch {
-        return false;
-    }
-}
-function isValidCidr(ip, version) {
-    if ((version === "v4" || !version) && ipv4CidrRegex.test(ip)) {
-        return true;
-    }
-    if ((version === "v6" || !version) && ipv6CidrRegex.test(ip)) {
-        return true;
-    }
-    return false;
-}
-class ZodString extends ZodType {
-    _parse(input) {
-        if (this._def.coerce) {
-            input.data = String(input.data);
-        }
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.string) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.string,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        const status = new ParseStatus();
-        let ctx = undefined;
-        for (const check of this._def.checks) {
-            if (check.kind === "min") {
-                if (input.data.length < check.value) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.too_small,
-                        minimum: check.value,
-                        type: "string",
-                        inclusive: true,
-                        exact: false,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "max") {
-                if (input.data.length > check.value) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.too_big,
-                        maximum: check.value,
-                        type: "string",
-                        inclusive: true,
-                        exact: false,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "length") {
-                const tooBig = input.data.length > check.value;
-                const tooSmall = input.data.length < check.value;
-                if (tooBig || tooSmall) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    if (tooBig) {
-                        addIssueToContext(ctx, {
-                            code: ZodIssueCode.too_big,
-                            maximum: check.value,
-                            type: "string",
-                            inclusive: true,
-                            exact: true,
-                            message: check.message,
-                        });
-                    }
-                    else if (tooSmall) {
-                        addIssueToContext(ctx, {
-                            code: ZodIssueCode.too_small,
-                            minimum: check.value,
-                            type: "string",
-                            inclusive: true,
-                            exact: true,
-                            message: check.message,
-                        });
-                    }
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "email") {
-                if (!emailRegex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "email",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "emoji") {
-                if (!emojiRegex) {
-                    emojiRegex = new RegExp(_emojiRegex, "u");
-                }
-                if (!emojiRegex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "emoji",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "uuid") {
-                if (!uuidRegex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "uuid",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "nanoid") {
-                if (!nanoidRegex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "nanoid",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "cuid") {
-                if (!cuidRegex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "cuid",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "cuid2") {
-                if (!cuid2Regex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "cuid2",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "ulid") {
-                if (!ulidRegex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "ulid",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "url") {
-                try {
-                    // @ts-ignore
-                    new URL(input.data);
-                }
-                catch {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "url",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "regex") {
-                check.regex.lastIndex = 0;
-                const testResult = check.regex.test(input.data);
-                if (!testResult) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "regex",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "trim") {
-                input.data = input.data.trim();
-            }
-            else if (check.kind === "includes") {
-                if (!input.data.includes(check.value, check.position)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.invalid_string,
-                        validation: { includes: check.value, position: check.position },
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "toLowerCase") {
-                input.data = input.data.toLowerCase();
-            }
-            else if (check.kind === "toUpperCase") {
-                input.data = input.data.toUpperCase();
-            }
-            else if (check.kind === "startsWith") {
-                if (!input.data.startsWith(check.value)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.invalid_string,
-                        validation: { startsWith: check.value },
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "endsWith") {
-                if (!input.data.endsWith(check.value)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.invalid_string,
-                        validation: { endsWith: check.value },
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "datetime") {
-                const regex = datetimeRegex(check);
-                if (!regex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.invalid_string,
-                        validation: "datetime",
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "date") {
-                const regex = dateRegex;
-                if (!regex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.invalid_string,
-                        validation: "date",
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "time") {
-                const regex = timeRegex(check);
-                if (!regex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.invalid_string,
-                        validation: "time",
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "duration") {
-                if (!durationRegex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "duration",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "ip") {
-                if (!isValidIP(input.data, check.version)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "ip",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "jwt") {
-                if (!isValidJWT(input.data, check.alg)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "jwt",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "cidr") {
-                if (!isValidCidr(input.data, check.version)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "cidr",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "base64") {
-                if (!base64Regex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "base64",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "base64url") {
-                if (!base64urlRegex.test(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        validation: "base64url",
-                        code: ZodIssueCode.invalid_string,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else {
-                util.assertNever(check);
-            }
-        }
-        return { status: status.value, value: input.data };
-    }
-    _regex(regex, validation, message) {
-        return this.refinement((data) => regex.test(data), {
-            validation,
-            code: ZodIssueCode.invalid_string,
-            ...errorUtil.errToObj(message),
-        });
-    }
-    _addCheck(check) {
-        return new ZodString({
-            ...this._def,
-            checks: [...this._def.checks, check],
-        });
-    }
-    email(message) {
-        return this._addCheck({ kind: "email", ...errorUtil.errToObj(message) });
-    }
-    url(message) {
-        return this._addCheck({ kind: "url", ...errorUtil.errToObj(message) });
-    }
-    emoji(message) {
-        return this._addCheck({ kind: "emoji", ...errorUtil.errToObj(message) });
-    }
-    uuid(message) {
-        return this._addCheck({ kind: "uuid", ...errorUtil.errToObj(message) });
-    }
-    nanoid(message) {
-        return this._addCheck({ kind: "nanoid", ...errorUtil.errToObj(message) });
-    }
-    cuid(message) {
-        return this._addCheck({ kind: "cuid", ...errorUtil.errToObj(message) });
-    }
-    cuid2(message) {
-        return this._addCheck({ kind: "cuid2", ...errorUtil.errToObj(message) });
-    }
-    ulid(message) {
-        return this._addCheck({ kind: "ulid", ...errorUtil.errToObj(message) });
-    }
-    base64(message) {
-        return this._addCheck({ kind: "base64", ...errorUtil.errToObj(message) });
-    }
-    base64url(message) {
-        // base64url encoding is a modification of base64 that can safely be used in URLs and filenames
-        return this._addCheck({
-            kind: "base64url",
-            ...errorUtil.errToObj(message),
-        });
-    }
-    jwt(options) {
-        return this._addCheck({ kind: "jwt", ...errorUtil.errToObj(options) });
-    }
-    ip(options) {
-        return this._addCheck({ kind: "ip", ...errorUtil.errToObj(options) });
-    }
-    cidr(options) {
-        return this._addCheck({ kind: "cidr", ...errorUtil.errToObj(options) });
-    }
-    datetime(options) {
-        if (typeof options === "string") {
-            return this._addCheck({
-                kind: "datetime",
-                precision: null,
-                offset: false,
-                local: false,
-                message: options,
-            });
-        }
-        return this._addCheck({
-            kind: "datetime",
-            precision: typeof options?.precision === "undefined" ? null : options?.precision,
-            offset: options?.offset ?? false,
-            local: options?.local ?? false,
-            ...errorUtil.errToObj(options?.message),
-        });
-    }
-    date(message) {
-        return this._addCheck({ kind: "date", message });
-    }
-    time(options) {
-        if (typeof options === "string") {
-            return this._addCheck({
-                kind: "time",
-                precision: null,
-                message: options,
-            });
-        }
-        return this._addCheck({
-            kind: "time",
-            precision: typeof options?.precision === "undefined" ? null : options?.precision,
-            ...errorUtil.errToObj(options?.message),
-        });
-    }
-    duration(message) {
-        return this._addCheck({ kind: "duration", ...errorUtil.errToObj(message) });
-    }
-    regex(regex, message) {
-        return this._addCheck({
-            kind: "regex",
-            regex: regex,
-            ...errorUtil.errToObj(message),
-        });
-    }
-    includes(value, options) {
-        return this._addCheck({
-            kind: "includes",
-            value: value,
-            position: options?.position,
-            ...errorUtil.errToObj(options?.message),
-        });
-    }
-    startsWith(value, message) {
-        return this._addCheck({
-            kind: "startsWith",
-            value: value,
-            ...errorUtil.errToObj(message),
-        });
-    }
-    endsWith(value, message) {
-        return this._addCheck({
-            kind: "endsWith",
-            value: value,
-            ...errorUtil.errToObj(message),
-        });
-    }
-    min(minLength, message) {
-        return this._addCheck({
-            kind: "min",
-            value: minLength,
-            ...errorUtil.errToObj(message),
-        });
-    }
-    max(maxLength, message) {
-        return this._addCheck({
-            kind: "max",
-            value: maxLength,
-            ...errorUtil.errToObj(message),
-        });
-    }
-    length(len, message) {
-        return this._addCheck({
-            kind: "length",
-            value: len,
-            ...errorUtil.errToObj(message),
-        });
-    }
-    /**
-     * Equivalent to `.min(1)`
-     */
-    nonempty(message) {
-        return this.min(1, errorUtil.errToObj(message));
-    }
-    trim() {
-        return new ZodString({
-            ...this._def,
-            checks: [...this._def.checks, { kind: "trim" }],
-        });
-    }
-    toLowerCase() {
-        return new ZodString({
-            ...this._def,
-            checks: [...this._def.checks, { kind: "toLowerCase" }],
-        });
-    }
-    toUpperCase() {
-        return new ZodString({
-            ...this._def,
-            checks: [...this._def.checks, { kind: "toUpperCase" }],
-        });
-    }
-    get isDatetime() {
-        return !!this._def.checks.find((ch) => ch.kind === "datetime");
-    }
-    get isDate() {
-        return !!this._def.checks.find((ch) => ch.kind === "date");
-    }
-    get isTime() {
-        return !!this._def.checks.find((ch) => ch.kind === "time");
-    }
-    get isDuration() {
-        return !!this._def.checks.find((ch) => ch.kind === "duration");
-    }
-    get isEmail() {
-        return !!this._def.checks.find((ch) => ch.kind === "email");
-    }
-    get isURL() {
-        return !!this._def.checks.find((ch) => ch.kind === "url");
-    }
-    get isEmoji() {
-        return !!this._def.checks.find((ch) => ch.kind === "emoji");
-    }
-    get isUUID() {
-        return !!this._def.checks.find((ch) => ch.kind === "uuid");
-    }
-    get isNANOID() {
-        return !!this._def.checks.find((ch) => ch.kind === "nanoid");
-    }
-    get isCUID() {
-        return !!this._def.checks.find((ch) => ch.kind === "cuid");
-    }
-    get isCUID2() {
-        return !!this._def.checks.find((ch) => ch.kind === "cuid2");
-    }
-    get isULID() {
-        return !!this._def.checks.find((ch) => ch.kind === "ulid");
-    }
-    get isIP() {
-        return !!this._def.checks.find((ch) => ch.kind === "ip");
-    }
-    get isCIDR() {
-        return !!this._def.checks.find((ch) => ch.kind === "cidr");
-    }
-    get isBase64() {
-        return !!this._def.checks.find((ch) => ch.kind === "base64");
-    }
-    get isBase64url() {
-        // base64url encoding is a modification of base64 that can safely be used in URLs and filenames
-        return !!this._def.checks.find((ch) => ch.kind === "base64url");
-    }
-    get minLength() {
-        let min = null;
-        for (const ch of this._def.checks) {
-            if (ch.kind === "min") {
-                if (min === null || ch.value > min)
-                    min = ch.value;
-            }
-        }
-        return min;
-    }
-    get maxLength() {
-        let max = null;
-        for (const ch of this._def.checks) {
-            if (ch.kind === "max") {
-                if (max === null || ch.value < max)
-                    max = ch.value;
-            }
-        }
-        return max;
-    }
-}
-ZodString.create = (params) => {
-    return new ZodString({
-        checks: [],
-        typeName: ZodFirstPartyTypeKind.ZodString,
-        coerce: params?.coerce ?? false,
-        ...processCreateParams(params),
-    });
-};
-// https://stackoverflow.com/questions/3966484/why-does-modulus-operator-return-fractional-number-in-javascript/31711034#31711034
-function floatSafeRemainder(val, step) {
-    const valDecCount = (val.toString().split(".")[1] || "").length;
-    const stepDecCount = (step.toString().split(".")[1] || "").length;
-    const decCount = valDecCount > stepDecCount ? valDecCount : stepDecCount;
-    const valInt = Number.parseInt(val.toFixed(decCount).replace(".", ""));
-    const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
-    return (valInt % stepInt) / 10 ** decCount;
-}
-class ZodNumber extends ZodType {
-    constructor() {
-        super(...arguments);
-        this.min = this.gte;
-        this.max = this.lte;
-        this.step = this.multipleOf;
-    }
-    _parse(input) {
-        if (this._def.coerce) {
-            input.data = Number(input.data);
-        }
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.number) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.number,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        let ctx = undefined;
-        const status = new ParseStatus();
-        for (const check of this._def.checks) {
-            if (check.kind === "int") {
-                if (!util.isInteger(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.invalid_type,
-                        expected: "integer",
-                        received: "float",
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "min") {
-                const tooSmall = check.inclusive ? input.data < check.value : input.data <= check.value;
-                if (tooSmall) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.too_small,
-                        minimum: check.value,
-                        type: "number",
-                        inclusive: check.inclusive,
-                        exact: false,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "max") {
-                const tooBig = check.inclusive ? input.data > check.value : input.data >= check.value;
-                if (tooBig) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.too_big,
-                        maximum: check.value,
-                        type: "number",
-                        inclusive: check.inclusive,
-                        exact: false,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "multipleOf") {
-                if (floatSafeRemainder(input.data, check.value) !== 0) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.not_multiple_of,
-                        multipleOf: check.value,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "finite") {
-                if (!Number.isFinite(input.data)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.not_finite,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else {
-                util.assertNever(check);
-            }
-        }
-        return { status: status.value, value: input.data };
-    }
-    gte(value, message) {
-        return this.setLimit("min", value, true, errorUtil.toString(message));
-    }
-    gt(value, message) {
-        return this.setLimit("min", value, false, errorUtil.toString(message));
-    }
-    lte(value, message) {
-        return this.setLimit("max", value, true, errorUtil.toString(message));
-    }
-    lt(value, message) {
-        return this.setLimit("max", value, false, errorUtil.toString(message));
-    }
-    setLimit(kind, value, inclusive, message) {
-        return new ZodNumber({
-            ...this._def,
-            checks: [
-                ...this._def.checks,
-                {
-                    kind,
-                    value,
-                    inclusive,
-                    message: errorUtil.toString(message),
-                },
-            ],
-        });
-    }
-    _addCheck(check) {
-        return new ZodNumber({
-            ...this._def,
-            checks: [...this._def.checks, check],
-        });
-    }
-    int(message) {
-        return this._addCheck({
-            kind: "int",
-            message: errorUtil.toString(message),
-        });
-    }
-    positive(message) {
-        return this._addCheck({
-            kind: "min",
-            value: 0,
-            inclusive: false,
-            message: errorUtil.toString(message),
-        });
-    }
-    negative(message) {
-        return this._addCheck({
-            kind: "max",
-            value: 0,
-            inclusive: false,
-            message: errorUtil.toString(message),
-        });
-    }
-    nonpositive(message) {
-        return this._addCheck({
-            kind: "max",
-            value: 0,
-            inclusive: true,
-            message: errorUtil.toString(message),
-        });
-    }
-    nonnegative(message) {
-        return this._addCheck({
-            kind: "min",
-            value: 0,
-            inclusive: true,
-            message: errorUtil.toString(message),
-        });
-    }
-    multipleOf(value, message) {
-        return this._addCheck({
-            kind: "multipleOf",
-            value: value,
-            message: errorUtil.toString(message),
-        });
-    }
-    finite(message) {
-        return this._addCheck({
-            kind: "finite",
-            message: errorUtil.toString(message),
-        });
-    }
-    safe(message) {
-        return this._addCheck({
-            kind: "min",
-            inclusive: true,
-            value: Number.MIN_SAFE_INTEGER,
-            message: errorUtil.toString(message),
-        })._addCheck({
-            kind: "max",
-            inclusive: true,
-            value: Number.MAX_SAFE_INTEGER,
-            message: errorUtil.toString(message),
-        });
-    }
-    get minValue() {
-        let min = null;
-        for (const ch of this._def.checks) {
-            if (ch.kind === "min") {
-                if (min === null || ch.value > min)
-                    min = ch.value;
-            }
-        }
-        return min;
-    }
-    get maxValue() {
-        let max = null;
-        for (const ch of this._def.checks) {
-            if (ch.kind === "max") {
-                if (max === null || ch.value < max)
-                    max = ch.value;
-            }
-        }
-        return max;
-    }
-    get isInt() {
-        return !!this._def.checks.find((ch) => ch.kind === "int" || (ch.kind === "multipleOf" && util.isInteger(ch.value)));
-    }
-    get isFinite() {
-        let max = null;
-        let min = null;
-        for (const ch of this._def.checks) {
-            if (ch.kind === "finite" || ch.kind === "int" || ch.kind === "multipleOf") {
-                return true;
-            }
-            else if (ch.kind === "min") {
-                if (min === null || ch.value > min)
-                    min = ch.value;
-            }
-            else if (ch.kind === "max") {
-                if (max === null || ch.value < max)
-                    max = ch.value;
-            }
-        }
-        return Number.isFinite(min) && Number.isFinite(max);
-    }
-}
-ZodNumber.create = (params) => {
-    return new ZodNumber({
-        checks: [],
-        typeName: ZodFirstPartyTypeKind.ZodNumber,
-        coerce: params?.coerce || false,
-        ...processCreateParams(params),
-    });
-};
-class ZodBigInt extends ZodType {
-    constructor() {
-        super(...arguments);
-        this.min = this.gte;
-        this.max = this.lte;
-    }
-    _parse(input) {
-        if (this._def.coerce) {
-            try {
-                input.data = BigInt(input.data);
-            }
-            catch {
-                return this._getInvalidInput(input);
-            }
-        }
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.bigint) {
-            return this._getInvalidInput(input);
-        }
-        let ctx = undefined;
-        const status = new ParseStatus();
-        for (const check of this._def.checks) {
-            if (check.kind === "min") {
-                const tooSmall = check.inclusive ? input.data < check.value : input.data <= check.value;
-                if (tooSmall) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.too_small,
-                        type: "bigint",
-                        minimum: check.value,
-                        inclusive: check.inclusive,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "max") {
-                const tooBig = check.inclusive ? input.data > check.value : input.data >= check.value;
-                if (tooBig) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.too_big,
-                        type: "bigint",
-                        maximum: check.value,
-                        inclusive: check.inclusive,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "multipleOf") {
-                if (input.data % check.value !== BigInt(0)) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.not_multiple_of,
-                        multipleOf: check.value,
-                        message: check.message,
-                    });
-                    status.dirty();
-                }
-            }
-            else {
-                util.assertNever(check);
-            }
-        }
-        return { status: status.value, value: input.data };
-    }
-    _getInvalidInput(input) {
-        const ctx = this._getOrReturnCtx(input);
-        addIssueToContext(ctx, {
-            code: ZodIssueCode.invalid_type,
-            expected: ZodParsedType.bigint,
-            received: ctx.parsedType,
-        });
-        return INVALID;
-    }
-    gte(value, message) {
-        return this.setLimit("min", value, true, errorUtil.toString(message));
-    }
-    gt(value, message) {
-        return this.setLimit("min", value, false, errorUtil.toString(message));
-    }
-    lte(value, message) {
-        return this.setLimit("max", value, true, errorUtil.toString(message));
-    }
-    lt(value, message) {
-        return this.setLimit("max", value, false, errorUtil.toString(message));
-    }
-    setLimit(kind, value, inclusive, message) {
-        return new ZodBigInt({
-            ...this._def,
-            checks: [
-                ...this._def.checks,
-                {
-                    kind,
-                    value,
-                    inclusive,
-                    message: errorUtil.toString(message),
-                },
-            ],
-        });
-    }
-    _addCheck(check) {
-        return new ZodBigInt({
-            ...this._def,
-            checks: [...this._def.checks, check],
-        });
-    }
-    positive(message) {
-        return this._addCheck({
-            kind: "min",
-            value: BigInt(0),
-            inclusive: false,
-            message: errorUtil.toString(message),
-        });
-    }
-    negative(message) {
-        return this._addCheck({
-            kind: "max",
-            value: BigInt(0),
-            inclusive: false,
-            message: errorUtil.toString(message),
-        });
-    }
-    nonpositive(message) {
-        return this._addCheck({
-            kind: "max",
-            value: BigInt(0),
-            inclusive: true,
-            message: errorUtil.toString(message),
-        });
-    }
-    nonnegative(message) {
-        return this._addCheck({
-            kind: "min",
-            value: BigInt(0),
-            inclusive: true,
-            message: errorUtil.toString(message),
-        });
-    }
-    multipleOf(value, message) {
-        return this._addCheck({
-            kind: "multipleOf",
-            value,
-            message: errorUtil.toString(message),
-        });
-    }
-    get minValue() {
-        let min = null;
-        for (const ch of this._def.checks) {
-            if (ch.kind === "min") {
-                if (min === null || ch.value > min)
-                    min = ch.value;
-            }
-        }
-        return min;
-    }
-    get maxValue() {
-        let max = null;
-        for (const ch of this._def.checks) {
-            if (ch.kind === "max") {
-                if (max === null || ch.value < max)
-                    max = ch.value;
-            }
-        }
-        return max;
-    }
-}
-ZodBigInt.create = (params) => {
-    return new ZodBigInt({
-        checks: [],
-        typeName: ZodFirstPartyTypeKind.ZodBigInt,
-        coerce: params?.coerce ?? false,
-        ...processCreateParams(params),
-    });
-};
-class ZodBoolean extends ZodType {
-    _parse(input) {
-        if (this._def.coerce) {
-            input.data = Boolean(input.data);
-        }
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.boolean) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.boolean,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        return OK(input.data);
-    }
-}
-ZodBoolean.create = (params) => {
-    return new ZodBoolean({
-        typeName: ZodFirstPartyTypeKind.ZodBoolean,
-        coerce: params?.coerce || false,
-        ...processCreateParams(params),
-    });
-};
-class ZodDate extends ZodType {
-    _parse(input) {
-        if (this._def.coerce) {
-            input.data = new Date(input.data);
-        }
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.date) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.date,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        if (Number.isNaN(input.data.getTime())) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_date,
-            });
-            return INVALID;
-        }
-        const status = new ParseStatus();
-        let ctx = undefined;
-        for (const check of this._def.checks) {
-            if (check.kind === "min") {
-                if (input.data.getTime() < check.value) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.too_small,
-                        message: check.message,
-                        inclusive: true,
-                        exact: false,
-                        minimum: check.value,
-                        type: "date",
-                    });
-                    status.dirty();
-                }
-            }
-            else if (check.kind === "max") {
-                if (input.data.getTime() > check.value) {
-                    ctx = this._getOrReturnCtx(input, ctx);
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.too_big,
-                        message: check.message,
-                        inclusive: true,
-                        exact: false,
-                        maximum: check.value,
-                        type: "date",
-                    });
-                    status.dirty();
-                }
-            }
-            else {
-                util.assertNever(check);
-            }
-        }
-        return {
-            status: status.value,
-            value: new Date(input.data.getTime()),
-        };
-    }
-    _addCheck(check) {
-        return new ZodDate({
-            ...this._def,
-            checks: [...this._def.checks, check],
-        });
-    }
-    min(minDate, message) {
-        return this._addCheck({
-            kind: "min",
-            value: minDate.getTime(),
-            message: errorUtil.toString(message),
-        });
-    }
-    max(maxDate, message) {
-        return this._addCheck({
-            kind: "max",
-            value: maxDate.getTime(),
-            message: errorUtil.toString(message),
-        });
-    }
-    get minDate() {
-        let min = null;
-        for (const ch of this._def.checks) {
-            if (ch.kind === "min") {
-                if (min === null || ch.value > min)
-                    min = ch.value;
-            }
-        }
-        return min != null ? new Date(min) : null;
-    }
-    get maxDate() {
-        let max = null;
-        for (const ch of this._def.checks) {
-            if (ch.kind === "max") {
-                if (max === null || ch.value < max)
-                    max = ch.value;
-            }
-        }
-        return max != null ? new Date(max) : null;
-    }
-}
-ZodDate.create = (params) => {
-    return new ZodDate({
-        checks: [],
-        coerce: params?.coerce || false,
-        typeName: ZodFirstPartyTypeKind.ZodDate,
-        ...processCreateParams(params),
-    });
-};
-class ZodSymbol extends ZodType {
-    _parse(input) {
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.symbol) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.symbol,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        return OK(input.data);
-    }
-}
-ZodSymbol.create = (params) => {
-    return new ZodSymbol({
-        typeName: ZodFirstPartyTypeKind.ZodSymbol,
-        ...processCreateParams(params),
-    });
-};
-class ZodUndefined extends ZodType {
-    _parse(input) {
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.undefined) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.undefined,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        return OK(input.data);
-    }
-}
-ZodUndefined.create = (params) => {
-    return new ZodUndefined({
-        typeName: ZodFirstPartyTypeKind.ZodUndefined,
-        ...processCreateParams(params),
-    });
-};
-class ZodNull extends ZodType {
-    _parse(input) {
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.null) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.null,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        return OK(input.data);
-    }
-}
-ZodNull.create = (params) => {
-    return new ZodNull({
-        typeName: ZodFirstPartyTypeKind.ZodNull,
-        ...processCreateParams(params),
-    });
-};
-class ZodAny extends ZodType {
-    constructor() {
-        super(...arguments);
-        // to prevent instances of other classes from extending ZodAny. this causes issues with catchall in ZodObject.
-        this._any = true;
-    }
-    _parse(input) {
-        return OK(input.data);
-    }
-}
-ZodAny.create = (params) => {
-    return new ZodAny({
-        typeName: ZodFirstPartyTypeKind.ZodAny,
-        ...processCreateParams(params),
-    });
-};
-class ZodUnknown extends ZodType {
-    constructor() {
-        super(...arguments);
-        // required
-        this._unknown = true;
-    }
-    _parse(input) {
-        return OK(input.data);
-    }
-}
-ZodUnknown.create = (params) => {
-    return new ZodUnknown({
-        typeName: ZodFirstPartyTypeKind.ZodUnknown,
-        ...processCreateParams(params),
-    });
-};
-class ZodNever extends ZodType {
-    _parse(input) {
-        const ctx = this._getOrReturnCtx(input);
-        addIssueToContext(ctx, {
-            code: ZodIssueCode.invalid_type,
-            expected: ZodParsedType.never,
-            received: ctx.parsedType,
-        });
-        return INVALID;
-    }
-}
-ZodNever.create = (params) => {
-    return new ZodNever({
-        typeName: ZodFirstPartyTypeKind.ZodNever,
-        ...processCreateParams(params),
-    });
-};
-class ZodVoid extends ZodType {
-    _parse(input) {
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.undefined) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.void,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        return OK(input.data);
-    }
-}
-ZodVoid.create = (params) => {
-    return new ZodVoid({
-        typeName: ZodFirstPartyTypeKind.ZodVoid,
-        ...processCreateParams(params),
-    });
-};
-class ZodArray extends ZodType {
-    _parse(input) {
-        const { ctx, status } = this._processInputParams(input);
-        const def = this._def;
-        if (ctx.parsedType !== ZodParsedType.array) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.array,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        if (def.exactLength !== null) {
-            const tooBig = ctx.data.length > def.exactLength.value;
-            const tooSmall = ctx.data.length < def.exactLength.value;
-            if (tooBig || tooSmall) {
-                addIssueToContext(ctx, {
-                    code: tooBig ? ZodIssueCode.too_big : ZodIssueCode.too_small,
-                    minimum: (tooSmall ? def.exactLength.value : undefined),
-                    maximum: (tooBig ? def.exactLength.value : undefined),
-                    type: "array",
-                    inclusive: true,
-                    exact: true,
-                    message: def.exactLength.message,
-                });
-                status.dirty();
-            }
-        }
-        if (def.minLength !== null) {
-            if (ctx.data.length < def.minLength.value) {
-                addIssueToContext(ctx, {
-                    code: ZodIssueCode.too_small,
-                    minimum: def.minLength.value,
-                    type: "array",
-                    inclusive: true,
-                    exact: false,
-                    message: def.minLength.message,
-                });
-                status.dirty();
-            }
-        }
-        if (def.maxLength !== null) {
-            if (ctx.data.length > def.maxLength.value) {
-                addIssueToContext(ctx, {
-                    code: ZodIssueCode.too_big,
-                    maximum: def.maxLength.value,
-                    type: "array",
-                    inclusive: true,
-                    exact: false,
-                    message: def.maxLength.message,
-                });
-                status.dirty();
-            }
-        }
-        if (ctx.common.async) {
-            return Promise.all([...ctx.data].map((item, i) => {
-                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));
-            })).then((result) => {
-                return ParseStatus.mergeArray(status, result);
-            });
-        }
-        const result = [...ctx.data].map((item, i) => {
-            return def.type._parseSync(new ParseInputLazyPath(ctx, item, ctx.path, i));
-        });
-        return ParseStatus.mergeArray(status, result);
-    }
-    get element() {
-        return this._def.type;
-    }
-    min(minLength, message) {
-        return new ZodArray({
-            ...this._def,
-            minLength: { value: minLength, message: errorUtil.toString(message) },
-        });
-    }
-    max(maxLength, message) {
-        return new ZodArray({
-            ...this._def,
-            maxLength: { value: maxLength, message: errorUtil.toString(message) },
-        });
-    }
-    length(len, message) {
-        return new ZodArray({
-            ...this._def,
-            exactLength: { value: len, message: errorUtil.toString(message) },
-        });
-    }
-    nonempty(message) {
-        return this.min(1, message);
-    }
-}
-ZodArray.create = (schema, params) => {
-    return new ZodArray({
-        type: schema,
-        minLength: null,
-        maxLength: null,
-        exactLength: null,
-        typeName: ZodFirstPartyTypeKind.ZodArray,
-        ...processCreateParams(params),
-    });
-};
-function deepPartialify(schema) {
-    if (schema instanceof ZodObject) {
-        const newShape = {};
-        for (const key in schema.shape) {
-            const fieldSchema = schema.shape[key];
-            newShape[key] = ZodOptional.create(deepPartialify(fieldSchema));
-        }
-        return new ZodObject({
-            ...schema._def,
-            shape: () => newShape,
-        });
-    }
-    else if (schema instanceof ZodArray) {
-        return new ZodArray({
-            ...schema._def,
-            type: deepPartialify(schema.element),
-        });
-    }
-    else if (schema instanceof ZodOptional) {
-        return ZodOptional.create(deepPartialify(schema.unwrap()));
-    }
-    else if (schema instanceof ZodNullable) {
-        return ZodNullable.create(deepPartialify(schema.unwrap()));
-    }
-    else if (schema instanceof ZodTuple) {
-        return ZodTuple.create(schema.items.map((item) => deepPartialify(item)));
-    }
-    else {
-        return schema;
-    }
-}
-class ZodObject extends ZodType {
-    constructor() {
-        super(...arguments);
-        this._cached = null;
-        /**
-         * @deprecated In most cases, this is no longer needed - unknown properties are now silently stripped.
-         * If you want to pass through unknown properties, use `.passthrough()` instead.
-         */
-        this.nonstrict = this.passthrough;
-        // extend<
-        //   Augmentation extends ZodRawShape,
-        //   NewOutput extends util.flatten<{
-        //     [k in keyof Augmentation | keyof Output]: k extends keyof Augmentation
-        //       ? Augmentation[k]["_output"]
-        //       : k extends keyof Output
-        //       ? Output[k]
-        //       : never;
-        //   }>,
-        //   NewInput extends util.flatten<{
-        //     [k in keyof Augmentation | keyof Input]: k extends keyof Augmentation
-        //       ? Augmentation[k]["_input"]
-        //       : k extends keyof Input
-        //       ? Input[k]
-        //       : never;
-        //   }>
-        // >(
-        //   augmentation: Augmentation
-        // ): ZodObject<
-        //   extendShape<T, Augmentation>,
-        //   UnknownKeys,
-        //   Catchall,
-        //   NewOutput,
-        //   NewInput
-        // > {
-        //   return new ZodObject({
-        //     ...this._def,
-        //     shape: () => ({
-        //       ...this._def.shape(),
-        //       ...augmentation,
-        //     }),
-        //   }) as any;
-        // }
-        /**
-         * @deprecated Use `.extend` instead
-         *  */
-        this.augment = this.extend;
-    }
-    _getCached() {
-        if (this._cached !== null)
-            return this._cached;
-        const shape = this._def.shape();
-        const keys = util.objectKeys(shape);
-        this._cached = { shape, keys };
-        return this._cached;
-    }
-    _parse(input) {
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.object) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.object,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        const { status, ctx } = this._processInputParams(input);
-        const { shape, keys: shapeKeys } = this._getCached();
-        const extraKeys = [];
-        if (!(this._def.catchall instanceof ZodNever && this._def.unknownKeys === "strip")) {
-            for (const key in ctx.data) {
-                if (!shapeKeys.includes(key)) {
-                    extraKeys.push(key);
-                }
-            }
-        }
-        const pairs = [];
-        for (const key of shapeKeys) {
-            const keyValidator = shape[key];
-            const value = ctx.data[key];
-            pairs.push({
-                key: { status: "valid", value: key },
-                value: keyValidator._parse(new ParseInputLazyPath(ctx, value, ctx.path, key)),
-                alwaysSet: key in ctx.data,
-            });
-        }
-        if (this._def.catchall instanceof ZodNever) {
-            const unknownKeys = this._def.unknownKeys;
-            if (unknownKeys === "passthrough") {
-                for (const key of extraKeys) {
-                    pairs.push({
-                        key: { status: "valid", value: key },
-                        value: { status: "valid", value: ctx.data[key] },
-                    });
-                }
-            }
-            else if (unknownKeys === "strict") {
-                if (extraKeys.length > 0) {
-                    addIssueToContext(ctx, {
-                        code: ZodIssueCode.unrecognized_keys,
-                        keys: extraKeys,
-                    });
-                    status.dirty();
-                }
-            }
-            else if (unknownKeys === "strip") {
-            }
-            else {
-                throw new Error(`Internal ZodObject error: invalid unknownKeys value.`);
-            }
-        }
-        else {
-            // run catchall validation
-            const catchall = this._def.catchall;
-            for (const key of extraKeys) {
-                const value = ctx.data[key];
-                pairs.push({
-                    key: { status: "valid", value: key },
-                    value: catchall._parse(new ParseInputLazyPath(ctx, value, ctx.path, key) //, ctx.child(key), value, getParsedType(value)
-                    ),
-                    alwaysSet: key in ctx.data,
-                });
-            }
-        }
-        if (ctx.common.async) {
-            return Promise.resolve()
-                .then(async () => {
-                const syncPairs = [];
-                for (const pair of pairs) {
-                    const key = await pair.key;
-                    const value = await pair.value;
-                    syncPairs.push({
-                        key,
-                        value,
-                        alwaysSet: pair.alwaysSet,
-                    });
-                }
-                return syncPairs;
-            })
-                .then((syncPairs) => {
-                return ParseStatus.mergeObjectSync(status, syncPairs);
-            });
-        }
-        else {
-            return ParseStatus.mergeObjectSync(status, pairs);
-        }
-    }
-    get shape() {
-        return this._def.shape();
-    }
-    strict(message) {
-        errorUtil.errToObj;
-        return new ZodObject({
-            ...this._def,
-            unknownKeys: "strict",
-            ...(message !== undefined
-                ? {
-                    errorMap: (issue, ctx) => {
-                        const defaultError = this._def.errorMap?.(issue, ctx).message ?? ctx.defaultError;
-                        if (issue.code === "unrecognized_keys")
-                            return {
-                                message: errorUtil.errToObj(message).message ?? defaultError,
-                            };
-                        return {
-                            message: defaultError,
-                        };
-                    },
-                }
-                : {}),
-        });
-    }
-    strip() {
-        return new ZodObject({
-            ...this._def,
-            unknownKeys: "strip",
-        });
-    }
-    passthrough() {
-        return new ZodObject({
-            ...this._def,
-            unknownKeys: "passthrough",
-        });
-    }
-    // const AugmentFactory =
-    //   <Def extends ZodObjectDef>(def: Def) =>
-    //   <Augmentation extends ZodRawShape>(
-    //     augmentation: Augmentation
-    //   ): ZodObject<
-    //     extendShape<ReturnType<Def["shape"]>, Augmentation>,
-    //     Def["unknownKeys"],
-    //     Def["catchall"]
-    //   > => {
-    //     return new ZodObject({
-    //       ...def,
-    //       shape: () => ({
-    //         ...def.shape(),
-    //         ...augmentation,
-    //       }),
-    //     }) as any;
-    //   };
-    extend(augmentation) {
-        return new ZodObject({
-            ...this._def,
-            shape: () => ({
-                ...this._def.shape(),
-                ...augmentation,
-            }),
-        });
-    }
-    /**
-     * Prior to zod@1.0.12 there was a bug in the
-     * inferred type of merged objects. Please
-     * upgrade if you are experiencing issues.
-     */
-    merge(merging) {
-        const merged = new ZodObject({
-            unknownKeys: merging._def.unknownKeys,
-            catchall: merging._def.catchall,
-            shape: () => ({
-                ...this._def.shape(),
-                ...merging._def.shape(),
-            }),
-            typeName: ZodFirstPartyTypeKind.ZodObject,
-        });
-        return merged;
-    }
-    // merge<
-    //   Incoming extends AnyZodObject,
-    //   Augmentation extends Incoming["shape"],
-    //   NewOutput extends {
-    //     [k in keyof Augmentation | keyof Output]: k extends keyof Augmentation
-    //       ? Augmentation[k]["_output"]
-    //       : k extends keyof Output
-    //       ? Output[k]
-    //       : never;
-    //   },
-    //   NewInput extends {
-    //     [k in keyof Augmentation | keyof Input]: k extends keyof Augmentation
-    //       ? Augmentation[k]["_input"]
-    //       : k extends keyof Input
-    //       ? Input[k]
-    //       : never;
-    //   }
-    // >(
-    //   merging: Incoming
-    // ): ZodObject<
-    //   extendShape<T, ReturnType<Incoming["_def"]["shape"]>>,
-    //   Incoming["_def"]["unknownKeys"],
-    //   Incoming["_def"]["catchall"],
-    //   NewOutput,
-    //   NewInput
-    // > {
-    //   const merged: any = new ZodObject({
-    //     unknownKeys: merging._def.unknownKeys,
-    //     catchall: merging._def.catchall,
-    //     shape: () =>
-    //       objectUtil.mergeShapes(this._def.shape(), merging._def.shape()),
-    //     typeName: ZodFirstPartyTypeKind.ZodObject,
-    //   }) as any;
-    //   return merged;
-    // }
-    setKey(key, schema) {
-        return this.augment({ [key]: schema });
-    }
-    // merge<Incoming extends AnyZodObject>(
-    //   merging: Incoming
-    // ): //ZodObject<T & Incoming["_shape"], UnknownKeys, Catchall> = (merging) => {
-    // ZodObject<
-    //   extendShape<T, ReturnType<Incoming["_def"]["shape"]>>,
-    //   Incoming["_def"]["unknownKeys"],
-    //   Incoming["_def"]["catchall"]
-    // > {
-    //   // const mergedShape = objectUtil.mergeShapes(
-    //   //   this._def.shape(),
-    //   //   merging._def.shape()
-    //   // );
-    //   const merged: any = new ZodObject({
-    //     unknownKeys: merging._def.unknownKeys,
-    //     catchall: merging._def.catchall,
-    //     shape: () =>
-    //       objectUtil.mergeShapes(this._def.shape(), merging._def.shape()),
-    //     typeName: ZodFirstPartyTypeKind.ZodObject,
-    //   }) as any;
-    //   return merged;
-    // }
-    catchall(index) {
-        return new ZodObject({
-            ...this._def,
-            catchall: index,
-        });
-    }
-    pick(mask) {
-        const shape = {};
-        for (const key of util.objectKeys(mask)) {
-            if (mask[key] && this.shape[key]) {
-                shape[key] = this.shape[key];
-            }
-        }
-        return new ZodObject({
-            ...this._def,
-            shape: () => shape,
-        });
-    }
-    omit(mask) {
-        const shape = {};
-        for (const key of util.objectKeys(this.shape)) {
-            if (!mask[key]) {
-                shape[key] = this.shape[key];
-            }
-        }
-        return new ZodObject({
-            ...this._def,
-            shape: () => shape,
-        });
-    }
-    /**
-     * @deprecated
-     */
-    deepPartial() {
-        return deepPartialify(this);
-    }
-    partial(mask) {
-        const newShape = {};
-        for (const key of util.objectKeys(this.shape)) {
-            const fieldSchema = this.shape[key];
-            if (mask && !mask[key]) {
-                newShape[key] = fieldSchema;
-            }
-            else {
-                newShape[key] = fieldSchema.optional();
-            }
-        }
-        return new ZodObject({
-            ...this._def,
-            shape: () => newShape,
-        });
-    }
-    required(mask) {
-        const newShape = {};
-        for (const key of util.objectKeys(this.shape)) {
-            if (mask && !mask[key]) {
-                newShape[key] = this.shape[key];
-            }
-            else {
-                const fieldSchema = this.shape[key];
-                let newField = fieldSchema;
-                while (newField instanceof ZodOptional) {
-                    newField = newField._def.innerType;
-                }
-                newShape[key] = newField;
-            }
-        }
-        return new ZodObject({
-            ...this._def,
-            shape: () => newShape,
-        });
-    }
-    keyof() {
-        return createZodEnum(util.objectKeys(this.shape));
-    }
-}
-ZodObject.create = (shape, params) => {
-    return new ZodObject({
-        shape: () => shape,
-        unknownKeys: "strip",
-        catchall: ZodNever.create(),
-        typeName: ZodFirstPartyTypeKind.ZodObject,
-        ...processCreateParams(params),
-    });
-};
-ZodObject.strictCreate = (shape, params) => {
-    return new ZodObject({
-        shape: () => shape,
-        unknownKeys: "strict",
-        catchall: ZodNever.create(),
-        typeName: ZodFirstPartyTypeKind.ZodObject,
-        ...processCreateParams(params),
-    });
-};
-ZodObject.lazycreate = (shape, params) => {
-    return new ZodObject({
-        shape,
-        unknownKeys: "strip",
-        catchall: ZodNever.create(),
-        typeName: ZodFirstPartyTypeKind.ZodObject,
-        ...processCreateParams(params),
-    });
-};
-class ZodUnion extends ZodType {
-    _parse(input) {
-        const { ctx } = this._processInputParams(input);
-        const options = this._def.options;
-        function handleResults(results) {
-            // return first issue-free validation if it exists
-            for (const result of results) {
-                if (result.result.status === "valid") {
-                    return result.result;
-                }
-            }
-            for (const result of results) {
-                if (result.result.status === "dirty") {
-                    // add issues from dirty option
-                    ctx.common.issues.push(...result.ctx.common.issues);
-                    return result.result;
-                }
-            }
-            // return invalid
-            const unionErrors = results.map((result) => new ZodError(result.ctx.common.issues));
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_union,
-                unionErrors,
-            });
-            return INVALID;
-        }
-        if (ctx.common.async) {
-            return Promise.all(options.map(async (option) => {
-                const childCtx = {
-                    ...ctx,
-                    common: {
-                        ...ctx.common,
-                        issues: [],
-                    },
-                    parent: null,
-                };
-                return {
-                    result: await option._parseAsync({
-                        data: ctx.data,
-                        path: ctx.path,
-                        parent: childCtx,
-                    }),
-                    ctx: childCtx,
-                };
-            })).then(handleResults);
-        }
-        else {
-            let dirty = undefined;
-            const issues = [];
-            for (const option of options) {
-                const childCtx = {
-                    ...ctx,
-                    common: {
-                        ...ctx.common,
-                        issues: [],
-                    },
-                    parent: null,
-                };
-                const result = option._parseSync({
-                    data: ctx.data,
-                    path: ctx.path,
-                    parent: childCtx,
-                });
-                if (result.status === "valid") {
-                    return result;
-                }
-                else if (result.status === "dirty" && !dirty) {
-                    dirty = { result, ctx: childCtx };
-                }
-                if (childCtx.common.issues.length) {
-                    issues.push(childCtx.common.issues);
-                }
-            }
-            if (dirty) {
-                ctx.common.issues.push(...dirty.ctx.common.issues);
-                return dirty.result;
-            }
-            const unionErrors = issues.map((issues) => new ZodError(issues));
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_union,
-                unionErrors,
-            });
-            return INVALID;
-        }
-    }
-    get options() {
-        return this._def.options;
-    }
-}
-ZodUnion.create = (types, params) => {
-    return new ZodUnion({
-        options: types,
-        typeName: ZodFirstPartyTypeKind.ZodUnion,
-        ...processCreateParams(params),
-    });
-};
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-//////////                                 //////////
-//////////      ZodDiscriminatedUnion      //////////
-//////////                                 //////////
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-const getDiscriminator = (type) => {
-    if (type instanceof ZodLazy) {
-        return getDiscriminator(type.schema);
-    }
-    else if (type instanceof ZodEffects) {
-        return getDiscriminator(type.innerType());
-    }
-    else if (type instanceof ZodLiteral) {
-        return [type.value];
-    }
-    else if (type instanceof ZodEnum) {
-        return type.options;
-    }
-    else if (type instanceof ZodNativeEnum) {
-        // eslint-disable-next-line ban/ban
-        return util.objectValues(type.enum);
-    }
-    else if (type instanceof ZodDefault) {
-        return getDiscriminator(type._def.innerType);
-    }
-    else if (type instanceof ZodUndefined) {
-        return [undefined];
-    }
-    else if (type instanceof ZodNull) {
-        return [null];
-    }
-    else if (type instanceof ZodOptional) {
-        return [undefined, ...getDiscriminator(type.unwrap())];
-    }
-    else if (type instanceof ZodNullable) {
-        return [null, ...getDiscriminator(type.unwrap())];
-    }
-    else if (type instanceof ZodBranded) {
-        return getDiscriminator(type.unwrap());
-    }
-    else if (type instanceof ZodReadonly) {
-        return getDiscriminator(type.unwrap());
-    }
-    else if (type instanceof ZodCatch) {
-        return getDiscriminator(type._def.innerType);
-    }
-    else {
-        return [];
-    }
-};
-class ZodDiscriminatedUnion extends ZodType {
-    _parse(input) {
-        const { ctx } = this._processInputParams(input);
-        if (ctx.parsedType !== ZodParsedType.object) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.object,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        const discriminator = this.discriminator;
-        const discriminatorValue = ctx.data[discriminator];
-        const option = this.optionsMap.get(discriminatorValue);
-        if (!option) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_union_discriminator,
-                options: Array.from(this.optionsMap.keys()),
-                path: [discriminator],
-            });
-            return INVALID;
-        }
-        if (ctx.common.async) {
-            return option._parseAsync({
-                data: ctx.data,
-                path: ctx.path,
-                parent: ctx,
-            });
-        }
-        else {
-            return option._parseSync({
-                data: ctx.data,
-                path: ctx.path,
-                parent: ctx,
-            });
-        }
-    }
-    get discriminator() {
-        return this._def.discriminator;
-    }
-    get options() {
-        return this._def.options;
-    }
-    get optionsMap() {
-        return this._def.optionsMap;
-    }
-    /**
-     * The constructor of the discriminated union schema. Its behaviour is very similar to that of the normal z.union() constructor.
-     * However, it only allows a union of objects, all of which need to share a discriminator property. This property must
-     * have a different value for each object in the union.
-     * @param discriminator the name of the discriminator property
-     * @param types an array of object schemas
-     * @param params
-     */
-    static create(discriminator, options, params) {
-        // Get all the valid discriminator values
-        const optionsMap = new Map();
-        // try {
-        for (const type of options) {
-            const discriminatorValues = getDiscriminator(type.shape[discriminator]);
-            if (!discriminatorValues.length) {
-                throw new Error(`A discriminator value for key \`${discriminator}\` could not be extracted from all schema options`);
-            }
-            for (const value of discriminatorValues) {
-                if (optionsMap.has(value)) {
-                    throw new Error(`Discriminator property ${String(discriminator)} has duplicate value ${String(value)}`);
-                }
-                optionsMap.set(value, type);
-            }
-        }
-        return new ZodDiscriminatedUnion({
-            typeName: ZodFirstPartyTypeKind.ZodDiscriminatedUnion,
-            discriminator,
-            options,
-            optionsMap,
-            ...processCreateParams(params),
-        });
-    }
-}
-function mergeValues(a, b) {
-    const aType = getParsedType(a);
-    const bType = getParsedType(b);
-    if (a === b) {
-        return { valid: true, data: a };
-    }
-    else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {
-        const bKeys = util.objectKeys(b);
-        const sharedKeys = util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);
-        const newObj = { ...a, ...b };
-        for (const key of sharedKeys) {
-            const sharedValue = mergeValues(a[key], b[key]);
-            if (!sharedValue.valid) {
-                return { valid: false };
-            }
-            newObj[key] = sharedValue.data;
-        }
-        return { valid: true, data: newObj };
-    }
-    else if (aType === ZodParsedType.array && bType === ZodParsedType.array) {
-        if (a.length !== b.length) {
-            return { valid: false };
-        }
-        const newArray = [];
-        for (let index = 0; index < a.length; index++) {
-            const itemA = a[index];
-            const itemB = b[index];
-            const sharedValue = mergeValues(itemA, itemB);
-            if (!sharedValue.valid) {
-                return { valid: false };
-            }
-            newArray.push(sharedValue.data);
-        }
-        return { valid: true, data: newArray };
-    }
-    else if (aType === ZodParsedType.date && bType === ZodParsedType.date && +a === +b) {
-        return { valid: true, data: a };
-    }
-    else {
-        return { valid: false };
-    }
-}
-class ZodIntersection extends ZodType {
-    _parse(input) {
-        const { status, ctx } = this._processInputParams(input);
-        const handleParsed = (parsedLeft, parsedRight) => {
-            if (isAborted(parsedLeft) || isAborted(parsedRight)) {
-                return INVALID;
-            }
-            const merged = mergeValues(parsedLeft.value, parsedRight.value);
-            if (!merged.valid) {
-                addIssueToContext(ctx, {
-                    code: ZodIssueCode.invalid_intersection_types,
-                });
-                return INVALID;
-            }
-            if (isDirty(parsedLeft) || isDirty(parsedRight)) {
-                status.dirty();
-            }
-            return { status: status.value, value: merged.data };
-        };
-        if (ctx.common.async) {
-            return Promise.all([
-                this._def.left._parseAsync({
-                    data: ctx.data,
-                    path: ctx.path,
-                    parent: ctx,
-                }),
-                this._def.right._parseAsync({
-                    data: ctx.data,
-                    path: ctx.path,
-                    parent: ctx,
-                }),
-            ]).then(([left, right]) => handleParsed(left, right));
-        }
-        else {
-            return handleParsed(this._def.left._parseSync({
-                data: ctx.data,
-                path: ctx.path,
-                parent: ctx,
-            }), this._def.right._parseSync({
-                data: ctx.data,
-                path: ctx.path,
-                parent: ctx,
-            }));
-        }
-    }
-}
-ZodIntersection.create = (left, right, params) => {
-    return new ZodIntersection({
-        left: left,
-        right: right,
-        typeName: ZodFirstPartyTypeKind.ZodIntersection,
-        ...processCreateParams(params),
-    });
-};
-// type ZodTupleItems = [ZodTypeAny, ...ZodTypeAny[]];
-class ZodTuple extends ZodType {
-    _parse(input) {
-        const { status, ctx } = this._processInputParams(input);
-        if (ctx.parsedType !== ZodParsedType.array) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.array,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        if (ctx.data.length < this._def.items.length) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.too_small,
-                minimum: this._def.items.length,
-                inclusive: true,
-                exact: false,
-                type: "array",
-            });
-            return INVALID;
-        }
-        const rest = this._def.rest;
-        if (!rest && ctx.data.length > this._def.items.length) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.too_big,
-                maximum: this._def.items.length,
-                inclusive: true,
-                exact: false,
-                type: "array",
-            });
-            status.dirty();
-        }
-        const items = [...ctx.data]
-            .map((item, itemIndex) => {
-            const schema = this._def.items[itemIndex] || this._def.rest;
-            if (!schema)
-                return null;
-            return schema._parse(new ParseInputLazyPath(ctx, item, ctx.path, itemIndex));
-        })
-            .filter((x) => !!x); // filter nulls
-        if (ctx.common.async) {
-            return Promise.all(items).then((results) => {
-                return ParseStatus.mergeArray(status, results);
-            });
-        }
-        else {
-            return ParseStatus.mergeArray(status, items);
-        }
-    }
-    get items() {
-        return this._def.items;
-    }
-    rest(rest) {
-        return new ZodTuple({
-            ...this._def,
-            rest,
-        });
-    }
-}
-ZodTuple.create = (schemas, params) => {
-    if (!Array.isArray(schemas)) {
-        throw new Error("You must pass an array of schemas to z.tuple([ ... ])");
-    }
-    return new ZodTuple({
-        items: schemas,
-        typeName: ZodFirstPartyTypeKind.ZodTuple,
-        rest: null,
-        ...processCreateParams(params),
-    });
-};
-class ZodRecord extends ZodType {
-    get keySchema() {
-        return this._def.keyType;
-    }
-    get valueSchema() {
-        return this._def.valueType;
-    }
-    _parse(input) {
-        const { status, ctx } = this._processInputParams(input);
-        if (ctx.parsedType !== ZodParsedType.object) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.object,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        const pairs = [];
-        const keyType = this._def.keyType;
-        const valueType = this._def.valueType;
-        for (const key in ctx.data) {
-            pairs.push({
-                key: keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, key)),
-                value: valueType._parse(new ParseInputLazyPath(ctx, ctx.data[key], ctx.path, key)),
-                alwaysSet: key in ctx.data,
-            });
-        }
-        if (ctx.common.async) {
-            return ParseStatus.mergeObjectAsync(status, pairs);
-        }
-        else {
-            return ParseStatus.mergeObjectSync(status, pairs);
-        }
-    }
-    get element() {
-        return this._def.valueType;
-    }
-    static create(first, second, third) {
-        if (second instanceof ZodType) {
-            return new ZodRecord({
-                keyType: first,
-                valueType: second,
-                typeName: ZodFirstPartyTypeKind.ZodRecord,
-                ...processCreateParams(third),
-            });
-        }
-        return new ZodRecord({
-            keyType: ZodString.create(),
-            valueType: first,
-            typeName: ZodFirstPartyTypeKind.ZodRecord,
-            ...processCreateParams(second),
-        });
-    }
-}
-class ZodMap extends ZodType {
-    get keySchema() {
-        return this._def.keyType;
-    }
-    get valueSchema() {
-        return this._def.valueType;
-    }
-    _parse(input) {
-        const { status, ctx } = this._processInputParams(input);
-        if (ctx.parsedType !== ZodParsedType.map) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.map,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        const keyType = this._def.keyType;
-        const valueType = this._def.valueType;
-        const pairs = [...ctx.data.entries()].map(([key, value], index) => {
-            return {
-                key: keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, [index, "key"])),
-                value: valueType._parse(new ParseInputLazyPath(ctx, value, ctx.path, [index, "value"])),
-            };
-        });
-        if (ctx.common.async) {
-            const finalMap = new Map();
-            return Promise.resolve().then(async () => {
-                for (const pair of pairs) {
-                    const key = await pair.key;
-                    const value = await pair.value;
-                    if (key.status === "aborted" || value.status === "aborted") {
-                        return INVALID;
-                    }
-                    if (key.status === "dirty" || value.status === "dirty") {
-                        status.dirty();
-                    }
-                    finalMap.set(key.value, value.value);
-                }
-                return { status: status.value, value: finalMap };
-            });
-        }
-        else {
-            const finalMap = new Map();
-            for (const pair of pairs) {
-                const key = pair.key;
-                const value = pair.value;
-                if (key.status === "aborted" || value.status === "aborted") {
-                    return INVALID;
-                }
-                if (key.status === "dirty" || value.status === "dirty") {
-                    status.dirty();
-                }
-                finalMap.set(key.value, value.value);
-            }
-            return { status: status.value, value: finalMap };
-        }
-    }
-}
-ZodMap.create = (keyType, valueType, params) => {
-    return new ZodMap({
-        valueType,
-        keyType,
-        typeName: ZodFirstPartyTypeKind.ZodMap,
-        ...processCreateParams(params),
-    });
-};
-class ZodSet extends ZodType {
-    _parse(input) {
-        const { status, ctx } = this._processInputParams(input);
-        if (ctx.parsedType !== ZodParsedType.set) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.set,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        const def = this._def;
-        if (def.minSize !== null) {
-            if (ctx.data.size < def.minSize.value) {
-                addIssueToContext(ctx, {
-                    code: ZodIssueCode.too_small,
-                    minimum: def.minSize.value,
-                    type: "set",
-                    inclusive: true,
-                    exact: false,
-                    message: def.minSize.message,
-                });
-                status.dirty();
-            }
-        }
-        if (def.maxSize !== null) {
-            if (ctx.data.size > def.maxSize.value) {
-                addIssueToContext(ctx, {
-                    code: ZodIssueCode.too_big,
-                    maximum: def.maxSize.value,
-                    type: "set",
-                    inclusive: true,
-                    exact: false,
-                    message: def.maxSize.message,
-                });
-                status.dirty();
-            }
-        }
-        const valueType = this._def.valueType;
-        function finalizeSet(elements) {
-            const parsedSet = new Set();
-            for (const element of elements) {
-                if (element.status === "aborted")
-                    return INVALID;
-                if (element.status === "dirty")
-                    status.dirty();
-                parsedSet.add(element.value);
-            }
-            return { status: status.value, value: parsedSet };
-        }
-        const elements = [...ctx.data.values()].map((item, i) => valueType._parse(new ParseInputLazyPath(ctx, item, ctx.path, i)));
-        if (ctx.common.async) {
-            return Promise.all(elements).then((elements) => finalizeSet(elements));
-        }
-        else {
-            return finalizeSet(elements);
-        }
-    }
-    min(minSize, message) {
-        return new ZodSet({
-            ...this._def,
-            minSize: { value: minSize, message: errorUtil.toString(message) },
-        });
-    }
-    max(maxSize, message) {
-        return new ZodSet({
-            ...this._def,
-            maxSize: { value: maxSize, message: errorUtil.toString(message) },
-        });
-    }
-    size(size, message) {
-        return this.min(size, message).max(size, message);
-    }
-    nonempty(message) {
-        return this.min(1, message);
-    }
-}
-ZodSet.create = (valueType, params) => {
-    return new ZodSet({
-        valueType,
-        minSize: null,
-        maxSize: null,
-        typeName: ZodFirstPartyTypeKind.ZodSet,
-        ...processCreateParams(params),
-    });
-};
-class ZodFunction extends ZodType {
-    constructor() {
-        super(...arguments);
-        this.validate = this.implement;
-    }
-    _parse(input) {
-        const { ctx } = this._processInputParams(input);
-        if (ctx.parsedType !== ZodParsedType.function) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.function,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        function makeArgsIssue(args, error) {
-            return makeIssue({
-                data: args,
-                path: ctx.path,
-                errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en].filter((x) => !!x),
-                issueData: {
-                    code: ZodIssueCode.invalid_arguments,
-                    argumentsError: error,
-                },
-            });
-        }
-        function makeReturnsIssue(returns, error) {
-            return makeIssue({
-                data: returns,
-                path: ctx.path,
-                errorMaps: [ctx.common.contextualErrorMap, ctx.schemaErrorMap, getErrorMap(), en].filter((x) => !!x),
-                issueData: {
-                    code: ZodIssueCode.invalid_return_type,
-                    returnTypeError: error,
-                },
-            });
-        }
-        const params = { errorMap: ctx.common.contextualErrorMap };
-        const fn = ctx.data;
-        if (this._def.returns instanceof ZodPromise) {
-            // Would love a way to avoid disabling this rule, but we need
-            // an alias (using an arrow function was what caused 2651).
-            // eslint-disable-next-line @typescript-eslint/no-this-alias
-            const me = this;
-            return OK(async function (...args) {
-                const error = new ZodError([]);
-                const parsedArgs = await me._def.args.parseAsync(args, params).catch((e) => {
-                    error.addIssue(makeArgsIssue(args, e));
-                    throw error;
-                });
-                const result = await Reflect.apply(fn, this, parsedArgs);
-                const parsedReturns = await me._def.returns._def.type
-                    .parseAsync(result, params)
-                    .catch((e) => {
-                    error.addIssue(makeReturnsIssue(result, e));
-                    throw error;
-                });
-                return parsedReturns;
-            });
-        }
-        else {
-            // Would love a way to avoid disabling this rule, but we need
-            // an alias (using an arrow function was what caused 2651).
-            // eslint-disable-next-line @typescript-eslint/no-this-alias
-            const me = this;
-            return OK(function (...args) {
-                const parsedArgs = me._def.args.safeParse(args, params);
-                if (!parsedArgs.success) {
-                    throw new ZodError([makeArgsIssue(args, parsedArgs.error)]);
-                }
-                const result = Reflect.apply(fn, this, parsedArgs.data);
-                const parsedReturns = me._def.returns.safeParse(result, params);
-                if (!parsedReturns.success) {
-                    throw new ZodError([makeReturnsIssue(result, parsedReturns.error)]);
-                }
-                return parsedReturns.data;
-            });
-        }
-    }
-    parameters() {
-        return this._def.args;
-    }
-    returnType() {
-        return this._def.returns;
-    }
-    args(...items) {
-        return new ZodFunction({
-            ...this._def,
-            args: ZodTuple.create(items).rest(ZodUnknown.create()),
-        });
-    }
-    returns(returnType) {
-        return new ZodFunction({
-            ...this._def,
-            returns: returnType,
-        });
-    }
-    implement(func) {
-        const validatedFunc = this.parse(func);
-        return validatedFunc;
-    }
-    strictImplement(func) {
-        const validatedFunc = this.parse(func);
-        return validatedFunc;
-    }
-    static create(args, returns, params) {
-        return new ZodFunction({
-            args: (args ? args : ZodTuple.create([]).rest(ZodUnknown.create())),
-            returns: returns || ZodUnknown.create(),
-            typeName: ZodFirstPartyTypeKind.ZodFunction,
-            ...processCreateParams(params),
-        });
-    }
-}
-class ZodLazy extends ZodType {
-    get schema() {
-        return this._def.getter();
-    }
-    _parse(input) {
-        const { ctx } = this._processInputParams(input);
-        const lazySchema = this._def.getter();
-        return lazySchema._parse({ data: ctx.data, path: ctx.path, parent: ctx });
-    }
-}
-ZodLazy.create = (getter, params) => {
-    return new ZodLazy({
-        getter: getter,
-        typeName: ZodFirstPartyTypeKind.ZodLazy,
-        ...processCreateParams(params),
-    });
-};
-class ZodLiteral extends ZodType {
-    _parse(input) {
-        if (input.data !== this._def.value) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                received: ctx.data,
-                code: ZodIssueCode.invalid_literal,
-                expected: this._def.value,
-            });
-            return INVALID;
-        }
-        return { status: "valid", value: input.data };
-    }
-    get value() {
-        return this._def.value;
-    }
-}
-ZodLiteral.create = (value, params) => {
-    return new ZodLiteral({
-        value: value,
-        typeName: ZodFirstPartyTypeKind.ZodLiteral,
-        ...processCreateParams(params),
-    });
-};
-function createZodEnum(values, params) {
-    return new ZodEnum({
-        values,
-        typeName: ZodFirstPartyTypeKind.ZodEnum,
-        ...processCreateParams(params),
-    });
-}
-class ZodEnum extends ZodType {
-    _parse(input) {
-        if (typeof input.data !== "string") {
-            const ctx = this._getOrReturnCtx(input);
-            const expectedValues = this._def.values;
-            addIssueToContext(ctx, {
-                expected: util.joinValues(expectedValues),
-                received: ctx.parsedType,
-                code: ZodIssueCode.invalid_type,
-            });
-            return INVALID;
-        }
-        if (!this._cache) {
-            this._cache = new Set(this._def.values);
-        }
-        if (!this._cache.has(input.data)) {
-            const ctx = this._getOrReturnCtx(input);
-            const expectedValues = this._def.values;
-            addIssueToContext(ctx, {
-                received: ctx.data,
-                code: ZodIssueCode.invalid_enum_value,
-                options: expectedValues,
-            });
-            return INVALID;
-        }
-        return OK(input.data);
-    }
-    get options() {
-        return this._def.values;
-    }
-    get enum() {
-        const enumValues = {};
-        for (const val of this._def.values) {
-            enumValues[val] = val;
-        }
-        return enumValues;
-    }
-    get Values() {
-        const enumValues = {};
-        for (const val of this._def.values) {
-            enumValues[val] = val;
-        }
-        return enumValues;
-    }
-    get Enum() {
-        const enumValues = {};
-        for (const val of this._def.values) {
-            enumValues[val] = val;
-        }
-        return enumValues;
-    }
-    extract(values, newDef = this._def) {
-        return ZodEnum.create(values, {
-            ...this._def,
-            ...newDef,
-        });
-    }
-    exclude(values, newDef = this._def) {
-        return ZodEnum.create(this.options.filter((opt) => !values.includes(opt)), {
-            ...this._def,
-            ...newDef,
-        });
-    }
-}
-ZodEnum.create = createZodEnum;
-class ZodNativeEnum extends ZodType {
-    _parse(input) {
-        const nativeEnumValues = util.getValidEnumValues(this._def.values);
-        const ctx = this._getOrReturnCtx(input);
-        if (ctx.parsedType !== ZodParsedType.string && ctx.parsedType !== ZodParsedType.number) {
-            const expectedValues = util.objectValues(nativeEnumValues);
-            addIssueToContext(ctx, {
-                expected: util.joinValues(expectedValues),
-                received: ctx.parsedType,
-                code: ZodIssueCode.invalid_type,
-            });
-            return INVALID;
-        }
-        if (!this._cache) {
-            this._cache = new Set(util.getValidEnumValues(this._def.values));
-        }
-        if (!this._cache.has(input.data)) {
-            const expectedValues = util.objectValues(nativeEnumValues);
-            addIssueToContext(ctx, {
-                received: ctx.data,
-                code: ZodIssueCode.invalid_enum_value,
-                options: expectedValues,
-            });
-            return INVALID;
-        }
-        return OK(input.data);
-    }
-    get enum() {
-        return this._def.values;
-    }
-}
-ZodNativeEnum.create = (values, params) => {
-    return new ZodNativeEnum({
-        values: values,
-        typeName: ZodFirstPartyTypeKind.ZodNativeEnum,
-        ...processCreateParams(params),
-    });
-};
-class ZodPromise extends ZodType {
-    unwrap() {
-        return this._def.type;
-    }
-    _parse(input) {
-        const { ctx } = this._processInputParams(input);
-        if (ctx.parsedType !== ZodParsedType.promise && ctx.common.async === false) {
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.promise,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        const promisified = ctx.parsedType === ZodParsedType.promise ? ctx.data : Promise.resolve(ctx.data);
-        return OK(promisified.then((data) => {
-            return this._def.type.parseAsync(data, {
-                path: ctx.path,
-                errorMap: ctx.common.contextualErrorMap,
-            });
-        }));
-    }
-}
-ZodPromise.create = (schema, params) => {
-    return new ZodPromise({
-        type: schema,
-        typeName: ZodFirstPartyTypeKind.ZodPromise,
-        ...processCreateParams(params),
-    });
-};
-class ZodEffects extends ZodType {
-    innerType() {
-        return this._def.schema;
-    }
-    sourceType() {
-        return this._def.schema._def.typeName === ZodFirstPartyTypeKind.ZodEffects
-            ? this._def.schema.sourceType()
-            : this._def.schema;
-    }
-    _parse(input) {
-        const { status, ctx } = this._processInputParams(input);
-        const effect = this._def.effect || null;
-        const checkCtx = {
-            addIssue: (arg) => {
-                addIssueToContext(ctx, arg);
-                if (arg.fatal) {
-                    status.abort();
-                }
-                else {
-                    status.dirty();
-                }
-            },
-            get path() {
-                return ctx.path;
-            },
-        };
-        checkCtx.addIssue = checkCtx.addIssue.bind(checkCtx);
-        if (effect.type === "preprocess") {
-            const processed = effect.transform(ctx.data, checkCtx);
-            if (ctx.common.async) {
-                return Promise.resolve(processed).then(async (processed) => {
-                    if (status.value === "aborted")
-                        return INVALID;
-                    const result = await this._def.schema._parseAsync({
-                        data: processed,
-                        path: ctx.path,
-                        parent: ctx,
-                    });
-                    if (result.status === "aborted")
-                        return INVALID;
-                    if (result.status === "dirty")
-                        return DIRTY(result.value);
-                    if (status.value === "dirty")
-                        return DIRTY(result.value);
-                    return result;
-                });
-            }
-            else {
-                if (status.value === "aborted")
-                    return INVALID;
-                const result = this._def.schema._parseSync({
-                    data: processed,
-                    path: ctx.path,
-                    parent: ctx,
-                });
-                if (result.status === "aborted")
-                    return INVALID;
-                if (result.status === "dirty")
-                    return DIRTY(result.value);
-                if (status.value === "dirty")
-                    return DIRTY(result.value);
-                return result;
-            }
-        }
-        if (effect.type === "refinement") {
-            const executeRefinement = (acc) => {
-                const result = effect.refinement(acc, checkCtx);
-                if (ctx.common.async) {
-                    return Promise.resolve(result);
-                }
-                if (result instanceof Promise) {
-                    throw new Error("Async refinement encountered during synchronous parse operation. Use .parseAsync instead.");
-                }
-                return acc;
-            };
-            if (ctx.common.async === false) {
-                const inner = this._def.schema._parseSync({
-                    data: ctx.data,
-                    path: ctx.path,
-                    parent: ctx,
-                });
-                if (inner.status === "aborted")
-                    return INVALID;
-                if (inner.status === "dirty")
-                    status.dirty();
-                // return value is ignored
-                executeRefinement(inner.value);
-                return { status: status.value, value: inner.value };
-            }
-            else {
-                return this._def.schema._parseAsync({ data: ctx.data, path: ctx.path, parent: ctx }).then((inner) => {
-                    if (inner.status === "aborted")
-                        return INVALID;
-                    if (inner.status === "dirty")
-                        status.dirty();
-                    return executeRefinement(inner.value).then(() => {
-                        return { status: status.value, value: inner.value };
-                    });
-                });
-            }
-        }
-        if (effect.type === "transform") {
-            if (ctx.common.async === false) {
-                const base = this._def.schema._parseSync({
-                    data: ctx.data,
-                    path: ctx.path,
-                    parent: ctx,
-                });
-                if (!isValid(base))
-                    return INVALID;
-                const result = effect.transform(base.value, checkCtx);
-                if (result instanceof Promise) {
-                    throw new Error(`Asynchronous transform encountered during synchronous parse operation. Use .parseAsync instead.`);
-                }
-                return { status: status.value, value: result };
-            }
-            else {
-                return this._def.schema._parseAsync({ data: ctx.data, path: ctx.path, parent: ctx }).then((base) => {
-                    if (!isValid(base))
-                        return INVALID;
-                    return Promise.resolve(effect.transform(base.value, checkCtx)).then((result) => ({
-                        status: status.value,
-                        value: result,
-                    }));
-                });
-            }
-        }
-        util.assertNever(effect);
-    }
-}
-ZodEffects.create = (schema, effect, params) => {
-    return new ZodEffects({
-        schema,
-        typeName: ZodFirstPartyTypeKind.ZodEffects,
-        effect,
-        ...processCreateParams(params),
-    });
-};
-ZodEffects.createWithPreprocess = (preprocess, schema, params) => {
-    return new ZodEffects({
-        schema,
-        effect: { type: "preprocess", transform: preprocess },
-        typeName: ZodFirstPartyTypeKind.ZodEffects,
-        ...processCreateParams(params),
-    });
-};
-
-class ZodOptional extends ZodType {
-    _parse(input) {
-        const parsedType = this._getType(input);
-        if (parsedType === ZodParsedType.undefined) {
-            return OK(undefined);
-        }
-        return this._def.innerType._parse(input);
-    }
-    unwrap() {
-        return this._def.innerType;
-    }
-}
-ZodOptional.create = (type, params) => {
-    return new ZodOptional({
-        innerType: type,
-        typeName: ZodFirstPartyTypeKind.ZodOptional,
-        ...processCreateParams(params),
-    });
-};
-class ZodNullable extends ZodType {
-    _parse(input) {
-        const parsedType = this._getType(input);
-        if (parsedType === ZodParsedType.null) {
-            return OK(null);
-        }
-        return this._def.innerType._parse(input);
-    }
-    unwrap() {
-        return this._def.innerType;
-    }
-}
-ZodNullable.create = (type, params) => {
-    return new ZodNullable({
-        innerType: type,
-        typeName: ZodFirstPartyTypeKind.ZodNullable,
-        ...processCreateParams(params),
-    });
-};
-class ZodDefault extends ZodType {
-    _parse(input) {
-        const { ctx } = this._processInputParams(input);
-        let data = ctx.data;
-        if (ctx.parsedType === ZodParsedType.undefined) {
-            data = this._def.defaultValue();
-        }
-        return this._def.innerType._parse({
-            data,
-            path: ctx.path,
-            parent: ctx,
-        });
-    }
-    removeDefault() {
-        return this._def.innerType;
-    }
-}
-ZodDefault.create = (type, params) => {
-    return new ZodDefault({
-        innerType: type,
-        typeName: ZodFirstPartyTypeKind.ZodDefault,
-        defaultValue: typeof params.default === "function" ? params.default : () => params.default,
-        ...processCreateParams(params),
-    });
-};
-class ZodCatch extends ZodType {
-    _parse(input) {
-        const { ctx } = this._processInputParams(input);
-        // newCtx is used to not collect issues from inner types in ctx
-        const newCtx = {
-            ...ctx,
-            common: {
-                ...ctx.common,
-                issues: [],
-            },
-        };
-        const result = this._def.innerType._parse({
-            data: newCtx.data,
-            path: newCtx.path,
-            parent: {
-                ...newCtx,
-            },
-        });
-        if (isAsync(result)) {
-            return result.then((result) => {
-                return {
-                    status: "valid",
-                    value: result.status === "valid"
-                        ? result.value
-                        : this._def.catchValue({
-                            get error() {
-                                return new ZodError(newCtx.common.issues);
-                            },
-                            input: newCtx.data,
-                        }),
-                };
-            });
-        }
-        else {
-            return {
-                status: "valid",
-                value: result.status === "valid"
-                    ? result.value
-                    : this._def.catchValue({
-                        get error() {
-                            return new ZodError(newCtx.common.issues);
-                        },
-                        input: newCtx.data,
-                    }),
-            };
-        }
-    }
-    removeCatch() {
-        return this._def.innerType;
-    }
-}
-ZodCatch.create = (type, params) => {
-    return new ZodCatch({
-        innerType: type,
-        typeName: ZodFirstPartyTypeKind.ZodCatch,
-        catchValue: typeof params.catch === "function" ? params.catch : () => params.catch,
-        ...processCreateParams(params),
-    });
-};
-class ZodNaN extends ZodType {
-    _parse(input) {
-        const parsedType = this._getType(input);
-        if (parsedType !== ZodParsedType.nan) {
-            const ctx = this._getOrReturnCtx(input);
-            addIssueToContext(ctx, {
-                code: ZodIssueCode.invalid_type,
-                expected: ZodParsedType.nan,
-                received: ctx.parsedType,
-            });
-            return INVALID;
-        }
-        return { status: "valid", value: input.data };
-    }
-}
-ZodNaN.create = (params) => {
-    return new ZodNaN({
-        typeName: ZodFirstPartyTypeKind.ZodNaN,
-        ...processCreateParams(params),
-    });
-};
-const BRAND = Symbol("zod_brand");
-class ZodBranded extends ZodType {
-    _parse(input) {
-        const { ctx } = this._processInputParams(input);
-        const data = ctx.data;
-        return this._def.type._parse({
-            data,
-            path: ctx.path,
-            parent: ctx,
-        });
-    }
-    unwrap() {
-        return this._def.type;
-    }
-}
-class ZodPipeline extends ZodType {
-    _parse(input) {
-        const { status, ctx } = this._processInputParams(input);
-        if (ctx.common.async) {
-            const handleAsync = async () => {
-                const inResult = await this._def.in._parseAsync({
-                    data: ctx.data,
-                    path: ctx.path,
-                    parent: ctx,
-                });
-                if (inResult.status === "aborted")
-                    return INVALID;
-                if (inResult.status === "dirty") {
-                    status.dirty();
-                    return DIRTY(inResult.value);
-                }
-                else {
-                    return this._def.out._parseAsync({
-                        data: inResult.value,
-                        path: ctx.path,
-                        parent: ctx,
-                    });
-                }
-            };
-            return handleAsync();
-        }
-        else {
-            const inResult = this._def.in._parseSync({
-                data: ctx.data,
-                path: ctx.path,
-                parent: ctx,
-            });
-            if (inResult.status === "aborted")
-                return INVALID;
-            if (inResult.status === "dirty") {
-                status.dirty();
-                return {
-                    status: "dirty",
-                    value: inResult.value,
-                };
-            }
-            else {
-                return this._def.out._parseSync({
-                    data: inResult.value,
-                    path: ctx.path,
-                    parent: ctx,
-                });
-            }
-        }
-    }
-    static create(a, b) {
-        return new ZodPipeline({
-            in: a,
-            out: b,
-            typeName: ZodFirstPartyTypeKind.ZodPipeline,
-        });
-    }
-}
-class ZodReadonly extends ZodType {
-    _parse(input) {
-        const result = this._def.innerType._parse(input);
-        const freeze = (data) => {
-            if (isValid(data)) {
-                data.value = Object.freeze(data.value);
-            }
-            return data;
-        };
-        return isAsync(result) ? result.then((data) => freeze(data)) : freeze(result);
-    }
-    unwrap() {
-        return this._def.innerType;
-    }
-}
-ZodReadonly.create = (type, params) => {
-    return new ZodReadonly({
-        innerType: type,
-        typeName: ZodFirstPartyTypeKind.ZodReadonly,
-        ...processCreateParams(params),
-    });
-};
-////////////////////////////////////////
-////////////////////////////////////////
-//////////                    //////////
-//////////      z.custom      //////////
-//////////                    //////////
-////////////////////////////////////////
-////////////////////////////////////////
-function cleanParams(params, data) {
-    const p = typeof params === "function" ? params(data) : typeof params === "string" ? { message: params } : params;
-    const p2 = typeof p === "string" ? { message: p } : p;
-    return p2;
-}
-function custom(check, _params = {}, 
-/**
- * @deprecated
- *
- * Pass `fatal` into the params object instead:
- *
- * ```ts
- * z.string().custom((val) => val.length > 5, { fatal: false })
- * ```
- *
- */
-fatal) {
-    if (check)
-        return ZodAny.create().superRefine((data, ctx) => {
-            const r = check(data);
-            if (r instanceof Promise) {
-                return r.then((r) => {
-                    if (!r) {
-                        const params = cleanParams(_params, data);
-                        const _fatal = params.fatal ?? fatal ?? true;
-                        ctx.addIssue({ code: "custom", ...params, fatal: _fatal });
-                    }
-                });
-            }
-            if (!r) {
-                const params = cleanParams(_params, data);
-                const _fatal = params.fatal ?? fatal ?? true;
-                ctx.addIssue({ code: "custom", ...params, fatal: _fatal });
-            }
-            return;
-        });
-    return ZodAny.create();
-}
-
-const late = {
-    object: ZodObject.lazycreate,
-};
-var ZodFirstPartyTypeKind;
-(function (ZodFirstPartyTypeKind) {
-    ZodFirstPartyTypeKind["ZodString"] = "ZodString";
-    ZodFirstPartyTypeKind["ZodNumber"] = "ZodNumber";
-    ZodFirstPartyTypeKind["ZodNaN"] = "ZodNaN";
-    ZodFirstPartyTypeKind["ZodBigInt"] = "ZodBigInt";
-    ZodFirstPartyTypeKind["ZodBoolean"] = "ZodBoolean";
-    ZodFirstPartyTypeKind["ZodDate"] = "ZodDate";
-    ZodFirstPartyTypeKind["ZodSymbol"] = "ZodSymbol";
-    ZodFirstPartyTypeKind["ZodUndefined"] = "ZodUndefined";
-    ZodFirstPartyTypeKind["ZodNull"] = "ZodNull";
-    ZodFirstPartyTypeKind["ZodAny"] = "ZodAny";
-    ZodFirstPartyTypeKind["ZodUnknown"] = "ZodUnknown";
-    ZodFirstPartyTypeKind["ZodNever"] = "ZodNever";
-    ZodFirstPartyTypeKind["ZodVoid"] = "ZodVoid";
-    ZodFirstPartyTypeKind["ZodArray"] = "ZodArray";
-    ZodFirstPartyTypeKind["ZodObject"] = "ZodObject";
-    ZodFirstPartyTypeKind["ZodUnion"] = "ZodUnion";
-    ZodFirstPartyTypeKind["ZodDiscriminatedUnion"] = "ZodDiscriminatedUnion";
-    ZodFirstPartyTypeKind["ZodIntersection"] = "ZodIntersection";
-    ZodFirstPartyTypeKind["ZodTuple"] = "ZodTuple";
-    ZodFirstPartyTypeKind["ZodRecord"] = "ZodRecord";
-    ZodFirstPartyTypeKind["ZodMap"] = "ZodMap";
-    ZodFirstPartyTypeKind["ZodSet"] = "ZodSet";
-    ZodFirstPartyTypeKind["ZodFunction"] = "ZodFunction";
-    ZodFirstPartyTypeKind["ZodLazy"] = "ZodLazy";
-    ZodFirstPartyTypeKind["ZodLiteral"] = "ZodLiteral";
-    ZodFirstPartyTypeKind["ZodEnum"] = "ZodEnum";
-    ZodFirstPartyTypeKind["ZodEffects"] = "ZodEffects";
-    ZodFirstPartyTypeKind["ZodNativeEnum"] = "ZodNativeEnum";
-    ZodFirstPartyTypeKind["ZodOptional"] = "ZodOptional";
-    ZodFirstPartyTypeKind["ZodNullable"] = "ZodNullable";
-    ZodFirstPartyTypeKind["ZodDefault"] = "ZodDefault";
-    ZodFirstPartyTypeKind["ZodCatch"] = "ZodCatch";
-    ZodFirstPartyTypeKind["ZodPromise"] = "ZodPromise";
-    ZodFirstPartyTypeKind["ZodBranded"] = "ZodBranded";
-    ZodFirstPartyTypeKind["ZodPipeline"] = "ZodPipeline";
-    ZodFirstPartyTypeKind["ZodReadonly"] = "ZodReadonly";
-})(ZodFirstPartyTypeKind || (ZodFirstPartyTypeKind = {}));
-// requires TS 4.4+
-class Class {
-    constructor(..._) { }
-}
-const instanceOfType = (
-// const instanceOfType = <T extends new (...args: any[]) => any>(
-cls, params = {
-    message: `Input not instance of ${cls.name}`,
-}) => custom((data) => data instanceof cls, params);
-const stringType = ZodString.create;
-const numberType = ZodNumber.create;
-const nanType = ZodNaN.create;
-const bigIntType = ZodBigInt.create;
-const booleanType = ZodBoolean.create;
-const dateType = ZodDate.create;
-const symbolType = ZodSymbol.create;
-const undefinedType = ZodUndefined.create;
-const nullType = ZodNull.create;
-const anyType = ZodAny.create;
-const unknownType = ZodUnknown.create;
-const neverType = ZodNever.create;
-const voidType = ZodVoid.create;
-const arrayType = ZodArray.create;
-const objectType = ZodObject.create;
-const strictObjectType = ZodObject.strictCreate;
-const unionType = ZodUnion.create;
-const discriminatedUnionType = ZodDiscriminatedUnion.create;
-const intersectionType = ZodIntersection.create;
-const tupleType = ZodTuple.create;
-const recordType = ZodRecord.create;
-const mapType = ZodMap.create;
-const setType = ZodSet.create;
-const functionType = ZodFunction.create;
-const lazyType = ZodLazy.create;
-const literalType = ZodLiteral.create;
-const enumType = ZodEnum.create;
-const nativeEnumType = ZodNativeEnum.create;
-const promiseType = ZodPromise.create;
-const effectsType = ZodEffects.create;
-const optionalType = ZodOptional.create;
-const nullableType = ZodNullable.create;
-const preprocessType = ZodEffects.createWithPreprocess;
-const pipelineType = ZodPipeline.create;
-const ostring = () => stringType().optional();
-const onumber = () => numberType().optional();
-const oboolean = () => booleanType().optional();
-const coerce = {
-    string: ((arg) => ZodString.create({ ...arg, coerce: true })),
-    number: ((arg) => ZodNumber.create({ ...arg, coerce: true })),
-    boolean: ((arg) => ZodBoolean.create({
-        ...arg,
-        coerce: true,
-    })),
-    bigint: ((arg) => ZodBigInt.create({ ...arg, coerce: true })),
-    date: ((arg) => ZodDate.create({ ...arg, coerce: true })),
-};
-
-const NEVER = INVALID;
-
-;// ./node_modules/zod/v3/external.js
-
-
-
-
-
-
-
-;// ./node_modules/zod/v3/index.js
-
-
-
-/* harmony default export */ const v3 = (external_namespaceObject);
-
-
-/***/ },
-
 /***/ 2069
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
@@ -61617,6 +57463,14 @@ config(en());
 
 /***/ },
 
+/***/ 1907
+(module) {
+
+"use strict";
+module.exports = /*#__PURE__*/JSON.parse('{"title":"Database Indexes with B-Trees","fps":30,"width":1920,"height":1080,"theme":{"primary":"#10b981","secondary":"#38bdf8","accent":"#fb923c","background":"#0a0f1e","font":"Outfit"},"voiceover":{"provider":null,"captions":[{"text":"Welcome to the world of database indexes, where","startMs":0,"endMs":1386,"timestampMs":null,"confidence":null},{"text":"performance meets efficiency. In this video, we\'ll explore","startMs":1386,"endMs":2772,"timestampMs":null,"confidence":null},{"text":"the ins and outs of B-tree indexes. By","startMs":2772,"endMs":4158,"timestampMs":null,"confidence":null},{"text":"the end of this video, you\'ll understand why","startMs":4158,"endMs":5544,"timestampMs":null,"confidence":null},{"text":"B-tree indexes are crucial for fast data retrieval.","startMs":5544,"endMs":6930,"timestampMs":null,"confidence":null},{"text":"Imagine querying a massive database with millions of","startMs":6933,"endMs":8319,"timestampMs":null,"confidence":null},{"text":"rows. Without indexes, the database would have to","startMs":8319,"endMs":9705,"timestampMs":null,"confidence":null},{"text":"scan every row, leading to slow performance. Indexes","startMs":9705,"endMs":11091,"timestampMs":null,"confidence":null},{"text":"bridge this performance gap by enabling fast lookups,","startMs":11091,"endMs":12477,"timestampMs":null,"confidence":null},{"text":"insertions, and deletions.","startMs":12477,"endMs":12996,"timestampMs":null,"confidence":null},{"text":"A B-tree node consists of key values, child","startMs":13000,"endMs":14380,"timestampMs":null,"confidence":null},{"text":"pointers, and a sibling pointer. These components map","startMs":14380,"endMs":15760,"timestampMs":null,"confidence":null},{"text":"to disk pages, ensuring efficient storage and retrieval.","startMs":15760,"endMs":17140,"timestampMs":null,"confidence":null},{"text":"Understanding B-tree node layout is crucial for optimizing","startMs":17140,"endMs":18520,"timestampMs":null,"confidence":null},{"text":"database performance.","startMs":18520,"endMs":18865,"timestampMs":null,"confidence":null},{"text":"B-tree properties guarantee balance and search efficiency. The","startMs":18866,"endMs":20246,"timestampMs":null,"confidence":null},{"text":"key invariant is that all leaf nodes are","startMs":20246,"endMs":21626,"timestampMs":null,"confidence":null},{"text":"at the same level, ensuring O(log n) search","startMs":21626,"endMs":23006,"timestampMs":null,"confidence":null},{"text":"time. This is achieved through rebalancing during insertion","startMs":23006,"endMs":24386,"timestampMs":null,"confidence":null},{"text":"and deletion.","startMs":24386,"endMs":24731,"timestampMs":null,"confidence":null},{"text":"The lookup algorithm traverses the B-tree by comparing","startMs":24733,"endMs":26118,"timestampMs":null,"confidence":null},{"text":"keys and following child pointers. This process repeats","startMs":26118,"endMs":27503,"timestampMs":null,"confidence":null},{"text":"until the desired key is found or a","startMs":27503,"endMs":28888,"timestampMs":null,"confidence":null},{"text":"leaf node is reached. Efficient lookup is critical","startMs":28888,"endMs":30273,"timestampMs":null,"confidence":null},{"text":"for fast query performance.","startMs":30273,"endMs":30965,"timestampMs":null,"confidence":null},{"text":"Insertion and deletion operations preserve B-tree invariants by","startMs":30966,"endMs":32349,"timestampMs":null,"confidence":null},{"text":"rebalancing the tree. This ensures that the tree","startMs":32349,"endMs":33732,"timestampMs":null,"confidence":null},{"text":"remains approximately balanced, maintaining search efficiency. Rebalancing can","startMs":33732,"endMs":35115,"timestampMs":null,"confidence":null},{"text":"be costly, but it\'s essential for long-term performance.","startMs":35115,"endMs":36498,"timestampMs":null,"confidence":null},{"text":"While B-tree indexes offer excellent search performance, they","startMs":36500,"endMs":37885,"timestampMs":null,"confidence":null},{"text":"come with costs. Insertion and deletion operations can","startMs":37885,"endMs":39270,"timestampMs":null,"confidence":null},{"text":"be expensive, especially for large datasets. Additionally, B-trees","startMs":39270,"endMs":40655,"timestampMs":null,"confidence":null},{"text":"can suffer from degradation over time if not","startMs":40655,"endMs":42040,"timestampMs":null,"confidence":null},{"text":"properly maintained. Understanding these trade-offs is crucial for","startMs":42040,"endMs":43425,"timestampMs":null,"confidence":null},{"text":"optimizing database performance in real-world workloads.","startMs":43425,"endMs":44464,"timestampMs":null,"confidence":null},{"text":"In conclusion, B-tree indexes are a fundamental component","startMs":44466,"endMs":45849,"timestampMs":null,"confidence":null},{"text":"of database performance. By understanding how they work","startMs":45849,"endMs":47232,"timestampMs":null,"confidence":null},{"text":"and their trade-offs, you can optimize your database","startMs":47232,"endMs":48615,"timestampMs":null,"confidence":null},{"text":"for fast data retrieval and efficient query performance.","startMs":48615,"endMs":49998,"timestampMs":null,"confidence":null}]},"scenes":[{"id":"scene-1","layout":"full","title":"","subtitle":"","duration_frames":208,"transition":"fade","narration":"Welcome to the world of database indexes, where performance meets efficiency. In this video, we\'ll explore the ins and outs of B-tree indexes. By the end of this video, you\'ll understand why B-tree indexes are crucial for fast data retrieval.","panels":[{"area":"panel","type":"AnimatedTitle","data":{"title":"B-Tree Indexes: The Backbone of Database Performance","subtitle":"Unlocking fast data retrieval with B-tree indexes","accentColor":"#3498db","align":"center"}}]},{"id":"scene-2","layout":"title-left-right","title":"Why Indexes Are Needed","subtitle":"The performance gap between full table scans and indexed lookups","duration_frames":182,"transition":"slideLeft","narration":"Imagine querying a massive database with millions of rows. Without indexes, the database would have to scan every row, leading to slow performance. Indexes bridge this performance gap by enabling fast lookups, insertions, and deletions.","panels":[{"area":"left","type":"BulletList","data":{"title":"The Performance Gap: Full Table Scans vs. Indexed Lookups","items":["Full table scan: 10,000,000 rows scanned in 10 seconds","Indexed lookup: 1,000,000 rows scanned in 1 millisecond","Example system: Google\'s Bigtable uses indexes for fast lookups","Real-world impact: 100x performance improvement with indexes","Database example: MySQL uses B-tree indexes by default"],"accentColor":"#f1c40f","numbered":false,"align":"left"}},{"area":"right","type":"CalloutAnnotation","data":{"title":"Why Indexes Are Needed","body":"Imagine querying a massive database with millions of rows. Without indexes, the database would have to scan every row, leading to slow performance. Indexes bridge this performance gap by enabling fast lookups, insertions, and deletions."}}]},{"id":"scene-3","layout":"title-main-sidebar","title":"B-Tree Node Layout","subtitle":"Components of a B-tree node and how they map to disk pages","duration_frames":176,"transition":"slideLeft","narration":"A B-tree node consists of key values, child pointers, and a sibling pointer. These components map to disk pages, ensuring efficient storage and retrieval. Understanding B-tree node layout is crucial for optimizing database performance.","panels":[{"area":"main","type":"CalloutAnnotation","data":{"title":"B-Tree Node Layout","body":"A B-tree node consists of key values, child pointers, and a sibling pointer. These components map to disk pages, ensuring efficient storage and retrieval. Understanding B-tree node layout is crucial for optimizing database performance."}},{"area":"sidebar","type":"CalloutAnnotation","data":{"title":"B-Tree Node Components","body":"A B-tree node typically contains key values, child pointers, and a sibling pointer.","bullets":["Key values: used for search and insertion","Child pointers: point to child nodes or leaf nodes","Sibling pointer: points to adjacent nodes for efficient insertion/deletion"],"position":"right","accentColor":"#e74c3c"}}]},{"id":"scene-4","layout":"title-content","title":"Core B-Tree Properties","subtitle":"Invariants that guarantee balance and search efficiency","duration_frames":176,"transition":"slideLeft","narration":"B-tree properties guarantee balance and search efficiency. The key invariant is that all leaf nodes are at the same level, ensuring O(log n) search time. This is achieved through rebalancing during insertion and deletion.","panels":[{"area":"main","type":"EquationDerivation","data":{"title":"Deriving B-Tree Balance","steps":[{"tokens":["n","=","number of keys"],"note":"Assume n keys in the B-tree"},{"tokens":["log","n","leaf nodes"],"highlight":true,"note":"Leaf nodes are at the same level"},{"tokens":["O(log","n",")"],"final":true,"note":"Guaranteed search efficiency"}],"accentColor":"#2ecc71"}}]},{"id":"scene-5","layout":"title-left-right","title":"Lookup (Search) Algorithm","subtitle":"How a key is located by traversing the tree","duration_frames":187,"transition":"slideLeft","narration":"The lookup algorithm traverses the B-tree by comparing keys and following child pointers. This process repeats until the desired key is found or a leaf node is reached. Efficient lookup is critical for fast query performance.","panels":[{"area":"left","type":"BulletList","data":{"title":"B-Tree Lookup Algorithm","items":["Start at the root node","Compare key with node values","Follow child pointer or sibling pointer","Repeat until key is found or leaf node is reached","Example: MySQL\'s B-tree implementation uses this algorithm"],"accentColor":"#9b59b6","numbered":false,"align":"left"}},{"area":"right","type":"FlowDiagram","data":{"title":"Lookup (Search) Algorithm","nodes":[{"id":"start","label":"Start","kind":"start","description":"","color":"#00FF00"},{"id":"root","label":"Root Node","kind":"process","description":"Find key in root node","color":"#CCCCCC"},{"id":"leaf","label":"Leaf Node","kind":"process","description":"Find key in leaf node","color":"#CCCCCC"},{"id":"end","label":"End","kind":"end","description":"","color":"#0000FF"}],"edges":[{"fromId":"start","toId":"root","label":"","active":true},{"fromId":"root","toId":"leaf","label":" Traverse tree","active":true},{"fromId":"leaf","toId":"end","label":"Key found","active":true}],"accentColor":"#FFFFFF"}}]},{"id":"scene-6","layout":"title-main-sidebar","title":"Insertion and Deletion Mechanics","subtitle":"How updates preserve B-tree invariants","duration_frames":166,"transition":"slideLeft","narration":"Insertion and deletion operations preserve B-tree invariants by rebalancing the tree. This ensures that the tree remains approximately balanced, maintaining search efficiency. Rebalancing can be costly, but it\'s essential for long-term performance.","panels":[{"area":"main","type":"CalloutAnnotation","data":{"title":"Insertion and Deletion Mechanics","body":"Insertion and deletion operations preserve B-tree invariants by rebalancing the tree. This ensures that the tree remains approximately balanced, maintaining search efficiency. Rebalancing can be costly, but it\'s essential for long-term performance."}},{"area":"sidebar","type":"CalloutAnnotation","data":{"title":"Preserving B-Tree Invariants","body":"Rebalancing during insertion and deletion ensures B-tree invariants are preserved.","bullets":["Insertion: add key to leaf node, rebalance if necessary","Deletion: remove key from leaf node, rebalance if necessary"],"position":"right","accentColor":"#16a085"}}]},{"id":"scene-7","layout":"title-content","title":"Trade-offs and Limitations","subtitle":"Assessing the costs of B-tree indexes in real workloads","duration_frames":239,"transition":"slideLeft","narration":"While B-tree indexes offer excellent search performance, they come with costs. Insertion and deletion operations can be expensive, especially for large datasets. Additionally, B-trees can suffer from degradation over time if not properly maintained. Understanding these trade-offs is crucial for optimizing database performance in real-world workloads.","panels":[{"area":"main","type":"BarChart","data":{"title":"Trade-offs and Limitations","bars":[{"label":"Insertion","value":10,"color":"#FF0000","sublabel":"ms"},{"label":"Deletion","value":15,"color":"#00FF00","sublabel":"ms"},{"label":"Lookup","value":5,"color":"#0000FF","sublabel":"ms"},{"label":"Storage","value":50,"color":"#CCCCCC","sublabel":"MB"}],"accentColor":"#FFFFFF","showValues":true,"layout":"horizontal"}}]},{"id":"scene-8","layout":"full","title":"","subtitle":"","duration_frames":166,"transition":"none","narration":"In conclusion, B-tree indexes are a fundamental component of database performance. By understanding how they work and their trade-offs, you can optimize your database for fast data retrieval and efficient query performance.","panels":[{"area":"panel","type":"AnimatedTitle","data":{"title":"B-Tree Indexes: The Backbone of Database Performance","subtitle":"Unlocking fast data retrieval with B-tree indexes","accentColor":"#3498db","align":"center"}}]}]}');
+
+/***/ },
+
 /***/ 1503
 (module) {
 
@@ -61646,6 +57500,14 @@ module.exports = /*#__PURE__*/JSON.parse('{"title":"Canvas Motion — Full Compo
 
 "use strict";
 module.exports = /*#__PURE__*/JSON.parse('{"title":"Scaling Dilemmas","fps":30,"width":1920,"height":1080,"theme":{"primary":"#7c3aed","secondary":"#ff69b4","accent":"#ffd700","background":"#1a1d23","font":"Space Grotesk"},"scenes":[{"id":"scene-1","type":"AnimatedTitle","duration_frames":210,"transition":"fade","data":{"title":"Scaling Dilemmas","subtitle":"Scalability Challenges, Resource Utilization, Response Time, Load Balancing, Distributed Systems","accentColor":null,"align":null}},{"id":"scene-2","type":"SplitScreen","duration_frames":240,"transition":"slideUp","data":{"title":"The Problem: Scaling Challenges","subtitle":null,"accentColor":null,"bullets":null,"codeSnippet":null,"mediaUrl":null}},{"id":"scene-3","type":"ArchitectureDiagram","duration_frames":300,"transition":"zoom","data":{"title":"Vertical Scaling Architecture","nodes":[{"id":"client","type":"client","x":10,"y":50,"label":"Client","metrics":null},{"id":"loadBalancer","type":"loadBalancer","x":40,"y":50,"label":"Load Balancer","metrics":null},{"id":"server","type":"server","x":70,"y":50,"label":"Server","metrics":null},{"id":"database","type":"database","x":50,"y":90,"label":"Database","metrics":null}],"connections":[{"fromId":"client","toId":"loadBalancer","type":"arrow","label":null},{"fromId":"loadBalancer","toId":"server","type":"arrow","label":null},{"fromId":"server","toId":"database","type":"stream","label":null}],"accentColor":null}},{"id":"scene-4","type":"ArchitectureDiagram","duration_frames":270,"transition":"slideLeft","data":{"title":"Horizontal Scaling Architecture","nodes":[{"id":"client","type":"client","x":10,"y":50,"label":"Client","metrics":null},{"id":"loadBalancer","type":"loadBalancer","x":40,"y":50,"label":"Load Balancer","metrics":null},{"id":"server1","type":"server","x":30,"y":80,"label":"Server 1","metrics":null},{"id":"server2","type":"server","x":60,"y":80,"label":"Server 2","metrics":null},{"id":"database","type":"database","x":50,"y":110,"label":"Database","metrics":null}],"connections":[{"fromId":"client","toId":"loadBalancer","type":"arrow","label":null},{"fromId":"loadBalancer","toId":"server1","type":"arrow","label":null},{"fromId":"loadBalancer","toId":"server2","type":"arrow","label":null},{"fromId":"server1","toId":"database","type":"stream","label":null},{"fromId":"server2","toId":"database","type":"stream","label":null}],"accentColor":null}},{"id":"scene-5","type":"ComparisonCard","duration_frames":180,"transition":"none","data":{"title":"Trade-Offs and Failure Modes","pros":["Fault Tolerance","Scalability","Load Balancing"],"cons":["Load Balancing Complexity","Data Replication","Kubernetes Complexity"],"accentColor":null,"visibleCount":null}},{"id":"scene-6","type":"AnimatedTitle","duration_frames":30,"transition":"none","data":{"title":"Scaling Dilemmas: Conclusion","subtitle":"","accentColor":null,"align":null}}]}');
+
+/***/ },
+
+/***/ 3754
+(module) {
+
+"use strict";
+module.exports = /*#__PURE__*/JSON.parse('{"title":"How Kubernetes Works","fps":30,"width":1920,"height":1080,"theme":{"primary":"#ef4444","secondary":"#f59e0b","accent":"#a3e635","background":"#0d1117","font":"Space Grotesk"},"voiceover":{"provider":null,"captions":[{"text":"Most engineers first meet Kubernetes through `kubectl apply`","startMs":0,"endMs":840,"timestampMs":null,"confidence":null},{"text":"and assume it\'s a fancy deployment script. It","startMs":840,"endMs":1680,"timestampMs":null,"confidence":null},{"text":"isn\'t. Kubernetes is a closed-loop control system: you","startMs":1680,"endMs":2520,"timestampMs":null,"confidence":null},{"text":"write a desired state into etcd, and a","startMs":2520,"endMs":3360,"timestampMs":null,"confidence":null},{"text":"set of controllers continuously observe reality and act","startMs":3360,"endMs":4200,"timestampMs":null,"confidence":null},{"text":"to close the gap. The mental shift —","startMs":4200,"endMs":5040,"timestampMs":null,"confidence":null},{"text":"from issuing commands to declaring intent — is","startMs":5040,"endMs":5880,"timestampMs":null,"confidence":null},{"text":"the single most important idea for understanding everything","startMs":5880,"endMs":6720,"timestampMs":null,"confidence":null},{"text":"else.","startMs":6720,"endMs":6825,"timestampMs":null,"confidence":null},{"text":"A controller runs an endless reconcile loop: read","startMs":6833,"endMs":7675,"timestampMs":null,"confidence":null},{"text":"desired state from etcd, observe actual state, compute","startMs":7675,"endMs":8517,"timestampMs":null,"confidence":null},{"text":"the diff, and take corrective action. Crucially it\'s","startMs":8517,"endMs":9359,"timestampMs":null,"confidence":null},{"text":"level-triggered, not edge-triggered — it acts on the","startMs":9359,"endMs":10201,"timestampMs":null,"confidence":null},{"text":"current state of the world, not on a","startMs":10201,"endMs":11043,"timestampMs":null,"confidence":null},{"text":"stream of \'pod deleted\' events. That\'s why a","startMs":11043,"endMs":11885,"timestampMs":null,"confidence":null},{"text":"missed or dropped watch event never causes drift:","startMs":11885,"endMs":12727,"timestampMs":null,"confidence":null},{"text":"the next resync re-observes reality and converges anyway.","startMs":12727,"endMs":13569,"timestampMs":null,"confidence":null},{"text":"The cost is latency and idempotency pressure —","startMs":13569,"endMs":14411,"timestampMs":null,"confidence":null},{"text":"every reconcile must be safe to run thousands","startMs":14411,"endMs":15253,"timestampMs":null,"confidence":null},{"text":"of times.","startMs":15253,"endMs":15463,"timestampMs":null,"confidence":null},{"text":"The control plane has four core pieces, but","startMs":15466,"endMs":16306,"timestampMs":null,"confidence":null},{"text":"only one writes to etcd: the API server.","startMs":16306,"endMs":17146,"timestampMs":null,"confidence":null},{"text":"The scheduler, controller-manager, and kubelets are all stateless","startMs":17146,"endMs":17986,"timestampMs":null,"confidence":null},{"text":"clients that watch the API server and react.","startMs":17986,"endMs":18826,"timestampMs":null,"confidence":null},{"text":"This hub-and-spoke design means etcd has exactly one","startMs":18826,"endMs":19666,"timestampMs":null,"confidence":null},{"text":"consumer to reason about for consistency, authz, and","startMs":19666,"endMs":20506,"timestampMs":null,"confidence":null},{"text":"admission, and components can crash and restart freely","startMs":20506,"endMs":21346,"timestampMs":null,"confidence":null},{"text":"because their truth lives in etcd, not in","startMs":21346,"endMs":22186,"timestampMs":null,"confidence":null},{"text":"process memory.","startMs":22186,"endMs":22396,"timestampMs":null,"confidence":null},{"text":"High-level intent materializes through a cascade of controllers,","startMs":22400,"endMs":23242,"timestampMs":null,"confidence":null},{"text":"each watching the layer above it. The Deployment","startMs":23242,"endMs":24084,"timestampMs":null,"confidence":null},{"text":"controller creates and scales ReplicaSets; the ReplicaSet controller","startMs":24084,"endMs":24926,"timestampMs":null,"confidence":null},{"text":"creates Pods to match its replica count. They","startMs":24926,"endMs":25768,"timestampMs":null,"confidence":null},{"text":"don\'t poll — they use informers, an in-memory","startMs":25768,"endMs":26610,"timestampMs":null,"confidence":null},{"text":"cache fed by a single shared watch stream,","startMs":26610,"endMs":27452,"timestampMs":null,"confidence":null},{"text":"so thousands of objects don\'t hammer the API","startMs":27452,"endMs":28294,"timestampMs":null,"confidence":null},{"text":"server. ownerReferences wire children to parents, enabling cascading","startMs":28294,"endMs":29136,"timestampMs":null,"confidence":null},{"text":"deletion and letting a controller find \'its\' objects","startMs":29136,"endMs":29978,"timestampMs":null,"confidence":null},{"text":"by label selector.","startMs":29978,"endMs":30294,"timestampMs":null,"confidence":null},{"text":"A freshly created Pod has no node assigned","startMs":30300,"endMs":31141,"timestampMs":null,"confidence":null},{"text":"— its nodeName is empty. The scheduler watches","startMs":31141,"endMs":31982,"timestampMs":null,"confidence":null},{"text":"for these and runs a two-phase algorithm: filtering","startMs":31982,"endMs":32823,"timestampMs":null,"confidence":null},{"text":"(which nodes can even fit this Pod?) then","startMs":32823,"endMs":33664,"timestampMs":null,"confidence":null},{"text":"scoring (which feasible node is best?). It decides","startMs":33664,"endMs":34505,"timestampMs":null,"confidence":null},{"text":"based on resource *requests*, not actual usage, so","startMs":34505,"endMs":35346,"timestampMs":null,"confidence":null},{"text":"a node packed with idle-but-reserved CPU looks full.","startMs":35346,"endMs":36187,"timestampMs":null,"confidence":null},{"text":"The scheduler never starts a container — it","startMs":36187,"endMs":37028,"timestampMs":null,"confidence":null},{"text":"only writes a Binding object; the kubelet on","startMs":37028,"endMs":37869,"timestampMs":null,"confidence":null},{"text":"the chosen node does the rest.","startMs":37869,"endMs":38499,"timestampMs":null,"confidence":null},{"text":"Once a Pod is bound, the kubelet on","startMs":38500,"endMs":39344,"timestampMs":null,"confidence":null},{"text":"that node owns turning the spec into running","startMs":39344,"endMs":40188,"timestampMs":null,"confidence":null},{"text":"containers. It doesn\'t run containers itself — it","startMs":40188,"endMs":41032,"timestampMs":null,"confidence":null},{"text":"calls a container runtime (containerd, CRI-O) over the","startMs":41032,"endMs":41876,"timestampMs":null,"confidence":null},{"text":"gRPC Container Runtime Interface to pull images and","startMs":41876,"endMs":42720,"timestampMs":null,"confidence":null},{"text":"start the sandbox. The kubelet also runs probes","startMs":42720,"endMs":43564,"timestampMs":null,"confidence":null},{"text":"that engineers routinely conflate: a failed livenessProbe restarts","startMs":43564,"endMs":44408,"timestampMs":null,"confidence":null},{"text":"the container, while a failed readinessProbe only pulls","startMs":44408,"endMs":45252,"timestampMs":null,"confidence":null},{"text":"the Pod out of Service endpoints — no","startMs":45252,"endMs":46096,"timestampMs":null,"confidence":null},{"text":"restart. Confusing the two is a classic cause","startMs":46096,"endMs":46940,"timestampMs":null,"confidence":null},{"text":"of restart storms.","startMs":46940,"endMs":47256,"timestampMs":null,"confidence":null},{"text":"Kubernetes mandates a flat network: every Pod gets","startMs":47266,"endMs":48108,"timestampMs":null,"confidence":null},{"text":"its own routable IP and can reach any","startMs":48108,"endMs":48950,"timestampMs":null,"confidence":null},{"text":"other Pod without NAT — the CNI plugin","startMs":48950,"endMs":49792,"timestampMs":null,"confidence":null},{"text":"(Calico, Cilium) implements this. But Pod IPs are","startMs":49792,"endMs":50634,"timestampMs":null,"confidence":null},{"text":"ephemeral; they change on every reschedule. A Service","startMs":50634,"endMs":51476,"timestampMs":null,"confidence":null},{"text":"solves that with a stable virtual IP (ClusterIP)","startMs":51476,"endMs":52318,"timestampMs":null,"confidence":null},{"text":"backed by an Endpoints/EndpointSlice list that controllers keep","startMs":52318,"endMs":53160,"timestampMs":null,"confidence":null},{"text":"current as Pods churn. kube-proxy (or eBPF in","startMs":53160,"endMs":54002,"timestampMs":null,"confidence":null},{"text":"Cilium) programs the node\'s iptables/IPVS rules so the","startMs":54002,"endMs":54844,"timestampMs":null,"confidence":null},{"text":"VIP load-balances to whatever healthy Pods exist right","startMs":54844,"endMs":55686,"timestampMs":null,"confidence":null},{"text":"now.","startMs":55686,"endMs":55791,"timestampMs":null,"confidence":null},{"text":"Self-healing is just the reconcile loop applied to","startMs":55800,"endMs":56642,"timestampMs":null,"confidence":null},{"text":"failure. When a node stops sending heartbeats, the","startMs":56642,"endMs":57484,"timestampMs":null,"confidence":null},{"text":"node controller marks it NotReady after ~40s, and","startMs":57484,"endMs":58326,"timestampMs":null,"confidence":null},{"text":"after a grace period (default 5m) evicts its","startMs":58326,"endMs":59168,"timestampMs":null,"confidence":null},{"text":"Pods so controllers reschedule them elsewhere. But the","startMs":59168,"endMs":60010,"timestampMs":null,"confidence":null},{"text":"loop only heals *workloads* — it cannot heal","startMs":60010,"endMs":60852,"timestampMs":null,"confidence":null},{"text":"its own foundation. If etcd loses quorum, the","startMs":60852,"endMs":61694,"timestampMs":null,"confidence":null},{"text":"API server goes read-only and reconciliation halts; the","startMs":61694,"endMs":62536,"timestampMs":null,"confidence":null},{"text":"loop that fixes everything else has no one","startMs":62536,"endMs":63378,"timestampMs":null,"confidence":null},{"text":"to fix it.","startMs":63378,"endMs":63694,"timestampMs":null,"confidence":null},{"text":"Scheduling, controllers, kubelet, networking, self-healing — none of","startMs":63700,"endMs":64540,"timestampMs":null,"confidence":null},{"text":"these are separate mechanisms. Each is the same","startMs":64540,"endMs":65380,"timestampMs":null,"confidence":null},{"text":"reconcile loop watching a different resource and driving","startMs":65380,"endMs":66220,"timestampMs":null,"confidence":null},{"text":"actual state toward declared intent. Once you see","startMs":66220,"endMs":67060,"timestampMs":null,"confidence":null},{"text":"that one pattern, Kubernetes stops being a pile","startMs":67060,"endMs":67900,"timestampMs":null,"confidence":null},{"text":"of components and becomes a single idea repeated","startMs":67900,"endMs":68740,"timestampMs":null,"confidence":null},{"text":"at every layer: declare what you want, and","startMs":68740,"endMs":69580,"timestampMs":null,"confidence":null},{"text":"let the system converge.","startMs":69580,"endMs":70000,"timestampMs":null,"confidence":null}]},"scenes":[{"id":"scene-1","layout":"full","title":"Kubernetes Is Not a Deployer — It\'s a Control System","subtitle":"Stop thinking in commands; start thinking in desired state that the cluster relentlessly drives toward.","duration_frames":205,"transition":"fade","narration":"Most engineers first meet Kubernetes through `kubectl apply` and assume it\'s a fancy deployment script. It isn\'t. Kubernetes is a closed-loop control system: you write a desired state into etcd, and a set of controllers continuously observe reality and act to close the gap. The mental shift — from issuing commands to declaring intent — is the single most important idea for understanding everything else.","panels":[{"area":"panel","type":"AnimatedTitle","data":{"title":"Kubernetes Is Not a Deployer — It\'s a Control System","subtitle":"Declare the destination; the cluster drives there, relentlessly.","accentColor":"#326CE5","align":"center"}}]},{"id":"scene-2","layout":"title-main-sidebar","title":"The Reconciliation Loop","subtitle":"Observe, diff against desired state in etcd, act — a level-triggered loop that self-heals missed events.","duration_frames":259,"transition":"slideLeft","narration":"A controller runs an endless reconcile loop: read desired state from etcd, observe actual state, compute the diff, and take corrective action. Crucially it\'s level-triggered, not edge-triggered — it acts on the current state of the world, not on a stream of \'pod deleted\' events. That\'s why a missed or dropped watch event never causes drift: the next resync re-observes reality and converges anyway. The cost is latency and idempotency pressure — every reconcile must be safe to run thousands of times.","panels":[{"area":"main","type":"StateMachine","data":{"title":"The Reconciliation Loop","states":[{"id":"observe","label":"Observe","color":"#3b82f6","description":"Read actual cluster state from etcd via the API server"},{"id":"diff","label":"Compare","color":"#f59e0b","description":"Compute the delta between desired spec and observed status"},{"id":"act","label":"Act","color":"#10b981","description":"Issue API calls to drive actual state toward desired state"},{"id":"converged","label":"Converged","color":"#8b5cf6","description":"actual == desired; requeue and watch for the next change"}],"transitions":[{"fromId":"observe","toId":"diff","label":"actual state read"},{"fromId":"diff","toId":"act","label":"delta detected","highlight":true},{"fromId":"diff","toId":"converged","label":"no delta"},{"fromId":"act","toId":"observe","label":"re-observe after mutation"},{"fromId":"converged","toId":"observe","label":"watch event / resync"}],"activeStateId":"diff","accentColor":"#3b82f6"}},{"area":"sidebar","type":"BulletList","data":{"title":"Why Level-Triggered Wins","items":["Desired state lives in etcd — a Raft-backed key-value store, not in any controller\'s memory","Reconcile reads full current state, not deltas — a lost event causes no permanent drift","Every action must be idempotent — controllers re-run reconcile on resync (default ~10m informer resync)","controller-runtime requeues failed reconciles with exponential backoff, capped near 1000s","Edge-triggered systems break on dropped events; Kubernetes self-heals by re-observing","etcd watch revisions let clients resume from the last seen index, not replay from zero"],"accentColor":"#326CE5","numbered":false,"align":"left"}}]},{"id":"scene-3","layout":"title-left-right","title":"Control Plane Anatomy","subtitle":"The API server is the only writer to etcd; every other component is a stateless client that watches the hub.","duration_frames":208,"transition":"slideUp","narration":"The control plane has four core pieces, but only one writes to etcd: the API server. The scheduler, controller-manager, and kubelets are all stateless clients that watch the API server and react. This hub-and-spoke design means etcd has exactly one consumer to reason about for consistency, authz, and admission, and components can crash and restart freely because their truth lives in etcd, not in process memory.","panels":[{"area":"left","type":"StepFlow","data":{"title":"How a Spec Reaches etcd","steps":["Client sends declarative YAML to the API server","Authenticate, authorize (RBAC), then run admission webhooks","Validate against the resource schema and defaults","Persist the object to etcd via Raft consensus","Stream the change to all watching components","Controllers observe and begin reconciling intent"],"accentColor":"#326CE5"}},{"area":"right","type":"ArchitectureDiagram","data":{"title":"Control Plane Anatomy","nodes":[{"id":"kubectl","type":"client","x":8,"y":50,"label":"kubectl / clients"},{"id":"apiserver","type":"loadBalancer","x":32,"y":50,"label":"kube-apiserver"},{"id":"etcd","type":"database","x":55,"y":50,"label":"etcd (state store)"},{"id":"scheduler","type":"server","x":80,"y":20,"label":"kube-scheduler"},{"id":"controllers","type":"server","x":80,"y":50,"label":"controller-manager"},{"id":"cloud","type":"server","x":80,"y":80,"label":"cloud-controller-manager"}],"connections":[{"fromId":"kubectl","toId":"apiserver","type":"arrow","label":"REST / watch"},{"fromId":"apiserver","toId":"etcd","type":"arrow","label":"read / write state"},{"fromId":"scheduler","toId":"apiserver","type":"stream","label":"watch unscheduled pods"},{"fromId":"controllers","toId":"apiserver","type":"stream","label":"watch / reconcile"},{"fromId":"cloud","toId":"apiserver","type":"stream","label":"watch nodes / LBs"}],"accentColor":"#326ce5"}}]},{"id":"scene-4","layout":"title-main-sidebar","title":"Controllers and the Watch/Reconcile Loop","subtitle":"Deployment → ReplicaSet → Pod cascades via watch streams, informer caches, and ownerReferences.","duration_frames":237,"transition":"slideLeft","narration":"High-level intent materializes through a cascade of controllers, each watching the layer above it. The Deployment controller creates and scales ReplicaSets; the ReplicaSet controller creates Pods to match its replica count. They don\'t poll — they use informers, an in-memory cache fed by a single shared watch stream, so thousands of objects don\'t hammer the API server. ownerReferences wire children to parents, enabling cascading deletion and letting a controller find \'its\' objects by label selector.","panels":[{"area":"main","type":"SequenceDiagram","data":{"title":"Controller: Watch / Reconcile Loop","actors":["Controller","Informer Cache","kube-apiserver","etcd"],"messages":[{"fromIdx":0,"toIdx":1,"label":"register watch on Deployments","kind":"sync","active":true},{"fromIdx":1,"toIdx":2,"label":"LIST + WATCH","kind":"sync"},{"fromIdx":2,"toIdx":3,"label":"read current objects","kind":"sync"},{"fromIdx":3,"toIdx":2,"label":"object stream","kind":"return"},{"fromIdx":2,"toIdx":1,"label":"ADDED / MODIFIED events","kind":"async"},{"fromIdx":1,"toIdx":0,"label":"enqueue object key","kind":"async"},{"fromIdx":0,"toIdx":0,"label":"reconcile: compare desired vs actual","kind":"sync","active":true},{"fromIdx":0,"toIdx":2,"label":"create ReplicaSet / update status","kind":"sync"},{"fromIdx":2,"toIdx":3,"label":"persist new state","kind":"sync"},{"fromIdx":2,"toIdx":0,"label":"200 OK","kind":"return"}],"activations":[{"actorIdx":0,"startMessage":5,"endMessage":9,"label":"reconcile"},{"actorIdx":2,"startMessage":1,"endMessage":9,"label":"serving"}],"accentColor":"#326ce5"}},{"area":"sidebar","type":"CalloutAnnotation","data":{"title":"The Controller Cascade","body":"Deployment → ReplicaSet → Pod isn\'t one component — it\'s three independent reconcile loops, each translating one layer of intent into the next. Informer caches absorb the read load so reconciles are nearly free.","bullets":["Informers share one watch + local cache — reads hit RAM, not the API server","ownerReferences enable garbage collection: delete the Deployment, children cascade","Label selectors, not IDs, link controllers to the Pods they own"],"position":"right","accentColor":"#326CE5"}}]},{"id":"scene-5","layout":"title-left-right","title":"Scheduling: Binding Pods to Nodes","subtitle":"Filter then score, then write a binding — the scheduler picks a node on requests, never starts the container.","duration_frames":246,"transition":"slideUp","narration":"A freshly created Pod has no node assigned — its nodeName is empty. The scheduler watches for these and runs a two-phase algorithm: filtering (which nodes can even fit this Pod?) then scoring (which feasible node is best?). It decides based on resource *requests*, not actual usage, so a node packed with idle-but-reserved CPU looks full. The scheduler never starts a container — it only writes a Binding object; the kubelet on the chosen node does the rest.","panels":[{"area":"left","type":"BulletList","data":{"title":"What the Scheduler Actually Decides","items":["Filtering eliminates nodes failing taints, nodeSelector, affinity, or resource fit","Scoring ranks survivors — spread, least-allocated, image locality each contribute weighted points","Decisions use Pod requests (e.g. cpu: 500m), never live utilization — overcommit is invisible here","PodSpec.nodeName starts empty; scheduling sets it by writing a Binding subresource","A Pod that fits nowhere stays Pending — kubectl describe shows \'0/N nodes available\'","Default scheduler handles thousands of pods/sec; it picks the node but never launches the container"],"accentColor":"#326CE5","numbered":false,"align":"left"}},{"area":"right","type":"ArchitectureDiagram","data":{"title":"Scheduling: Binding Pods to Nodes","nodes":[{"id":"apiserver","type":"loadBalancer","x":10,"y":50,"label":"kube-apiserver"},{"id":"scheduler","type":"server","x":35,"y":50,"label":"kube-scheduler"},{"id":"node1","type":"server","x":80,"y":20,"label":"node-1","metrics":{"cpu":"85%","ram":"70%"}},{"id":"node2","type":"server","x":80,"y":50,"label":"node-2","metrics":{"cpu":"30%","ram":"40%"}},{"id":"node3","type":"server","x":80,"y":80,"label":"node-3","metrics":{"cpu":"95%","ram":"88%"}}],"connections":[{"fromId":"scheduler","toId":"apiserver","type":"stream","label":"watch pods (nodeName=\\"\\")"},{"fromId":"scheduler","toId":"node1","type":"arrow","label":"filter + score"},{"fromId":"scheduler","toId":"node2","type":"arrow","label":"best fit → Bind"},{"fromId":"scheduler","toId":"node3","type":"arrow","label":"filtered out (pressure)"}],"accentColor":"#10b981"}}]},{"id":"scene-6","layout":"title-main-sidebar","title":"The Node Agent: Kubelet and the CRI","subtitle":"The kubelet turns a Pod spec into containers over gRPC and runs the probes engineers routinely conflate.","duration_frames":263,"transition":"slideLeft","narration":"Once a Pod is bound, the kubelet on that node owns turning the spec into running containers. It doesn\'t run containers itself — it calls a container runtime (containerd, CRI-O) over the gRPC Container Runtime Interface to pull images and start the sandbox. The kubelet also runs probes that engineers routinely conflate: a failed livenessProbe restarts the container, while a failed readinessProbe only pulls the Pod out of Service endpoints — no restart. Confusing the two is a classic cause of restart storms.","panels":[{"area":"main","type":"TerminalCLI","data":{"title":"kubelet → CRI handoff","command":"journalctl -u kubelet -f | grep -E \'CRI|Probe\'","output":["I0626 10:14:02 kubelet.go] SyncPod \\"web-7d9f-xk2\\" desired=Running","I0626 10:14:02 remote_runtime.go] RunPodSandbox via /run/containerd/containerd.sock","I0626 10:14:03 remote_image.go] PullImage \\"nginx:1.27\\" succeeded (1.4s)","I0626 10:14:03 remote_runtime.go] CreateContainer + StartContainer ok","I0626 10:14:13 prober.go] Readiness probe GET :8080/healthz -> 200, Pod Ready","I0626 10:15:41 prober.go] Liveness probe failed: HTTP 500 (x3)","I0626 10:15:41 kuberuntime_manager.go] Killing container, restartCount=1"],"typingCommand":true,"highlightLines":[2,5,6],"theme":"dark","accentColor":"#326CE5"}},{"area":"sidebar","type":"CalloutAnnotation","data":{"title":"Liveness ≠ Readiness","body":"A failed liveness probe restarts the container; a failed readiness probe only removes the Pod from Service endpoints — traffic stops, the process keeps running. Pointing liveness at a dependency you don\'t control turns one slow backend into a cluster-wide restart storm.","position":"right","accentColor":"#326CE5"}}]},{"id":"scene-7","layout":"title-left-right","title":"Networking: Pod IPs, Services, kube-proxy","subtitle":"A flat network gives every Pod a routable IP; a Service VIP stays stable while endpoints churn.","duration_frames":256,"transition":"slideLeft","narration":"Kubernetes mandates a flat network: every Pod gets its own routable IP and can reach any other Pod without NAT — the CNI plugin (Calico, Cilium) implements this. But Pod IPs are ephemeral; they change on every reschedule. A Service solves that with a stable virtual IP (ClusterIP) backed by an Endpoints/EndpointSlice list that controllers keep current as Pods churn. kube-proxy (or eBPF in Cilium) programs the node\'s iptables/IPVS rules so the VIP load-balances to whatever healthy Pods exist right now.","panels":[{"area":"left","type":"BulletList","data":{"title":"Stable VIPs Over Ephemeral Pods","items":["CNI gives every Pod a unique, routable IP — no NAT between Pods, by spec","Pod IPs are disposable: a reschedule means a new IP, so clients can\'t target them directly","A Service\'s ClusterIP is a virtual IP with no interface — it exists only as kube-proxy rules","EndpointSlices track ready Pod IPs; the endpoints controller updates them as Pods come and go","kube-proxy programs iptables/IPVS (or Cilium uses eBPF) to DNAT VIP traffic to a live backend","kube-dns/CoreDNS resolves service.namespace.svc.cluster.local to the stable ClusterIP"],"accentColor":"#326CE5","numbered":false,"align":"left"}},{"area":"right","type":"ArchitectureDiagram","data":{"title":"Networking: Services, Pod IPs, kube-proxy","nodes":[{"id":"client","type":"client","x":8,"y":50,"label":"client"},{"id":"svc","type":"loadBalancer","x":30,"y":50,"label":"Service (ClusterIP / VIP)"},{"id":"proxy","type":"server","x":52,"y":50,"label":"kube-proxy (iptables/IPVS)"},{"id":"pod1","type":"server","x":82,"y":22,"label":"pod 10.244.1.5"},{"id":"pod2","type":"server","x":82,"y":50,"label":"pod 10.244.2.7"},{"id":"pod3","type":"server","x":82,"y":78,"label":"pod 10.244.3.9"}],"connections":[{"fromId":"client","toId":"svc","type":"arrow","label":"request to VIP:80"},{"fromId":"svc","toId":"proxy","type":"arrow","label":"DNAT rules"},{"fromId":"proxy","toId":"pod1","type":"arrow","label":"load-balance"},{"fromId":"proxy","toId":"pod2","type":"arrow","label":"load-balance"},{"fromId":"proxy","toId":"pod3","type":"arrow","label":"load-balance"}],"accentColor":"#f59e0b"}}]},{"id":"scene-8","layout":"title-main-sidebar","title":"Self-Healing — and Where It Stops","subtitle":"The same loop reschedules Pods off dead nodes, but heals workloads, not its own etcd consensus.","duration_frames":237,"transition":"zoom","narration":"Self-healing is just the reconcile loop applied to failure. When a node stops sending heartbeats, the node controller marks it NotReady after ~40s, and after a grace period (default 5m) evicts its Pods so controllers reschedule them elsewhere. But the loop only heals *workloads* — it cannot heal its own foundation. If etcd loses quorum, the API server goes read-only and reconciliation halts; the loop that fixes everything else has no one to fix it.","panels":[{"area":"main","type":"TwoColumnLayout","data":{"title":"What Heals — and What Doesn\'t","left":{"heading":"Self-Heals (workload layer)","points":["Crashed container → kubelet restarts per restartPolicy","Dead node → Pods evicted after ~5m, rescheduled elsewhere","Deleted Pod → ReplicaSet recreates to match replica count","Failed rollout → Deployment can roll back to last good ReplicaSet"],"color":"#22C55E"},"right":{"heading":"Does NOT Heal (control plane)","points":["etcd quorum loss → API server read-only, all reconciliation stops","Split-brain etcd → Raft refuses writes rather than diverge","Stateful data in a Pod → no replicas without a StatefulSet + storage","Persistent misconfiguration → loop faithfully reconciles the wrong intent"],"color":"#EF4444"},"accentColor":"#326CE5","dividerLabel":"the loop\'s edge"}},{"area":"sidebar","type":"CalloutAnnotation","data":{"title":"The Loop Can\'t Heal Itself","body":"etcd needs a majority quorum (2 of 3, 3 of 5) to accept writes. Lose it and the API server can still serve reads but rejects all writes — so the reconciliation engine that recovers every workload simply stops, because it has nowhere to record intent.","position":"right","accentColor":"#326CE5"}}]},{"id":"scene-9","layout":"full","title":"One Loop, All the Way Down","subtitle":"Every behavior you\'ve seen is the same reconcile loop — declare intent, and the system converges.","duration_frames":189,"transition":"none","narration":"Scheduling, controllers, kubelet, networking, self-healing — none of these are separate mechanisms. Each is the same reconcile loop watching a different resource and driving actual state toward declared intent. Once you see that one pattern, Kubernetes stops being a pile of components and becomes a single idea repeated at every layer: declare what you want, and let the system converge.","panels":[{"area":"panel","type":"AnimatedTitle","data":{"title":"One Loop, All the Way Down","subtitle":"Declare intent. Observe reality. Close the gap. Forever.","accentColor":"#326CE5","align":"center"}}]}]}');
 
 /***/ },
 
@@ -61984,7 +57846,7 @@ module.exports = /*#__PURE__*/JSON.parse('{"title":"50 Milliseconds: The Life of
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
 /******/ 	__webpack_require__(6507);
-/******/ 	__webpack_require__(3301);
+/******/ 	__webpack_require__(3323);
 /******/ 	__webpack_require__(3610);
 /******/ 	var __webpack_exports__ = __webpack_require__(3482);
 /******/ 	

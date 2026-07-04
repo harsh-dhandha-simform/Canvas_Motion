@@ -436,11 +436,66 @@ export type Theme = {
 // Top-level video script
 // ---------------------------------------------------------------------------
 
+export type PanelSpec = {
+  area: string;
+  type: string;
+  data: Record<string, any>;
+};
+
+export type SceneSpec = {
+  id: string;
+  layout?: string;
+  title?: string;
+  subtitle?: string;
+  duration_frames: number;
+  transition: TransitionType;
+  narration?: string;
+  panels?: PanelSpec[];
+  type?: string;
+  data?: Record<string, any>;
+};
+
 export type VideoScript = {
   title: string;
   fps: 30;
   width: 1920;
   height: 1080;
   theme: Theme;
-  scenes: Scene[];
+  scenes: SceneSpec[];
+};
+
+// ---------------------------------------------------------------------------
+// Interaction Cue & Topic Hierarchy (added for Remotion UI layout)
+// ---------------------------------------------------------------------------
+
+export type InteractionCueType = "send_request" | "simulate_mutation" | "quiz";
+
+export type InteractionCue = {
+  id: string;
+  slideIndex: number;
+  triggerAt: "slide_start" | "slide_end";
+  concept: string;
+  type: InteractionCueType;
+  payload: Record<string, any>;
+  triggerAtSec: number;
+};
+
+export type Topic = {
+  id: string;
+  title: string;
+  videoScript: VideoScript;
+  interactionCues: InteractionCue[];
+  totalDurationSec: number;
+};
+
+export type Chapter = {
+  id: string;
+  title: string;
+  topics: Topic[];
+};
+
+export type Course = {
+  id: string;
+  title: string;
+  chapters: Chapter[];
 };

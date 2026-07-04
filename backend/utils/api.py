@@ -76,6 +76,25 @@ def chat_completion(
             lf.update_current_generation(model=f"ask:{ASK_MODEL}", output=answer)
         return answer
 
+    if LLM_BACKEND == "azure":
+        from openai import AzureOpenAI
+        import os
+        az_client = AzureOpenAI(
+            api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+            api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
+            azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+        )
+        deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o")
+        logger.info("[azure] → calling Azure OpenAI deployment=%s", deployment)
+        response = az_client.chat.completions.create(
+            model=deployment,
+            messages=messages, # type: ignore
+            temperature=temperature,
+        )
+        content = response.choices[0].message.content or ""
+        logger.info("[azure] ✅ received answer chars=%d", len(content))
+        return content
+
     est_tokens = estimate_tokens(messages)
     client = get_client()
 

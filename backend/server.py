@@ -151,6 +151,116 @@ def list_scripts():
     return {"scripts": [p.name for p in paths], "count": len(paths)}
 
 
+class GenerateTopicRequest(BaseModel):
+    prompt: str = Field(..., description="Subject of the educational video")
+    duration_seconds: int = Field(60, ge=10, le=300, description="Target length")
+
+
+@app.post("/api/generate")
+async def generate_topic_stream(req: GenerateTopicRequest):
+    """
+    SSE endpoint for generating a complete Topic JSON (VideoScript + InteractionCues)
+    with 4-stage progress streaming.
+    """
+    from fastapi.responses import StreamingResponse
+    import asyncio
+    from queue import Queue
+    from utils.interaction_cues import generate_interaction_cues
+
+    async def sse_generator():
+        initial_state: PipelineState = {
+            "topic": req.prompt,
+            "duration_seconds": req.duration_seconds,
+            "syllabus": None,
+            "plan": None,
+            "script": None,
+            "story": None,
+            "scenes": None,
+            "captions": None,
+            "video_script": None,
+            "validation_report": None,
+            "errors": [],
+            "model_used": None,
+            "fallback_triggered": False,
+        }
+
+        try:
+            event_queue = Queue()
+
+            def run_pipeline():
+                try:
+                    for chunk in compiled_graph.stream(initial_state):
+                        event_queue.put(("chunk", chunk))
+                    event_queue.put(("done", None))
+                except Exception as ex:
+                    event_queue.put(("error", ex))
+
+            asyncio.create_task(asyncio.to_thread(run_pipeline))
+
+            topic_title = req.prompt
+            scene_count = 0
+
+            while True:
+                while event_queue.empty():
+                    await asyncio.sleep(0.1)
+
+                status, val = event_queue.get()
+                if status == "done":
+                    break
+                elif status == "error":
+                    raise val
+
+                # LangGraph stream output format: {node_name: state_delta}
+                node_name = list(val.keys())[0]
+                node_data = val[node_name]
+
+                if node_name == "researcher":
+                    syllabus = node_data.get("syllabus") or {}
+                    topic_title = syllabus.get("topic", req.prompt)
+                    yield f"data: {json.dumps({'stage': 1, 'status': 'complete', 'title': topic_title})}\n\n"
+                    await asyncio.sleep(0.05)
+
+                elif node_name == "director":
+                    plan = node_data.get("plan") or {}
+                    scene_count = len(plan.get("scenes", []))
+                    yield f"data: {json.dumps({'stage': 2, 'status': 'in_progress', 'scene_count': scene_count})}\n\n"
+                    await asyncio.sleep(0.05)
+
+                elif node_name == "merge":
+                    scenes = node_data.get("scenes") or []
+                    scene_count = len(scenes)
+                    yield f"data: {json.dumps({'stage': 2, 'status': 'complete', 'scene_count': scene_count})}\n\n"
+                    await asyncio.sleep(0.05)
+
+                elif node_name == "assembler":
+                    video_script = node_data.get("video_script") or {}
+                    yield f"data: {json.dumps({'stage': 3, 'status': 'in_progress', 'message': 'Generating interactive checkpoints...'})}\n\n"
+                    await asyncio.sleep(0.05)
+
+                    cues = await asyncio.to_thread(generate_interaction_cues, video_script)
+                    total_duration = sum(s.get("duration_frames", 150) for s in video_script.get("scenes", [])) / 30.0
+
+                    topic_json = {
+                        "id": slugify_topic(topic_title),
+                        "title": topic_title,
+                        "videoScript": video_script,
+                        "interactionCues": cues,
+                        "totalDurationSec": total_duration
+                    }
+
+                    yield f"data: {json.dumps({'stage': 3, 'status': 'complete', 'topic': topic_json})}\n\n"
+                    await asyncio.sleep(0.05)
+
+                    yield f"data: {json.dumps({'stage': 4, 'status': 'complete'})}\n\n"
+                    await asyncio.sleep(0.05)
+
+        except Exception as e:
+            logger.error("SSE stream failed: %s", e, exc_info=True)
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    return StreamingResponse(sse_generator(), media_type="text/event-stream")
+
+
 @app.post("/api/generate-script", response_model=GenerateScriptResponse)
 def generate_script(req: GenerateScriptRequest):
     """

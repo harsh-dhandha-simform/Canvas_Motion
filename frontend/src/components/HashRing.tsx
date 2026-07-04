@@ -7,19 +7,18 @@ import {
   spring,
 } from "remotion";
 import { z } from "zod";
+import { useContainerScale } from "../hooks/useContainerScale";
 
 export const HashRingSchema = z.object({
   title: z.string().optional(),
-  /** Physical server names — each gets a color from the palette. */
   servers: z.array(z.string()).min(2).max(6),
-  /** Virtual-node count per server (controls how evenly keys distribute). */
   virtualNodesPerServer: z.number().min(2).max(64).optional(),
-  /** Optional lookup keys to highlight — they sweep around the ring to the next server clockwise. */
   lookupKeys: z.array(z.string()).optional(),
-  /** Total tick marks around the ring (key-space granularity). */
   ticks: z.number().min(24).max(360).optional(),
   accentColor: z.string().optional(),
   showLegend: z.boolean().optional(),
+  centerLabel: z.string().optional(),
+  centerSubLabel: z.string().optional(),
 });
 
 export type HashRingProps = z.infer<typeof HashRingSchema>;
@@ -41,17 +40,19 @@ export const HashRing: React.FC<HashRingProps> = ({
   ticks = 96,
   accentColor = "#38BDF8",
   showLegend = true,
+  centerLabel = "HASH RING",
+  centerSubLabel = "0 ... 2³² − 1",
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const { ref, scale } = useContainerScale();
 
-  // Layout: 1920x1080 stage — ring centered in the right 60% of the canvas.
-  const cx = 1180;
+  // Layout centered: 960x540
+  const cx = 960;
   const cy = 540;
-  const radius = 360;
+  const radius = 300;
   const ringStroke = 2;
 
-  // --- Deterministic pseudo-random helper so the layout is stable across frames ---
   const rng = (seed: number) => {
     let s = seed;
     return () => {
@@ -60,14 +61,12 @@ export const HashRing: React.FC<HashRingProps> = ({
     };
   };
 
-  // --- Title fade ---
   const titleOpacity = interpolate(frame, [0, 20], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });
 
-  // --- Place virtual nodes deterministically ---
   const rand = rng(42);
   const vnodes: { serverIdx: number; angle: number; r: number }[] = [];
   servers.forEach((_, sIdx) => {
@@ -75,13 +74,11 @@ export const HashRing: React.FC<HashRingProps> = ({
       vnodes.push({
         serverIdx: sIdx,
         angle: rand() * Math.PI * 2,
-        // Offset slightly inside/outside ring for visual stacking
-        r: radius + (v % 2 === 0 ? -22 : 22),
+        r: radius + (v % 2 === 0 ? -18 : 18),
       });
     }
   });
 
-  // --- Per-server reveal stagger ---
   const serverSprings = servers.map((_, i) =>
     spring({
       frame: frame - (10 + i * 10),
@@ -91,7 +88,6 @@ export const HashRing: React.FC<HashRingProps> = ({
     })
   );
 
-  // --- Lookup sweep animation ---
   const lookupStart = 20 + servers.length * 10 + 10;
   const lookupDuration = 60;
   const lookupProgress = (keyIdx: number) =>
@@ -106,7 +102,6 @@ export const HashRing: React.FC<HashRingProps> = ({
       }
     );
 
-  // Each lookup key starts at its own deterministic angle.
   const keyAngles = lookupKeys.map((_, i) => {
     const r = rng(7 + i * 13);
     return r() * Math.PI * 2;
@@ -114,6 +109,7 @@ export const HashRing: React.FC<HashRingProps> = ({
 
   return (
     <div
+      ref={ref}
       style={{
         width: "100%",
         height: "100%",
@@ -124,6 +120,7 @@ export const HashRing: React.FC<HashRingProps> = ({
         fontFamily: "Inter, sans-serif",
       }}
     >
+      {/* Title section remains fixed and stable */}
       {title && (
         <h2
           style={{
@@ -134,6 +131,7 @@ export const HashRing: React.FC<HashRingProps> = ({
             margin: 0,
             marginBottom: 12,
             opacity: titleOpacity,
+            textAlign: "center",
           }}
         >
           {title}
@@ -145,6 +143,8 @@ export const HashRing: React.FC<HashRingProps> = ({
           fontSize: 18,
           margin: 0,
           opacity: titleOpacity,
+          textAlign: "center",
+          marginBottom: 12,
         }}
       >
         Keys and servers are hashed onto the ring; each key walks clockwise to the next server.
@@ -155,9 +155,13 @@ export const HashRing: React.FC<HashRingProps> = ({
           width="100%"
           height="100%"
           viewBox="0 0 1920 1080"
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${scale})`,
+            transformOrigin: "center center",
+          }}
         >
-          {/* Glow filter for ring */}
           <defs>
             <filter id="hash-ring-glow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="4" />
@@ -168,7 +172,7 @@ export const HashRing: React.FC<HashRingProps> = ({
             </filter>
           </defs>
 
-          {/* Tick marks around the ring (key-space granularity) */}
+          {/* Tick marks */}
           {Array.from({ length: ticks }).map((_, i) => {
             const a = (i / ticks) * Math.PI * 2 - Math.PI / 2;
             const x1 = cx + Math.cos(a) * (radius - 10);
@@ -210,7 +214,7 @@ export const HashRing: React.FC<HashRingProps> = ({
             opacity={0.9}
           />
 
-          {/* Center label */}
+          {/* Center labels */}
           <text
             x={cx}
             y={cy - 12}
@@ -220,7 +224,7 @@ export const HashRing: React.FC<HashRingProps> = ({
             fontFamily="Fira Code, monospace"
             opacity={titleOpacity}
           >
-            HASH RING
+            {centerLabel}
           </text>
           <text
             x={cx}
@@ -231,10 +235,10 @@ export const HashRing: React.FC<HashRingProps> = ({
             fontFamily="Fira Code, monospace"
             opacity={titleOpacity}
           >
-            0 ... 2³² − 1
+            {centerSubLabel}
           </text>
 
-          {/* Virtual nodes (dots) — fade in per server */}
+          {/* Virtual nodes */}
           {vnodes.map((v, i) => {
             const x = cx + Math.cos(v.angle) * v.r;
             const y = cy + Math.sin(v.angle) * v.r;
@@ -253,7 +257,7 @@ export const HashRing: React.FC<HashRingProps> = ({
             );
           })}
 
-          {/* Server labels around the ring (positioned at the average of their vnode angles) */}
+          {/* Server labels */}
           {servers.map((name, sIdx) => {
             const myVnodes = vnodes.filter((v) => v.serverIdx === sIdx);
             let sx = 0,
@@ -270,15 +274,14 @@ export const HashRing: React.FC<HashRingProps> = ({
 
             const sp = serverSprings[sIdx];
             const labelOpacity = sp;
-            const scale = interpolate(sp, [0, 1], [0.7, 1]);
+            const scaleVal = interpolate(sp, [0, 1], [0.7, 1]);
 
             return (
               <g
                 key={`srv-${sIdx}`}
-                transform={`translate(${x}, ${y}) scale(${scale})`}
+                transform={`translate(${x}, ${y}) scale(${scaleVal})`}
                 style={{ opacity: labelOpacity, transformOrigin: `${x}px ${y}px` }}
               >
-                {/* Connector from ring to label */}
                 <line
                   x1={cx + Math.cos(avgA) * radius - x}
                   y1={cy + Math.sin(avgA) * radius - y}
@@ -288,7 +291,6 @@ export const HashRing: React.FC<HashRingProps> = ({
                   strokeWidth={2}
                   opacity={0.4}
                 />
-                {/* Label box */}
                 <rect
                   x={-60}
                   y={-22}
@@ -315,7 +317,7 @@ export const HashRing: React.FC<HashRingProps> = ({
             );
           })}
 
-          {/* Lookup key animations */}
+          {/* Lookup keys */}
           {lookupKeys.map((keyName, keyIdx) => {
             const startA = keyAngles[keyIdx];
             const progress = lookupProgress(keyIdx);
@@ -323,7 +325,6 @@ export const HashRing: React.FC<HashRingProps> = ({
             const x = cx + Math.cos(sweepA) * radius;
             const y = cy + Math.sin(sweepA) * radius;
 
-            // Find nearest server (clockwise) from the key's start angle.
             let targetServerIdx = 0;
             let smallestGap = Math.PI * 2;
             servers.forEach((_, sIdx) => {
@@ -346,7 +347,6 @@ export const HashRing: React.FC<HashRingProps> = ({
 
             return (
               <g key={`lookup-${keyIdx}`} opacity={progress > 0 ? 1 : 0}>
-                {/* Arrow from key start position sweeping along the ring */}
                 <g
                   style={{
                     transformOrigin: `${cx}px ${cy}px`,
@@ -364,7 +364,6 @@ export const HashRing: React.FC<HashRingProps> = ({
                   />
                 </g>
 
-                {/* Moving dot */}
                 <circle
                   cx={x}
                   cy={y}
@@ -373,7 +372,6 @@ export const HashRing: React.FC<HashRingProps> = ({
                   style={{ filter: `drop-shadow(0 0 12px ${color})` }}
                 />
 
-                {/* Key label */}
                 <g
                   transform={`translate(${x + 16}, ${y - 28})`}
                   style={{ opacity: progress > 0.1 ? 1 : 0 }}
@@ -404,13 +402,13 @@ export const HashRing: React.FC<HashRingProps> = ({
           })}
         </svg>
 
-        {/* Legend */}
+        {/* Legend remains fixed at the side */}
         {showLegend && (
           <div
             style={{
               position: "absolute",
-              left: 80,
-              top: 160,
+              left: 0,
+              top: 0,
               display: "flex",
               flexDirection: "column",
               gap: 12,

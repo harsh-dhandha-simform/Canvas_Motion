@@ -36,6 +36,13 @@ import { GlossaryCards, GlossaryCardsSchema } from "./components/GlossaryCards";
 import { FlowDiagram, FlowDiagramSchema } from "./components/FlowDiagram";
 import { CalloutAnnotation, CalloutAnnotationSchema } from "./components/CalloutAnnotation";
 
+// 5 New Components
+import { QueueFlow, QueueFlowSchema } from "./components/QueueFlow";
+import { TradeoffMatrix, TradeoffMatrixSchema } from "./components/TradeoffMatrix";
+import { BeforeAfterTransform, BeforeAfterTransformSchema } from "./components/BeforeAfterTransform";
+import { RetrySequence, RetrySequenceSchema } from "./components/RetrySequence";
+import { LoadPattern, LoadPatternSchema } from "./components/LoadPattern";
+
 export const COMPONENT_REGISTRY = {
   AnimatedTitle,
   ComparisonCard,
@@ -65,6 +72,11 @@ export const COMPONENT_REGISTRY = {
   GlossaryCards,
   FlowDiagram,
   CalloutAnnotation,
+  QueueFlow,
+  TradeoffMatrix,
+  BeforeAfterTransform,
+  RetrySequence,
+  LoadPattern,
 } as const;
 
 export const COMPONENT_SCHEMAS = {
@@ -96,6 +108,11 @@ export const COMPONENT_SCHEMAS = {
   GlossaryCards: GlossaryCardsSchema,
   FlowDiagram: FlowDiagramSchema,
   CalloutAnnotation: CalloutAnnotationSchema,
+  QueueFlow: QueueFlowSchema,
+  TradeoffMatrix: TradeoffMatrixSchema,
+  BeforeAfterTransform: BeforeAfterTransformSchema,
+  RetrySequence: RetrySequenceSchema,
+  LoadPattern: LoadPatternSchema,
 } as const;
 
 // Zod v4 ships a native JSON-Schema converter. The old `zod-to-json-schema`
@@ -166,6 +183,13 @@ export const COMPONENT_META: Record<SceneType, ComponentMeta> = {
   TreeHierarchy: { category: "state-tree", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "hierarchical structure (B-tree, DNS, file system, org)", tags: ["tree", "hierarchy", "b-tree", "dns", "recursion"], minSeconds: 8 },
   FlowDiagram: { category: "state-tree", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "branching workflow with decisions (if/else logic)", tags: ["flowchart", "branching", "decision", "workflow", "algorithm"], minSeconds: 9 },
   TimelineFlow: { category: "timeline", dataOwner: "visual", bestAreas: ["main", "panel"], useWhen: "chronological history with real dates and events", tags: ["timeline", "history", "chronology", "roadmap", "events"], minSeconds: 8 },
+  
+  // 5 New Components Planning Meta
+  QueueFlow: { category: "network-diagram", dataOwner: "visual", bestAreas: ["main", "panel"], useWhen: "producer-consumer pattern, message queue, Kafka topic, SQS, event bus", tags: ["queue", "producers", "consumers", "message-queue", "kafka", "sqs", "rabbitmq"], minSeconds: 8 },
+  TradeoffMatrix: { category: "list", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "N-way tradeoff comparison across multiple criteria (CAP, databases)", tags: ["comparison", "matrix", "tradeoffs", "databases", "grid"], minSeconds: 8 },
+  BeforeAfterTransform: { category: "list", dataOwner: "content", bestAreas: ["panel", "main"], useWhen: "show data or state before and after a transformation (compaction, encoding)", tags: ["before-after", "transform", "compaction", "encoding", "state"], minSeconds: 8 },
+  RetrySequence: { category: "sequence", dataOwner: "visual", bestAreas: ["panel", "main"], useWhen: "retry with backoff, circuit breaker, idempotency, delivery guarantees", tags: ["retry", "backoff", "timeout", "network", "exponential"], minSeconds: 8 },
+  LoadPattern: { category: "chart", dataOwner: "visual", bestAreas: ["main", "right"], useWhen: "traffic spike visualization, load test, traffic pattern, capacity planning", tags: ["traffic", "load", "spike", "time-series", "capacity"], minSeconds: 8 },
 };
 
 export const COMPONENT_CATALOG = {
@@ -280,6 +304,28 @@ export const COMPONENT_CATALOG = {
   CalloutAnnotation: {
     description: "A highlighted callout box with corner brackets, a side arrow, and optional bullet points. Use to emphasize a key insight or definition against a darker background.",
     schema: toJsonSchema(CalloutAnnotationSchema, "CalloutAnnotationProps"),
+  },
+  
+  // 5 New Components
+  QueueFlow: {
+    description: "A producer-consumer queue flow diagram showing message ingestion, queue buffer, and consumption.",
+    schema: toJsonSchema(QueueFlowSchema, "QueueFlowProps"),
+  },
+  TradeoffMatrix: {
+    description: "An N-way tradeoff grid matrix comparing systems against multiple criteria.",
+    schema: toJsonSchema(TradeoffMatrixSchema, "TradeoffMatrixProps"),
+  },
+  BeforeAfterTransform: {
+    description: "A side-by-side data transformation viewer demonstrating state before and after processing.",
+    schema: toJsonSchema(BeforeAfterTransformSchema, "BeforeAfterTransformProps"),
+  },
+  RetrySequence: {
+    description: "A request retry attempt sequence chart with delay backoff bars.",
+    schema: toJsonSchema(RetrySequenceSchema, "RetrySequenceProps"),
+  },
+  LoadPattern: {
+    description: "A multi-series chart representing traffic load patterns over time with annotated event markers.",
+    schema: toJsonSchema(LoadPatternSchema, "LoadPatternProps"),
   },
 };
 

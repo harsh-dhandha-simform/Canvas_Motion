@@ -7,24 +7,21 @@ import {
   spring,
 } from "remotion";
 import { z } from "zod";
+import { useContainerScale } from "../hooks/useContainerScale";
 
 export const SequenceDiagramSchema = z.object({
   title: z.string().optional(),
-  /** Actors (lifelines) shown at the top, evenly distributed across the canvas. */
   actors: z.array(z.string()).min(2).max(6),
-  /** Time-ordered messages. Each goes from one actor to another. */
   messages: z.array(
     z.object({
       fromIdx: z.number().int().min(0),
       toIdx: z.number().int().min(0),
       label: z.string(),
-      /** Sync = solid arrow, return = dashed arrow. */
       kind: z.enum(["sync", "return", "async"]).optional(),
-      /** If true, the message gets a special highlight color (latest event). */
       active: z.boolean().optional(),
+      delayMs: z.number().optional(),
     })
   ),
-  /** Optional activation notes — start/end index of message that "activates" each actor. */
   activations: z
     .array(
       z.object({
@@ -58,27 +55,38 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const { ref, scale } = useContainerScale();
 
-  // Layout: actors evenly spaced in the top 12% of the canvas
   const STAGE_LEFT = 140;
   const STAGE_RIGHT = 1820;
   const ACTOR_Y = 110;
   const MSG_START_Y = 200;
   const MSG_GAP = 56;
-  const bottom = MSG_START_Y + messages.length * MSG_GAP + 40;
+
+  // Calculate dynamic message Y coordinates based on delayMs
+  const messageYs: number[] = [];
+  let currentY = MSG_START_Y;
+  const maxDelay = Math.max(...messages.map((m) => m.delayMs || 0), 1);
+
+  messages.forEach((msg) => {
+    messageYs.push(currentY);
+    const delay = msg.delayMs || 0;
+    const factor = delay > 0 ? 1 + (delay / maxDelay) * 1.5 : 1; // max 2.5x gap
+    currentY += MSG_GAP * factor;
+  });
+
+  const bottom = currentY + 40;
 
   const actorX = (i: number) =>
     STAGE_LEFT + ((STAGE_RIGHT - STAGE_LEFT) * i) / (actors.length - 1);
 
-  // Title fade
   const titleOpacity = interpolate(frame, [0, 18], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });
 
-  // Actors appear first
-  const actorSprings = actors.map((_actor, i) =>  // eslint-disable-line @typescript-eslint/no-unused-vars
+  const actorSprings = actors.map((_actor, i) =>
     spring({
       frame,
       fps,
@@ -87,7 +95,6 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
     })
   );
 
-  // Messages appear staggered
   const messageSprings = messages.map((_, i) =>
     spring({
       frame: frame - (15 + i * 12),
@@ -99,6 +106,7 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
 
   return (
     <div
+      ref={ref}
       style={{
         width: "100%",
         height: "100%",
@@ -109,6 +117,7 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
         fontFamily: "Inter, sans-serif",
       }}
     >
+      {/* Title section remains fixed and stable */}
       {title && (
         <h2
           style={{
@@ -131,7 +140,12 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
           height="100%"
           viewBox={`0 0 1920 ${bottom}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${scale})`,
+            transformOrigin: "center top",
+          }}
         >
           <defs>
             <marker
@@ -169,7 +183,7 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
             </marker>
           </defs>
 
-          {/* Lifelines (vertical dashed lines under each actor) */}
+          {/* Lifelines */}
           {actors.map((name, i) => {
             const x = actorX(i);
             const sp = actorSprings[i];
@@ -193,11 +207,11 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
             const x = actorX(i);
             const sp = actorSprings[i];
             const color = ACTOR_PALETTE[i % ACTOR_PALETTE.length];
-            const scale = interpolate(sp, [0, 1], [0.7, 1]);
+            const scaleVal = interpolate(sp, [0, 1], [0.7, 1]);
             return (
               <g
                 key={`actor-${i}`}
-                transform={`translate(${x}, ${ACTOR_Y}) scale(${scale})`}
+                transform={`translate(${x}, ${ACTOR_Y}) scale(${scaleVal})`}
                 style={{ opacity: sp, transformOrigin: `${x}px ${ACTOR_Y}px` }}
               >
                 <rect
@@ -226,11 +240,11 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
             );
           })}
 
-          {/* Activation bars (filled rectangles on a lifeline) */}
+          {/* Activation bars */}
           {activations.map((act, i) => {
             const x = actorX(act.actorIdx);
-            const y1 = MSG_START_Y + act.startMessage * MSG_GAP - 12;
-            const y2 = MSG_START_Y + act.endMessage * MSG_GAP + 12;
+            const y1 = messageYs[act.startMessage] - 12;
+            const y2 = messageYs[act.endMessage] + 12;
             const sp = Math.min(
               messageSprings[act.startMessage] ?? 0,
               messageSprings[act.endMessage] ?? 0
@@ -262,9 +276,10 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
             );
           })}
 
-          {/* Messages (arrows between lifelines) */}
+          {/* Messages and optional delay annotations */}
           {messages.map((msg, i) => {
-            const y = MSG_START_Y + i * MSG_GAP;
+            const y = messageYs[i];
+            const nextY = messageYs[i + 1] ?? y;
             const fromX = actorX(msg.fromIdx);
             const toX = actorX(msg.toIdx);
             const sp = messageSprings[i];
@@ -288,7 +303,6 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
               ? "url(#seq-arrow-async)"
               : "url(#seq-arrow-sync)";
 
-            // For left-going arrows, the arrowhead still points at "to"
             const x1 = fromX;
             const x2 = toX;
 
@@ -305,18 +319,11 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
                   strokeDasharray={stroke}
                   markerEnd={marker}
                   opacity={isReturn ? 0.75 : 1}
-                  style={{
-                    filter: isActive ? `drop-shadow(0 0 6px ${color})` : undefined,
-                  }}
+                  style={{ filter: isActive ? `drop-shadow(0 0 6px ${color})` : undefined }}
                 />
 
                 {/* Label box centered between from and to */}
-                <g
-                  transform={`translate(${(x1 + x2) / 2}, ${y - 18})`}
-                  style={{
-                    opacity: sp,
-                  }}
-                >
+                <g transform={`translate(${(x1 + x2) / 2}, ${y - 18})`}>
                   <rect
                     x={-Math.max(40, msg.label.length * 5.5)}
                     y={-12}
@@ -339,6 +346,34 @@ export const SequenceDiagram: React.FC<SequenceDiagramProps> = ({
                     {msg.label}
                   </text>
                 </g>
+
+                {/* Delay annotation if present */}
+                {msg.delayMs !== undefined && msg.delayMs > 0 && nextY > y && (
+                  <g transform={`translate(${(fromX + toX) / 2}, ${(y + nextY) / 2})`}>
+                    <rect
+                      x={-45}
+                      y={-10}
+                      width={90}
+                      height={20}
+                      rx={4}
+                      fill="#1e293b"
+                      stroke="#475569"
+                      strokeWidth={1}
+                      opacity={0.8}
+                    />
+                    <text
+                      x={0}
+                      y={4}
+                      textAnchor="middle"
+                      fill="#94a3b8"
+                      fontSize={11}
+                      fontWeight={600}
+                      fontFamily="Fira Code, monospace"
+                    >
+                      ⏱ {msg.delayMs}ms
+                    </text>
+                  </g>
+                )}
               </g>
             );
           })}

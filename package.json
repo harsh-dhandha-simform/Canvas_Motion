@@ -1,0 +1,8 @@
+{
+  "name": "canvas-motion-root",
+  "private": true,
+  "scripts": {
+    "frontend": "npm run start --prefix frontend",
+    "backend": "cd backend && uv run uvicorn server:app --port 8000"
+  }
+}

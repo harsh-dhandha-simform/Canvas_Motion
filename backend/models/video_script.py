@@ -128,3 +128,37 @@ class VideoScript(_NullSafeBase):
 
     def total_frames(self) -> int:
         return sum(s.duration_frames for s in self.scenes)
+
+
+# ---------------------------------------------------------------------------
+# Interaction Cue & Topic Hierarchy (added for Remotion UI layout)
+# ---------------------------------------------------------------------------
+
+class InteractionCue(_NullSafeBase):
+    id: str
+    slideIndex: int
+    triggerAt: Literal["slide_start", "slide_end"]
+    concept: str
+    type: Literal["send_request", "simulate_mutation", "quiz"]
+    payload: dict[str, Any] = Field(default_factory=dict)
+    triggerAtSec: float
+
+
+class Topic(_NullSafeBase):
+    id: str
+    title: str
+    videoScript: VideoScript
+    interactionCues: list[InteractionCue] = Field(default_factory=list)
+    totalDurationSec: float
+
+
+class Chapter(_NullSafeBase):
+    id: str
+    title: str
+    topics: list[Topic] = Field(default_factory=list)
+
+
+class Course(_NullSafeBase):
+    id: str
+    title: str
+    chapters: list[Chapter] = Field(default_factory=list)

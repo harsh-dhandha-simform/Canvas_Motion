@@ -154,11 +154,30 @@
         "steps": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "label"
+            ],
+            "additionalProperties": false
           }
         },
         "accentColor": {
           "type": "string"
+        },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ]
         }
       },
       "required": [
@@ -812,7 +831,9 @@
                   "server",
                   "database",
                   "router",
-                  "cdn"
+                  "cdn",
+                  "queue",
+                  "broker"
                 ]
               },
               "sublabel": {
@@ -997,6 +1018,12 @@
         },
         "showLegend": {
           "type": "boolean"
+        },
+        "centerLabel": {
+          "type": "string"
+        },
+        "centerSubLabel": {
+          "type": "string"
         }
       },
       "required": [
@@ -1070,6 +1097,12 @@
               },
               "highlight": {
                 "type": "boolean"
+              },
+              "guard": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
               }
             },
             "required": [
@@ -1257,6 +1290,9 @@
               },
               "active": {
                 "type": "boolean"
+              },
+              "delayMs": {
+                "type": "number"
               }
             },
             "required": [
@@ -2163,5 +2199,469 @@
       "note"
     ],
     "minSeconds": 5
+  },
+  "QueueFlow": {
+    "description": "A producer-consumer queue flow diagram showing message ingestion, queue buffer, and consumption.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "producers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "queueLabel": {
+          "type": "string"
+        },
+        "queueCapacity": {
+          "type": "number"
+        },
+        "consumers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "fifo",
+            "priority",
+            "pub-sub"
+          ]
+        }
+      },
+      "required": [
+        "producers",
+        "queueLabel",
+        "consumers"
+      ],
+      "additionalProperties": false
+    },
+    "category": "network-diagram",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "producer-consumer pattern, message queue, Kafka topic, SQS, event bus",
+    "tags": [
+      "queue",
+      "producers",
+      "consumers",
+      "message-queue",
+      "kafka",
+      "sqs",
+      "rabbitmq"
+    ],
+    "minSeconds": 8
+  },
+  "TradeoffMatrix": {
+    "description": "An N-way tradeoff grid matrix comparing systems against multiple criteria.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rowIdx": {
+                "type": "number"
+              },
+              "colIdx": {
+                "type": "number"
+              },
+              "value": {
+                "type": "string",
+                "enum": [
+                  "high",
+                  "medium",
+                  "low",
+                  "yes",
+                  "no",
+                  "partial"
+                ]
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rowIdx",
+              "colIdx",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rows",
+        "columns",
+        "cells"
+      ],
+      "additionalProperties": false
+    },
+    "category": "list",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "N-way tradeoff comparison across multiple criteria (CAP, databases)",
+    "tags": [
+      "comparison",
+      "matrix",
+      "tradeoffs",
+      "databases",
+      "grid"
+    ],
+    "minSeconds": 8
+  },
+  "BeforeAfterTransform": {
+    "description": "A side-by-side data transformation viewer demonstrating state before and after processing.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "before": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "color": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "label",
+            "content"
+          ],
+          "additionalProperties": false
+        },
+        "after": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "content": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "color": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "label",
+            "content"
+          ],
+          "additionalProperties": false
+        },
+        "transformLabel": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "before",
+        "after"
+      ],
+      "additionalProperties": false
+    },
+    "category": "list",
+    "dataOwner": "content",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "show data or state before and after a transformation (compaction, encoding)",
+    "tags": [
+      "before-after",
+      "transform",
+      "compaction",
+      "encoding",
+      "state"
+    ],
+    "minSeconds": 8
+  },
+  "RetrySequence": {
+    "description": "A request retry attempt sequence chart with delay backoff bars.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "attemptNumber": {
+                "type": "number"
+              },
+              "delayMs": {
+                "type": "number"
+              },
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "fail",
+                  "success",
+                  "timeout"
+                ]
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "attemptNumber",
+              "delayMs",
+              "outcome"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "maxAttempts": {
+          "type": "number"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "attempts"
+      ],
+      "additionalProperties": false
+    },
+    "category": "sequence",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "retry with backoff, circuit breaker, idempotency, delivery guarantees",
+    "tags": [
+      "retry",
+      "backoff",
+      "timeout",
+      "network",
+      "exponential"
+    ],
+    "minSeconds": 8
+  },
+  "LoadPattern": {
+    "description": "A multi-series chart representing traffic load patterns over time with annotated event markers.",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "series": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "t": {
+                      "type": "number"
+                    },
+                    "value": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "t",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "label",
+              "points"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "t": {
+                "type": "number"
+              },
+              "label": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "t",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "yLabel": {
+          "type": "string"
+        },
+        "xLabel": {
+          "type": "string"
+        },
+        "accentColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "series"
+      ],
+      "additionalProperties": false
+    },
+    "category": "chart",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "right"
+    ],
+    "useWhen": "traffic spike visualization, load test, traffic pattern, capacity planning",
+    "tags": [
+      "traffic",
+      "load",
+      "spike",
+      "time-series",
+      "capacity"
+    ],
+    "minSeconds": 8
   }
 }

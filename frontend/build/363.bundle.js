@@ -27407,7 +27407,7 @@ async function getZodIfPossible() {
 }
 var getZodV3IfPossible = async () => {
   try {
-    const mod = await Promise.resolve(/* import() */).then(__webpack_require__.bind(__webpack_require__, 3161));
+    const mod = await __webpack_require__.e(/* import() */ 161).then(__webpack_require__.bind(__webpack_require__, 3161));
     return mod;
   } catch {
     return null;

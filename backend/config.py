@@ -53,16 +53,22 @@ GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
 # "groq" → original Groq fallback-chain client
 LLM_BACKEND: str = os.environ.get("LLM_BACKEND", "ask")
 
-# Self-hosted Claude /ask endpoint (ask_server.py)
-ASK_URL: str = os.environ.get("ASK_URL", "http://0.0.0.0:8080/ask")
-ASK_API_KEY: str = os.environ.get(
-    "ASK_API_KEY", "sfrgf54vdfvdsfvsdf9sd2fe3sfs8cdsdceAWSdaewd5dd2"
+# Self-hosted custom LLM endpoint.
+# Primary env vars: CUSTOM_LLM_URL, CUSTOM_LLM_TOKEN
+# Legacy fallbacks:  ASK_URL, ASK_API_KEY  (for backward compatibility)
+ASK_URL: str = (
+    os.environ.get("CUSTOM_LLM_URL")
+    or os.environ.get("ASK_URL", "http://0.0.0.0:8080/ask")
 )
-ASK_MODEL: str = os.environ.get("ASK_MODEL", "opus")
-ASK_THINKING: str = os.environ.get("ASK_THINKING", "adaptive")
-ASK_EFFORT: str = os.environ.get("ASK_EFFORT", "medium")
-# Client timeout must exceed ask_server.py's CLAUDE_TIMEOUT (default 600) so the
-# server's own clean timeout response wins over a client-side socket cutoff.
+ASK_API_KEY: str = (
+    os.environ.get("CUSTOM_LLM_TOKEN")
+    or os.environ.get("ASK_API_KEY", "")
+)
+ASK_MODEL: str = os.environ.get("ASK_MODEL", "sonnet")
+ASK_THINKING: str = os.environ.get("ASK_THINKING", "disabled")
+ASK_EFFORT: str = os.environ.get("ASK_EFFORT", "max")
+# Client timeout must exceed the custom endpoint's own timeout so the
+# server's clean timeout response wins over a client-side socket cutoff.
 ASK_TIMEOUT_SECONDS: int = int(os.environ.get("ASK_TIMEOUT_SECONDS", "660"))
 
 if LLM_BACKEND == "groq" and not GROQ_API_KEY:

@@ -1,74 +1,232 @@
 import React from "react";
-import { interpolate, Easing, useCurrentFrame } from "remotion";
+import { interpolate, Easing, useCurrentFrame, useVideoConfig, spring } from "remotion";
 import { z } from "zod";
+import { useContainerScale } from "../hooks/useContainerScale";
 
 export const StepFlowSchema = z.object({
   title: z.string(),
-  steps: z.array(z.string()),
+  steps: z.array(
+    z.object({
+      label: z.string(),
+      description: z.string().optional(),
+    })
+  ),
   accentColor: z.string().optional(),
+  layout: z.enum(["horizontal", "vertical"]).optional(),
 });
 
 interface StepFlowProps {
   title: string;
-  steps: string[];
+  steps: Array<{
+    label: string;
+    description?: string;
+  }>;
   accentColor?: string;
+  layout?: "horizontal" | "vertical";
 }
 
 export const StepFlow: React.FC<StepFlowProps> = ({
   title,
   steps,
   accentColor = "#38BDF8",
+  layout = "horizontal",
 }) => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const { ref, scale } = useContainerScale();
+
+  const isVertical = layout === "vertical";
+
+  // Stagger reveal of steps
+  const stepSprings = steps.map((_, i) =>
+    spring({
+      frame: frame - i * 15,
+      fps,
+      config: { damping: 14, stiffness: 120 },
+      durationInFrames: 30,
+    })
+  );
+
+  // Connector line progress
+  const connectorProgress = interpolate(
+    frame,
+    [10, 10 + steps.length * 15],
+    [0, 100],
+    { extrapolateRight: "clamp", extrapolateLeft: "clamp" }
+  );
 
   return (
-    <div className="flex flex-col h-full w-full items-center justify-center p-16">
-      <h2 className="text-5xl font-black text-white mb-16 tracking-tight text-center">
+    <div
+      ref={ref}
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        padding: "60px 80px",
+        boxSizing: "border-box",
+      }}
+    >
+      {/* Title section remains fixed and stable */}
+      <h2
+        style={{
+          fontFamily: "Inter, sans-serif",
+          fontSize: "48px",
+          fontWeight: 900,
+          color: "#f1f5f9",
+          letterSpacing: "-0.02em",
+          marginBottom: isVertical ? "40px" : "60px",
+          textAlign: "center",
+        }}
+      >
         {title}
       </h2>
-      <div className="flex flex-row justify-between w-full max-w-5xl items-center relative">
+
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: isVertical ? "column" : "row",
+          justifyContent: "space-between",
+          alignItems: isVertical ? "flex-start" : "center",
+          width: "100%",
+          maxWidth: "1100px",
+          flex: 1,
+          transform: `scale(${scale})`,
+          transformOrigin: "center center",
+          paddingLeft: isVertical ? "40px" : 0,
+        }}
+      >
         {/* Connector Line Base */}
-        <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-800 -translate-y-1/2 -z-10" />
-        
+        {isVertical ? (
+          <div
+            style={{
+              position: "absolute",
+              left: "28px",
+              top: 0,
+              bottom: 0,
+              width: "4px",
+              backgroundColor: "#1e293b",
+              zIndex: -1,
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              position: "absolute",
+              top: "32px",
+              left: 0,
+              right: 0,
+              height: "4px",
+              backgroundColor: "#1e293b",
+              zIndex: -1,
+            }}
+          />
+        )}
+
         {/* Connector Line Animated */}
-        <div 
-          className="absolute top-1/2 left-0 h-1 -translate-y-1/2 -z-10"
-          style={{
-            backgroundColor: accentColor,
-            width: `${interpolate(frame, [10, 60], [0, 100], { extrapolateRight: "clamp", extrapolateLeft: "clamp" })}%`,
-            boxShadow: `0 0 10px ${accentColor}`,
-          }}
-        />
+        {isVertical ? (
+          <div
+            style={{
+              position: "absolute",
+              left: "28px",
+              top: 0,
+              height: `${connectorProgress}%`,
+              width: "4px",
+              backgroundColor: accentColor,
+              boxShadow: `0 0 10px ${accentColor}`,
+              zIndex: -1,
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              position: "absolute",
+              top: "32px",
+              left: 0,
+              width: `${connectorProgress}%`,
+              height: "4px",
+              backgroundColor: accentColor,
+              boxShadow: `0 0 10px ${accentColor}`,
+              zIndex: -1,
+            }}
+          />
+        )}
 
         {steps.map((step, index) => {
-          const itemFrame = frame - index * 15;
-          const opacity = interpolate(itemFrame, [0, 15], [0, 1], {
-            easing: Easing.bezier(0.16, 1, 0.3, 1),
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-          });
-          const scale = interpolate(itemFrame, [0, 15], [0.5, 1], {
-            easing: Easing.bezier(0.16, 1, 0.3, 1),
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-          });
+          const sp = stepSprings[index];
+          const opacity = sp;
+          const scaleVal = interpolate(sp, [0, 1], [0.6, 1]);
 
           return (
             <div
               key={index}
               style={{
                 opacity,
-                transform: `scale(${scale})`,
+                transform: `scale(${scaleVal})`,
+                display: "flex",
+                flexDirection: isVertical ? "row" : "column",
+                alignItems: isVertical ? "center" : "center",
+                gap: isVertical ? "24px" : "16px",
+                textAlign: isVertical ? "left" : "center",
+                width: isVertical ? "100%" : `${100 / steps.length}%`,
+                paddingBottom: isVertical ? "30px" : 0,
               }}
-              className="flex flex-col items-center gap-4 w-48 text-center"
             >
-              <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black text-slate-900 bg-white border-4"
-                style={{ borderColor: accentColor, boxShadow: `0 0 20px ${accentColor}88` }}
+              {/* Step Circle Badge */}
+              <div
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  borderRadius: "50%",
+                  backgroundColor: "#ffffff",
+                  border: `4px solid ${accentColor}`,
+                  boxShadow: `0 0 20px ${accentColor}88`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "24px",
+                  fontWeight: 900,
+                  color: "#0f172a",
+                  flexShrink: 0,
+                }}
               >
                 {index + 1}
               </div>
-              <span className="text-xl font-bold text-slate-200">{step}</span>
+
+              {/* Text contents */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "4px",
+                  maxWidth: isVertical ? "800px" : "180px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "20px",
+                    fontWeight: "bold",
+                    color: "#f1f5f9",
+                    fontFamily: "Inter, sans-serif",
+                  }}
+                >
+                  {step.label}
+                </span>
+                {step.description && (
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      color: "#94a3b8",
+                      fontFamily: "Inter, sans-serif",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {step.description}
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}

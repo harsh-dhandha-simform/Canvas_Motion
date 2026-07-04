@@ -6,13 +6,14 @@
 import React from "react";
 import { interpolate, Easing, useCurrentFrame } from "remotion";
 import { z } from "zod";
+import { useContainerScale } from "../hooks/useContainerScale";
 
 const PacketNodeSchema = z.object({
   id: z.string(),
   label: z.string(),
   x: z.number(),
   y: z.number(),
-  type: z.enum(["client", "server", "database", "router", "cdn"]).optional(),
+  type: z.enum(["client", "server", "database", "router", "cdn", "queue", "broker"]).optional(),
   sublabel: z.string().optional(),
 });
 
@@ -44,6 +45,8 @@ const TYPE_COLOR: Record<string, string> = {
   database: "#f59e0b",
   router: "#22d3ee",
   cdn: "#8b5cf6",
+  queue: "#f472b6",
+  broker: "#a78bfa",
 };
 
 const TYPE_SYMBOL: Record<string, string> = {
@@ -52,6 +55,8 @@ const TYPE_SYMBOL: Record<string, string> = {
   database: "⬟",
   router: "◈",
   cdn: "◎",
+  queue: "▤",
+  broker: "⧇",
 };
 
 export const PacketFlow: React.FC<PacketFlowProps> = ({
@@ -62,6 +67,7 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
   packetInterval = 18,
 }) => {
   const frame = useCurrentFrame();
+  const { ref, scale } = useContainerScale();
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
   // Title fade-in
@@ -71,7 +77,11 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
   });
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden" }}>
+    <div
+      ref={ref}
+      style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden" }}
+    >
+      {/* Title section remains fixed and stable */}
       {title && (
         <div
           style={{
@@ -105,9 +115,11 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
           width: "100%",
           height: "100%",
           overflow: "visible",
+          transform: `scale(${scale})`,
+          transformOrigin: "center center",
         }}
         viewBox={`0 0 ${LW} ${LH}`}
-        preserveAspectRatio="none"
+        preserveAspectRatio="xMidYMid meet"
       >
         <defs>
           <filter id="pf-glow" x="-60%" y="-60%" width="220%" height="220%">
@@ -148,7 +160,6 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
             extrapolateRight: "clamp",
           });
 
-          // Animate packets spaced by packetInterval frames
           const packets = Array.from({ length: PACKETS_PER_EDGE }, (_, pi) => {
             const pStart = edgeDelay + 35 + pi * packetInterval;
             const t = interpolate(frame, [pStart, pStart + PACKET_DURATION], [0, 1], {
@@ -167,14 +178,12 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
 
           return (
             <g key={`edge-${ei}`}>
-              {/* Track line */}
               <line
                 x1={x1} y1={y1} x2={x2} y2={y2}
                 stroke="#1e293b"
                 strokeWidth={6}
                 strokeLinecap="round"
               />
-              {/* Animated reveal */}
               <line
                 x1={x1} y1={y1} x2={x2} y2={y2}
                 stroke={edgeColor}
@@ -184,7 +193,6 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
                 strokeDashoffset={len * (1 - lineProgress)}
                 opacity={0.55}
               />
-              {/* Packets */}
               {packets.map((p) => {
                 if (!p) return null;
                 const px = x1 + dx * p.t;
@@ -197,7 +205,6 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
                   </g>
                 );
               })}
-              {/* Edge label */}
               {edge.label && (
                 <text
                   x={(x1 + x2) / 2}
@@ -224,7 +231,7 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
           const color = TYPE_COLOR[node.type || "server"] || accentColor;
           const symbol = TYPE_SYMBOL[node.type || "server"] || "◉";
 
-          const scale = interpolate(frame, [delay, delay + 20], [0, 1], {
+          const scaleVal = interpolate(frame, [delay, delay + 20], [0, 1], {
             easing: Easing.bezier(0.34, 1.56, 0.64, 1),
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
@@ -236,19 +243,16 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
 
           return (
             <g key={`node-${ni}`}>
-              <g transform={`translate(${cx},${cy}) scale(${scale})`}>
-                {/* Outer pulse ring */}
+              <g transform={`translate(${cx},${cy}) scale(${scaleVal})`}>
                 <circle r={66} fill="none" stroke={color} strokeWidth={1.5} opacity={0.2} />
-                {/* Main node body */}
                 <circle
                   r={50}
-                  fill="#0f172a"
+                  fill="#0f1729"
                   stroke={color}
                   strokeWidth={3}
                   filter="url(#pf-node-shadow)"
                 />
                 <circle r={46} fill={`${color}14`} />
-                {/* Type symbol */}
                 <text
                   y={14}
                   textAnchor="middle"
@@ -260,14 +264,13 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
                   {symbol}
                 </text>
               </g>
-              {/* Label below node (no transform so it doesn't scale oddly) */}
               <text
                 x={cx}
                 y={cy + 70}
                 textAnchor="middle"
                 fill="white"
                 fontSize={30}
-                fontWeight="700"
+                fontWeight={700}
                 opacity={labelOpacity}
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
@@ -280,7 +283,7 @@ export const PacketFlow: React.FC<PacketFlowProps> = ({
                   textAnchor="middle"
                   fill="#64748b"
                   fontSize={22}
-                  fontWeight="500"
+                  fontWeight={500}
                   opacity={labelOpacity}
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >

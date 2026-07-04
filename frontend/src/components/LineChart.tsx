@@ -7,29 +7,23 @@ import {
   spring,
 } from "remotion";
 import { z } from "zod";
+import { useContainerScale } from "../hooks/useContainerScale";
 
 export const LineChartSchema = z.object({
   title: z.string().optional(),
-  /** X-axis tick labels (e.g. years, request rates). */
   xLabels: z.array(z.string()),
-  /** Each series is one line. */
   series: z.array(
     z.object({
       name: z.string(),
       color: z.string().optional(),
-      /** Y values, one per xLabel. */
       values: z.array(z.number()),
-      /** If true, draw area fill under the line. */
       fill: z.boolean().optional(),
     })
   ),
-  /** Optional Y-axis label. */
   yLabel: z.string().optional(),
-  /** Optional X-axis label. */
   xLabel: z.string().optional(),
   accentColor: z.string().optional(),
   showLegend: z.boolean().optional(),
-  /** Optional highlight index — that xLabel point gets a special marker. */
   highlightIndex: z.number().int().min(0).optional(),
 });
 
@@ -56,6 +50,7 @@ export const LineChart: React.FC<LineChartProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const { ref, scale } = useContainerScale();
 
   // Plot area
   const PAD_L = 140;
@@ -75,14 +70,12 @@ export const LineChart: React.FC<LineChartProps> = ({
   const yAt = (v: number) =>
     PAD_T + PLOT_H - ((v - yMin) / yRange) * PLOT_H;
 
-  // Title fade
   const titleOpacity = interpolate(frame, [0, 18], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });
 
-  // Axis spring
   const axisSpring = spring({
     frame,
     fps,
@@ -90,7 +83,6 @@ export const LineChart: React.FC<LineChartProps> = ({
     durationInFrames: 30,
   });
 
-  // Each series draws in over time
   const seriesDrawProgress = series.map((_, i) =>
     interpolate(frame, [20 + i * 10, 70 + i * 10], [0, 1], {
       extrapolateLeft: "clamp",
@@ -99,7 +91,6 @@ export const LineChart: React.FC<LineChartProps> = ({
     })
   );
 
-  // Y-axis ticks: 5 evenly spaced
   const yTickCount = 5;
   const yTicks = Array.from({ length: yTickCount + 1 }, (_, i) => {
     const v = yMin + (yRange * i) / yTickCount;
@@ -108,6 +99,7 @@ export const LineChart: React.FC<LineChartProps> = ({
 
   return (
     <div
+      ref={ref}
       style={{
         width: "100%",
         height: "100%",
@@ -118,6 +110,7 @@ export const LineChart: React.FC<LineChartProps> = ({
         fontFamily: "Inter, sans-serif",
       }}
     >
+      {/* Title section remains fixed and stable */}
       {title && (
         <h2
           style={{
@@ -128,6 +121,7 @@ export const LineChart: React.FC<LineChartProps> = ({
             margin: 0,
             marginBottom: 8,
             opacity: titleOpacity,
+            textAlign: "center",
           }}
         >
           {title}
@@ -144,7 +138,12 @@ export const LineChart: React.FC<LineChartProps> = ({
           width="100%"
           height="100%"
           viewBox="0 0 1920 1080"
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${scale})`,
+            transformOrigin: "center center",
+          }}
         >
           {/* Y-axis grid lines + labels */}
           {yTicks.map((tick, i) => (
@@ -187,7 +186,7 @@ export const LineChart: React.FC<LineChartProps> = ({
             </text>
           ))}
 
-          {/* Y-axis label (rotated) */}
+          {/* Y-axis label */}
           {yLabel && (
             <text
               x={-540}
@@ -239,7 +238,6 @@ export const LineChart: React.FC<LineChartProps> = ({
             const color = s.color || SERIES_PALETTE[sIdx % SERIES_PALETTE.length];
             const progress = seriesDrawProgress[sIdx];
 
-            // Build the path
             const visiblePoints = s.values.length;
             const visibleCount = Math.max(
               2,
@@ -258,7 +256,6 @@ export const LineChart: React.FC<LineChartProps> = ({
               )
               .join(" ");
 
-            // Closed path for fill
             const fillPath =
               s.fill && pathPoints.length >= 2
                 ? `${linePath} L ${pathPoints[pathPoints.length - 1].x} ${
@@ -284,7 +281,6 @@ export const LineChart: React.FC<LineChartProps> = ({
                   strokeLinejoin="round"
                   style={{ filter: `drop-shadow(0 0 6px ${color}80)` }}
                 />
-                {/* Data points */}
                 {pathPoints.map((p, i) => (
                   <circle
                     key={`p-${i}`}
@@ -305,7 +301,7 @@ export const LineChart: React.FC<LineChartProps> = ({
             );
           })}
 
-          {/* Highlight index callout */}
+          {/* Highlight point callout */}
           {highlightIndex !== undefined && highlightIndex < xLabels.length && (
             <g>
               <line
@@ -333,7 +329,7 @@ export const LineChart: React.FC<LineChartProps> = ({
           )}
         </svg>
 
-        {/* Legend */}
+        {/* Legend remains fixed at the top right */}
         {showLegend && (
           <div
             style={{

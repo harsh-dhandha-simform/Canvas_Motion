@@ -1,11 +1,15 @@
 """
-backend/utils/ask_client.py — client for the self-hosted Claude /ask endpoint.
+backend/utils/ask_client.py — client for the custom self-hosted LLM endpoint.
 
-POSTs to ASK_URL (ask_server.py, which shells out to the Claude Code CLI) with
-Bearer auth and a JSON body {query, model, thinking, effort}, and returns the
-`answer` field of the response.
+Configured via environment variables (resolved in config.py):
+  CUSTOM_LLM_URL    — endpoint URL  (e.g. http://172.16.5.228:8080/ask)
+  CUSTOM_LLM_TOKEN  — Bearer auth token
+  ASK_MODEL         — model name to pass to the server (e.g. "sonnet")
+  ASK_THINKING      — thinking mode ("enabled" | "disabled" | "adaptive")
+  ASK_EFFORT        — effort level  ("low" | "medium" | "high" | "max")
 
-This is the LLM transport used by every agent when LLM_BACKEND="ask".
+Legacy fallbacks ASK_URL / ASK_API_KEY are also accepted for compatibility.
+This transport is active when LLM_BACKEND="ask" in the environment.
 """
 
 import logging
@@ -66,8 +70,9 @@ def ask(
 
     data = resp.json()
     if not data.get("success"):
+        err_detail = data.get('stderr') or data.get('error') or data.get('answer') or "Unknown error"
         raise RuntimeError(
-            f"[{agent_name}] /ask returned failure: {data.get('stderr') or data.get('error')}"
+            f"[{agent_name}] /ask returned failure: {err_detail}"
         )
 
     answer = (data.get("answer") or "").strip()

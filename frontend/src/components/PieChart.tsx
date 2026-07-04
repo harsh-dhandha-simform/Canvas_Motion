@@ -7,10 +7,10 @@ import {
   spring,
 } from "remotion";
 import { z } from "zod";
+import { useContainerScale } from "../hooks/useContainerScale";
 
 export const PieChartSchema = z.object({
   title: z.string().optional(),
-  /** Each slice. Values are normalized to sum to 100%. */
   slices: z.array(
     z.object({
       label: z.string(),
@@ -18,14 +18,11 @@ export const PieChartSchema = z.object({
       color: z.string().optional(),
     })
   ),
-  /** Optional center label (for a donut). */
   centerLabel: z.string().optional(),
   centerValue: z.string().optional(),
-  /** Layout variant. */
   variant: z.enum(["pie", "donut"]).optional(),
   accentColor: z.string().optional(),
   showLegend: z.boolean().optional(),
-  /** Optional slice index to highlight (gets a "explode" offset). */
   highlightIndex: z.number().int().min(0).optional(),
 });
 
@@ -54,11 +51,12 @@ export const PieChart: React.FC<PieChartProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const { ref, scale } = useContainerScale();
 
   const total = slices.reduce((s, x) => s + x.value, 0) || 1;
 
-  // Layout
-  const cx = 800;
+  // Layout centered: 960x540
+  const cx = 960;
   const cy = 540;
   const radius = 280;
   const innerR = variant === "donut" ? radius * 0.55 : 0;
@@ -69,19 +67,16 @@ export const PieChart: React.FC<PieChartProps> = ({
     easing: Easing.out(Easing.cubic),
   });
 
-  // Sweep animation: each slice draws in sequentially
   const sweepTotal = Math.PI * 2;
   let cursor = 0;
-  const sliceProgress: { slice: PieChartProps["slices"][0]; start: number; end: number; idx: number }[] =
-    slices.map((s, i) => {
-      const frac = s.value / total;
-      const start = cursor;
-      const end = cursor + frac * sweepTotal;
-      cursor = end;
-      return { slice: s, start, end, idx: i };
-    });
+  const sliceProgress = slices.map((s, i) => {
+    const frac = s.value / total;
+    const start = cursor;
+    const end = cursor + frac * sweepTotal;
+    cursor = end;
+    return { slice: s, start, end, idx: i };
+  });
 
-  // Animate a global reveal 0 → sweepTotal over time
   const reveal = interpolate(frame, [15, 100], [0, sweepTotal], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -94,7 +89,6 @@ export const PieChart: React.FC<PieChartProps> = ({
       ? 16 * interpolate(Math.sin(frame / 8), [-1, 1], [0.5, 1])
       : 0;
 
-  // Helper: produce path "d" for an annular sector between angles a1, a2
   const annularSector = (a1: number, a2: number) => {
     const x1 = cx + Math.cos(a1) * radius;
     const y1 = cy + Math.sin(a1) * radius;
@@ -115,6 +109,7 @@ export const PieChart: React.FC<PieChartProps> = ({
 
   return (
     <div
+      ref={ref}
       style={{
         width: "100%",
         height: "100%",
@@ -126,6 +121,7 @@ export const PieChart: React.FC<PieChartProps> = ({
       }}
     >
       <div style={{ flex: 1.4, position: "relative" }}>
+        {/* Title section remains fixed and stable */}
         {title && (
           <h2
             style={{
@@ -136,6 +132,7 @@ export const PieChart: React.FC<PieChartProps> = ({
               margin: 0,
               marginBottom: 8,
               opacity: titleOpacity,
+              textAlign: "center",
             }}
           >
             {title}
@@ -143,7 +140,15 @@ export const PieChart: React.FC<PieChartProps> = ({
         )}
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100% - 60px)" }}>
-          <svg width={700} height={700} viewBox="0 0 1600 1080">
+          <svg
+            width={700}
+            height={700}
+            viewBox="0 0 1920 1080"
+            style={{
+              transform: `scale(${scale})`,
+              transformOrigin: "center center",
+            }}
+          >
             <defs>
               <filter id="pie-glow" x="-20%" y="-20%" width="140%" height="140%">
                 <feGaussianBlur stdDeviation="3" />
@@ -154,14 +159,12 @@ export const PieChart: React.FC<PieChartProps> = ({
               </filter>
             </defs>
 
-            {/* Each slice — partial sweep based on `reveal` */}
             {sliceProgress.map(({ slice, start, end, idx }) => {
               const color = slice.color || SLICE_PALETTE[idx % SLICE_PALETTE.length];
               const sliceReveal = Math.max(0, Math.min(reveal - start, end - start));
               if (sliceReveal <= 0) return null;
               const a2 = start + sliceReveal;
               const ex = explode(idx);
-              // Translate slice slightly outward
               const midA = (start + a2) / 2 - Math.PI / 2;
               const dx = Math.cos(midA) * ex;
               const dy = Math.sin(midA) * ex;
@@ -178,7 +181,6 @@ export const PieChart: React.FC<PieChartProps> = ({
                     stroke="#0f1729"
                     strokeWidth={2}
                   />
-                  {/* Label on the slice if it's wide enough */}
                   {sliceReveal / (end - start) > 0.6 && (end - start) > 0.35 && (
                     <text
                       x={cx + Math.cos(midA) * (radius * 0.7) + dx}
@@ -196,7 +198,6 @@ export const PieChart: React.FC<PieChartProps> = ({
               );
             })}
 
-            {/* Center label for donut */}
             {variant === "donut" && (
               <g>
                 <text
@@ -208,7 +209,6 @@ export const PieChart: React.FC<PieChartProps> = ({
                   fontFamily="Inter, sans-serif"
                   fontWeight={700}
                   letterSpacing="0.15em"
-                  textLength={centerLabel ? undefined : 0}
                 >
                   {centerLabel || ""}
                 </text>
@@ -232,7 +232,7 @@ export const PieChart: React.FC<PieChartProps> = ({
         </div>
       </div>
 
-      {/* Legend */}
+      {/* Legend stays in fixed vertical column on right */}
       {showLegend && (
         <div
           style={{
@@ -286,20 +286,8 @@ export const PieChart: React.FC<PieChartProps> = ({
                     flexShrink: 0,
                   }}
                 />
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    flex: 1,
-                  }}
-                >
-                  <span
-                    style={{
-                      color: "#f1f5f9",
-                      fontSize: 20,
-                      fontWeight: 700,
-                    }}
-                  >
+                <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                  <span style={{ color: "#f1f5f9", fontSize: 20, fontWeight: 700 }}>
                     {s.label}
                   </span>
                 </div>

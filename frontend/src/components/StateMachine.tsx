@@ -7,30 +7,28 @@ import {
   spring,
 } from "remotion";
 import { z } from "zod";
+import { useContainerScale } from "../hooks/useContainerScale";
 
 export const StateMachineSchema = z.object({
   title: z.string().optional(),
-  /** State nodes. */
   states: z.array(
     z.object({
       id: z.string(),
       label: z.string(),
       color: z.string().optional(),
-      /** Optional description that appears under the label. */
       description: z.string().optional(),
     })
   ),
-  /** Directed transitions between states. */
   transitions: z.array(
     z.object({
       fromId: z.string(),
       toId: z.string(),
       label: z.string(),
-      /** Optional: highlight this transition (color pulses, others fade). */
       highlight: z.boolean().optional(),
+      guard: z.string().optional(),
+      action: z.string().optional(),
     })
   ),
-  /** Optional id of the state to start "active" — pulses in primary color. */
   activeStateId: z.string().optional(),
   accentColor: z.string().optional(),
 });
@@ -46,15 +44,10 @@ const STATE_PALETTE = [
   "#fb923c",
 ];
 
-/**
- * Auto-layout: arrange states evenly in a circle, large enough to fit
- * 8pt label boxes without overlap. Good for up to ~8 states.
- */
 function layoutStates(count: number) {
   const cx = 960;
   const cy = 540;
   const r = 260;
-  // Start at top, go clockwise
   return Array.from({ length: count }, (_, i) => {
     const angle = (i / count) * Math.PI * 2 - Math.PI / 2;
     return {
@@ -73,18 +66,17 @@ export const StateMachine: React.FC<StateMachineProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const { ref, scale } = useContainerScale();
 
   const positions = layoutStates(states.length);
   const stateById = new Map(states.map((s, i) => [s.id, { ...s, ...positions[i] }]));
 
-  // Title fade
   const titleOpacity = interpolate(frame, [0, 20], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });
 
-  // States spring in stagger
   const stateSprings = states.map((_, i) =>
     spring({
       frame: frame - (15 + i * 8),
@@ -94,7 +86,6 @@ export const StateMachine: React.FC<StateMachineProps> = ({
     })
   );
 
-  // Transitions draw in after states
   const transitionStart = 15 + states.length * 8 + 10;
   const transitionSprings = transitions.map((_, i) =>
     spring({
@@ -105,11 +96,11 @@ export const StateMachine: React.FC<StateMachineProps> = ({
     })
   );
 
-  // Active state pulsing glow
   const pulse = interpolate(Math.sin(frame / 8), [-1, 1], [0.4, 1]);
 
   return (
     <div
+      ref={ref}
       style={{
         width: "100%",
         height: "100%",
@@ -120,6 +111,7 @@ export const StateMachine: React.FC<StateMachineProps> = ({
         fontFamily: "Inter, sans-serif",
       }}
     >
+      {/* Title section remains fixed and stable */}
       {title && (
         <h2
           style={{
@@ -154,7 +146,12 @@ export const StateMachine: React.FC<StateMachineProps> = ({
           width="100%"
           height="100%"
           viewBox="0 0 1920 1080"
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${scale})`,
+            transformOrigin: "center center",
+          }}
         >
           <defs>
             <marker
@@ -188,7 +185,7 @@ export const StateMachine: React.FC<StateMachineProps> = ({
             </filter>
           </defs>
 
-          {/* Transitions (drawn under states) */}
+          {/* Transitions */}
           {transitions.map((t, i) => {
             const from = stateById.get(t.fromId);
             const to = stateById.get(t.toId);
@@ -197,8 +194,7 @@ export const StateMachine: React.FC<StateMachineProps> = ({
             const isSelf = t.fromId === t.toId;
             const isActive = !!t.highlight;
 
-            // Pull endpoints back to the box edge so arrowheads don't sit inside boxes
-            const BOX = 130; // half-width of a state box
+            const BOX = 130;
             const dx = to.x - from.x;
             const dy = to.y - from.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -213,7 +209,6 @@ export const StateMachine: React.FC<StateMachineProps> = ({
             const color = isActive ? accentColor : "#94a3b8";
             const opacity = sp * (isActive ? 1 : 0.6);
 
-            // Self-loop path
             if (isSelf) {
               const loopR = 70;
               return (
@@ -241,7 +236,6 @@ export const StateMachine: React.FC<StateMachineProps> = ({
               );
             }
 
-            // Curved path between states (control point offset perpendicular)
             const midX = (x1 + x2) / 2;
             const midY = (y1 + y2) / 2;
             const perpX = -uy * 30;
@@ -249,13 +243,20 @@ export const StateMachine: React.FC<StateMachineProps> = ({
             const cx = midX + perpX;
             const cy = midY + perpY;
 
-            // Animated draw-in
             const pathLen = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) + 60;
             const dashOffset = pathLen * (1 - sp);
 
-            // Label position at midpoint of curve
             const labelX = midX + perpX * 0.6;
             const labelY = midY + perpY * 0.6;
+
+            // Compute labels text & dynamic box size
+            const lines = [t.label];
+            if (t.guard) lines.push(`[${t.guard}]`);
+            if (t.action) lines.push(`/ ${t.action}`);
+
+            const maxLen = Math.max(...lines.map(l => l.length));
+            const boxW = Math.max(72, maxLen * 11);
+            const boxH = lines.length * 20 + 8;
 
             return (
               <g key={`t-${i}`} opacity={opacity}>
@@ -272,26 +273,50 @@ export const StateMachine: React.FC<StateMachineProps> = ({
                 />
                 <g transform={`translate(${labelX}, ${labelY})`}>
                   <rect
-                    x={-Math.max(36, t.label.length * 5.5)}
-                    y={-12}
-                    width={Math.max(72, t.label.length * 11)}
-                    height={24}
+                    x={-boxW / 2}
+                    y={-boxH / 2}
+                    width={boxW}
+                    height={boxH}
                     rx={6}
                     fill="#0f1729"
                     stroke={isActive ? color : "#334155"}
                     strokeWidth={1.5}
                   />
-                  <text
-                    x={0}
-                    y={4}
-                    textAnchor="middle"
-                    fill={isActive ? color : "#cbd5e1"}
-                    fontSize={13}
-                    fontWeight={700}
-                    fontFamily="Fira Code, monospace"
-                  >
-                    {t.label}
-                  </text>
+                  {lines.map((line, lineIdx) => {
+                    const isFirst = lineIdx === 0;
+                    const isGuard = line.startsWith("[");
+                    const isAction = line.startsWith("/");
+                    let fill = "#cbd5e1";
+                    let fontSize = 13;
+                    let fontWeight = "700";
+
+                    if (isFirst) {
+                      fill = isActive ? color : "#cbd5e1";
+                    } else if (isGuard) {
+                      fill = "#64748b";
+                      fontSize = 11;
+                      fontWeight = "500";
+                    } else if (isAction) {
+                      fill = accentColor;
+                      fontSize = 11;
+                      fontWeight = "600";
+                    }
+
+                    return (
+                      <text
+                        key={lineIdx}
+                        x={0}
+                        y={-boxH / 2 + 16 + lineIdx * 19}
+                        textAnchor="middle"
+                        fill={fill}
+                        fontSize={fontSize}
+                        fontWeight={fontWeight}
+                        fontFamily="Fira Code, monospace"
+                      >
+                        {line}
+                      </text>
+                    );
+                  })}
                 </g>
               </g>
             );
@@ -303,13 +328,13 @@ export const StateMachine: React.FC<StateMachineProps> = ({
             const sp = stateSprings[i];
             const isActive = s.id === activeStateId;
             const baseColor = s.color || STATE_PALETTE[i % STATE_PALETTE.length];
-            const scale = interpolate(sp, [0, 1], [0.6, 1]);
+            const scaleVal = interpolate(sp, [0, 1], [0.6, 1]);
             const opacity = sp;
 
             return (
               <g
                 key={s.id}
-                transform={`translate(${pos.x}, ${pos.y}) scale(${scale})`}
+                transform={`translate(${pos.x}, ${pos.y}) scale(${scaleVal})`}
                 style={{ opacity, transformOrigin: `${pos.x}px ${pos.y}px` }}
               >
                 <rect

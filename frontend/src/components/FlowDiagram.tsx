@@ -7,27 +7,24 @@ import {
   spring,
 } from "remotion";
 import { z } from "zod";
+import { useContainerScale } from "../hooks/useContainerScale";
 
 export const FlowDiagramSchema = z.object({
   title: z.string().optional(),
-  /** Nodes in the flow. */
   nodes: z.array(
     z.object({
       id: z.string(),
       label: z.string(),
-      /** "process" | "decision" | "start" | "end" */
       kind: z.enum(["process", "decision", "start", "end"]).optional(),
       description: z.string().optional(),
       color: z.string().optional(),
     })
   ),
-  /** Directed connections between nodes. */
   edges: z.array(
     z.object({
       fromId: z.string(),
       toId: z.string(),
       label: z.string().optional(),
-      /** If true, the edge is highlighted (latest/active flow). */
       active: z.boolean().optional(),
     })
   ),
@@ -50,16 +47,9 @@ const KIND_SHAPES = {
   end: "pill",
 };
 
-/**
- * Sugiyama-style layered layout:
- *  - Compute each node's depth (longest path from a "start" node).
- *  - Within a layer, order nodes to reduce crossings (simple: keep input order).
- *  - Assign y by depth, x evenly within the layer.
- */
 function layout(nodes: FlowDiagramProps["nodes"], edges: FlowDiagramProps["edges"]) {
   const byId = new Map(nodes.map((n) => [n.id, n]));
 
-  // Build adjacency for indegree + forward
   const indeg = new Map<string, number>();
   const fwd = new Map<string, string[]>();
   nodes.forEach((n) => {
@@ -73,7 +63,6 @@ function layout(nodes: FlowDiagramProps["nodes"], edges: FlowDiagramProps["edges
     }
   });
 
-  // Topological depth using Kahn's algorithm with tie-breaking on input order.
   const order = nodes.map((n) => n.id);
   const depth = new Map<string, number>();
   order.forEach((id) => depth.set(id, 0));
@@ -91,7 +80,6 @@ function layout(nodes: FlowDiagramProps["nodes"], edges: FlowDiagramProps["edges
     if (!changed) break;
   }
 
-  // Group by depth
   const layers = new Map<number, string[]>();
   let maxDepth = 0;
   nodes.forEach((n) => {
@@ -101,7 +89,6 @@ function layout(nodes: FlowDiagramProps["nodes"], edges: FlowDiagramProps["edges
     layers.get(d)!.push(n.id);
   });
 
-  // Layout positions
   const PAD_X = 140;
   const PAD_Y = 130;
   const CANVAS_W = 1920 - 2 * PAD_X;
@@ -128,6 +115,7 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const { ref, scale } = useContainerScale();
 
   const { positions } = layout(nodes, edges);
 
@@ -137,11 +125,8 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
     easing: Easing.out(Easing.cubic),
   });
 
-  // Reveal nodes by depth first
   const nodeSprings = new Map<string, number>();
   nodes.forEach((n) => {
-    // depth is implicit in position.y — derive index
-    // We'll just stagger by index in input order — simpler and stable
     const idx = nodes.findIndex((x) => x.id === n.id);
     nodeSprings.set(
       n.id,
@@ -166,13 +151,13 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
   const renderShape = (n: typeof nodes[0], x: number, y: number) => {
     const sp = nodeSprings.get(n.id) || 0;
     const color = n.color || KIND_COLORS[n.kind || "process"];
-    const scale = interpolate(sp, [0, 1], [0.6, 1]);
+    const scaleVal = interpolate(sp, [0, 1], [0.6, 1]);
     const shape = KIND_SHAPES[n.kind || "process"];
 
     if (shape === "diamond") {
       return (
         <g
-          transform={`translate(${x}, ${y}) scale(${scale})`}
+          transform={`translate(${x}, ${y}) scale(${scaleVal})`}
           style={{ opacity: sp, transformOrigin: `${x}px ${y}px` }}
         >
           <polygon
@@ -201,7 +186,7 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
       const w = Math.max(120, n.label.length * 12 + 40);
       return (
         <g
-          transform={`translate(${x}, ${y}) scale(${scale})`}
+          transform={`translate(${x}, ${y}) scale(${scaleVal})`}
           style={{ opacity: sp, transformOrigin: `${x}px ${y}px` }}
         >
           <rect
@@ -230,12 +215,11 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
       );
     }
 
-    // Default: process (rounded rect)
     const w = 180;
     const h = 70;
     return (
       <g
-        transform={`translate(${x}, ${y}) scale(${scale})`}
+        transform={`translate(${x}, ${y}) scale(${scaleVal})`}
         style={{ opacity: sp, transformOrigin: `${x}px ${y}px` }}
       >
         <rect
@@ -278,6 +262,7 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
 
   return (
     <div
+      ref={ref}
       style={{
         width: "100%",
         height: "100%",
@@ -288,6 +273,7 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
         fontFamily: "Inter, sans-serif",
       }}
     >
+      {/* Title section remains fixed and stable */}
       {title && (
         <h2
           style={{
@@ -322,7 +308,12 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
           width="100%"
           height="100%"
           viewBox="0 0 1920 1080"
-          style={{ position: "absolute", inset: 0 }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${scale})`,
+            transformOrigin: "center center",
+          }}
         >
           <defs>
             <marker
@@ -365,14 +356,12 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
             const ux = dx / dist;
             const uy = dy / dist;
 
-            // Pull endpoints back so arrowheads don't enter shape bounds
             const PAD = 60;
             const x1 = from.x + ux * PAD;
             const y1 = from.y + uy * PAD;
             const x2 = to.x - ux * PAD;
             const y2 = to.y - uy * PAD;
 
-            // Curved path with vertical-bias control
             const midX = (x1 + x2) / 2;
             const midY = (y1 + y2) / 2;
             const pathLen = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) + 80;
@@ -387,9 +376,7 @@ export const FlowDiagram: React.FC<FlowDiagramProps> = ({
                   strokeDasharray={pathLen}
                   strokeDashoffset={pathLen * (1 - sp)}
                   markerEnd={isActive ? "url(#flow-arrow-active)" : "url(#flow-arrow)"}
-                  style={{
-                    filter: isActive ? `drop-shadow(0 0 6px ${color})` : undefined,
-                  }}
+                  style={{ filter: isActive ? `drop-shadow(0 0 6px ${color})` : undefined }}
                 />
                 {e.label && (
                   <g transform={`translate(${midX}, ${midY - 8})`}>
