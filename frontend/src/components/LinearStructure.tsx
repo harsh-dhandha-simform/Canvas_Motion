@@ -84,6 +84,25 @@ export const LinearStructure: React.FC<LinearStructureProps> = ({
   const theme = useTheme();
   const accent = accentColor ?? theme.accent;
 
+  if (operations.length === 0) {
+    return (
+      <div style={{
+        width: "100%", height: "100%",
+        display: "flex", flexDirection: "column",
+        padding: "60px 80px", boxSizing: "border-box", gap: 40,
+        background: theme.background, fontFamily: `${theme.font}, sans-serif`,
+        position: "relative",
+      }}>
+        {title && (
+          <h2 style={{
+            fontSize: 48, fontWeight: 900, color: "#f1f5f9",
+            letterSpacing: "-0.03em", margin: 0,
+          }}>{title}</h2>
+        )}
+      </div>
+    );
+  }
+
   const stepFrames = Math.max(1, Math.round((1.2 / speed) * fps));
   const currentStepIdx = Math.min(operations.length - 1, Math.floor(frame / stepFrames));
   const { progress } = stepAt(currentStepIdx, { stepFrames, frame, fps });
@@ -156,7 +175,7 @@ function renderCells(args: {
   const cells: {
     value: CellValue; opacity: number;
     dx: number; dy: number; scale: number;
-    highlight: boolean; ghost?: boolean;
+    highlight: boolean;
   }[] = [];
 
   const isInsertion =
@@ -255,7 +274,7 @@ function renderCells(args: {
               color: "#64748b", fontSize: 28,
             }}>→</span>
           )}
-          {showIndices && kind !== "linked-list" && kind !== "stack" && (
+          {showIndices && kind === "array" && (
             <span style={{
               position: "absolute", bottom: -28, color: "#64748b", fontSize: 14,
             }}>{i}</span>
