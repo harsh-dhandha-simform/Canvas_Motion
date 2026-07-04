@@ -2,30 +2,11 @@
   "AnimatedTitle": {
     "description": "A large title with an optional subtitle and an animated underline. Good for intros and transitions.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "subtitle": {
-          "type": "string"
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "align": {
-          "type": "string",
-          "enum": [
-            "center",
-            "left"
-          ]
-        }
+      "$ref": "#/definitions/AnimatedTitleProps",
+      "definitions": {
+        "AnimatedTitleProps": {}
       },
-      "required": [
-        "title"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "title",
     "dataOwner": "content",
@@ -44,37 +25,11 @@
   "ComparisonCard": {
     "description": "A card displaying a side-by-side comparison with pros and cons. Good for evaluating options.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "pros": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "cons": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "visibleCount": {
-          "type": "number"
-        }
+      "$ref": "#/definitions/ComparisonCardProps",
+      "definitions": {
+        "ComparisonCardProps": {}
       },
-      "required": [
-        "title",
-        "pros",
-        "cons"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "list",
     "dataOwner": "content",
@@ -94,37 +49,11 @@
   "BulletList": {
     "description": "A bulleted or numbered list with staggered reveal animation.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "numbered": {
-          "type": "boolean"
-        },
-        "align": {
-          "type": "string",
-          "enum": [
-            "left",
-            "center"
-          ]
-        }
+      "$ref": "#/definitions/BulletListProps",
+      "definitions": {
+        "BulletListProps": {}
       },
-      "required": [
-        "title",
-        "items"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "list",
     "dataOwner": "content",
@@ -145,27 +74,11 @@
   "StepFlow": {
     "description": "A horizontal step-by-step flow diagram with an animated connector line.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "steps": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/StepFlowProps",
+      "definitions": {
+        "StepFlowProps": {}
       },
-      "required": [
-        "title",
-        "steps"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "list",
     "dataOwner": "content",
@@ -185,30 +98,11 @@
   "StatCallout": {
     "description": "A large statistic callout with an animated counting number.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "value": {
-          "type": "number"
-        },
-        "suffix": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "accentColor": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/StatCalloutProps",
+      "definitions": {
+        "StatCalloutProps": {}
       },
-      "required": [
-        "title",
-        "value"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "chart",
     "dataOwner": "visual",
@@ -228,98 +122,11 @@
   "ArchitectureDiagram": {
     "description": "Renders an architecture diagram with servers, databases, and load balancers connected by animated data streams and arrows. Specify nodes and connections.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "nodes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "server",
-                  "loadBalancer",
-                  "database",
-                  "client"
-                ]
-              },
-              "x": {
-                "type": "number"
-              },
-              "y": {
-                "type": "number"
-              },
-              "label": {
-                "type": "string"
-              },
-              "metrics": {
-                "type": "object",
-                "properties": {
-                  "cpu": {
-                    "type": "string"
-                  },
-                  "ram": {
-                    "type": "string"
-                  }
-                },
-                "additionalProperties": false
-              }
-            },
-            "required": [
-              "id",
-              "type",
-              "x",
-              "y"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "connections": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "fromId": {
-                "type": "string"
-              },
-              "toId": {
-                "type": "string"
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "stream",
-                  "arrow"
-                ]
-              },
-              "label": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "fromId",
-              "toId",
-              "type"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/ArchitectureDiagramProps",
+      "definitions": {
+        "ArchitectureDiagramProps": {}
       },
-      "required": [
-        "title"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "network-diagram",
     "dataOwner": "visual",
@@ -340,48 +147,11 @@
   "SplitScreen": {
     "description": "A layout scene showing a title, bullet points, code snippets, and optional media on the right side. Great for explaining technical concepts.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "subtitle": {
-          "type": "string"
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "bullets": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "codeSnippet": {
-          "type": "object",
-          "properties": {
-            "code": {
-              "type": "string"
-            },
-            "language": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "code",
-            "language"
-          ],
-          "additionalProperties": false
-        },
-        "mediaUrl": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/SplitScreenProps",
+      "definitions": {
+        "SplitScreenProps": {}
       },
-      "required": [
-        "title"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "code",
     "dataOwner": "content",
@@ -399,40 +169,11 @@
   "TypewriterText": {
     "description": "Animated typewriter effect with a blinking cursor. Reveals one or more lines of text character by character. Great for code reveals or dramatic text.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "lines": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "fontSize": {
-          "type": "number"
-        },
-        "align": {
-          "type": "string",
-          "enum": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "charPerFrame": {
-          "type": "number"
-        },
-        "showCursor": {
-          "type": "boolean"
-        }
+      "$ref": "#/definitions/TypewriterTextProps",
+      "definitions": {
+        "TypewriterTextProps": {}
       },
-      "required": [
-        "lines"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "title",
     "dataOwner": "content",
@@ -451,52 +192,11 @@
   "TimelineFlow": {
     "description": "An animated vertical or horizontal timeline with events appearing in staggered sequence. Use for history, roadmaps, or step-by-step processes.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "events": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "year": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "description": {
-                "type": "string"
-              },
-              "highlight": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "year",
-              "label"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "direction": {
-          "type": "string",
-          "enum": [
-            "vertical",
-            "horizontal"
-          ]
-        }
+      "$ref": "#/definitions/TimelineFlowProps",
+      "definitions": {
+        "TimelineFlowProps": {}
       },
-      "required": [
-        "events"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "timeline",
     "dataOwner": "visual",
@@ -517,39 +217,11 @@
   "QuoteCard": {
     "description": "A full-screen animated pull quote with an optional highlight sweep on key words and author attribution. Great for testimonials and impactful statements.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "quote": {
-          "type": "string"
-        },
-        "author": {
-          "type": "string"
-        },
-        "role": {
-          "type": "string"
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "highlightWords": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "align": {
-          "type": "string",
-          "enum": [
-            "left",
-            "center"
-          ]
-        }
+      "$ref": "#/definitions/QuoteCardProps",
+      "definitions": {
+        "QuoteCardProps": {}
       },
-      "required": [
-        "quote"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "text",
     "dataOwner": "content",
@@ -568,43 +240,11 @@
   "CodeBlock": {
     "description": "A macOS-style code window with syntax highlighting, line numbers, and optional line-by-line reveal animation. Ideal for showing code examples.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "code": {
-          "type": "string"
-        },
-        "language": {
-          "type": "string"
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "revealMode": {
-          "type": "string",
-          "enum": [
-            "lines",
-            "chars",
-            "instant"
-          ]
-        },
-        "highlightLines": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          }
-        },
-        "fontSize": {
-          "type": "number"
-        }
+      "$ref": "#/definitions/CodeBlockProps",
+      "definitions": {
+        "CodeBlockProps": {}
       },
-      "required": [
-        "code"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "code",
     "dataOwner": "content",
@@ -625,74 +265,11 @@
   "TwoColumnLayout": {
     "description": "A two-column comparison layout with an animated center divider. Each column has a heading and bullet points that slide in from opposite sides.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "left": {
-          "type": "object",
-          "properties": {
-            "heading": {
-              "type": "string"
-            },
-            "points": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "color": {
-              "type": "string"
-            },
-            "icon": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "heading",
-            "points"
-          ],
-          "additionalProperties": false
-        },
-        "right": {
-          "type": "object",
-          "properties": {
-            "heading": {
-              "type": "string"
-            },
-            "points": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "color": {
-              "type": "string"
-            },
-            "icon": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "heading",
-            "points"
-          ],
-          "additionalProperties": false
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "dividerLabel": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/TwoColumnLayoutProps",
+      "definitions": {
+        "TwoColumnLayoutProps": {}
       },
-      "required": [
-        "left",
-        "right"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "list",
     "dataOwner": "content",
@@ -712,55 +289,11 @@
   "BarChart": {
     "description": "An animated bar chart with vertical or horizontal layout. Bars grow in with spring physics and values count up from 0. Use for data comparisons.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "bars": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "label": {
-                "type": "string"
-              },
-              "value": {
-                "type": "number"
-              },
-              "color": {
-                "type": "string"
-              },
-              "sublabel": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "label",
-              "value"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "showValues": {
-          "type": "boolean"
-        },
-        "layout": {
-          "type": "string",
-          "enum": [
-            "vertical",
-            "horizontal"
-          ]
-        }
+      "$ref": "#/definitions/BarChartProps",
+      "definitions": {
+        "BarChartProps": {}
       },
-      "required": [
-        "bars"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "chart",
     "dataOwner": "visual",
@@ -782,89 +315,11 @@
   "PacketFlow": {
     "description": "An animated network topology where data packets travel along edges between nodes. Nodes are positioned by x/y percentage coordinates. Ideal for showing network protocols, request routing, TCP handshakes, and distributed system data flows.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "nodes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "x": {
-                "type": "number"
-              },
-              "y": {
-                "type": "number"
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "client",
-                  "server",
-                  "database",
-                  "router",
-                  "cdn"
-                ]
-              },
-              "sublabel": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "label",
-              "x",
-              "y"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "edges": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "from": {
-                "type": "string"
-              },
-              "to": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "color": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "from",
-              "to"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "packetInterval": {
-          "type": "number"
-        }
+      "$ref": "#/definitions/PacketFlowProps",
+      "definitions": {
+        "PacketFlowProps": {}
       },
-      "required": [
-        "nodes",
-        "edges"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "network-diagram",
     "dataOwner": "visual",
@@ -885,63 +340,11 @@
   "HttpExchange": {
     "description": "A side-by-side HTTP request and response viewer with line-by-line animated reveal. Shows method, path, headers, and body for both request and response. Great for explaining APIs, REST calls, and HTTP protocol details.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "method": {
-          "type": "string",
-          "enum": [
-            "GET",
-            "POST",
-            "PUT",
-            "DELETE",
-            "PATCH"
-          ]
-        },
-        "path": {
-          "type": "string"
-        },
-        "host": {
-          "type": "string"
-        },
-        "requestHeaders": {
-          "type": "object",
-          "propertyNames": {
-            "type": "string"
-          },
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "requestBody": {
-          "type": "string"
-        },
-        "statusCode": {
-          "type": "number"
-        },
-        "statusText": {
-          "type": "string"
-        },
-        "responseHeaders": {
-          "type": "object",
-          "propertyNames": {
-            "type": "string"
-          },
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "responseBody": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/HttpExchangeProps",
+      "definitions": {
+        "HttpExchangeProps": {}
       },
-      "required": [
-        "path"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "code",
     "dataOwner": "content",
@@ -962,47 +365,11 @@
   "HashRing": {
     "description": "A consistent hashing ring with virtual nodes, server placement, and animated key lookups. Use for distributed caches, sharded databases, CDNs, and any consistent-hashing explanation.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "servers": {
-          "minItems": 2,
-          "maxItems": 6,
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "virtualNodesPerServer": {
-          "type": "number",
-          "minimum": 2,
-          "maximum": 64
-        },
-        "lookupKeys": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "ticks": {
-          "type": "number",
-          "minimum": 24,
-          "maximum": 360
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "showLegend": {
-          "type": "boolean"
-        }
+      "$ref": "#/definitions/HashRingProps",
+      "definitions": {
+        "HashRingProps": {}
       },
-      "required": [
-        "servers"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "network-diagram",
     "dataOwner": "visual",
@@ -1023,75 +390,11 @@
   "StateMachine": {
     "description": "An animated finite-state machine with state boxes, labeled transition arrows, and a pulsing active state. Use for protocol diagrams (TCP handshake, Raft consensus), cache coherence, and workflow states.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "states": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "color": {
-                "type": "string"
-              },
-              "description": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "label"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "transitions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "fromId": {
-                "type": "string"
-              },
-              "toId": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "highlight": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "fromId",
-              "toId",
-              "label"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "activeStateId": {
-          "type": "string"
-        },
-        "accentColor": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/StateMachineProps",
+      "definitions": {
+        "StateMachineProps": {}
       },
-      "required": [
-        "states",
-        "transitions"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "state-tree",
     "dataOwner": "visual",
@@ -1112,89 +415,11 @@
   "TreeHierarchy": {
     "description": "A top-down tree diagram with auto-laid-out nodes and curved connectors. Use for B-trees, DNS hierarchy, recursion trees, file systems, org charts, and classification.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "root": {
-          "type": "object",
-          "properties": {
-            "label": {
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            },
-            "color": {
-              "type": "string"
-            },
-            "children": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "color": {
-                    "type": "string"
-                  },
-                  "children": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "label": {
-                          "type": "string"
-                        },
-                        "description": {
-                          "type": "string"
-                        },
-                        "color": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "label"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                "required": [
-                  "label",
-                  "children"
-                ],
-                "additionalProperties": false
-              }
-            }
-          },
-          "required": [
-            "label",
-            "children"
-          ],
-          "additionalProperties": false
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "direction": {
-          "type": "string",
-          "enum": [
-            "down",
-            "right"
-          ]
-        }
+      "$ref": "#/definitions/TreeHierarchyProps",
+      "definitions": {
+        "TreeHierarchyProps": {}
       },
-      "required": [
-        "root"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "state-tree",
     "dataOwner": "visual",
@@ -1215,99 +440,11 @@
   "SequenceDiagram": {
     "description": "A UML-style sequence diagram with actor lifelines and time-ordered request/response arrows. Use for API flows, microservice communication, and authentication sequences.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "actors": {
-          "minItems": 2,
-          "maxItems": 6,
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "messages": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "fromIdx": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
-              },
-              "toIdx": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
-              },
-              "label": {
-                "type": "string"
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "sync",
-                  "return",
-                  "async"
-                ]
-              },
-              "active": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "fromIdx",
-              "toIdx",
-              "label"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "activations": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "actorIdx": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
-              },
-              "startMessage": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
-              },
-              "endMessage": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 9007199254740991
-              },
-              "label": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "actorIdx",
-              "startMessage",
-              "endMessage"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/SequenceDiagramProps",
+      "definitions": {
+        "SequenceDiagramProps": {}
       },
-      "required": [
-        "actors",
-        "messages"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "sequence",
     "dataOwner": "visual",
@@ -1328,69 +465,11 @@
   "LineChart": {
     "description": "An animated multi-series line chart with optional area fill, grid lines, and legend. Lines draw in over time. Use for trends, growth curves, latency vs load, and any time-series comparison.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "xLabels": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "series": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "color": {
-                "type": "string"
-              },
-              "values": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                }
-              },
-              "fill": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "name",
-              "values"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "yLabel": {
-          "type": "string"
-        },
-        "xLabel": {
-          "type": "string"
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "showLegend": {
-          "type": "boolean"
-        },
-        "highlightIndex": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        }
+      "$ref": "#/definitions/LineChartProps",
+      "definitions": {
+        "LineChartProps": {}
       },
-      "required": [
-        "xLabels",
-        "series"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "chart",
     "dataOwner": "visual",
@@ -1411,253 +490,11 @@
   "MathFormula": {
     "description": "A centered formula display with token-based rendering for variables, numbers, fractions, exponents, subscripts, square roots, and sums. Use for Big-O notation, equations, and math derivations.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "tokens": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "const": "text"
-                  },
-                  "value": {
-                    "type": "string"
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "value"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "const": "var"
-                  },
-                  "value": {
-                    "type": "string"
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "value"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "const": "num"
-                  },
-                  "value": {
-                    "type": "string"
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "value"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "const": "op"
-                  },
-                  "value": {
-                    "type": "string"
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "value"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "const": "frac"
-                  },
-                  "numerator": {
-                    "type": "array",
-                    "items": {}
-                  },
-                  "denominator": {
-                    "type": "array",
-                    "items": {}
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "numerator",
-                  "denominator"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "const": "sup"
-                  },
-                  "base": {
-                    "type": "array",
-                    "items": {}
-                  },
-                  "exponent": {
-                    "type": "array",
-                    "items": {}
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "base",
-                  "exponent"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "const": "sub"
-                  },
-                  "base": {
-                    "type": "array",
-                    "items": {}
-                  },
-                  "subscript": {
-                    "type": "array",
-                    "items": {}
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "base",
-                  "subscript"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "const": "sqrt"
-                  },
-                  "body": {
-                    "type": "array",
-                    "items": {}
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "body"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "const": "sum"
-                  },
-                  "lower": {
-                    "type": "array",
-                    "items": {}
-                  },
-                  "upper": {
-                    "type": "array",
-                    "items": {}
-                  },
-                  "body": {
-                    "type": "array",
-                    "items": {}
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "lower",
-                  "upper",
-                  "body"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "const": "space"
-                  }
-                },
-                "required": [
-                  "type"
-                ],
-                "additionalProperties": false
-              }
-            ]
-          }
-        },
-        "description": {
-          "type": "string"
-        },
-        "accentColor": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/MathFormulaProps",
+      "definitions": {
+        "MathFormulaProps": {}
       },
-      "required": [
-        "tokens"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "math",
     "dataOwner": "content",
@@ -1678,48 +515,11 @@
   "EquationDerivation": {
     "description": "A vertical stack of formula steps connected by arrows, with optional justifications. Each step is a complete formula that can highlight independently. Use for proof walks and algebraic transformations.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "steps": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "label": {
-                "type": "string"
-              },
-              "tokens": {
-                "type": "array",
-                "items": {}
-              },
-              "highlight": {
-                "type": "boolean"
-              },
-              "final": {
-                "type": "boolean"
-              },
-              "note": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "tokens"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/EquationDerivationProps",
+      "definitions": {
+        "EquationDerivationProps": {}
       },
-      "required": [
-        "steps"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "math",
     "dataOwner": "content",
@@ -1739,58 +539,11 @@
   "TerminalCLI": {
     "description": "An animated terminal/CLI window that types a command then streams output line by line. Themes: dark, matrix, amber. Use for tutorials, debugging flows, and showing command output.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "command": {
-          "type": "string"
-        },
-        "output": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "typingCommand": {
-          "type": "boolean"
-        },
-        "outputLineDelay": {
-          "type": "number"
-        },
-        "typingSpeed": {
-          "type": "number"
-        },
-        "caption": {
-          "type": "string"
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "highlightLines": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 9007199254740991
-          }
-        },
-        "theme": {
-          "type": "string",
-          "enum": [
-            "dark",
-            "matrix",
-            "amber"
-          ]
-        }
+      "$ref": "#/definitions/TerminalCLIProps",
+      "definitions": {
+        "TerminalCLIProps": {}
       },
-      "required": [
-        "command",
-        "output"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "code",
     "dataOwner": "content",
@@ -1811,63 +564,11 @@
   "PieChart": {
     "description": "An animated pie or donut chart with a sweeping reveal, percentage labels, an optional center label, and a side legend with values. Use for proportional breakdowns.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "slices": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "label": {
-                "type": "string"
-              },
-              "value": {
-                "type": "number"
-              },
-              "color": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "label",
-              "value"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "centerLabel": {
-          "type": "string"
-        },
-        "centerValue": {
-          "type": "string"
-        },
-        "variant": {
-          "type": "string",
-          "enum": [
-            "pie",
-            "donut"
-          ]
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "showLegend": {
-          "type": "boolean"
-        },
-        "highlightIndex": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        }
+      "$ref": "#/definitions/PieChartProps",
+      "definitions": {
+        "PieChartProps": {}
       },
-      "required": [
-        "slices"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "chart",
     "dataOwner": "visual",
@@ -1888,51 +589,11 @@
   "NumberedList": {
     "description": "A list of numbered cards with large colored badges, headings, and descriptions. Stack (vertical) or grid (2-column) layout. Use for ranked steps, principles, and ordered concepts.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "heading": {
-                "type": "string"
-              },
-              "description": {
-                "type": "string"
-              },
-              "color": {
-                "type": "string"
-              },
-              "icon": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "heading"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        },
-        "layout": {
-          "type": "string",
-          "enum": [
-            "stack",
-            "grid"
-          ]
-        }
+      "$ref": "#/definitions/NumberedListProps",
+      "definitions": {
+        "NumberedListProps": {}
       },
-      "required": [
-        "items"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "list",
     "dataOwner": "content",
@@ -1952,55 +613,11 @@
   "GlossaryCards": {
     "description": "A grid of term/definition cards with colored icon tiles. Auto-detects 2- or 3-column layout. Use for vocabulary sections, acronym glossaries, and concept maps.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "terms": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "term": {
-                "type": "string"
-              },
-              "definition": {
-                "type": "string"
-              },
-              "icon": {
-                "type": "string"
-              },
-              "color": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "term",
-              "definition"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "grid": {
-          "type": "string",
-          "enum": [
-            "auto",
-            "2x2",
-            "2x3",
-            "3x2",
-            "3x3"
-          ]
-        },
-        "accentColor": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/GlossaryCardsProps",
+      "definitions": {
+        "GlossaryCardsProps": {}
       },
-      "required": [
-        "terms"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "list",
     "dataOwner": "content",
@@ -2020,80 +637,11 @@
   "FlowDiagram": {
     "description": "A branching flow diagram with process (rectangle), decision (diamond), and start/end (pill) shapes connected by labeled arrows. Use for workflows, conditional logic, and algorithms with branching.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "nodes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "process",
-                  "decision",
-                  "start",
-                  "end"
-                ]
-              },
-              "description": {
-                "type": "string"
-              },
-              "color": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "label"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "edges": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "fromId": {
-                "type": "string"
-              },
-              "toId": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "active": {
-                "type": "boolean"
-              }
-            },
-            "required": [
-              "fromId",
-              "toId"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "accentColor": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/FlowDiagramProps",
+      "definitions": {
+        "FlowDiagramProps": {}
       },
-      "required": [
-        "nodes",
-        "edges"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "state-tree",
     "dataOwner": "visual",
@@ -2114,38 +662,11 @@
   "CalloutAnnotation": {
     "description": "A highlighted callout box with corner brackets, a side arrow, and optional bullet points. Use to emphasize a key insight or definition against a darker background.",
     "schema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "body": {
-          "type": "string"
-        },
-        "bullets": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "position": {
-          "type": "string",
-          "enum": [
-            "left",
-            "right",
-            "top",
-            "bottom"
-          ]
-        },
-        "accentColor": {
-          "type": "string"
-        }
+      "$ref": "#/definitions/CalloutAnnotationProps",
+      "definitions": {
+        "CalloutAnnotationProps": {}
       },
-      "required": [
-        "body"
-      ],
-      "additionalProperties": false
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "category": "text",
     "dataOwner": "content",
@@ -2163,5 +684,827 @@
       "note"
     ],
     "minSeconds": 5
+  },
+  "SortingVisualizer": {
+    "description": "An animated sorting-algorithm walkthrough. Bars represent values; steps compare, swap, partition, set, or merge-write to visualise bubble / merge / quick / heap / radix / counting sort.",
+    "schema": {
+      "$ref": "#/definitions/SortingVisualizerProps",
+      "definitions": {
+        "SortingVisualizerProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a sorting algorithm being walked through, or comparing sort algorithms visually",
+    "tags": [
+      "sort",
+      "algorithm",
+      "swap",
+      "comparison",
+      "complexity",
+      "bubble",
+      "merge",
+      "quick",
+      "heap",
+      "radix"
+    ],
+    "minSeconds": 10
+  },
+  "LinearStructure": {
+    "description": "An animated linear data structure — array, stack, queue, deque, or linked list — with push/pop/enqueue/dequeue/insert/delete motion. Cells shift, fade, and translate to visualise each operation.",
+    "schema": {
+      "$ref": "#/definitions/LinearStructureProps",
+      "definitions": {
+        "LinearStructureProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "panel",
+      "main"
+    ],
+    "useWhen": "a linear data structure — array, stack, queue, deque, or linked list — being mutated by a sequence of operations",
+    "tags": [
+      "array",
+      "stack",
+      "queue",
+      "deque",
+      "linked-list",
+      "data-structure",
+      "push",
+      "pop"
+    ],
+    "minSeconds": 8
+  },
+  "ArrayAlgorithm": {
+    "description": "An animated array walkthrough with pointer overlays. Modes: binary-search (L/M/R), sliding-window (start/end + running sum), two-pointer (i/j).",
+    "schema": {
+      "$ref": "#/definitions/ArrayAlgorithmProps",
+      "definitions": {
+        "ArrayAlgorithmProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "an array-scan algorithm — binary search, sliding window, or two-pointer technique",
+    "tags": [
+      "array",
+      "pointer",
+      "binary-search",
+      "sliding-window",
+      "two-pointer"
+    ],
+    "minSeconds": 8
+  },
+  "DPTableVisualizer": {
+    "description": "An animated 2D DP table. Cells fill in order with dependency arrows from prior cells; optional final path traces the optimal answer.",
+    "schema": {
+      "$ref": "#/definitions/DPTableVisualizerProps",
+      "definitions": {
+        "DPTableVisualizerProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a 2D DP table being filled cell-by-cell, or a matrix-based algorithm (LCS, edit distance, Floyd-Warshall, knapsack)",
+    "tags": [
+      "dp",
+      "dynamic-programming",
+      "matrix",
+      "table",
+      "memoization",
+      "subproblems"
+    ],
+    "minSeconds": 12
+  },
+  "GraphTraversal": {
+    "description": "An animated graph algorithm walkthrough. Node states (unvisited/frontier/visited/settled) and edge states (traversed/relaxed/MST/rejected) update per step. Supports DFS, BFS, Dijkstra, Bellman-Ford, topological sort, Prim's and Kruskal's MST.",
+    "schema": {
+      "$ref": "#/definitions/GraphTraversalProps",
+      "definitions": {
+        "GraphTraversalProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a graph algorithm being traced — DFS/BFS traversal, shortest path (Dijkstra/Bellman-Ford), MST, or topological sort",
+    "tags": [
+      "graph",
+      "traversal",
+      "dfs",
+      "bfs",
+      "dijkstra",
+      "bellman-ford",
+      "shortest-path",
+      "mst",
+      "topological"
+    ],
+    "minSeconds": 12
+  },
+  "RecursionTree": {
+    "description": "An animated recursion tree. Nodes grow in DFS order, then unwind with return values. Supports backtracking pruning (red dead-ends, green success paths) and memoization (memo-hit nodes stay collapsed).",
+    "schema": {
+      "$ref": "#/definitions/RecursionTreeProps",
+      "definitions": {
+        "RecursionTreeProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a recursive call tree, backtracking search, or memoization pattern being walked through",
+    "tags": [
+      "recursion",
+      "tree",
+      "backtracking",
+      "memoization",
+      "call-stack"
+    ],
+    "minSeconds": 12
+  },
+  "HeapVisualizer": {
+    "description": "An animated binary heap (min or max) drawn as a complete tree with an optional array view. Give `initial` values and `operations` (insert / extract); it walks the sift-up and sift-down compares and swaps automatically.",
+    "schema": {
+      "$ref": "#/definitions/HeapVisualizerProps",
+      "definitions": {
+        "HeapVisualizerProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a binary heap / priority queue being built or mutated — insert (sift-up), extract-min/max (sift-down), heapsort",
+    "tags": [
+      "heap",
+      "priority-queue",
+      "binary-heap",
+      "sift",
+      "heapsort",
+      "min-heap",
+      "max-heap"
+    ],
+    "minSeconds": 11
+  },
+  "HashTable": {
+    "description": "An animated hash table showing the hash function h(key) and collision resolution. Choose `strategy` \"chaining\" or \"open-addressing\"; give `operations` (insert / lookup / delete) and it animates hashing, probing, placement, hits and misses.",
+    "schema": {
+      "$ref": "#/definitions/HashTableProps",
+      "definitions": {
+        "HashTableProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a hash table with a hash function and collision resolution — separate chaining or open-addressing (linear probing)",
+    "tags": [
+      "hash-table",
+      "hashing",
+      "collision",
+      "chaining",
+      "open-addressing",
+      "probing",
+      "buckets"
+    ],
+    "minSeconds": 11
+  },
+  "TrieVisualizer": {
+    "description": "An animated trie / prefix tree. Give `operations` (insert / search / prefix); nodes appear as words are inserted and searches trace the path character by character, ending in a hit (green) or miss (red).",
+    "schema": {
+      "$ref": "#/definitions/TrieVisualizerProps",
+      "definitions": {
+        "TrieVisualizerProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a trie / prefix tree — inserting words and searching words or prefixes character by character",
+    "tags": [
+      "trie",
+      "prefix-tree",
+      "string",
+      "autocomplete",
+      "search",
+      "prefix"
+    ],
+    "minSeconds": 11
+  },
+  "UnionFind": {
+    "description": "An animated disjoint-set (union-find). Elements sit in a fixed row and parent-pointer arrows change as sets merge. Give `elements` and `operations` (union / find); supports union-by-rank and path compression.",
+    "schema": {
+      "$ref": "#/definitions/UnionFindProps",
+      "definitions": {
+        "UnionFindProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a disjoint-set / union-find structure — union, find, union-by-rank and path compression (e.g. Kruskal's MST, connectivity)",
+    "tags": [
+      "union-find",
+      "disjoint-set",
+      "dsu",
+      "connectivity",
+      "path-compression",
+      "union-by-rank",
+      "kruskal"
+    ],
+    "minSeconds": 10
+  },
+  "BSTOperations": {
+    "description": "An animated binary search tree. Give `initial` values and `operations` (insert / search / delete); nodes tween into place, comparisons highlight the path, and with `balance:\"avl\"` it performs and animates rotations to self-balance.",
+    "schema": {
+      "$ref": "#/definitions/BSTOperationsProps",
+      "definitions": {
+        "BSTOperationsProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a binary search tree being mutated — insert, search, delete, and optional AVL self-balancing rotations",
+    "tags": [
+      "bst",
+      "binary-search-tree",
+      "avl",
+      "rotation",
+      "self-balancing",
+      "insert",
+      "delete"
+    ],
+    "minSeconds": 12
+  },
+  "SegmentTree": {
+    "description": "An animated segment tree over an array. Nodes cover ranges; `operations` run range queries (sum/min/max) highlighting full-cover vs partial nodes, and point updates propagating leaf→root. Set `op` to the aggregate.",
+    "schema": {
+      "$ref": "#/definitions/SegmentTreeProps",
+      "definitions": {
+        "SegmentTreeProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a segment tree answering range sum/min/max queries and point updates over an array",
+    "tags": [
+      "segment-tree",
+      "range-query",
+      "range-sum",
+      "range-min",
+      "point-update",
+      "divide-and-conquer"
+    ],
+    "minSeconds": 12
+  },
+  "FenwickTree": {
+    "description": "An animated Fenwick tree (binary indexed tree) with the logical array and the BIT array. Updates walk i += i&-i and prefix-sum queries walk i -= i&-i, shown with index-jump arcs and a running sum.",
+    "schema": {
+      "$ref": "#/definitions/FenwickTreeProps",
+      "definitions": {
+        "FenwickTreeProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a Fenwick tree / binary indexed tree doing prefix-sum queries and updates via i ± (i & -i)",
+    "tags": [
+      "fenwick-tree",
+      "binary-indexed-tree",
+      "bit",
+      "prefix-sum",
+      "lowbit",
+      "range-query"
+    ],
+    "minSeconds": 11
+  },
+  "RedBlackTree": {
+    "description": "An animated red-black tree. Give `values` to insert; nodes are colored red/black, and the tree recolors and rotates to restore the red-black properties after each insertion.",
+    "schema": {
+      "$ref": "#/definitions/RedBlackTreeProps",
+      "definitions": {
+        "RedBlackTreeProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a red-black tree insertion with recoloring and rotations to stay balanced",
+    "tags": [
+      "red-black-tree",
+      "rbtree",
+      "balanced-bst",
+      "recolor",
+      "rotation",
+      "self-balancing"
+    ],
+    "minSeconds": 12
+  },
+  "BTreeVisualizer": {
+    "description": "An animated B-tree of a given `order`. Keys insert into multi-key leaf nodes; when a node overflows it splits and promotes the median upward, cascading toward the root. Good for database indexes and filesystems.",
+    "schema": {
+      "$ref": "#/definitions/BTreeVisualizerProps",
+      "definitions": {
+        "BTreeVisualizerProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a B-tree / B+ tree with multi-key nodes splitting on overflow as keys are inserted (databases, filesystems)",
+    "tags": [
+      "b-tree",
+      "b+tree",
+      "multiway-tree",
+      "split",
+      "database-index",
+      "order"
+    ],
+    "minSeconds": 12
+  },
+  "SkipList": {
+    "description": "An animated skip list with express lanes. `operations` (insert / search) walk right on a level then drop down to lower levels. Heights are deterministic (from the value or an explicit level).",
+    "schema": {
+      "$ref": "#/definitions/SkipListProps",
+      "definitions": {
+        "SkipListProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a skip list search or insert walking express lanes (walk right, drop down) across levels",
+    "tags": [
+      "skip-list",
+      "probabilistic",
+      "levels",
+      "express-lane",
+      "search",
+      "ordered"
+    ],
+    "minSeconds": 11
+  },
+  "LRUCache": {
+    "description": "An animated LRU cache as an ordered list from most- to least-recently-used. `operations` (get / put) move entries to the front on access and evict the tail when over `capacity`.",
+    "schema": {
+      "$ref": "#/definitions/LRUCacheProps",
+      "definitions": {
+        "LRUCacheProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "an LRU cache with a hash map + doubly-linked list — get/put, move-to-front, and eviction of the least-recently-used entry",
+    "tags": [
+      "lru",
+      "cache",
+      "eviction",
+      "doubly-linked-list",
+      "hash-map",
+      "capacity"
+    ],
+    "minSeconds": 11
+  },
+  "MonotonicStack": {
+    "description": "An animated monotonic stack computing the next/previous greater or smaller element (set `variant`). Shows the scan, the stack contents, pops, and the resulting answer array.",
+    "schema": {
+      "$ref": "#/definitions/MonotonicStackProps",
+      "definitions": {
+        "MonotonicStackProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a monotonic stack computing next/previous greater or smaller element for each array entry",
+    "tags": [
+      "monotonic-stack",
+      "next-greater-element",
+      "stack",
+      "sliding",
+      "invariant"
+    ],
+    "minSeconds": 10
+  },
+  "AStarPathfinding": {
+    "description": "An animated A* search on a grid with walls. Cells show g and f costs; the open (frontier) and closed sets fill in until the goal is reached and the shortest path is traced. Set `heuristic` to manhattan or euclidean.",
+    "schema": {
+      "$ref": "#/definitions/AStarPathfindingProps",
+      "definitions": {
+        "AStarPathfindingProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "A* pathfinding on a grid with obstacles — open/closed sets and g/h/f costs guiding to the goal",
+    "tags": [
+      "a-star",
+      "astar",
+      "pathfinding",
+      "grid",
+      "heuristic",
+      "shortest-path",
+      "search"
+    ],
+    "minSeconds": 12
+  },
+  "StringMatching": {
+    "description": "An animated substring search sliding a `pattern` over `text`. Supports naive, KMP (LPS jumps), and Rabin-Karp (rolling hash); highlights each comparison and every match found.",
+    "schema": {
+      "$ref": "#/definitions/StringMatchingProps",
+      "definitions": {
+        "StringMatchingProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a substring-search algorithm sliding a pattern over text — KMP, Rabin-Karp, or naive",
+    "tags": [
+      "string-matching",
+      "kmp",
+      "rabin-karp",
+      "pattern-search",
+      "substring",
+      "rolling-hash"
+    ],
+    "minSeconds": 11
+  },
+  "BacktrackingGrid": {
+    "description": "An animated N-Queens backtracking search. Queens are placed row by row; conflicts are shown against attacking queens and the search backtracks from dead ends until a full solution is found.",
+    "schema": {
+      "$ref": "#/definitions/BacktrackingGridProps",
+      "definitions": {
+        "BacktrackingGridProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a backtracking search on a board — N-Queens placing, detecting conflicts, and backtracking",
+    "tags": [
+      "backtracking",
+      "n-queens",
+      "constraint",
+      "search",
+      "recursion",
+      "board"
+    ],
+    "minSeconds": 12
+  },
+  "BloomFilter": {
+    "description": "An animated Bloom filter — a bit array with k hash functions. Insert sets k bits; query checks them and reports \"possibly present\" (all set) or \"definitely not present\" (any clear), demonstrating false positives.",
+    "schema": {
+      "$ref": "#/definitions/BloomFilterProps",
+      "definitions": {
+        "BloomFilterProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a Bloom filter — a bit array with k hash functions, insert setting bits, query returning maybe/definitely-not (probabilistic membership)",
+    "tags": [
+      "bloom-filter",
+      "probabilistic",
+      "hashing",
+      "bit-array",
+      "membership",
+      "false-positive"
+    ],
+    "minSeconds": 11
+  },
+  "SieveOfEratosthenes": {
+    "description": "An animated Sieve of Eratosthenes on a number grid. Each prime is highlighted and its multiples are crossed out; the numbers left standing are the primes up to n.",
+    "schema": {
+      "$ref": "#/definitions/SieveOfEratosthenesProps",
+      "definitions": {
+        "SieveOfEratosthenesProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "the Sieve of Eratosthenes — crossing out multiples of each prime on a number grid to find all primes up to n",
+    "tags": [
+      "sieve",
+      "eratosthenes",
+      "primes",
+      "number-theory",
+      "crossing-out",
+      "grid"
+    ],
+    "minSeconds": 11
+  },
+  "FlowNetwork": {
+    "description": "An animated maximum-flow computation (Edmonds-Karp). Nodes are placed by x/y percent; BFS finds augmenting paths, edges show flow/capacity, and the running max-flow value updates until no path remains.",
+    "schema": {
+      "$ref": "#/definitions/FlowNetworkProps",
+      "definitions": {
+        "FlowNetworkProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a maximum-flow computation — Ford-Fulkerson / Edmonds-Karp augmenting paths with edge flow/capacity and residuals",
+    "tags": [
+      "max-flow",
+      "min-cut",
+      "edmonds-karp",
+      "ford-fulkerson",
+      "augmenting-path",
+      "network-flow",
+      "capacity"
+    ],
+    "minSeconds": 13
+  },
+  "QuadTree": {
+    "description": "An animated point quadtree over the unit square. Points insert one by one; when a leaf exceeds capacity it subdivides into four quadrants, showing spatial partitioning.",
+    "schema": {
+      "$ref": "#/definitions/QuadTreeProps",
+      "definitions": {
+        "QuadTreeProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a point quadtree — a 2D region recursively subdividing into quadrants as points exceed a node's capacity (spatial indexing)",
+    "tags": [
+      "quadtree",
+      "spatial",
+      "subdivision",
+      "2d",
+      "points",
+      "collision",
+      "spatial-index"
+    ],
+    "minSeconds": 12
+  },
+  "KDTree": {
+    "description": "An animated 2D k-d tree. Points insert with alternating x/y splits; each split draws a line across its region, partitioning the plane. Vertical lines are x-splits, horizontal lines are y-splits.",
+    "schema": {
+      "$ref": "#/definitions/KDTreeProps",
+      "definitions": {
+        "KDTreeProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a 2D k-d tree — alternating x/y splits partitioning the plane (nearest-neighbour, range search)",
+    "tags": [
+      "kd-tree",
+      "spatial",
+      "nearest-neighbour",
+      "partition",
+      "2d",
+      "binary-space-partition"
+    ],
+    "minSeconds": 12
+  },
+  "StronglyConnectedComponents": {
+    "description": "An animated Tarjan's SCC algorithm on a directed graph. Nodes show index/low-link values, a stack tracks the current path, and strongly connected components are colored as they close.",
+    "schema": {
+      "$ref": "#/definitions/StronglyConnectedComponentsProps",
+      "definitions": {
+        "StronglyConnectedComponentsProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "Tarjan's strongly-connected-components — DFS with index/low-link values and a stack, closing SCCs on a directed graph",
+    "tags": [
+      "scc",
+      "tarjan",
+      "strongly-connected",
+      "low-link",
+      "directed-graph",
+      "dfs",
+      "components"
+    ],
+    "minSeconds": 13
+  },
+  "GraphColoring": {
+    "description": "An animated greedy vertex coloring. Each vertex is assigned the smallest color not used by its already-colored neighbours; a legend shows the palette and the total colors used.",
+    "schema": {
+      "$ref": "#/definitions/GraphColoringProps",
+      "definitions": {
+        "GraphColoringProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "greedy graph coloring — assigning each vertex the smallest color not used by its neighbours",
+    "tags": [
+      "graph-coloring",
+      "greedy",
+      "chromatic",
+      "conflict",
+      "vertex-coloring",
+      "scheduling"
+    ],
+    "minSeconds": 11
+  },
+  "SuffixArray": {
+    "description": "An animated suffix array. All suffixes of a string are listed, sorted lexicographically (the suffix array), then a pattern is located with binary search showing L/M/R pointers.",
+    "schema": {
+      "$ref": "#/definitions/SuffixArrayProps",
+      "definitions": {
+        "SuffixArrayProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "a suffix array — sorting a string's suffixes and binary-searching a pattern against them",
+    "tags": [
+      "suffix-array",
+      "string",
+      "sorting",
+      "binary-search",
+      "substring",
+      "pattern"
+    ],
+    "minSeconds": 12
+  },
+  "IntervalScheduling": {
+    "description": "An animated greedy interval scheduling (activity selection). Intervals are sorted by end time and shown on a timeline; non-overlapping ones are selected (green) and overlapping ones rejected (red).",
+    "schema": {
+      "$ref": "#/definitions/IntervalSchedulingProps",
+      "definitions": {
+        "IntervalSchedulingProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "greedy interval scheduling / activity selection — sort by end time and pick non-overlapping intervals on a timeline",
+    "tags": [
+      "interval-scheduling",
+      "activity-selection",
+      "greedy",
+      "intervals",
+      "timeline",
+      "overlap"
+    ],
+    "minSeconds": 11
+  },
+  "BitManipulation": {
+    "description": "An animated bit-manipulation walkthrough on a fixed-width binary value. Applies AND/OR/XOR with a mask, left/right shifts, set/clear/toggle a bit, NOT, and popcount, highlighting the bits that change.",
+    "schema": {
+      "$ref": "#/definitions/BitManipulationProps",
+      "definitions": {
+        "BitManipulationProps": {}
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "category": "algorithm",
+    "dataOwner": "visual",
+    "bestAreas": [
+      "main",
+      "panel"
+    ],
+    "useWhen": "bit-level operations on a binary value — AND/OR/XOR/shift, set/clear/toggle a bit, NOT, popcount",
+    "tags": [
+      "bit-manipulation",
+      "bitwise",
+      "and",
+      "or",
+      "xor",
+      "shift",
+      "popcount",
+      "binary"
+    ],
+    "minSeconds": 10
   }
 }
