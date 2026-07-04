@@ -71,12 +71,6 @@ export const SortingVisualizer: React.FC<SortingVisualizerProps> = ({
   const cmpCount = steps.slice(0, currentStepIdx + 1).filter(s => s.kind === "compare").length;
   const swapCount = steps.slice(0, currentStepIdx + 1).filter(s => s.kind === "swap").length;
 
-  // Sorted-region tint: for bubble/heap, sorted grows from the right by count(swap-to-end).
-  // For merge/quick/radix/counting we omit the tint (the settled array itself is the story).
-  const sortedFromRight = algorithm === "bubble" || algorithm === "heap"
-    ? swapCount   // rough heuristic; refine per-algorithm if needed
-    : 0;
-
   return (
     <div style={{
       width: "100%", height: "100%",
@@ -84,6 +78,7 @@ export const SortingVisualizer: React.FC<SortingVisualizerProps> = ({
       padding: "60px 80px", boxSizing: "border-box", gap: 40,
       background: theme.background,
       fontFamily: `${theme.font}, sans-serif`,
+      position: "relative",
     }}>
       {title && (
         <h2 style={{
@@ -101,14 +96,12 @@ export const SortingVisualizer: React.FC<SortingVisualizerProps> = ({
           const involved = activeStep?.indices.includes(i);
           const isPivot =
             activeStep?.kind === "partition" && i === activeStep.indices[1];
-          const isSortedTail = i >= settled.length - sortedFromRight;
 
           // Base color logic
           let color = "#1e293b";
           let border = "#334155";
-          if (isSortedTail) color = mix("#1e293b", theme.secondary, 0.4);
           if (involved) {
-            if (activeStep.kind === "compare") color = mix(color, accent, entering ? progress / 0.3 : 1);
+            if (activeStep.kind === "compare") color = mix(color, accent, entering ? Math.min(1, progress / 0.3) : 1);
             if (activeStep.kind === "swap") color = mix(color, accent, 0.7);
             if (activeStep.kind === "set" || activeStep.kind === "merge-write")
               color = mix(color, accent, 0.8);
