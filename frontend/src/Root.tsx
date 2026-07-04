@@ -13,6 +13,7 @@ import { SortingVisualizer } from "./components/SortingVisualizer";
 import { LinearStructure } from "./components/LinearStructure";
 import { ArrayAlgorithm } from "./components/ArrayAlgorithm";
 import { DPTableVisualizer } from "./components/DPTableVisualizer";
+import { GraphTraversal } from "./components/GraphTraversal";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -108,6 +109,38 @@ export const RemotionRoot: React.FC = () => {
             { row: 0, col: 6, value: 8, dependsOn: [{ row: 0, col: 4 }, { row: 0, col: 5 }] },
             { row: 0, col: 7, value: 13, dependsOn: [{ row: 0, col: 5 }, { row: 0, col: 6 }] },
           ],
+        }}
+      />
+      <Composition
+        id="preview-GraphTraversal"
+        component={GraphTraversal}
+        durationInFrames={30 * 18}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          title: "Dijkstra from A",
+          algorithm: "dijkstra" as const,
+          nodes: [
+            { id: "A", x: 15, y: 40 },
+            { id: "B", x: 40, y: 20 },
+            { id: "C", x: 40, y: 65 },
+            { id: "D", x: 65, y: 40 },
+            { id: "E", x: 85, y: 25 },
+            { id: "F", x: 85, y: 60 },
+          ],
+          edges: [
+            { from: "A", to: "B", weight: 4 },
+            { from: "A", to: "C", weight: 2 },
+            { from: "B", to: "C", weight: 1 },
+            { from: "B", to: "D", weight: 5 },
+            { from: "C", to: "D", weight: 8 },
+            { from: "D", to: "E", weight: 2 },
+            { from: "D", to: "F", weight: 6 },
+            { from: "E", to: "F", weight: 3 },
+          ],
+          start: "A",
+          showDistanceTable: true,
         }}
       />
     </>

@@ -44,6 +44,7 @@ import { SortingVisualizer, SortingVisualizerSchema } from "./components/Sorting
 import { LinearStructure, LinearStructureSchema } from "./components/LinearStructure";
 import { ArrayAlgorithm, ArrayAlgorithmSchema } from "./components/ArrayAlgorithm";
 import { DPTableVisualizer, DPTableVisualizerSchema } from "./components/DPTableVisualizer";
+import { GraphTraversal, GraphTraversalSchema } from "./components/GraphTraversal";
 
 export const COMPONENT_REGISTRY = {
   AnimatedTitle,
@@ -78,6 +79,7 @@ export const COMPONENT_REGISTRY = {
   LinearStructure,
   ArrayAlgorithm,
   DPTableVisualizer,
+  GraphTraversal,
 } as const;
 
 export const COMPONENT_SCHEMAS = {
@@ -113,6 +115,7 @@ export const COMPONENT_SCHEMAS = {
   LinearStructure: LinearStructureSchema,
   ArrayAlgorithm: ArrayAlgorithmSchema,
   DPTableVisualizer: DPTableVisualizerSchema,
+  GraphTraversal: GraphTraversalSchema,
 } as const;
 
 // Zod v4 ships a native JSON-Schema converter. The old `zod-to-json-schema`
@@ -210,6 +213,13 @@ export const COMPONENT_META: Record<SceneType, ComponentMeta> = {
     bestAreas: ["main", "panel"],
     useWhen: "a 2D DP table being filled cell-by-cell, or a matrix-based algorithm (LCS, edit distance, Floyd-Warshall, knapsack)",
     tags: ["dp", "dynamic-programming", "matrix", "table", "memoization", "subproblems"],
+    minSeconds: 12,
+  },
+  GraphTraversal: {
+    category: "algorithm", dataOwner: "visual",
+    bestAreas: ["main", "panel"],
+    useWhen: "a graph algorithm being traced — DFS/BFS traversal, shortest path (Dijkstra/Bellman-Ford), MST, or topological sort",
+    tags: ["graph", "traversal", "dfs", "bfs", "dijkstra", "bellman-ford", "shortest-path", "mst", "topological"],
     minSeconds: 12,
   },
 };
@@ -342,6 +352,10 @@ export const COMPONENT_CATALOG = {
   DPTableVisualizer: {
     description: "An animated 2D DP table. Cells fill in order with dependency arrows from prior cells; optional final path traces the optimal answer.",
     schema: toJsonSchema(DPTableVisualizerSchema, "DPTableVisualizerProps"),
+  },
+  GraphTraversal: {
+    description: "An animated graph algorithm walkthrough. Node states (unvisited/frontier/visited/settled) and edge states (traversed/relaxed/MST/rejected) update per step. Supports DFS, BFS, Dijkstra, Bellman-Ford, topological sort, Prim's and Kruskal's MST.",
+    schema: toJsonSchema(GraphTraversalSchema, "GraphTraversalProps"),
   },
 };
 
