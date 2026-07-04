@@ -151,7 +151,7 @@ export const GraphTraversal: React.FC<GraphTraversalProps> = ({
         {edges.map((e, i) => {
           const from = nodeById.get(e.from), to = nodeById.get(e.to);
           if (!from || !to) return null;
-          const { stroke, width } = edgeColour(e.from, e.to);
+          const { stroke, width: strokeW } = edgeColour(e.from, e.to);
           const entrance = interpolate(frame, [0, entranceFrames], [0, 1], {
             extrapolateLeft: "clamp", extrapolateRight: "clamp",
             easing: Easing.out(Easing.cubic),
@@ -164,7 +164,7 @@ export const GraphTraversal: React.FC<GraphTraversalProps> = ({
                 x1={`${from.x}%`} y1={`${from.y}%`}
                 x2={`${from.x + dx * entrance}%`}
                 y2={`${from.y + dy * entrance}%`}
-                stroke={stroke} strokeWidth={width} strokeLinecap="round"
+                stroke={stroke} strokeWidth={strokeW} strokeLinecap="round"
               />
               {typeof e.weight === "number" && (
                 <g transform={`translate(${mx / 100 * width}, ${my / 100 * height})`} opacity={entrance}>
