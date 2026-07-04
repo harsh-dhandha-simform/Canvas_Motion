@@ -177,7 +177,8 @@ export const ArrayAlgorithm: React.FC<ArrayAlgorithmProps> = ({
           {Object.entries(pointerPositions).map(([name, pos]) => (
             <div key={name} style={{
               position: "absolute",
-              left: pos * (cellW + gap) + cellW / 2 - 20,
+              left: pos * (cellW + gap) + cellW / 2,
+              translate: "-50% 0",
               display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
               color: name === "M" || name === "start" ? theme.primary : accent,
             }}>
