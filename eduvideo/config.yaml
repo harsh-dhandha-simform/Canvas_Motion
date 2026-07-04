@@ -2,17 +2,26 @@ video:
   width: 1920
   height: 1080
   fps: 30
-  theme: education_clean
-  primary_color: "#22c55e"
-  background_color: "#f8fafc"
+  theme: dark_matte
+  primary_color: "#7aa2f7"
+  background_color: "#1a1b26"
   font_family: "Inter"
+  default_scene_duration_sec: 3.0
 
 llm:
   model: sonnet
   thinking: disabled
-  effort: medium
+  effort: high
   timeout_seconds: 60
   fallback_model: gpt-4o
 
 tts:
   timeout_seconds: 30
+  model: aura-2-neptune-en
+  encoding: mp3
+  words_per_minute: 150
+
+subtitles:
+  max_words_per_line: 9
+  max_chars_per_line: 42
+  min_display_seconds: 0.8

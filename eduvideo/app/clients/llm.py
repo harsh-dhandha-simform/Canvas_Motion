@@ -23,8 +23,11 @@ class LLMClient:
 
         if self._settings.custom_llm_configured:
             try:
-                with span("llm.complete", provider="custom"):
-                    return self._call_custom(query)
+                model = self._settings.llm_model or self._settings.config.llm.model
+                with span("llm.complete", as_type="generation", input=query, provider="custom", model=model) as obs:
+                    answer = self._call_custom(query)
+                    obs.update(output=answer)
+                    return answer
             except Exception as exc:
                 if not self._settings.azure_configured:
                     raise LLMError(
@@ -33,8 +36,12 @@ class LLMClient:
         elif not self._settings.azure_configured:
             raise LLMError("no LLM provider configured: set LLM_BASE_URL/LLM_API_KEY or Azure OpenAI keys")
 
-        with span("llm.complete", provider="azure"):
-            return self._call_azure(system, user, json_mode)
+        with span(
+            "llm.complete", as_type="generation", input=query, provider="azure", model=self._settings.azure_openai_deployment
+        ) as obs:
+            answer = self._call_azure(system, user, json_mode)
+            obs.update(output=answer)
+            return answer
 
     def _call_custom(self, query: str) -> str:
         """Adapter for the user's custom Claude-backed API. Adjust here if the API shape changes.
@@ -47,8 +54,11 @@ class LLMClient:
         model = settings.llm_model or llm_cfg.model
 
         response = httpx.post(
-            settings.llm_base_url,
-            headers={"Authorization": f"Bearer {settings.llm_api_key}"},
+            settings.llm_base_url.strip(),
+            # .strip() guards against a trailing newline/space sneaking into the .env
+            # value (e.g. from copy-paste) — the custom API does an exact string
+            # match on "Bearer <key>", so stray whitespace silently causes a 401.
+            headers={"Authorization": f"Bearer {settings.llm_api_key.strip()}"},
             json={
                 "query": query,
                 "model": model,

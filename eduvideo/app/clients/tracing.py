@@ -73,10 +73,14 @@ def start_trace(job_id: str) -> str | None:
 
 
 @contextlib.contextmanager
-def span(name: str, **metadata: Any) -> Iterator[None]:
-    """Wraps an LLM/TTS/stage call in a span, attached to the current job's trace
-    (see start_trace). Usable as a context manager or `@span("name")` decorator.
-    No-op (and never raises) if tracing is disabled or the SDK call fails.
+def span(
+    name: str, *, as_type: str = "span", input: Any = None, model: str | None = None, **metadata: Any
+) -> Iterator[Any]:
+    """Wraps an LLM/TTS/stage call in a span (or generation, via `as_type="generation"`),
+    attached to the current job's trace (see start_trace). Yields the observation
+    handle — the caller records the result with `handle.update(output=..., ...)`
+    before the block exits; nothing is recorded automatically. No-op (and never
+    raises) if tracing is disabled or the SDK call fails.
     """
     tracer = get_tracer()
     try:
@@ -86,13 +90,19 @@ def span(name: str, **metadata: Any) -> Iterator[None]:
 
             trace_context = TraceContext(trace_id=_current_trace_id)
         handle = tracer.start_observation(
-            name=name, as_type="span", metadata=metadata, trace_context=trace_context
+            name=name, as_type=as_type, input=input, model=model, metadata=metadata, trace_context=trace_context
         )
     except Exception:
         handle = _NoOpHandle()
 
     try:
-        yield
+        yield handle
+    except Exception as exc:
+        try:
+            handle.update(level="ERROR", status_message=str(exc))
+        except Exception:
+            pass
+        raise
     finally:
         try:
             handle.end()

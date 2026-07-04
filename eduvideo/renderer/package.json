@@ -1,0 +1,23 @@
+{
+  "name": "eduvideo-renderer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Revideo renderer for eduvideo video_plan.json (MASTER_CONTEXT.md Phase 9). The only part of the system that knows about Revideo/React.",
+  "scripts": {
+    "render": "tsc && node dist/render.js"
+  },
+  "dependencies": {
+    "@revideo/core": "0.10.4",
+    "@revideo/2d": "0.10.4",
+    "@revideo/renderer": "0.10.4",
+    "@lezer/javascript": "^1.4.0",
+    "@lezer/python": "^1.1.0",
+    "@lezer/cpp": "^1.1.0",
+    "@lezer/java": "^1.1.0"
+  },
+  "devDependencies": {
+    "@revideo/cli": "0.10.4",
+    "@revideo/ui": "0.10.4",
+    "typescript": "5.5.4"
+  }
+}

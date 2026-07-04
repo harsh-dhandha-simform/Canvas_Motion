@@ -1,0 +1,189 @@
+{
+  "video": {
+    "title": "TCP Three-Way Handshake",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "durationSec": 74.0,
+    "style": {
+      "theme": "education_clean",
+      "primaryColor": "#22c55e",
+      "backgroundColor": "#f8fafc",
+      "fontFamily": "Arial"
+    }
+  },
+  "audio": { "voiceoverFile": "voiceover.mp3" },
+  "subtitles": [
+    { "start": 0.0, "end": 3.5, "text": "How does a reliable connection begin?", "highlight": [] },
+    { "start": 34.0, "end": 43.5, "text": "The client sends a SYN, the server replies with a SYN-ACK, then the client sends an ACK.", "highlight": ["SYN", "SYN-ACK", "ACK"] },
+    { "start": 44.0, "end": 51.0, "text": "Here is a minimal socket connecting to a server in Python.", "highlight": ["socket"] },
+    { "start": 66.0, "end": 73.5, "text": "That's the TCP handshake in a nutshell.", "highlight": [] }
+  ],
+  "scenes": [
+    {
+      "id": "scene_001",
+      "concept_id": "c1",
+      "template": "TitleScene",
+      "start": 0.0,
+      "duration": 4.0,
+      "animation": "fadeIn",
+      "props": { "title": "TCP Three-Way Handshake", "subtitle": "How reliable connections start" }
+    },
+    {
+      "id": "scene_002",
+      "concept_id": "c1",
+      "template": "DefinitionScene",
+      "start": 4.0,
+      "duration": 6.0,
+      "animation": "slideUp",
+      "props": {
+        "term": "TCP Handshake",
+        "definition": "A three-step exchange that lets a client and server agree to start a reliable connection.",
+        "keywords": ["SYN", "SYN-ACK", "ACK"]
+      }
+    },
+    {
+      "id": "scene_003",
+      "concept_id": "c1",
+      "template": "BulletListScene",
+      "start": 10.0,
+      "duration": 6.0,
+      "animation": "fadeIn",
+      "props": {
+        "heading": "Why bother with a handshake?",
+        "items": [
+          "Confirms both sides are reachable",
+          "Agrees on starting sequence numbers",
+          "Avoids acting on stale, duplicate connections"
+        ]
+      }
+    },
+    {
+      "id": "scene_004",
+      "concept_id": "c2",
+      "template": "DiagramScene",
+      "start": 16.0,
+      "duration": 10.0,
+      "animation": "slideUp",
+      "props": {
+        "diagramType": "sequence",
+        "nodes": [
+          { "id": "client", "label": "Client", "type": "actor" },
+          { "id": "server", "label": "Server", "type": "actor" }
+        ],
+        "edges": [
+          { "from": "client", "to": "server", "label": "SYN" },
+          { "from": "server", "to": "client", "label": "SYN-ACK" },
+          { "from": "client", "to": "server", "label": "ACK" }
+        ],
+        "labels": [],
+        "caption": "The three steps of the TCP handshake"
+      }
+    },
+    {
+      "id": "scene_005",
+      "concept_id": "c3",
+      "template": "CodeScene",
+      "start": 26.0,
+      "duration": 8.0,
+      "animation": "popIn",
+      "props": {
+        "language": "python",
+        "code": "import socket\n\nsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\nsock.connect((\"example.com\", 80))\nsock.sendall(b\"GET / HTTP/1.1\\r\\n\\r\\n\")\nprint(sock.recv(1024))",
+        "highlightLines": [4],
+        "caption": "connect() triggers the handshake before any data is sent",
+        "steps": []
+      }
+    },
+    {
+      "id": "scene_006",
+      "concept_id": "c4",
+      "template": "ComparisonScene",
+      "start": 34.0,
+      "duration": 6.0,
+      "animation": "fadeIn",
+      "props": {
+        "heading": "TCP vs UDP",
+        "left": { "title": "TCP", "points": ["Handshake required", "Reliable, ordered delivery", "Higher overhead"] },
+        "right": { "title": "UDP", "points": ["No handshake", "Best-effort delivery", "Lower overhead"] }
+      }
+    },
+    {
+      "id": "scene_007",
+      "concept_id": "c5",
+      "template": "DiagramScene",
+      "start": 40.0,
+      "duration": 10.0,
+      "animation": "slideUp",
+      "props": {
+        "diagramType": "architecture",
+        "nodes": [
+          { "id": "web", "label": "Web Server", "type": "service", "group": "Edge" },
+          { "id": "api", "label": "API Service", "type": "service", "group": "Application" },
+          { "id": "cache", "label": "Cache", "type": "queue", "group": "Application" },
+          { "id": "db", "label": "Database", "type": "db", "group": "Data" }
+        ],
+        "edges": [
+          { "from": "web", "to": "api", "label": "HTTPS" },
+          { "from": "api", "to": "cache", "label": "lookup" },
+          { "from": "api", "to": "db", "label": "query" }
+        ],
+        "labels": [],
+        "caption": "A typical layered web architecture"
+      }
+    },
+    {
+      "id": "scene_008",
+      "concept_id": "c6",
+      "template": "ChartScene",
+      "start": 50.0,
+      "duration": 8.0,
+      "animation": "fadeIn",
+      "props": {
+        "chartType": "bar",
+        "series": [{ "name": "Latency (ms)", "data": [12, 45, 90] }],
+        "xLabel": "Cache hit / DB read / Cold start",
+        "yLabel": "ms",
+        "caption": "Illustrative latency comparison"
+      }
+    },
+    {
+      "id": "scene_009",
+      "concept_id": "c6",
+      "template": "QuizScene",
+      "start": 58.0,
+      "duration": 6.0,
+      "animation": "popIn",
+      "props": {
+        "question": "Which packet does the server send second?",
+        "options": ["SYN", "SYN-ACK", "ACK", "FIN"],
+        "answer": "SYN-ACK"
+      }
+    },
+    {
+      "id": "scene_010",
+      "concept_id": "c6",
+      "template": "RecapScene",
+      "start": 64.0,
+      "duration": 6.0,
+      "animation": "fadeIn",
+      "props": {
+        "heading": "Recap",
+        "points": [
+          "SYN starts the handshake",
+          "SYN-ACK acknowledges and replies",
+          "ACK completes the connection"
+        ]
+      }
+    },
+    {
+      "id": "scene_011",
+      "concept_id": "c6",
+      "template": "OutroScene",
+      "start": 70.0,
+      "duration": 4.0,
+      "animation": "fadeIn",
+      "props": { "message": "Thanks for watching!" }
+    }
+  ]
+}

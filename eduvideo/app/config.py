@@ -21,6 +21,7 @@ class VideoConfig(BaseModel):
     primary_color: str = "#22c55e"
     background_color: str = "#f8fafc"
     font_family: str = "Inter"
+    default_scene_duration_sec: float = 3.0
 
 
 class LLMConfig(BaseModel):
@@ -33,10 +34,33 @@ class LLMConfig(BaseModel):
 
 class TTSConfig(BaseModel):
     timeout_seconds: float = 30.0
+    model: str = "aura-asteria-en"
+    encoding: str = "mp3"
+    words_per_minute: float = 150.0
+    # Round-robin voice rotation across jobs (see app/clients/voice_rotation.py) so
+    # consecutive videos don't all sound identical. Empty list = always use `model`.
+    voice_models: list[str] = [
+        "aura-2-neptune-en",
+        "aura-2-selene-en",
+        "aura-2-jupiter-en",
+        "aura-2-orion-en",
+        "aura-2-odysseus-en",
+    ]
 
 
 class JobsConfig(BaseModel):
     dir: str = "jobs"
+
+
+class SubtitlesConfig(BaseModel):
+    max_words_per_line: int = 9
+    max_chars_per_line: int = 42
+    min_display_seconds: float = 0.8
+
+
+class RenderConfig(BaseModel):
+    renderer_dir: str = "renderer"
+    timeout_seconds: float = 900.0
 
 
 class YamlConfig(BaseModel):
@@ -44,6 +68,8 @@ class YamlConfig(BaseModel):
     llm: LLMConfig = LLMConfig()
     tts: TTSConfig = TTSConfig()
     jobs: JobsConfig = JobsConfig()
+    subtitles: SubtitlesConfig = SubtitlesConfig()
+    render: RenderConfig = RenderConfig()
 
 
 def _load_yaml_config() -> YamlConfig:

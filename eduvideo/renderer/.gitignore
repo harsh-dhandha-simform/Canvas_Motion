@@ -1,0 +1,6 @@
+node_modules/
+dist/
+output/
+public/voiceover.mp3
+test-fixtures/sample-job/rendered.mp4
+test-fixtures/sample-job/voiceover.mp3
