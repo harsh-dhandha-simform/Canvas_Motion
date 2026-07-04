@@ -7,10 +7,28 @@ requires `custom.code`.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schemas.enums import CodeLanguage, DiagramType, InteractionType
-from app.schemas.video_plan import DiagramEdge, DiagramNode
+
+
+# Diagram node/edge shapes for diagram_explore. These originally lived in video_plan.py
+# (which the LangGraph engine replaced/removed); relocated here since interactions is
+# now their only consumer.
+class DiagramNode(BaseModel):
+    id: str
+    label: str
+    type: str | None = None
+    group: str | None = None
+
+
+class DiagramEdge(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    from_: str = Field(alias="from")
+    to: str
+    label: str | None = None
+    direction: str | None = None
 
 
 class StepThroughStep(BaseModel):
