@@ -12,7 +12,7 @@ llm:
   model: sonnet
   thinking: disabled
   effort: high
-  timeout_seconds: 60
+  timeout_seconds: 600  # agent prompts (catalog + schema injection) at effort:high are slow
   fallback_model: gpt-4o
 
 tts:
