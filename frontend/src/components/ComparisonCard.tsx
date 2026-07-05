@@ -97,9 +97,11 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
         padding: pad,
         borderRadius: clamp(Math.round(ch * 0.03), 16, 28),
         border: `2px solid ${accentColor}33`,
-        background: "rgba(2, 6, 23, 0.82)",
+        // Frosted, accent-tinted glass so the card blends into the scene instead of
+        // reading as a solid black slab (the scene background shows through).
+        background: `linear-gradient(160deg, ${accentColor}14 0%, rgba(2, 6, 23, 0.5) 48%)`,
         backdropFilter: "blur(12px)",
-        boxShadow: `0 30px 60px -15px rgba(15, 23, 42, 0.8), 0 0 20px -5px ${accentColor}1A`,
+        boxShadow: `0 24px 50px -22px rgba(0, 0, 0, 0.5), inset 0 1px 0 ${accentColor}1f`,
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",

@@ -14,7 +14,6 @@ import React from "react";
 import {
   AbsoluteFill,
   Sequence,
-  Easing,
   interpolate,
   useCurrentFrame,
   Audio,
@@ -321,8 +320,6 @@ const PanelCell: React.FC<{
 // SceneWrapper — renders header + grid of panels + transition overlay
 // ---------------------------------------------------------------------------
 
-const TRANSITION_FRAMES = 15;
-
 const autoDelay = (index: number, total: number, duration: number) => {
   // If only one panel, show immediately
   if (total <= 1) return 0;
@@ -335,8 +332,26 @@ const SceneWrapper: React.FC<{
   videoWidth: number;
   videoHeight: number;
   hasCaptions: boolean;
-}> = ({ scene, videoWidth, videoHeight, hasCaptions }) => {
+  baseDuration: number;
+  crossfade: number;
+}> = ({ scene, videoWidth, videoHeight, hasCaptions, baseDuration, crossfade }) => {
+  const sceneFrame = useCurrentFrame();
   const { layout, title, panels } = normaliseScene(scene);
+  // Smooth cross-dissolve: fade the whole scene in at the start, and out over the
+  // crossfade tail (the extra frames that overlap the next scene). Pure opacity is
+  // the least-noticeable transition and keeps audio/caption timing untouched.
+  const fadeIn = interpolate(sceneFrame, [0, 14], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const fadeOut =
+    crossfade > 0
+      ? interpolate(sceneFrame, [baseDuration, baseDuration + crossfade], [1, 0], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+        })
+      : 1;
+  const sceneOpacity = Math.min(fadeIn, fadeOut);
   const config = LAYOUTS[layout] ?? LAYOUTS["full"];
   // Only render the header bar when there is an actual title, so title-less
   // scenes don't waste 148px on an empty bar.
@@ -362,7 +377,7 @@ const SceneWrapper: React.FC<{
   const cellWByArea = cellWidths(areaNames, frByArea, videoWidth);
 
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{ opacity: sceneOpacity }}>
       {/* Animated theme-driven background (behind everything) */}
       <Background variant={hasDiagram ? "grid" : "glow"} />
       {/* Content above the background — bottom padding reserves the subtitle band */}
@@ -409,101 +424,8 @@ const SceneWrapper: React.FC<{
           ))}
         </div>
       </AbsoluteFill>
-      {/* Transition overlay */}
-      {scene.transition !== "none" && (
-        <Sequence
-          from={scene.duration_frames - TRANSITION_FRAMES}
-          durationInFrames={TRANSITION_FRAMES}
-          layout="none"
-        >
-          <TransitionOverlay transition={scene.transition} />
-        </Sequence>
-      )}
     </AbsoluteFill>
   );
-};
-
-// ---------------------------------------------------------------------------
-// Transition overlay
-// ---------------------------------------------------------------------------
-
-const TransitionOverlay: React.FC<{ transition: TransitionType }> = ({
-  transition,
-}) => {
-  const frame = useCurrentFrame();
-  const theme = useTheme();
-
-  // Smooth 0→1 sweep across the overlay's lifetime (eased, not springy, so the
-  // wipe reads as a clean directional motion).
-  const p = interpolate(frame, [0, TRANSITION_FRAMES], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.bezier(0.65, 0, 0.35, 1),
-  });
-
-  // A themed gradient panel — more cinematic than flat black.
-  const panel = `linear-gradient(135deg, ${theme.background} 0%, ${theme.primary}cc 60%, ${theme.accent}aa 100%)`;
-
-  if (transition === "fade") {
-    const fadeOpacity = interpolate(
-      frame,
-      [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES],
-      [0, 0.95, 0],
-      { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-    );
-    return (
-      <AbsoluteFill
-        style={{
-          background: panel,
-          opacity: fadeOpacity,
-          pointerEvents: "none",
-        }}
-      />
-    );
-  }
-  if (transition === "slideLeft") {
-    // Wipe in from the right, covering the outgoing scene.
-    return (
-      <AbsoluteFill
-        style={{
-          background: panel,
-          transform: `translateX(${interpolate(p, [0, 1], [100, 0])}%)`,
-          pointerEvents: "none",
-        }}
-      />
-    );
-  }
-  if (transition === "slideUp") {
-    return (
-      <AbsoluteFill
-        style={{
-          background: panel,
-          transform: `translateY(${interpolate(p, [0, 1], [100, 0])}%)`,
-          pointerEvents: "none",
-        }}
-      />
-    );
-  }
-  if (transition === "zoom") {
-    // Radial flash that scales up — for the most dramatic beat.
-    const flash = interpolate(
-      frame,
-      [0, TRANSITION_FRAMES / 2, TRANSITION_FRAMES],
-      [0, 0.85, 0],
-      { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-    );
-    return (
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(circle at 50% 50%, ${theme.accent}, ${theme.primary} 50%, ${theme.background} 100%)`,
-          opacity: flash,
-          transform: `scale(${interpolate(p, [0, 1], [1, 1.12])})`,
-          pointerEvents: "none",
-        }}
-      />
-    );
-  }
-  return null;
 };
 
 // ---------------------------------------------------------------------------
@@ -518,22 +440,26 @@ export const DynamicVideo: React.FC<VideoScriptProps> = ({
   voiceover,
   audio_url,
 }) => {
+  // Frames each scene lingers past its end to dissolve into the next. Only the
+  // Sequence duration is extended (they overlap) — `from` stays on the exact
+  // cumulative timeline, so audio + captions are never shifted.
+  const CROSSFADE = 18;
   let cursor = 0;
-  const positioned = scenes.map((scene) => {
+  const positioned = scenes.map((scene, i) => {
     const from = cursor;
     cursor += scene.duration_frames;
-    return { scene, from };
+    return { scene, from, isLast: i === scenes.length - 1 };
   });
   const hasCaptions = (voiceover?.captions?.length ?? 0) > 0;
 
   return (
     <ThemeProvider theme={theme}>
       <AbsoluteFill style={{ backgroundColor: theme.background }}>
-        {positioned.map(({ scene, from }) => (
+        {positioned.map(({ scene, from, isLast }) => (
           <Sequence
             key={scene.id}
             from={from}
-            durationInFrames={scene.duration_frames}
+            durationInFrames={scene.duration_frames + (isLast ? 0 : CROSSFADE)}
             premountFor={30}
           >
             <SceneWrapper
@@ -541,6 +467,8 @@ export const DynamicVideo: React.FC<VideoScriptProps> = ({
               videoWidth={width}
               videoHeight={height}
               hasCaptions={hasCaptions}
+              baseDuration={scene.duration_frames}
+              crossfade={isLast ? 0 : CROSSFADE}
             />
           </Sequence>
         ))}
