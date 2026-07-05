@@ -24,7 +24,11 @@ import { COMPONENT_REGISTRY, SceneType } from "./registry";
 import { Background } from "./components/Background";
 import { CaptionLayer } from "./components/CaptionLayer";
 import { PanelSizeProvider } from "./PanelSizeContext";
-import { DESIGN_W, computeFractions, cellWidths } from "./layout";
+import { computeFractions, cellWidths } from "./layout";
+
+// Reserve a band at the bottom of every scene for the caption/subtitle so panels
+// never render on top of or below it (CaptionLayer draws inside this band).
+const SUBTITLE_RESERVE_FRAC = 0.16; // ~173px on 1080p
 
 const DIAGRAM_TYPES = new Set([
   "ArchitectureDiagram",
@@ -292,13 +296,9 @@ const PanelCell: React.FC<{
   const AnyComponent = Component as React.FC<Record<string, unknown>>;
   const { style, ...componentProps } = safeProps;
 
-  // Render the component at the 1920-wide design canvas, then uniformly scale it
-  // to the cell. designH is over-sized so the scaled box exactly fills the cell
-  // height → fills the cell with no letterbox; a full-width cell gives scale≈1
-  // (no change from before). transformOrigin top-left keeps the fit exact.
-  const scale = cellW > 0 ? cellW / DESIGN_W : 1;
-  const designH = scale > 0 ? cellH / scale : cellH;
-
+  // Cell-responsive: the component renders at its cell's actual pixel size and is
+  // told that size via PanelSizeProvider, so it fills and reflows at natural font
+  // sizes instead of being scaled down. overflow:hidden guards any residual spill.
   return (
     <div
       style={{
@@ -308,21 +308,9 @@ const PanelCell: React.FC<{
         ...((style as React.CSSProperties) || {}),
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: DESIGN_W,
-          height: designH,
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
-        }}
-      >
-        <PanelSizeProvider size={{ width: DESIGN_W, height: designH }}>
-          <AnyComponent {...componentProps} />
-        </PanelSizeProvider>
-      </div>
+      <PanelSizeProvider size={{ width: cellW, height: cellH }}>
+        <AnyComponent {...componentProps} />
+      </PanelSizeProvider>
     </div>
   );
 };
@@ -347,7 +335,9 @@ const SceneWrapper: React.FC<{
 }> = ({ scene, videoWidth, videoHeight }) => {
   const { layout, title, panels } = normaliseScene(scene);
   const config = LAYOUTS[layout] ?? LAYOUTS["full"];
-  const contentH = config.hasHeader ? videoHeight - HEADER_H : videoHeight;
+  const subtitleReserve = Math.round(videoHeight * SUBTITLE_RESERVE_FRAC);
+  const contentH =
+    (config.hasHeader ? videoHeight - HEADER_H : videoHeight) - subtitleReserve;
   const hasDiagram = panels.some((p) => DIAGRAM_TYPES.has(p.type));
 
   // Column fractions per grid area (honors explicit size_ratio, else infers from
@@ -366,8 +356,15 @@ const SceneWrapper: React.FC<{
     <AbsoluteFill>
       {/* Animated theme-driven background (behind everything) */}
       <Background variant={hasDiagram ? "grid" : "glow"} />
-      {/* Content above the background */}
-      <AbsoluteFill style={{ flexDirection: "column", zIndex: 1 }}>
+      {/* Content above the background — bottom padding reserves the subtitle band */}
+      <AbsoluteFill
+        style={{
+          flexDirection: "column",
+          zIndex: 1,
+          paddingBottom: subtitleReserve,
+          boxSizing: "border-box",
+        }}
+      >
         {/* Header bar */}
         {config.hasHeader && (
           <SceneHeader title={title} subtitle={scene.subtitle} />

@@ -1,5 +1,6 @@
 import React from "react";
 import { useCurrentFrame, useVideoConfig, interpolate, Easing } from "remotion";
+import { usePanelSize } from "../PanelSizeContext";
 import { z } from "zod";
 import { useTheme } from "../ThemeContext";
 import { stepAt } from "./_shared/anim";
@@ -75,7 +76,8 @@ export const RedBlackTree: React.FC<RedBlackTreeProps> = ({
   accentColor,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, width: videoWidth, height: videoHeight } = useVideoConfig();
+  const { fps } = useVideoConfig();
+  const { width: videoWidth, height: videoHeight } = usePanelSize();
   const theme = useTheme();
   const accent = accentColor ?? theme.accent;
 

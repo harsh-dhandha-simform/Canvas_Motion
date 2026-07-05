@@ -66,8 +66,12 @@ export const AnimatedTitle: React.FC<AnimatedTitleProps> = ({
         display: "flex",
         flexDirection: "column",
         width: "100%",
+        height: "100%",
+        justifyContent: "center",
         alignItems: isCenter ? "center" : "flex-start",
         textAlign: isCenter ? "center" : "left",
+        padding: "0 6%",
+        boxSizing: "border-box",
         userSelect: "none",
         ...style,
       }}
