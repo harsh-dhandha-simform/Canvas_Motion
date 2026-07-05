@@ -237,6 +237,31 @@ The backend picks it up automatically from the regenerated catalog. Details in
 
 ---
 
+## AI tools & development
+
+**How this was built (ADE + AI tools).** Development was AI-assisted, using agentic
+development environments and AI tooling:
+
+| Tool | Role in development |
+|---|---|
+| **Claude Code** | Anthropic's agentic CLI — primary pair-programmer across the backend pipeline and the Remotion frontend (implementation, refactoring, debugging, docs). |
+| **Antigravity** | Agentic IDE used during development. |
+| **Ollama** | Local LLM runtime used during development / experimentation. |
+| **Azure OpenAI** | Hosted GPT-4o used while developing and testing generation. |
+| **Claude API** | Anthropic API used during development. |
+
+**AI services the app uses at runtime.** The generator is model-agnostic — pick one with
+`LLM_BACKEND` (see [LLM backends](#llm-backends)):
+
+| Service | Role at runtime |
+|---|---|
+| **Anthropic Claude** | Default `ask` backend (via the `claude` CLI behind `ask_server.py`); every pipeline agent — researcher · director · scriptwriter · visual_architect — calls it to plan and write the video. |
+| **Azure OpenAI** | Alternative LLM backend (`LLM_BACKEND=azure`, GPT-4o deployment). |
+| **Groq** | Alternative LLM backend (`LLM_BACKEND=groq`). |
+| **Deepgram** | Aura TTS for narration audio + Nova-2 STT for word-level caption timing (when `enable_audio=true`). |
+
+---
+
 ## Commands
 
 **Frontend** (`frontend/`)
