@@ -76,6 +76,10 @@ export const SplitScreen: React.FC<SplitScreenProps> = ({
   const leftY = interpolate(leftPanelSpring, [0, 1], [50, 0]);
   const mediaScale = interpolate(mediaSpring, [0, 1], [0.8, 1]);
 
+  // The right half is a media/image slot the pipeline rarely fills. When there's
+  // no image, let the text + code span the full width instead of leaving it blank.
+  const hasMedia = !!mediaUrl;
+
   return (
     <AbsoluteFill style={{ backgroundColor: PALETTE.background }}>
       {/* Header */}
@@ -93,13 +97,14 @@ export const SplitScreen: React.FC<SplitScreenProps> = ({
         />
       </div>
 
-      {/* Left panel (Bullets & Code) */}
+      {/* Left panel (Bullets & Code) — full width when there's no media image. */}
       <div
         style={{
           position: 'absolute',
           top: 160,
           left: 60,
-          width: 660,
+          width: hasMedia ? 660 : undefined,
+          right: hasMedia ? undefined : 60,
           bottom: 60,
           opacity: leftPanelSpring,
           transform: `translateY(${leftY}px)`,
@@ -120,7 +125,7 @@ export const SplitScreen: React.FC<SplitScreenProps> = ({
                 marginTop: 7, flexShrink: 0,
                 boxShadow: `0 0 12px ${accentColor}`,
               }} />
-              <span style={{ color: PALETTE.text, fontSize: 24, lineHeight: 1.5, fontFamily: 'Inter, sans-serif' }}>
+              <span style={{ color: PALETTE.text, fontSize: hasMedia ? 24 : 30, lineHeight: 1.5, fontFamily: 'Inter, sans-serif' }}>
                 {point}
               </span>
             </div>
@@ -135,7 +140,7 @@ export const SplitScreen: React.FC<SplitScreenProps> = ({
             borderRadius: 12,
             borderLeft: `4px solid ${accentColor}`,
             color: PALETTE.text,
-            fontSize: 16,
+            fontSize: hasMedia ? 16 : 18,
             fontFamily: 'Fira Code, monospace',
             lineHeight: 1.6,
             opacity: codeSpring,

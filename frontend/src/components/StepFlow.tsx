@@ -1,6 +1,7 @@
 import React from "react";
 import { interpolate, Easing, useCurrentFrame } from "remotion";
 import { z } from "zod";
+import { usePanelSize } from "../PanelSizeContext";
 
 export const StepFlowSchema = z.object({
   title: z.string(),
@@ -14,34 +15,91 @@ interface StepFlowProps {
   accentColor?: string;
 }
 
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
 export const StepFlow: React.FC<StepFlowProps> = ({
   title,
   steps,
   accentColor = "#38BDF8",
 }) => {
   const frame = useCurrentFrame();
+  const { width: cw, height: ch } = usePanelSize();
+
+  const safeSteps = steps ?? [];
+  const n = Math.max(1, safeSteps.length);
+
+  // Everything scales to the actual cell so steps never overlap and the connector
+  // line sits on the circle centers — never struck through the labels.
+  const pad = clamp(cw * 0.04, 24, 72);
+  const titleFont = clamp(ch * 0.07, 22, 46);
+  const rowW = cw - pad * 2;
+  const stepW = rowW / n; // each step owns an equal slice → no horizontal overlap
+  const circle = clamp(Math.min(stepW * 0.42, ch * 0.16), 32, 72);
+  const numFont = circle * 0.44;
+  const labelFont = clamp(Math.min(stepW * 0.145, ch * 0.05), 11, 22);
+  const labelW = stepW * 0.9;
+  const lineProgress = interpolate(frame, [10, 60], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   return (
-    <div className="flex flex-col h-full w-full items-center justify-center p-16">
-      <h2 className="text-5xl font-black text-white mb-16 tracking-tight text-center">
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
+        padding: pad,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+      }}
+    >
+      <h2
+        style={{
+          margin: 0,
+          marginBottom: clamp(ch * 0.06, 16, 48),
+          fontSize: titleFont,
+          fontWeight: 900,
+          color: "#ffffff",
+          letterSpacing: "-0.02em",
+          textAlign: "center",
+        }}
+      >
         {title}
       </h2>
-      <div className="flex flex-row justify-between w-full max-w-5xl items-center relative">
-        {/* Connector Line Base */}
-        <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-800 -translate-y-1/2 -z-10" />
-        
-        {/* Connector Line Animated */}
-        <div 
-          className="absolute top-1/2 left-0 h-1 -translate-y-1/2 -z-10"
+
+      {/* Circles align on one row; labels hang below. The connector line is pinned
+          to the circles' vertical center (top: circle/2), so it can't cross text. */}
+      <div style={{ position: "relative", width: rowW, display: "flex", justifyContent: "space-between" }}>
+        <div
           style={{
-            backgroundColor: accentColor,
-            width: `${interpolate(frame, [10, 60], [0, 100], { extrapolateRight: "clamp", extrapolateLeft: "clamp" })}%`,
+            position: "absolute",
+            top: circle / 2,
+            left: stepW / 2,
+            right: stepW / 2,
+            height: 3,
+            transform: "translateY(-50%)",
+            background: "#1e293b",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: circle / 2,
+            left: stepW / 2,
+            height: 3,
+            transform: "translateY(-50%)",
+            background: accentColor,
             boxShadow: `0 0 10px ${accentColor}`,
+            width: `${lineProgress * (rowW - stepW)}px`,
           }}
         />
 
-        {steps.map((step, index) => {
-          const itemFrame = frame - index * 15;
+        {safeSteps.map((step, index) => {
+          const itemFrame = frame - index * 12;
           const opacity = interpolate(itemFrame, [0, 15], [0, 1], {
             easing: Easing.bezier(0.16, 1, 0.3, 1),
             extrapolateLeft: "clamp",
@@ -57,18 +115,47 @@ export const StepFlow: React.FC<StepFlowProps> = ({
             <div
               key={index}
               style={{
+                width: stepW,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
                 opacity,
-                transform: `scale(${scale})`,
               }}
-              className="flex flex-col items-center gap-4 w-48 text-center"
             >
-              <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black text-slate-900 bg-white border-4"
-                style={{ borderColor: accentColor, boxShadow: `0 0 20px ${accentColor}88` }}
+              <div
+                style={{
+                  width: circle,
+                  height: circle,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: numFont,
+                  fontWeight: 900,
+                  color: "#0f172a",
+                  background: "#ffffff",
+                  border: `${Math.max(2, circle * 0.06)}px solid ${accentColor}`,
+                  boxShadow: `0 0 20px ${accentColor}88`,
+                  transform: `scale(${scale})`,
+                  flexShrink: 0,
+                  zIndex: 1,
+                }}
               >
                 {index + 1}
               </div>
-              <span className="text-xl font-bold text-slate-200">{step}</span>
+              <span
+                style={{
+                  marginTop: clamp(circle * 0.22, 8, 20),
+                  width: labelW,
+                  textAlign: "center",
+                  fontSize: labelFont,
+                  fontWeight: 700,
+                  lineHeight: 1.25,
+                  color: "#e2e8f0",
+                }}
+              >
+                {step}
+              </span>
             </div>
           );
         })}

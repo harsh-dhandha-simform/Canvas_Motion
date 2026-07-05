@@ -29,7 +29,7 @@ export const BulletList: React.FC<BulletListProps> = ({
   align = "left",
 }) => {
   const frame = useCurrentFrame();
-  const { height: ch } = usePanelSize();
+  const { width: cw, height: ch } = usePanelSize();
 
   const safeItems = items ?? [];
   const n = safeItems.length;
@@ -38,9 +38,21 @@ export const BulletList: React.FC<BulletListProps> = ({
   // Fill the cell and size type so title + all items fit the height — never crop.
   const pad = clamp(ch * 0.06, 22, 64);
   const titleFont = clamp(ch * 0.058, 24, 50);
-  const avail = ch - pad * 2 - titleFont * 1.5; // minus title + its margin
-  const denom = n * 1.5 + Math.max(0, n - 1) * 0.5; // line-height + gap per item, with wrap headroom
-  const itemFont = clamp(avail / Math.max(1, denom), 14, 30);
+  const avail = ch - pad * 2 - titleFont * 1.55; // height left for items after the title
+  const lineH = 1.35;
+  // Width-aware fit: shrink the item font until every item — counting the lines it
+  // wraps to at the cell's REAL width — fits `avail`. Guarantees nothing is cropped,
+  // for any item count or text length (down to a 14px floor).
+  const itemFont = (() => {
+    for (let f = 30; f >= 14; f--) {
+      const g = clamp(f * 0.5, 6, 24);
+      const charsPerLine = Math.max(6, Math.floor((cw - pad * 2 - f * 1.7) / (f * 0.52)));
+      let lines = 0;
+      for (const it of safeItems) lines += Math.max(1, Math.ceil((it?.length || 1) / charsPerLine));
+      if (lines * f * lineH + Math.max(0, n - 1) * g <= avail) return f;
+    }
+    return 14;
+  })();
   const gap = clamp(itemFont * 0.5, 6, 24);
   const iconSz = Math.round(itemFont * 1.15);
 

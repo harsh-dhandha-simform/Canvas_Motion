@@ -5,6 +5,7 @@ import { ServerRack } from "./ServerRack";
 import { GlowingNode } from "./GlowingNode";
 import { DataStream } from "./DataStream";
 import { ScalingArrow } from "./ScalingArrow";
+import { usePanelSize } from "../PanelSizeContext";
 
 // ---------------------------------------------------------------------------
 // Zod Schema for JSON Validation
@@ -50,6 +51,15 @@ export const ArchitectureDiagram: React.FC<ArchitectureDiagramProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const { width: cw, height: chh } = usePanelSize();
+
+  // The nodes (ServerRack/GlowingNode) are fixed-pixel boxes positioned by x/y %.
+  // In a narrow panel those boxes would collide, so render the whole diagram in a
+  // 1920×1080 design box and uniformly scale it to fit the cell — spacing that
+  // reads correctly full-screen stays correct (just smaller) in any panel.
+  const DESIGN_W = 1920;
+  const DESIGN_H = 1080;
+  const fitScale = Math.min(cw / DESIGN_W, chh / DESIGN_H) || 1;
 
   // Reveal nodes staggered
   const nodeRevealProgress = (index: number) => spring({
@@ -71,8 +81,17 @@ export const ArchitectureDiagram: React.FC<ArchitectureDiagramProps> = ({
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "transparent" }}>
-      <AbsoluteFill>
+    <AbsoluteFill style={{ backgroundColor: "transparent", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          width: DESIGN_W,
+          height: DESIGN_H,
+          position: "relative",
+          flexShrink: 0,
+          transform: `scale(${fitScale})`,
+          transformOrigin: "center center",
+        }}
+      >
 
         {/* Render Connections first (underneath) */}
         {connections.map((conn, idx) => {
@@ -153,7 +172,7 @@ export const ArchitectureDiagram: React.FC<ArchitectureDiagramProps> = ({
           );
         })}
 
-      </AbsoluteFill>
+      </div>
     </AbsoluteFill>
   );
 };
