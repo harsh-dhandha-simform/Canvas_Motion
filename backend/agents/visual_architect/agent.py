@@ -100,8 +100,52 @@ not only the title. Match each component's schema exactly.
 
 STYLING: You may optionally output a "style" object inside any component's "data" payload to dynamically override CSS properties of its wrapper container (e.g. {{"backgroundColor": "rgba(0,0,0,0.5)", "padding": "40px", "borderRadius": "10px"}}). Use this for visual flair or adjusting spacing.
 
+## OUTPUT FORMAT
+Return a JSON object with this EXACT structure (scenes in order). "panels" is an
+OBJECT keyed by area name — it is NOT a list:
+{{
+  "scenes": [
+    {{
+      "transition": "slideLeft",
+      "panels": {{
+        "<area_name>": {{ <component data matching that component's schema> }}
+      }}
+    }}
+  ]
+}}
+Every scene MUST include a "panels" object; use an empty object {{}} only for a scene
+with no visual panels. NEVER output "panels" as an array.
+
 Return ONLY valid JSON.
 """.strip()
+
+
+def _coerce_panels(raw_dict: dict) -> None:
+    """Make scene.panels a dict keyed by area, in place.
+
+    The model sometimes returns panels as a LIST (mirroring the Director plan:
+    [{"area": ..., "type": ..., "data": {...}}]) instead of the required dict.
+    Coerce list→dict (and None→{}) so StoryOutput validation passes regardless of
+    which shape the model emitted. Belt to the prompt's OUTPUT FORMAT suspenders.
+    """
+    _STRUCTURAL = {"area", "type", "size_ratio", "delay_frames"}
+    for scene in raw_dict.get("scenes", []) or []:
+        panels = scene.get("panels")
+        if isinstance(panels, list):
+            as_dict: dict = {}
+            for item in panels:
+                if not isinstance(item, dict):
+                    continue
+                area = item.get("area")
+                if not area:
+                    continue
+                if isinstance(item.get("data"), dict):
+                    as_dict[area] = item["data"]
+                else:
+                    as_dict[area] = {k: v for k, v in item.items() if k not in _STRUCTURAL}
+            scene["panels"] = as_dict
+        elif panels is None:
+            scene["panels"] = {}
 
 
 def run_agent(plan: dict, syllabus: dict) -> dict:
@@ -141,7 +185,8 @@ def run_agent(plan: dict, syllabus: dict) -> dict:
     )
 
     raw_dict: dict = parse_json_robust(raw, label=AGENT_NAME)
-    
+    _coerce_panels(raw_dict)  # accept list- or dict-shaped panels from the model
+
     story = StoryOutput.model_validate(raw_dict)
     
     # Normalize: LLMs sometimes wrap panel data as {"component": "X", "data": {...}}
