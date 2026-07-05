@@ -1,25 +1,75 @@
-node_modules
-dist
+# ---------------------------------------------------------------------------
+# OS
+# ---------------------------------------------------------------------------
 .DS_Store
-.env
+Thumbs.db
 
-# Remotion
-out
+# ---------------------------------------------------------------------------
+# Editors / IDEs
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*~
+
+# ---------------------------------------------------------------------------
+# Environment / secrets  (keep .env.example committed)
+# ---------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+
+# ---------------------------------------------------------------------------
+# Node / JS
+# ---------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.eslintcache
+
+# ---------------------------------------------------------------------------
+# Logs
+# ---------------------------------------------------------------------------
+*.log
+
+# ---------------------------------------------------------------------------
+# Build / render output
+# ---------------------------------------------------------------------------
+dist/
+out/
+frontend/build/
 .remotion/
 
+# Vite dependency cache (can appear at the repo root or under a package)
+.vite/
+**/.vite/
+
+# ---------------------------------------------------------------------------
 # Python
+# ---------------------------------------------------------------------------
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*.egg-info/
 .Python
 env/
 venv/
 .venv/
-pip-log.txt
-pip-delete-this-directory.txt
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Backend Output
+# ---------------------------------------------------------------------------
+# Backend runtime artifacts (regenerated per run)
+# ---------------------------------------------------------------------------
 backend/checkpoints/
 backend/audio/
+
+# ---------------------------------------------------------------------------
+# Generated frontend sources (recreated by `npm run register-examples`).
+# NOTE: shared/componentCatalog.json and src/generated/Palette.ts are committed
+# on purpose — the backend reads the catalog at runtime and Palette.ts is
+# hand-maintained.
+# ---------------------------------------------------------------------------
+frontend/src/generated/examples.generated.ts
