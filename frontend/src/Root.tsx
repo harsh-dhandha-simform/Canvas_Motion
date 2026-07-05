@@ -63,6 +63,45 @@ export const RemotionRoot: React.FC = () => {
         );
       })}
 
+      {/* Generic composition for rendering ANY VideoScript passed via --props
+          (used by the backend render pipeline). Duration + dimensions are derived
+          from the props at render time via calculateMetadata, so no rebuild or
+          per-slug composition is needed. */}
+      <Composition
+        id="DynamicVideo"
+        component={DynamicVideo}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          title: "Untitled",
+          fps: 30,
+          width: 1920,
+          height: 1080,
+          theme: {
+            primary: "#6366f1",
+            secondary: "#22d3ee",
+            accent: "#f59e0b",
+            background: "#030711",
+            font: "Inter",
+          },
+          scenes: [],
+        } as VideoScriptProps}
+        calculateMetadata={({ props }) => {
+          const total = Math.max(
+            1,
+            (props.scenes ?? []).reduce((sum, s) => sum + (s.duration_frames ?? 0), 0),
+          );
+          return {
+            durationInFrames: total,
+            fps: props.fps ?? 30,
+            width: props.width ?? 1920,
+            height: props.height ?? 1080,
+          };
+        }}
+      />
+
       <Composition
         id="preview-SortingVisualizer"
         component={SortingVisualizer}

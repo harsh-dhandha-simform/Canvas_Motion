@@ -120,3 +120,18 @@ VIDEO_WIDTH: int = 1920
 VIDEO_HEIGHT: int = 1080
 VIDEO_FPS: int = 30
 VIDEO_DURATION_FRAMES: int = 4500  # 150 seconds @ 30 fps (default for in-depth content)
+
+# ---------------------------------------------------------------------------
+# Video rendering  (npx remotion render — see backend/render/*)
+# ---------------------------------------------------------------------------
+RENDER_DIR: Path = REPO_ROOT / "backend" / "renders"
+# Only "remotion" is supported; kept as a switch to mirror the source adapter.
+RENDER_ENGINE: str = os.environ.get("RENDER_ENGINE", "remotion")
+RENDER_TIMEOUT_SECONDS: int = int(os.environ.get("RENDER_TIMEOUT_SECONDS", "1200"))
+# Blank → derived from the CPU count at render time.
+RENDER_CONCURRENCY: str = os.environ.get("RENDER_CONCURRENCY", "")
+RENDER_SCALE: float = float(os.environ.get("RENDER_SCALE", "1"))
+RENDER_CRF: int = int(os.environ.get("RENDER_CRF", "18"))
+# Use a provided Chrome instead of Remotion's auto-downloaded headless shell when
+# set — required in sandboxed/corporate envs that can't reach the chromium host.
+REMOTION_BROWSER_EXECUTABLE: str = os.environ.get("REMOTION_BROWSER_EXECUTABLE", "")

@@ -65,6 +65,7 @@ venv/
 # ---------------------------------------------------------------------------
 backend/checkpoints/
 backend/audio/
+backend/renders/
 
 # Per-request generated video scripts (curated demos live in shared/examples/).
 shared/generated/

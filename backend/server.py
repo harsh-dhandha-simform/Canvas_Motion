@@ -33,13 +33,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from config import GROQ_MODEL, GROQ_FALLBACK_MODEL
+from config import GROQ_MODEL, GROQ_FALLBACK_MODEL, RENDER_DIR
 from graph.pipeline import compiled_graph
 from graph.state import PipelineState
 from component_catalog import get_catalog
 from utils.checkpoint import checkpoint_slug, clear_checkpoints, load_checkpoint
-from utils.file_output import write_example_script, list_example_scripts, slugify_topic
+from utils.file_output import write_example_script, list_example_scripts, slugify_topic, EXAMPLES_DIR, GENERATED_DIR
 from utils.tracing import get_langfuse, flush as flush_langfuse, is_enabled as tracing_enabled
+from render.jobs import start_render, get_job
 
 logging.basicConfig(
     level=logging.INFO,
@@ -103,6 +104,10 @@ audio_dir = _BACKEND_DIR / "audio"
 audio_dir.mkdir(exist_ok=True)
 app.mount("/audio", StaticFiles(directory=str(audio_dir)), name="audio")
 
+# Mount the renders folder so clients can download the rendered mp4s
+RENDER_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/renders", StaticFiles(directory=str(RENDER_DIR)), name="renders")
+
 # ---------------------------------------------------------------------------
 # Pydantic request / response models
 # ---------------------------------------------------------------------------
@@ -114,6 +119,7 @@ class GenerateScriptRequest(BaseModel):
     style: str = Field("educational", description="educational | explainer | tutorial")
     force_restart: bool = Field(False, description="Clear checkpoints and regenerate from scratch")
     enable_audio: bool = Field(False, description="Generate Deepgram TTS audio")
+    render: bool = Field(False, description="Render the generated script to mp4 in the background")
     fps: int = Field(30, description="Frames per second")
     width: int = Field(1920, description="Canvas width")
     height: int = Field(1080, description="Canvas height")
@@ -127,11 +133,17 @@ class GenerateMeta(BaseModel):
     pipeline_mode: str
     checkpoint_slug: str
     trace_url: Optional[str] = None  # Langfuse trace URL (None when tracing is off)
+    render_job_id: Optional[str] = None  # set when render=true (poll GET /api/render/{id})
 
 
 class GenerateScriptResponse(BaseModel):
     script: dict[str, Any]
     meta: GenerateMeta
+
+
+class RenderRequest(BaseModel):
+    slug: Optional[str] = Field(None, description="Slug of a generated/example script to render")
+    topic: Optional[str] = Field(None, description="Topic (slugified to a slug) when slug is not given")
 
 
 class ComponentInfo(BaseModel):
@@ -322,6 +334,14 @@ def generate_script(req: GenerateScriptRequest):
     except Exception as exc:
         logger.warning("Could not write example script: %s", exc)
 
+    # Optionally kick off a background render of the just-generated script.
+    render_job_id: Optional[str] = None
+    if req.render:
+        try:
+            render_job_id = start_render(slugify_topic(req.topic), script)
+        except Exception as exc:
+            logger.warning("Could not start render: %s", exc)
+
     if trace_url:
         logger.info("📊 Langfuse trace: %s", trace_url)
     if lf:
@@ -337,5 +357,41 @@ def generate_script(req: GenerateScriptRequest):
             pipeline_mode="langgraph",
             checkpoint_slug=slug,
             trace_url=trace_url,
+            render_job_id=render_job_id,
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# Render routes
+# ---------------------------------------------------------------------------
+
+def _resolve_script(slug: str) -> Optional[dict[str, Any]]:
+    """Load a generated (or example) VideoScript JSON by slug, or None if absent."""
+    for d in (GENERATED_DIR, EXAMPLES_DIR):
+        p = d / f"{slug}.json"
+        if p.exists():
+            return json.loads(p.read_text(encoding="utf-8"))
+    return None
+
+
+@app.post("/api/render")
+def start_render_endpoint(req: RenderRequest):
+    """Render a previously generated (or example) script to mp4 in the background."""
+    slug = req.slug or (slugify_topic(req.topic) if req.topic else None)
+    if not slug:
+        raise HTTPException(status_code=400, detail="Provide 'slug' or 'topic'")
+    script = _resolve_script(slug)
+    if script is None:
+        raise HTTPException(status_code=404, detail=f"No script found for slug '{slug}'")
+    job_id = start_render(slug, script)
+    return {"job_id": job_id, "slug": slug, "status": "queued"}
+
+
+@app.get("/api/render/{job_id}")
+def render_status(job_id: str):
+    """Poll a render job's status; output_url is set once status == 'done'."""
+    job = get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail=f"No render job '{job_id}'")
+    return job
