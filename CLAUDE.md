@@ -88,6 +88,10 @@ researcher → director → ┬─ scriptwriter ──┐
   `syllabus, plan, script, story, scenes, validation_report, video_script`.
 - **Timing** (`utils/timing.py`) deterministically scales scene `duration_frames` to the requested
   duration, respecting each component's `minSeconds` floor. `server.py` does a final frame-sum fixup.
+- **Invocation & context**: `server.py` runs the graph synchronously for `POST /api/generate-script`,
+  or in a background thread (`graph/jobs.py`) for `POST /api/generate-script/async` — poll
+  `GET /api/generate-script/status/{job_id}` for coarse per-stage progress + the final script. The
+  optional request `context` is threaded through `PipelineState` into the researcher + director prompts.
 
 ### LLM transport is swappable (`config.py:LLM_BACKEND`)
 - `ask` (default): every agent call goes through `utils/ask_client.py` → `ask_server.py` → the local

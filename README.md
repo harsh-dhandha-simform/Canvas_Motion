@@ -146,7 +146,9 @@ Smoke-test Azure: `cd backend && uv run python test_azure.py`.
 | `GET`  | `/api/components` | All renderable components + descriptions |
 | `GET`  | `/api/scripts` | Generated + example script files on disk |
 | `GET`  | `/api/checkpoints/{slug}` | Per-stage checkpoint status for a topic |
-| `POST` | `/api/generate-script` | Run the pipeline → VideoScript JSON |
+| `POST` | `/api/generate-script` | Run the pipeline synchronously → VideoScript JSON |
+| `POST` | `/api/generate-script/async` | Start generation in the background → `{job_id}` |
+| `GET`  | `/api/generate-script/status/{job_id}` | Poll generation progress + the final script |
 | `POST` | `/api/render` | Render a generated script to mp4 (background) |
 | `GET`  | `/api/render/{job_id}` | Poll a render job |
 | `GET`  | `/audio/<slug>.mp3` | Narration audio (when `enable_audio`) |
@@ -157,6 +159,7 @@ Smoke-test Azure: `cd backend && uv run python test_azure.py`.
 ```jsonc
 {
   "topic": "How TCP congestion control works",  // required
+  "context": "optional framing/scenario — steers the syllabus + scenes",
   "duration_seconds": 60,        // 10–1800 (up to 30 min)
   "style": "educational",        // educational | explainer | tutorial
   "enable_audio": false,         // Deepgram TTS + word-timed captions
@@ -165,6 +168,25 @@ Smoke-test Azure: `cd backend && uv run python test_azure.py`.
   "fps": 30, "width": 1920, "height": 1080
 }
 ```
+
+### Async generation (recommended for a UI)
+
+The pipeline takes minutes (more with `enable_audio`), so a browser shouldn't block on the sync
+endpoint. Post once, then poll:
+
+```bash
+curl -X POST http://localhost:8000/api/generate-script/async -H "Content-Type: application/json" \
+  -d '{"topic":"…","context":"…","duration_seconds":60,"enable_audio":true}'
+# → {"job_id":"…","status":"queued"}
+curl http://localhost:8000/api/generate-script/status/<job_id>
+# → {"status":"running","stage":"writing scenes", …}
+# → {"status":"done","stage":"done","script":{…},"render_job_id":null}
+```
+
+Same body as the sync endpoint. `stage` gives coarse progress
+(`researching → planning → writing scenes → reviewing → generating audio → finalizing`). Pass
+`"render": true` to also render the mp4 in the background — poll the returned `render_job_id` via
+`/api/render/{job_id}`.
 
 ---
 

@@ -17,6 +17,6 @@ def director_node(state: PipelineState) -> dict[str, Any]:
         logger.info("[Director] ⏩ Loaded from checkpoint")
         return {"plan": cached}
 
-    plan = run_agent(state["syllabus"], state.get("duration_seconds", 60))
+    plan = run_agent(state["syllabus"], state.get("duration_seconds", 60), state.get("context"))
     save_checkpoint(slug, "plan", plan)
     return {"plan": plan}

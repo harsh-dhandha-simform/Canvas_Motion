@@ -17,6 +17,6 @@ def researcher_node(state: PipelineState) -> dict[str, Any]:
         logger.info("[Researcher] ⏩ Loaded from checkpoint")
         return {"syllabus": cached}
 
-    syllabus = run_agent(state["topic"], state.get("duration_seconds", 60))
+    syllabus = run_agent(state["topic"], state.get("duration_seconds", 60), state.get("context"))
     save_checkpoint(slug, "syllabus", syllabus)
     return {"syllabus": syllabus}

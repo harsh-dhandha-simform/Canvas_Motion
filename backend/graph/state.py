@@ -3,6 +3,7 @@ from typing import TypedDict, Any, Optional
 
 class PipelineState(TypedDict):
     topic: str
+    context: Optional[str]           # optional author framing that steers researcher + director
     duration_seconds: int            # user-requested length; Timing scales scenes to fit
     fps: int
     width: int

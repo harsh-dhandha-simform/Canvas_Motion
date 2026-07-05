@@ -50,15 +50,20 @@ Return ONLY valid JSON.
 """.strip()
 
 
-def run_agent(topic: str, duration_seconds: int = 60) -> dict:
+def run_agent(topic: str, duration_seconds: int = 60, context: str | None = None) -> dict:
     logger.info("[%s] Building syllabus for %r (%ds)", AGENT_NAME, topic, duration_seconds)
 
+    context_block = (
+        f"Author's framing / angle to honor (shape the syllabus around this):\n{context.strip()}\n\n"
+        if context and context.strip() else ""
+    )
     raw = chat_completion(
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": (
                 f"Topic: {topic}\n"
                 f"Target video length: {duration_seconds} seconds.\n\n"
+                f"{context_block}"
                 "Design the complete teaching syllabus. Be exhaustive about what a senior engineer "
                 "needs in order to truly understand this — leave no important sub-topic uncovered. "
                 "Return only JSON."

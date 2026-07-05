@@ -41,6 +41,7 @@ from utils.checkpoint import checkpoint_slug, clear_checkpoints, load_checkpoint
 from utils.file_output import write_example_script, list_example_scripts, slugify_topic, EXAMPLES_DIR, GENERATED_DIR
 from utils.tracing import get_langfuse, flush as flush_langfuse, is_enabled as tracing_enabled
 from render.jobs import start_render, get_job
+from graph.jobs import start_generation, get_job as get_generation_job
 
 logging.basicConfig(
     level=logging.INFO,
@@ -235,6 +236,7 @@ def generate_script(req: GenerateScriptRequest):
 
     initial_state: PipelineState = {
         "topic": req.topic,
+        "context": req.context,
         "duration_seconds": req.duration_seconds,
         "fps": req.fps,
         "width": req.width,
@@ -394,4 +396,26 @@ def render_status(job_id: str):
     job = get_job(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail=f"No render job '{job_id}'")
+    return job
+
+
+# ---------------------------------------------------------------------------
+# Async script generation (frontend-friendly: POST once, then poll)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/generate-script/async")
+def generate_script_async(req: GenerateScriptRequest):
+    """Start the generation pipeline in the background. Poll
+    GET /api/generate-script/status/{job_id} for progress + the final script."""
+    job_id = start_generation(req.model_dump())
+    return {"job_id": job_id, "status": "queued"}
+
+
+@app.get("/api/generate-script/status/{job_id}")
+def generate_script_status(job_id: str):
+    """Poll a generation job. When status == 'done', `script` holds the VideoScript
+    (and `render_job_id` is set when render was requested)."""
+    job = get_generation_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail=f"No generation job '{job_id}'")
     return job

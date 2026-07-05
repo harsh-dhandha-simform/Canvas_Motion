@@ -107,7 +107,7 @@ def _candidate_reference(names: set[str]) -> str:
     return "\n".join(lines)
 
 
-def run_agent(syllabus: dict, duration_seconds: int = 60) -> dict:
+def run_agent(syllabus: dict, duration_seconds: int = 60, context: str | None = None) -> dict:
     topic = syllabus.get("topic", "")
     subtopics = syllabus.get("subtopics", [])
     logger.info("[%s] Planning scenes for %r (%d subtopics)", AGENT_NAME, topic, len(subtopics))
@@ -127,10 +127,15 @@ def run_agent(syllabus: dict, duration_seconds: int = 60) -> dict:
             f"      candidate components: {', '.join(cands)}"
         )
 
+    context_block = (
+        f"Author's framing / angle to honor:\n{context.strip()}\n\n"
+        if context and context.strip() else ""
+    )
     user_message = (
         f"Topic: {topic}\n"
         f"Depth level: {syllabus.get('depth_level')}\n"
         f"Target length: {duration_seconds}s\n\n"
+        f"{context_block}"
         f"SYLLABUS (subtopics + their shortlisted components):\n"
         + "\n".join(subtopic_lines)
         + "\n\nCOMPONENT REFERENCE (only the shortlisted ones):\n"
