@@ -22,7 +22,8 @@ class VideoConfig(BaseModel):
     background_color: str = "#f8fafc"
     font_family: str = "Inter"
     default_scene_duration_sec: float = 3.0
-    default_duration_seconds: int = 120  # total video length when JobInput.durationSec is unset
+    default_duration_seconds: int = 120  # target video length when JobInput.durationSec is unset
+    max_duration_seconds: int = 240  # hard cap — no video exceeds this (4 min) regardless of content
 
 
 class LLMConfig(BaseModel):

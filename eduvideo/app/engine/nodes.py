@@ -96,7 +96,8 @@ def merge_node(state: PipelineState) -> dict[str, Any]:
     # Deterministic (estimate) timing (needs narration) → then captions (needs frame
     # positions). voiceover_node later overrides these with REAL Deepgram audio timing.
     fps = state.get("fps", 30)
-    compute_timings(scenes_out, state.get("duration_seconds", 60), fps=fps)
+    max_seconds = get_settings().config.video.max_duration_seconds
+    compute_timings(scenes_out, state.get("duration_seconds", 60), fps=fps, max_seconds=max_seconds)
     captions = build_captions(scenes_out, fps=fps)
 
     validated_scenes = [MergedScene.model_validate(s).model_dump() for s in scenes_out]

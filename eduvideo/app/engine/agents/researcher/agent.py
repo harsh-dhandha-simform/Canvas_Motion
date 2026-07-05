@@ -35,8 +35,9 @@ Output ONLY a single JSON object — no prose, no markdown fences.
 
 ## RULES FOR DEPTH & COMPLETENESS
 
-1. Produce 5-9 subtopics. They must form a coherent arc: hook → prerequisites → core mechanism →
-   deep dive(s) → trade-offs/failure modes → synthesis/when-to-use.
+1. Produce the number of subtopics that fits the target video length you are given (stated below) —
+   FEWER, well-chosen subtopics for a short video, more for a long one. Do not pad. They must still
+   form a coherent arc: hook → core mechanism → (deep dive/trade-offs) → synthesis/when-to-use.
 2. At least 4 subtopics MUST be must_cover=true. Mark a subtopic must_cover=false only if it is
    genuinely optional enrichment.
 3. depth_notes is mandatory and must contain something concrete — a real mechanism, a benchmark
@@ -53,14 +54,19 @@ Return ONLY valid JSON.
 def run_agent(topic: str, duration_seconds: int = 60) -> dict:
     logger.info("[%s] Building syllabus for %r (%ds)", AGENT_NAME, topic, duration_seconds)
 
+    # Scale subtopic count to the target length (~one subtopic per ~35s of video), so a
+    # short request yields a short, focused video instead of an exhaustive 10-minute one.
+    n_subtopics = max(2, min(8, round(duration_seconds / 35)))
+
     raw = chat_completion(
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": (
                 f"Topic: {topic}\n"
-                f"Target video length: {duration_seconds} seconds.\n\n"
-                "Design the complete teaching syllabus. Be exhaustive about what a senior engineer "
-                "needs in order to truly understand this — leave no important sub-topic uncovered. "
+                f"Target video length: {duration_seconds} seconds.\n"
+                f"Produce approximately {n_subtopics} subtopic(s) — sized to that length. For a short "
+                "video pick only the most essential subtopics; do NOT try to cover everything. "
+                "Depth over breadth: teach the chosen subtopics well rather than listing many.\n\n"
                 "Return only JSON."
             )},
         ],

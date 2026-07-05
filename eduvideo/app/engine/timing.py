@@ -42,10 +42,16 @@ def _scene_base_seconds(scene: dict) -> float:
     return max(secs) + 0.4 * sum(sorted(secs)[:-1])
 
 
-def compute_timings(scenes: list[dict], total_seconds: int, fps: int = 30) -> list[dict]:
+def compute_timings(scenes: list[dict], total_seconds: int, fps: int = 30, max_seconds: int | None = None) -> list[dict]:
     """Assign duration_frames + start_frame to each scene. Mutates and returns scenes.
 
     `scenes` items need: panels[{type}] and optionally narration. Order is preserved.
+
+    The natural length (max of component-absorb time and narration reading time per scene)
+    is the baseline. It is scaled UP to `total_seconds` if the content is shorter, and — when
+    `max_seconds` is given — scaled DOWN to that hard cap if the content would run longer. The
+    cap is a last-resort clamp; content is budgeted upstream (researcher subtopic count) so it
+    rarely fires, but it guarantees no video ever exceeds `max_seconds`.
     """
     total_frames = total_seconds * fps
     if not scenes:
@@ -61,21 +67,30 @@ def compute_timings(scenes: list[dict], total_seconds: int, fps: int = 30) -> li
         base_frames = max(absorb, reading) * fps
         bases.append(max(min_scene_frames, base_frames))
 
-    # Step 2: Scale up if total natural duration is less than user requested.
-    # NEVER scale down, because scaling down cuts off narration.
+    # Step 2: target = natural length, but at least total_frames (floor) and at most the cap.
     raw_total = sum(bases)
-    scale = max(1.0, total_frames / raw_total) if raw_total else 1.0
-    durations = [max(min_scene_frames, round(b * scale)) for b in bases]
+    target_frames = max(raw_total, total_frames)
+    capped = False
+    if max_seconds is not None and target_frames > max_seconds * fps:
+        target_frames = max_seconds * fps
+        capped = True
+    scale = target_frames / raw_total if raw_total else 1.0
 
-    # Step 3: absorb rounding drift (only if we scaled up to exactly total_frames)
-    if scale > 1.0:
-        drift = total_frames - sum(durations)
+    # When capping down, relax the per-scene floor so the sum can actually reach the cap.
+    floor = min_scene_frames if scale >= 1.0 else max(fps, round(min_scene_frames * scale))
+    durations = [max(floor, round(b * scale)) for b in bases]
+
+    # Step 3: absorb rounding drift so the total lands exactly on target when we scaled.
+    if scale != 1.0:
+        drift = target_frames - sum(durations)
         if drift != 0:
             if len(durations) > 2:
                 idx = max(range(1, len(durations) - 1), key=lambda i: durations[i])
             else:
                 idx = len(durations) - 1
-            durations[idx] = max(min_scene_frames, durations[idx] + drift)
+            durations[idx] = max(floor, durations[idx] + drift)
+    if capped:
+        logger.info("[timing] capped video to max %ds", max_seconds)
 
     # Step 4: write back duration_frames + start_frame.
     cursor = 0
