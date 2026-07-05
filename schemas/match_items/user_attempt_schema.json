@@ -1,0 +1,8 @@
+{
+  "challenge_id":"match_001",
+
+  "matches":[
+    ["l1","r2"],
+    ["l2","r1"]
+  ]
+}

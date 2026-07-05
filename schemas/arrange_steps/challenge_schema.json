@@ -1,0 +1,29 @@
+{
+  "challenge_id":"arr_001",
+  "challenge_type":"arrange_steps",
+  "title":"Neural Network Training",
+  "description":"Arrange the steps correctly",
+  "difficulty":"easy",
+  "learning_objective":"Understand training flow",
+
+  "data":{
+    "steps":[
+      {
+        "id":"s1",
+        "label":"Forward Pass"
+      },
+      {
+        "id":"s2",
+        "label":"Compute Loss"
+      },
+      {
+        "id":"s3",
+        "label":"Backpropagation"
+      },
+      {
+        "id":"s4",
+        "label":"Update Weights"
+      }
+    ]
+  }
+}

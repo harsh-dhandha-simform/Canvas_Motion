@@ -1,0 +1,23 @@
+# Secrets / environment
+.env
+.env.*
+.env.example
+interactive_learning/visualizer/config.local.js
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+
+# Logs (grows unbounded - see state.md)
+*.log
+
+# Claude Code local session/tool state (not project config)
+.claude/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+*.swp

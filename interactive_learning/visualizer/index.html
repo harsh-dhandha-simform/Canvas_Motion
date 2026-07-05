@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Interactive Learning Visualizer</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Interactive Learning Visualizer</h1>
+    <p class="subtitle">
+      Drag/select to attempt each challenge, then check your answer against
+      the live backend (<code>claude_api.py</code> on <code id="api-base-label"></code>).
+    </p>
+    <nav id="tabs">
+      <button class="tab-button active" data-tab="arrange_steps">Arrange Steps</button>
+      <button class="tab-button" data-tab="build_it_yourself">Build It Yourself</button>
+      <button class="tab-button" data-tab="scenario_based">Scenario Based</button>
+      <button class="tab-button" data-tab="multiple_choice">Multiple Choice</button>
+      <button class="tab-button" data-tab="match_items">Match Items</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="panel-arrange_steps" class="panel active">
+      <h2 id="arrange_steps-title"></h2>
+      <p id="arrange_steps-description" class="challenge-subtitle"></p>
+      <p class="instructions">Drag the steps into the order you think is correct.</p>
+      <div id="arrange_steps-viz" class="viz"></div>
+      <div class="actions" id="arrange_steps-actions"></div>
+      <div class="result" id="arrange_steps-result"></div>
+    </section>
+
+    <section id="panel-build_it_yourself" class="panel">
+      <h2 id="build_it_yourself-title"></h2>
+      <p id="build_it_yourself-description" class="challenge-subtitle"></p>
+      <p class="instructions">Drag from a node's port (bottom-right dot) to another node to connect them. Click a connection to remove it.</p>
+      <div id="build_it_yourself-viz" class="viz"></div>
+      <div class="actions" id="build_it_yourself-actions"></div>
+      <div class="result" id="build_it_yourself-result"></div>
+    </section>
+
+    <section id="panel-scenario_based" class="panel">
+      <h2 id="scenario_based-title"></h2>
+      <p id="scenario_based-description" class="challenge-subtitle"></p>
+      <p class="instructions">Read the scenario, then click the option you think fits best.</p>
+      <div id="scenario_based-viz" class="viz"></div>
+      <div class="actions" id="scenario_based-actions"></div>
+      <div class="result" id="scenario_based-result"></div>
+    </section>
+
+    <section id="panel-multiple_choice" class="panel">
+      <h2 id="multiple_choice-title"></h2>
+      <p id="multiple_choice-description" class="challenge-subtitle"></p>
+      <p class="instructions">Click the option you think is correct.</p>
+      <div id="multiple_choice-viz" class="viz"></div>
+      <div class="actions" id="multiple_choice-actions"></div>
+      <div class="result" id="multiple_choice-result"></div>
+    </section>
+
+    <section id="panel-match_items" class="panel">
+      <h2 id="match_items-title"></h2>
+      <p id="match_items-description" class="challenge-subtitle"></p>
+      <p class="instructions">Drag from a left item's port to the right item it matches. Click a connection to remove it.</p>
+      <div id="match_items-viz" class="viz"></div>
+      <div class="actions" id="match_items-actions"></div>
+      <div class="result" id="match_items-result"></div>
+    </section>
+  </main>
+
+  <script src="config.local.js"></script>
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

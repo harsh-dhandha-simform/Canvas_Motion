@@ -1,0 +1,32 @@
+{
+  "challenge_id":"scenario_001",
+
+  "challenge_type":"scenario_based",
+
+  "title":"Choose Best Model",
+
+  "description":"Select best option",
+
+  "difficulty":"medium",
+
+  "learning_objective":"Model selection",
+
+  "data":{
+    "scenario":"500 images with limited GPU and high accuracy needed",
+
+    "options":[
+      {
+        "id":"op1",
+        "label":"CNN"
+      },
+      {
+        "id":"op2",
+        "label":"Transformer"
+      },
+      {
+        "id":"op3",
+        "label":"Logistic Regression"
+      }
+    ]
+  }
+}

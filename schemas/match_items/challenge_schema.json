@@ -1,0 +1,37 @@
+{
+  "challenge_id":"match_001",
+
+  "challenge_type":"match_items",
+
+  "title":"Match Terms",
+
+  "description":"Connect related items",
+
+  "difficulty":"easy",
+
+  "learning_objective":"Concept association",
+
+  "data":{
+    "left":[
+      {
+        "id":"l1",
+        "label":"CNN"
+      },
+      {
+        "id":"l2",
+        "label":"RNN"
+      }
+    ],
+
+    "right":[
+      {
+        "id":"r1",
+        "label":"Images"
+      },
+      {
+        "id":"r2",
+        "label":"Sequential Data"
+      }
+    ]
+  }
+}

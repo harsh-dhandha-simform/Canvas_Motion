@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Interactive Learning - Hardcoded Chapters</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Hardcoded Chapters</h1>
+    <p class="subtitle">
+      Fixed content from tests/hardcore.md, built with the same
+      Challenge/Ground&nbsp;Truth JSON and /validate + /hint backend as
+      everything else (<code id="api-base-label"></code>). This is a
+      separate page from the main demo visualizer - nothing there was
+      touched.
+    </p>
+    <nav id="tabs">
+      <button class="tab-button active" data-tab="chapter-1">Chapter 1</button>
+      <button class="tab-button" data-tab="chapter-2">Chapter 2</button>
+      <button class="tab-button" data-tab="chapter-3">Chapter 3</button>
+    </nav>
+  </header>
+
+  <main id="chapters-root"></main>
+
+  <script src="config.local.js"></script>
+  <script src="chapters_data.js"></script>
+  <script src="chapters.js"></script>
+</body>
+</html>

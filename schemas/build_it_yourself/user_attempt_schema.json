@@ -1,0 +1,6 @@
+{
+  "challenge_id":"build_001",
+  "connections":[
+    ["frontend","database"]
+  ]
+}

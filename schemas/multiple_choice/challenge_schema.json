@@ -1,0 +1,32 @@
+{
+  "challenge_id":"mcq_001",
+
+  "challenge_type":"multiple_choice",
+
+  "title":"Neural Networks",
+
+  "description":"Choose the correct answer",
+
+  "difficulty":"easy",
+
+  "learning_objective":"Concept understanding",
+
+  "data":{
+    "question":"Which function calculates error?",
+
+    "options":[
+      {
+        "id":"a",
+        "label":"Loss Function"
+      },
+      {
+        "id":"b",
+        "label":"Optimizer"
+      },
+      {
+        "id":"c",
+        "label":"Activation Function"
+      }
+    ]
+  }
+}

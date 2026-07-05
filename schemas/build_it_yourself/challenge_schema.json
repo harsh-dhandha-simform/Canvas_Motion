@@ -1,0 +1,29 @@
+{
+  "challenge_id":"build_001",
+  "challenge_type":"build_it_yourself",
+
+  "title":"Build Web Architecture",
+
+  "description":"Connect components",
+
+  "difficulty":"medium",
+
+  "learning_objective":"Understand architecture flow",
+
+  "data":{
+    "components":[
+      {
+        "id":"frontend",
+        "label":"Frontend"
+      },
+      {
+        "id":"backend",
+        "label":"Backend"
+      },
+      {
+        "id":"database",
+        "label":"Database"
+      }
+    ]
+  }
+}

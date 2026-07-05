@@ -1,0 +1,9 @@
+{
+  "challenge_id":"string",
+  "challenge_type":"string",
+  "title":"string",
+  "description":"string",
+  "difficulty":"easy|medium|hard",
+  "learning_objective":"string",
+  "data":{}
+}
