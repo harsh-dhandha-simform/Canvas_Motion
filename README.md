@@ -255,7 +255,11 @@ uvicorn server:app --reload --port 8000   # API (fires the full pipeline per req
 python ask_server.py                       # Claude HTTP shim on :8080 (for LLM_BACKEND=ask)
 python test_dry_run.py                     # pipeline wiring test with mocked LLM calls (no keys)
 python ../test_pipeline.py                 # end-to-end generate_script() (needs a live LLM backend)
+./serve_ngrok.sh                           # run the API + an ngrok tunnel (prints the public URL)
 ```
+
+> `serve_ngrok.sh` also starts `ask_server.py` when `LLM_BACKEND=ask`. One-time setup:
+> `ngrok config add-authtoken <token>`. Override the port/domain with `PORT=` / `NGROK_DOMAIN=`.
 
 ## Notes
 

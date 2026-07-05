@@ -39,6 +39,8 @@ The default LLM backend is **`ask`** (see below), which requires `ask_server.py`
 ```bash
 python ask_server.py   # HTTP shim on :8080 that shells out to the `claude` CLI
 ```
+To expose the API publicly, `backend/serve_ngrok.sh` runs the backend + an ngrok tunnel (prints the
+public URL; also starts `ask_server.py` when `LLM_BACKEND=ask`). `PORT` / `NGROK_DOMAIN` env vars override.
 
 ### Env
 Copy `.env.example` → `.env` at repo root (auto-loaded by `config.py`). `LLM_BACKEND` picks the
