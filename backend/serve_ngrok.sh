@@ -11,8 +11,10 @@
 #   - ngrok, with an authtoken configured once:  ngrok config add-authtoken <token>
 #   - uv + synced backend deps:                  cd backend && uv sync
 #
-# If LLM_BACKEND=ask (the default) it also starts ask_server.py on :8080, which the
-# pipeline calls internally (the tunnel only exposes the API on $PORT, not the shim).
+# LLM_BACKEND=ask (the default) only ROUTES agent calls to $ASK_URL — it does not
+# start a server. This script launches the bundled ask_server.py on :8080 for you,
+# but that shim needs the `claude` CLI installed+authed on THIS machine. On a server
+# without the claude CLI, use LLM_BACKEND=groq or azure instead (no shim needed).
 #
 set -euo pipefail
 
@@ -23,9 +25,14 @@ cd "$BACKEND_DIR"
 command -v ngrok >/dev/null 2>&1 || { echo "❌ ngrok not found — install: https://ngrok.com/download"; exit 1; }
 command -v uv    >/dev/null 2>&1 || { echo "❌ uv not found — install: https://docs.astral.sh/uv/"; exit 1; }
 
-# Effective LLM backend: env wins, else read repo-root .env, else default "ask".
-LLM_BACKEND="${LLM_BACKEND:-$(grep -E '^[[:space:]]*LLM_BACKEND=' ../.env 2>/dev/null | tail -n1 | cut -d= -f2- | tr -d " \"'" || true)}"
-LLM_BACKEND="${LLM_BACKEND:-ask}"
+# Read a KEY from the environment, else from the repo-root .env, else a fallback.
+env_or_dotenv() {  # $1=var name  $2=fallback
+  local v="${!1:-}"
+  [ -z "$v" ] && v="$(grep -E "^[[:space:]]*$1=" ../.env 2>/dev/null | tail -n1 | cut -d= -f2- | tr -d " \"'" || true)"
+  echo "${v:-$2}"
+}
+LLM_BACKEND="$(env_or_dotenv LLM_BACKEND ask)"
+ASK_URL="$(env_or_dotenv ASK_URL http://127.0.0.1:8080/ask)"
 
 PIDS=()
 cleanup() {
@@ -36,16 +43,12 @@ cleanup() {
 }
 trap cleanup INT TERM EXIT
 
-# The `ask` backend needs the local Claude shim running alongside the API.
+# The `ask` backend needs a server at $ASK_URL — launch the bundled shim on :8080.
 if [ "$LLM_BACKEND" = "ask" ]; then
   echo "▶  LLM_BACKEND=ask → starting ask_server.py on :8080  (log: /tmp/ask_server.log)"
   uv run python ask_server.py > /tmp/ask_server.log 2>&1 &
   PIDS+=($!)
 fi
-
-echo "▶  starting backend (uvicorn) on :$PORT  (log: /tmp/backend-$PORT.log)"
-uv run uvicorn server:app --host 0.0.0.0 --port "$PORT" > "/tmp/backend-$PORT.log" 2>&1 &
-PIDS+=($!)
 
 echo "▶  starting ngrok tunnel → :$PORT  (log: /tmp/ngrok-$PORT.log)"
 if [ -n "${NGROK_DOMAIN:-}" ]; then
@@ -64,6 +67,8 @@ for _ in $(seq 1 40); do
 done
 
 echo
+echo "   LLM_BACKEND=$LLM_BACKEND"
+[ "$LLM_BACKEND" = "ask" ] && echo "   ASK_URL=$ASK_URL   (a server must be listening here)"
 if [ -n "$PUBLIC_URL" ]; then
   echo "✅  Public API:  $PUBLIC_URL"
   echo "      health:    $PUBLIC_URL/health"
@@ -73,7 +78,9 @@ else
   echo "⚠  Couldn't read the ngrok URL — check http://127.0.0.1:4040 or /tmp/ngrok-$PORT.log"
 fi
 echo "      ngrok inspector: http://127.0.0.1:4040     (Ctrl+C stops everything)"
-echo
+echo "─────────────────────────── backend logs (live) ───────────────────────────"
 
-# Exit (→ cleanup) as soon as any process dies.
-wait -n
+# Run uvicorn in the FOREGROUND so its request + job logs stream to THIS terminal.
+# (Not backgrounded/redirected — that's why hitting the API showed no logs before.)
+# When it exits (Ctrl+C) the trap tears down ngrok + ask_server.
+uv run uvicorn server:app --host 0.0.0.0 --port "$PORT"
