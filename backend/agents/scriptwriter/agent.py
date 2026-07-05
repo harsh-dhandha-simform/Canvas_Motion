@@ -41,21 +41,21 @@ Every number you state must be defensible (a real benchmark or spec). No placeho
 """.strip()
 
 NARRATION_RULES = """
-## NARRATION (one per scene — this is shown on screen as the explanation)
+## NARRATION (one per scene — spoken aloud AND shown on screen as the explanation)
 
-EVERY single scene MUST have narration. This is critical. 
-The audio for the entire video comes directly from the combined narration. 
-If a scene has empty narration, there will be dead silence during that scene.
+EVERY single scene MUST have narration. This is critical.
+The audio for the entire video comes directly from the combined narration, spoken at
+~2.5 words/second. The TOTAL word count therefore sets the video length, so you MUST
+stay within the WORD BUDGET given in the request — it takes precedence over any
+sentence-count guidance below.
 
-1. Scene 0 (Hook): 2-3 sentences introducing the topic and why it matters.
-2. Middle Scenes: 3-5 sentences that actually TEACH the scene's subtopic(s):
-   - the problem / why it exists
-   - how the mechanism works at implementation level
-   - a real system that uses it
-   - the trade-off or failure mode
-3. Last Scene (Outro): 2-3 sentences summarizing the key takeaways.
+- Hook & Outro scenes: the tightest — a sentence or two.
+- Middle scenes: teach the subtopic (why it exists, how it works, a real system, the
+  trade-off) — but compressed to fit the per-scene budget. Prefer one or two dense,
+  high-signal sentences over many shallow ones.
 
-Be concrete and specific — name real systems and real numbers. No filler.
+Be concrete and specific — name real systems and real numbers. No filler. NEVER exceed
+the budget; a 60-second video is only ~150 words of narration TOTAL across all scenes.
 """.strip()
 
 
@@ -116,10 +116,16 @@ Do NOT output "panels": {{}} for any scene that has content panels.
 """.strip()
 
 
-def run_agent(plan: dict, syllabus: dict) -> dict:
+def run_agent(plan: dict, syllabus: dict, duration_seconds: int = 60) -> dict:
     scenes = plan.get("scenes", [])
     content = _content_panels(scenes)
     types = {t for _, _, t in content}
+
+    # Narration is spoken at ~2.5 words/sec, so the total word count sets the video
+    # length. Budget the narration to the requested duration so a 60s request yields
+    # ~60s of speech (not several minutes).
+    word_budget = max(30, round(duration_seconds * 2.5))
+    per_scene_words = max(8, round(word_budget / max(1, len(scenes))))
 
     # subtopic lookup for teaching goals
     by_id = {st.get("id"): st for st in syllabus.get("subtopics", [])}
@@ -144,7 +150,10 @@ def run_agent(plan: dict, syllabus: dict) -> dict:
 
     user_message = (
         f"Topic: {syllabus.get('topic')}  (depth: {syllabus.get('depth_level')})\n\n"
-        f"Produce exactly {len(scenes)} scenes in order. For each scene, write narration AND fill ALL listed content panel areas:\n"
+        f"⏱ NARRATION WORD BUDGET: the video is {duration_seconds}s long, so total narration across "
+        f"ALL {len(scenes)} scenes must be about {word_budget} words (~{per_scene_words} words per scene). "
+        f"This is a hard budget — going over makes the video longer than requested. Be concise.\n\n"
+        f"Produce exactly {len(scenes)} scenes in order. For each scene, write narration (within budget) AND fill ALL listed content panel areas:\n"
         + "\n".join(scene_lines)
         + "\n\nContent component schemas you must satisfy:\n"
         + (_schema_reference(types) or "(no content components)")

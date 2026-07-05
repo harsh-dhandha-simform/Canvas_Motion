@@ -10,7 +10,11 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { resolve, join, basename } from "path";
 
-const EXAMPLES_DIR = resolve(__dirname, "../../shared/examples");
+// Scan curated demos AND generated (gitignored) outputs so both are previewable.
+const SOURCE_DIRS = [
+  { dir: resolve(__dirname, "../../shared/examples"), rel: "../../../shared/examples" },
+  { dir: resolve(__dirname, "../../shared/generated"), rel: "../../../shared/generated" },
+];
 const OUT_DIR = resolve(__dirname, "../src/generated");
 const OUT_FILE = join(OUT_DIR, "examples.generated.ts");
 
@@ -21,30 +25,32 @@ function slugFromFilename(filename: string): string {
 }
 
 function buildExamplesMap(): string {
-  let files: string[] = [];
-  try {
-    files = readdirSync(EXAMPLES_DIR).filter((f) => f.endsWith(".json"));
-  } catch {
-    console.warn(`[register-examples] shared/examples/ not found — writing empty map`);
-  }
+  // slug → require path. A generated script with the same slug overrides its demo.
+  const bySlug = new Map<string, string>();
 
-  const entries: string[] = [];
-
-  for (const file of files.sort()) {
-    const slug = slugFromFilename(file);
-    const filePath = join(EXAMPLES_DIR, file);
+  for (const { dir, rel } of SOURCE_DIRS) {
+    let files: string[] = [];
     try {
-      const content = readFileSync(filePath, "utf-8");
-      JSON.parse(content); // validate it's valid JSON
-      // Use a relative require path for the generated file
-      entries.push(
-        `  "${slug}": require("../../../shared/examples/${file}") as VideoScriptProps,`
-      );
-      console.log(`  ✅  ${slug}`);
-    } catch (err) {
-      console.warn(`  ⚠️  Skipping ${file}: ${err}`);
+      files = readdirSync(dir).filter((f) => f.endsWith(".json"));
+    } catch {
+      continue; // dir may not exist (e.g. no generations yet) — skip quietly
+    }
+    for (const file of files.sort()) {
+      const slug = slugFromFilename(file);
+      const filePath = join(dir, file);
+      try {
+        JSON.parse(readFileSync(filePath, "utf-8")); // validate it's valid JSON
+        bySlug.set(slug, `${rel}/${file}`);
+        console.log(`  ✅  ${slug}`);
+      } catch (err) {
+        console.warn(`  ⚠️  Skipping ${file}: ${err}`);
+      }
     }
   }
+
+  const entries = [...bySlug.entries()].map(
+    ([slug, req]) => `  "${slug}": require("${req}") as VideoScriptProps,`,
+  );
 
   const body = entries.length > 0 ? "\n" + entries.join("\n") + "\n" : "";
 

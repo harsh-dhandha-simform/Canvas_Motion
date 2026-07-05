@@ -14,7 +14,10 @@ from config import SHARED_DIR
 
 logger = logging.getLogger(__name__)
 
+# Curated demo scripts committed to git and shown as Studio previews.
 EXAMPLES_DIR = SHARED_DIR / "examples"
+# Per-request pipeline outputs — gitignored, not committed.
+GENERATED_DIR = SHARED_DIR / "generated"
 
 
 def slugify_topic(topic: str) -> str:
@@ -32,13 +35,13 @@ def slugify_topic(topic: str) -> str:
 
 def write_example_script(script: dict, topic: str) -> Path:
     """
-    Write a VideoScript dict to shared/examples/<slug>.json.
+    Write a generated VideoScript dict to shared/generated/<slug>.json (gitignored).
     Only writes if Pydantic validation already passed (caller's responsibility).
     Returns the path written.
     """
-    EXAMPLES_DIR.mkdir(parents=True, exist_ok=True)
+    GENERATED_DIR.mkdir(parents=True, exist_ok=True)
     slug = slugify_topic(topic)
-    path = EXAMPLES_DIR / f"{slug}.json"
+    path = GENERATED_DIR / f"{slug}.json"
     with open(path, "w", encoding="utf-8") as f:
         json.dump(script, f, indent=2, ensure_ascii=False)
     logger.info("[file_output] ✅ Wrote %d-scene script to %s", len(script.get("scenes", [])), path)
@@ -46,7 +49,9 @@ def write_example_script(script: dict, topic: str) -> Path:
 
 
 def list_example_scripts() -> list[Path]:
-    """Return all *.json files in shared/examples/, sorted by name."""
-    if not EXAMPLES_DIR.exists():
-        return []
-    return sorted(EXAMPLES_DIR.glob("*.json"))
+    """Return all *.json scripts (curated demos + generated outputs), sorted by name."""
+    out: list[Path] = []
+    for d in (EXAMPLES_DIR, GENERATED_DIR):
+        if d.exists():
+            out.extend(d.glob("*.json"))
+    return sorted(out)

@@ -110,7 +110,7 @@ app.mount("/audio", StaticFiles(directory=str(audio_dir)), name="audio")
 class GenerateScriptRequest(BaseModel):
     topic: str = Field(..., description="Subject of the educational video")
     context: Optional[str] = Field(None, description="Additional context or constraints")
-    duration_seconds: int = Field(60, ge=10, le=600, description="Target video length in seconds")
+    duration_seconds: int = Field(60, ge=10, le=1800, description="Target video length in seconds (up to 30 min)")
     style: str = Field("educational", description="educational | explainer | tutorial")
     force_restart: bool = Field(False, description="Clear checkpoints and regenerate from scratch")
     enable_audio: bool = Field(False, description="Generate Deepgram TTS audio")
@@ -215,7 +215,6 @@ def generate_script(req: GenerateScriptRequest):
 
     The result is validated with Pydantic and saved to shared/examples/.
     """
-    total_frames = req.duration_seconds * 30
     t0 = time.monotonic()
 
     slug = checkpoint_slug(req.topic, req.duration_seconds)

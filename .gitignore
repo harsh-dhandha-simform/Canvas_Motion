@@ -66,6 +66,9 @@ venv/
 backend/checkpoints/
 backend/audio/
 
+# Per-request generated video scripts (curated demos live in shared/examples/).
+shared/generated/
+
 # ---------------------------------------------------------------------------
 # Generated frontend sources (recreated by `npm run register-examples`).
 # NOTE: shared/componentCatalog.json and src/generated/Palette.ts are committed

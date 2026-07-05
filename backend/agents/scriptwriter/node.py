@@ -17,6 +17,6 @@ def scriptwriter_node(state: PipelineState) -> dict[str, Any]:
         logger.info("[Scriptwriter] ⏩ Loaded from checkpoint")
         return {"script": cached}
 
-    script = run_agent(state["plan"], state["syllabus"])
+    script = run_agent(state["plan"], state["syllabus"], state.get("duration_seconds", 60))
     save_checkpoint(slug, "script", script)
     return {"script": script}

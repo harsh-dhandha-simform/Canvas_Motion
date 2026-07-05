@@ -141,11 +141,28 @@ def tts_node(state: PipelineState) -> dict[str, Any]:
         
     # Rebuild captions using perfect word timestamps
     perfect_captions = build_captions_from_words(words)
-    
+
+    # Sync the video length to the ACTUAL audio length so speech is never cut off
+    # and there's no trailing silence: rescale every scene's duration_frames so the
+    # total matches the real audio duration (captions are already in absolute ms).
+    fps = state.get("fps", 30)
+    audio_seconds = float(words[-1].get("end", 0) or 0)
+    if audio_seconds > 0:
+        target_frames = max(1, round(audio_seconds * fps))
+        cur_total = sum(int(s.get("duration_frames", 0)) for s in scenes)
+        if cur_total > 0:
+            ratio = target_frames / cur_total
+            cursor = 0
+            for s in scenes:
+                s["duration_frames"] = max(1, round(int(s.get("duration_frames", 0)) * ratio))
+                s["start_frame"] = cursor
+                cursor += s["duration_frames"]
+
     data = {
-        "audio_path": audio_path, 
-        "audio_url": f"/audio/{slug}.mp3", 
-        "captions": perfect_captions
+        "scenes": scenes,
+        "audio_path": audio_path,
+        "audio_url": f"/audio/{slug}.mp3",
+        "captions": perfect_captions,
     }
     save_checkpoint(slug, "tts", data)
     return data

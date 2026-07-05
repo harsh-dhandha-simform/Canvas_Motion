@@ -45,13 +45,31 @@ export const GlowingNode: React.FC<GlowingNodeProps> = ({
       border: `2px solid ${color}`,
       boxShadow: `0 0 ${shadowSpread}px rgba(${hexToRgb(color)}, ${glowIntensity}), inset 0 0 10px rgba(${hexToRgb(color)}, 0.3)`,
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
     }}>
-      {icon && <span style={{ fontSize: size * 0.4 }}>{icon}</span>}
-      {label && <span style={{ color: PALETTE.text, fontSize: size * 0.16, fontWeight: 'bold' }}>{label}</span>}
+      {icon && <span style={{ fontSize: size * 0.5, lineHeight: 1 }}>{icon}</span>}
+      {/* Label sits BELOW the box (box stays centered on its anchor so connectors
+          still align) and wraps within a wider width so long names don't spill. */}
+      {label && (
+        <span
+          style={{
+            position: 'absolute',
+            top: '106%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: size * 1.9,
+            textAlign: 'center',
+            color: PALETTE.text,
+            fontSize: Math.max(12, size * 0.16),
+            fontWeight: 'bold',
+            lineHeight: 1.15,
+            whiteSpace: 'normal',
+          }}
+        >
+          {label}
+        </span>
+      )}
     </div>
   );
 };

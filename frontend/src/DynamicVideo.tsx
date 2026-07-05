@@ -26,9 +26,11 @@ import { CaptionLayer } from "./components/CaptionLayer";
 import { PanelSizeProvider } from "./PanelSizeContext";
 import { computeFractions, cellWidths } from "./layout";
 
-// Reserve a band at the bottom of every scene for the caption/subtitle so panels
+// Reserve a band at the bottom of a scene for the caption/subtitle so panels
 // never render on top of or below it (CaptionLayer draws inside this band).
-const SUBTITLE_RESERVE_FRAC = 0.16; // ~173px on 1080p
+// Only applied when the video actually has captions; otherwise panels get the
+// full height. Kept just tall enough for a two-line caption at the very bottom.
+const SUBTITLE_RESERVE_FRAC = 0.13; // ~140px on 1080p
 
 const DIAGRAM_TYPES = new Set([
   "ArchitectureDiagram",
@@ -332,12 +334,19 @@ const SceneWrapper: React.FC<{
   scene: SceneSpec;
   videoWidth: number;
   videoHeight: number;
-}> = ({ scene, videoWidth, videoHeight }) => {
+  hasCaptions: boolean;
+}> = ({ scene, videoWidth, videoHeight, hasCaptions }) => {
   const { layout, title, panels } = normaliseScene(scene);
   const config = LAYOUTS[layout] ?? LAYOUTS["full"];
-  const subtitleReserve = Math.round(videoHeight * SUBTITLE_RESERVE_FRAC);
+  // Only render the header bar when there is an actual title, so title-less
+  // scenes don't waste 148px on an empty bar.
+  const showHeader = config.hasHeader && title.trim().length > 0;
+  // Reserve the subtitle band only when the video has captions.
+  const subtitleReserve = hasCaptions
+    ? Math.round(videoHeight * SUBTITLE_RESERVE_FRAC)
+    : 0;
   const contentH =
-    (config.hasHeader ? videoHeight - HEADER_H : videoHeight) - subtitleReserve;
+    (showHeader ? videoHeight - HEADER_H : videoHeight) - subtitleReserve;
   const hasDiagram = panels.some((p) => DIAGRAM_TYPES.has(p.type));
 
   // Column fractions per grid area (honors explicit size_ratio, else infers from
@@ -365,10 +374,8 @@ const SceneWrapper: React.FC<{
           boxSizing: "border-box",
         }}
       >
-        {/* Header bar */}
-        {config.hasHeader && (
-          <SceneHeader title={title} subtitle={scene.subtitle} />
-        )}
+        {/* Header bar (only when there is a title) */}
+        {showHeader && <SceneHeader title={title} subtitle={scene.subtitle} />}
 
         {/* Content grid */}
         <div
@@ -517,6 +524,7 @@ export const DynamicVideo: React.FC<VideoScriptProps> = ({
     cursor += scene.duration_frames;
     return { scene, from };
   });
+  const hasCaptions = (voiceover?.captions?.length ?? 0) > 0;
 
   return (
     <ThemeProvider theme={theme}>
@@ -532,6 +540,7 @@ export const DynamicVideo: React.FC<VideoScriptProps> = ({
               scene={scene}
               videoWidth={width}
               videoHeight={height}
+              hasCaptions={hasCaptions}
             />
           </Sequence>
         ))}

@@ -61,21 +61,22 @@ def compute_timings(scenes: list[dict], total_seconds: int, fps: int = 30) -> li
         base_frames = max(absorb, reading) * fps
         bases.append(max(min_scene_frames, base_frames))
 
-    # Step 2: Scale up if total natural duration is less than user requested.
-    # NEVER scale down, because scaling down cuts off narration.
+    # Step 2: Scale the natural durations to hit the requested total — in BOTH
+    # directions. Narration is budgeted to the duration upstream (Scriptwriter),
+    # so scaling down just tightens on-screen time; when audio is enabled the TTS
+    # node re-syncs scene durations to the real audio length afterwards.
     raw_total = sum(bases)
-    scale = max(1.0, total_frames / raw_total) if raw_total else 1.0
+    scale = (total_frames / raw_total) if raw_total else 1.0
     durations = [max(min_scene_frames, round(b * scale)) for b in bases]
 
-    # Step 3: absorb rounding drift (only if we scaled up to exactly total_frames)
-    if scale > 1.0:
-        drift = total_frames - sum(durations)
-        if drift != 0:
-            if len(durations) > 2:
-                idx = max(range(1, len(durations) - 1), key=lambda i: durations[i])
-            else:
-                idx = len(durations) - 1
-            durations[idx] = max(min_scene_frames, durations[idx] + drift)
+    # Step 3: absorb rounding drift so the total lands exactly on target.
+    drift = total_frames - sum(durations)
+    if drift != 0 and durations:
+        if len(durations) > 2:
+            idx = max(range(1, len(durations) - 1), key=lambda i: durations[i])
+        else:
+            idx = len(durations) - 1
+        durations[idx] = max(min_scene_frames, durations[idx] + drift)
 
     # Step 4: write back duration_frames + start_frame.
     cursor = 0

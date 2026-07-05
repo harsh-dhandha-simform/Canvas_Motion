@@ -49,7 +49,7 @@ export const CaptionLayer: React.FC<{ captions?: Caption[] }> = ({ captions }) =
           position: "absolute",
           left: 0,
           right: 0,
-          bottom: Math.round(height * 0.05), // ~54px on 1080p
+          bottom: Math.round(height * 0.02), // ~22px on 1080p — sit at the very bottom
           display: "flex",
           justifyContent: "center",
           pointerEvents: "none",
@@ -59,8 +59,8 @@ export const CaptionLayer: React.FC<{ captions?: Caption[] }> = ({ captions }) =
       >
         <div
           style={{
-            maxWidth: "75%",
-            padding: `${Math.round(height * 0.015)}px ${Math.round(height * 0.03)}px`, // ~16px 32px
+            maxWidth: "80%",
+            padding: `${Math.round(height * 0.009)}px ${Math.round(height * 0.026)}px`, // ~10px 28px — minimal vertical padding
             borderRadius: Math.round(height * 0.013), // ~14px
             background: "rgba(3, 7, 17, 0.72)",
             backdropFilter: "blur(8px)",
