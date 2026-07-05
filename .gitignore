@@ -1,14 +1,25 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
-
-# Virtual environments
-.venv
-/node_modules
+# Secrets / environment
 .env
-.agents/
-.codex/
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# uv-managed virtualenv
+.venv/
+
+# Generated output
+output/
+modules_summary/
+# Claude Code local session/tool state
+.claude/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
