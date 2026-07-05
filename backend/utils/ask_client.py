@@ -66,8 +66,15 @@ def ask(
 
     data = resp.json()
     if not data.get("success"):
+        # Surface what the `claude` CLI actually said. ask_server returns its stdout in
+        # `answer` (usually {"raw_output": ...}) and stderr separately — the real error is
+        # often on stdout, so include all of it (truncated) instead of a bare "None".
+        answer = data.get("answer")
+        if isinstance(answer, dict):
+            answer = answer.get("raw_output", answer)
+        detail = data.get("stderr") or data.get("error") or answer or "(no stderr/stdout)"
         raise RuntimeError(
-            f"[{agent_name}] /ask returned failure: {data.get('stderr') or data.get('error')}"
+            f"[{agent_name}] /ask returned failure (exit={data.get('exit_code')}): {str(detail)[:1500]}"
         )
 
     raw_answer = data.get("answer")
