@@ -1,326 +1,243 @@
-# AI-Powered Remotion Video Generator
+# Canvas Motion
 
-Generate animated educational videos from a text topic. The backend calls Groq to produce a structured JSON "video script"; the Remotion frontend reads that JSON and renders the video — no human animation code required per video.
+Turn a text topic into a narrated, animated educational video.
+
+A Python **multi-agent pipeline** (LangGraph) plans the video and emits a single **VideoScript JSON**; a
+**Remotion / React** app reads that JSON and renders the video. The two halves share nothing but the JSON
+contract — the backend never touches React/Remotion, and the frontend never calls an LLM.
+
+```
+ topic ──▶  backend (FastAPI + LangGraph)  ──▶  VideoScript JSON  ──▶  frontend (Remotion)  ──▶  mp4
+             researcher → director →                                    DynamicVideo.tsx
+             scriptwriter ∥ visual_architect →
+             merge → validator → [tts] → assembler
+```
+
+The interface between the two halves is `shared/componentCatalog.json` — a machine-readable catalog of
+every renderable component (its JSON schema + planning metadata). It is **generated** from the frontend's
+`registry.ts`; the backend reads it to know what it may emit.
 
 ---
 
-## Architecture
+## Repository layout
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         User / Client                           │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │  POST /api/generate-script
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              backend/server.py  (FastAPI)                       │
-│                                                                 │
-│  build_system_prompt(COMPONENTS)                                │
-│          │                                                      │
-│          ▼                                                      │
-│  call_llm(prompt, system_prompt)                                │
-│    ├─ Primary:  openai/gpt-oss-120b  via Groq                  │
-│    └─ Fallback: compound-beta        via Groq                  │
-│          │                                                      │
-│          ▼                                                      │
-│  validate JSON (scene types, frame sum)                         │
-│          │                                                      │
-│          ▼                                                      │
-│  { script: VideoScript, meta: { model_used, fallback, ms } }   │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │  JSON video script
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│           frontend/src/DynamicVideo.tsx  (Remotion)             │
-│                                                                 │
-│  VideoScriptProps (inputProps)                                  │
-│          │                                                      │
-│          ▼                                                      │
-│  ThemeProvider (injects theme into React context)               │
-│          │                                                      │
-│          ▼                                                      │
-│  for each scene:                                                │
-│    <Sequence from={cursor} durationInFrames={...}>              │
-│      <SceneWrapper>                                             │
-│        COMPONENT_REGISTRY[scene.type] {...scene.data}           │
-│        + TransitionOverlay (15-frame fade/slide/zoom)           │
-│      </SceneWrapper>                                            │
-│    </Sequence>                                                  │
-└─────────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-                  Rendered MP4 / Remotion Studio
+backend/     FastAPI server + LangGraph agent pipeline (Python ≥3.10)
+  agents/      researcher · director · scriptwriter · visual_architect (LLM agents)
+  graph/       pipeline wiring, shared state, pure-Python nodes (merge/validator/tts/assembler)
+  render/      VideoScript JSON → mp4 via `npx remotion render`
+  utils/       LLM transports (ask/groq/azure), TTS, timing, tracing
+  models/      Pydantic VideoScript model
+  server.py    HTTP API
+frontend/    Remotion + React 19 + Tailwind v4 (the renderer)
+  src/registry.ts        single source of truth for all ~59 components
+  src/DynamicVideo.tsx   JSON → animated timeline
+  src/Root.tsx           Remotion composition registration
+  src/components/         the component library
+shared/
+  componentCatalog.json  generated contract (backend reads this)
+  examples/*.json        curated demo scripts (committed)
+  generated/*.json       per-request pipeline outputs (gitignored)
 ```
 
-### Key Design Principle
-
-The backend outputs **JSON only**. It never writes TypeScript or knows about Remotion internals. The frontend never calls the LLM. They communicate exclusively through the `VideoScript` JSON contract defined in `shared/videoScriptSchema.ts`.
+For the deeper architecture (how the graph fans out, checkpointing, the merge/dataOwner routing, the
+layout engine), see **[CLAUDE.md](./CLAUDE.md)**.
 
 ---
 
-## Running the Backend
+## Prerequisites
 
-### Prerequisites
+- **Node.js** + npm (frontend / Remotion)
+- **Python ≥ 3.10** and [`uv`](https://github.com/astral-sh/uv) (backend)
+- An **LLM backend** — one of:
+  - `ask` (default): the local `claude` CLI + `ask_server.py` (no paid API key)
+  - `groq`: a `GROQ_API_KEY`
+  - `azure`: Azure OpenAI (`AZURE_OPENAI_*`)
+- Optional: **`DEEPGRAM_API_KEY`** for narration audio + word-timed captions
+- Optional (for rendering to mp4): a **Chrome/Chromium** reachable by Remotion
+
+## Setup
 
 ```bash
-pip install fastapi uvicorn groq pydantic
+# 1. Environment — copy the template and fill in what you need
+cp .env.example .env
+
+# 2. Backend deps
+cd backend && uv sync
+
+# 3. Frontend deps
+cd ../frontend && npm install
 ```
 
-### Environment
+`.env` (at the repo root) is auto-loaded by `backend/config.py`. Set `LLM_BACKEND` to `ask` (default),
+`groq`, or `azure`, and provide the matching keys — see [LLM backends](#llm-backends).
+
+---
+
+## Quick start
 
 ```bash
-export GROQ_API_KEY=gsk_...
-# or create my-video/.env containing:
-# GROQ_API_KEY=gsk_...
-```
+# (only for the default `ask` backend) start the Claude HTTP shim on :8080
+cd backend && python ask_server.py
 
-### Start the server
+# start the API on :8000
+cd backend && uvicorn server:app --reload --port 8000
 
-```bash
-cd my-video/backend
-uvicorn server:app --reload --port 8000
-```
-
-### API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET`  | `/health` | Returns `{ status, models }` |
-| `GET`  | `/api/components` | Lists available scene components and their props |
-| `POST` | `/api/generate-script` | Generates a video script JSON |
-
-#### Example generate request
-
-```bash
+# generate a script (writes shared/generated/<slug>.json and returns it)
 curl -X POST http://localhost:8000/api/generate-script \
   -H "Content-Type: application/json" \
-  -d '{
-    "topic": "How Neural Networks Learn",
-    "duration_seconds": 60,
-    "style": "educational"
-  }'
+  -d '{"topic": "How TCP congestion control works", "duration_seconds": 60}'
 ```
 
-#### Example response
-
-```json
-{
-  "script": {
-    "title": "How Neural Networks Learn",
-    "fps": 30,
-    "width": 1920,
-    "height": 1080,
-    "theme": { "primary": "#7c3aed", "background": "#0b0f1e" },
-    "scenes": [ ... ]
-  },
-  "meta": {
-    "model_used": "openai/gpt-oss-120b",
-    "fallback_triggered": false,
-    "generation_time_ms": 1843
-  }
-}
-```
-
-### LLM Configuration
-
-| Setting | Value | Where |
-|---------|-------|-------|
-| Primary model | `openai/gpt-oss-120b` | `backend/server.py → _PRIMARY_MODEL` |
-| Fallback model | `compound-beta` | `backend/server.py → _FALLBACK_MODEL` |
-| Full fallback chain | `gpt-oss-120b → compound-beta → llama-3.3-70b` | `backend/server.py → _MODEL_CHAIN` |
-
-To change models, edit `_MODEL_CHAIN` in `backend/server.py`.
-
----
-
-## Running the Frontend
-
-### Prerequisites
+**Preview** the result in Remotion Studio:
 
 ```bash
-cd my-video/frontend
-npm install
+cd frontend && npm run dev      # http://localhost:3000
 ```
 
-### Remotion Studio (development)
+New generations show up automatically as their own compositions; there is also a generic `DynamicVideo`
+composition you can point at any script.
+
+**Render to mp4** — either ask the backend (background job) …
 
 ```bash
-npm run dev
-# Opens http://localhost:3000
-# Select "DynamicVideo" to preview the demo script
+curl -X POST http://localhost:8000/api/render -H "Content-Type: application/json" \
+  -d '{"slug": "how-tcp-congestion-control-works"}'
+# → {"job_id": "...", "status": "queued"}   then poll:
+curl http://localhost:8000/api/render/<job_id>
+# → {"status": "done", "output_url": "/renders/<slug>.mp4"}
 ```
 
-The `DynamicVideo` composition loads `shared/examples/demo.json` as its default props. You can paste any generated script into the Remotion Studio props panel.
-
-### Render to MP4
+… or render directly with the Remotion CLI:
 
 ```bash
-npx remotion render DynamicVideo out/video.mp4 \
-  --props='{"title":"...","scenes":[...]}'
+cd frontend
+npx remotion render DynamicVideo out/video.mp4 --props=../shared/generated/<slug>.json
+```
+
+> Rendering needs the frontend's `node_modules` and a Chrome, and — if the script has narration audio —
+> the API server must be running (Remotion fetches `/audio/<slug>.mp3` over HTTP). In sandboxed
+> environments set `REMOTION_BROWSER_EXECUTABLE` to a Chrome binary.
+
+To generate **and** render in one call, pass `"render": true` to `/api/generate-script`; the response's
+`meta.render_job_id` is what you poll.
+
+---
+
+## LLM backends
+
+Selected by `LLM_BACKEND`; all three are dispatched from `backend/utils/api.py:chat_completion`.
+
+| `LLM_BACKEND` | Transport | Requires |
+|---|---|---|
+| `ask` (default) | `utils/ask_client.py` → `ask_server.py` → local `claude` CLI (model `opus`) | the `claude` CLI + `python ask_server.py` running |
+| `groq` | `utils/api.py` rate-limit-aware model chain on Groq | `GROQ_API_KEY` |
+| `azure` | `utils/azure_client.py` → `AzureOpenAI` SDK | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT_NAME`, `AZURE_OPENAI_API_VERSION` |
+
+Smoke-test Azure: `cd backend && uv run python test_azure.py`.
+
+---
+
+## API
+
+| Method | Path | Description |
+|---|---|---|
+| `GET`  | `/health` | Liveness + pipeline/tracing status |
+| `GET`  | `/api/components` | All renderable components + descriptions |
+| `GET`  | `/api/scripts` | Generated + example script files on disk |
+| `GET`  | `/api/checkpoints/{slug}` | Per-stage checkpoint status for a topic |
+| `POST` | `/api/generate-script` | Run the pipeline → VideoScript JSON |
+| `POST` | `/api/render` | Render a generated script to mp4 (background) |
+| `GET`  | `/api/render/{job_id}` | Poll a render job |
+| `GET`  | `/audio/<slug>.mp3` | Narration audio (when `enable_audio`) |
+| `GET`  | `/renders/<slug>.mp4` | A finished render |
+
+### `POST /api/generate-script` body
+
+```jsonc
+{
+  "topic": "How TCP congestion control works",  // required
+  "duration_seconds": 60,        // 10–1800 (up to 30 min)
+  "style": "educational",        // educational | explainer | tutorial
+  "enable_audio": false,         // Deepgram TTS + word-timed captions
+  "render": false,               // also render to mp4 in the background
+  "force_restart": false,        // ignore checkpoints and regenerate
+  "fps": 30, "width": 1920, "height": 1080
+}
 ```
 
 ---
 
-## JSON Schema
+## The VideoScript contract
 
-Full TypeScript types live in `shared/videoScriptSchema.ts`.
+The pipeline's output (and the frontend's input). Validated by `backend/models/video_script.py`.
 
-### Top-level structure
-
-```json
+```jsonc
 {
-  "title": "string",
-  "fps": 30,
-  "width": 1920,
-  "height": 1080,
-  "theme": {
-    "primary":    "#hex — main accent color",
-    "secondary":  "#hex — complementary accent",
-    "accent":     "#hex — highlight color",
-    "background": "#hex — dark background",
-    "font":       "Google Font name"
-  },
-  "scenes": [ ... ]
+  "title": "…", "fps": 30, "width": 1920, "height": 1080,
+  "theme": { "primary": "#…", "secondary": "#…", "accent": "#…", "background": "#…", "font": "…" },
+  "audio_url": "/audio/<slug>.mp3 | null",
+  "voiceover": { "provider": "…|null", "captions": [ { "text": "…", "startMs": 0, "endMs": 900 } ] },
+  "scenes": [
+    {
+      "id": "scene-1",
+      "layout": "full | left-right | title-content | title-left-right | title-main-sidebar",
+      "title": "…", "subtitle": "…",
+      "duration_frames": 150,
+      "transition": "fade | slideLeft | slideUp | zoom | none",
+      "narration": "…",
+      "panels": [ { "area": "left", "type": "<ComponentName>", "size_ratio": 1.8, "data": { /* per-component */ } } ]
+    }
+  ]
 }
 ```
 
-### Scene structure
-
-```json
-{
-  "id": "unique-string",
-  "type": "AnimatedTitle | ComparisonCard",
-  "duration_frames": 90,
-  "transition": "fade | slideLeft | slideUp | zoom | none",
-  "data": { }
-}
-```
-
-### AnimatedTitle data
-
-```json
-{
-  "title":       "string (required)",
-  "subtitle":    "string (optional)",
-  "accentColor": "#hex (optional, default #38BDF8)",
-  "align":       "\"center\" | \"left\" (optional, default \"center\")"
-}
-```
-
-### ComparisonCard data
-
-```json
-{
-  "title":        "string (required)",
-  "pros":         ["string", ...],
-  "cons":         ["string", ...],
-  "accentColor":  "#hex (optional)",
-  "visibleCount": "number (optional, default 99 = show all)"
-}
-```
-
-### Frame budget rule
-
-`sum(scene.duration_frames) == duration_seconds * 30`
-
-The backend enforces this: if the LLM returns a mismatched sum, the last scene's duration is silently adjusted.
+- Each panel's `type` is one of the components in `shared/componentCatalog.json` (see `GET /api/components`);
+  its `data` matches that component's schema.
+- **Frame budget:** `sum(scene.duration_frames) == duration_seconds * fps` (the backend enforces it).
+- `size_ratio` sets a panel's relative width within its layout row (diagrams wider than text, etc.).
 
 ---
 
-## How to Add a New Scene Component
+## Adding a scene component
 
-Adding a new component is a four-step process — one logical change per step:
+Everything derives from one file — `frontend/src/registry.ts`:
 
-### Step 1 — Create the component
+1. Create `frontend/src/components/<Name>.tsx` (export the component **and** a Zod schema
+   `export const <Name>Schema = z.object({…})`).
+2. Add it to **all four** maps in `registry.ts` (`COMPONENT_REGISTRY`, `COMPONENT_SCHEMAS`,
+   `COMPONENT_CATALOG`, `COMPONENT_META`). Set `dataOwner` (`"content"` → filled by the scriptwriter,
+   `"visual"` → by the visual_architect).
+3. `npm run catalog` to regenerate `shared/componentCatalog.json`.
 
-```tsx
-// frontend/src/components/BulletList.tsx
-import React from "react";
-import { useCurrentFrame, interpolate } from "remotion";
-
-export type BulletListProps = {
-  heading: string;
-  bullets: string[];
-  accentColor?: string;
-};
-
-export const BulletList: React.FC<BulletListProps> = ({ heading, bullets, accentColor = "#38BDF8" }) => {
-  const frame = useCurrentFrame();
-  // ... animation using interpolate() with extrapolateLeft/Right: "clamp"
-};
-```
-
-### Step 2 — Register it (one line in registry.ts)
-
-```ts
-// frontend/src/registry.ts
-import { BulletList } from "./components/BulletList";
-
-export const COMPONENT_REGISTRY = {
-  AnimatedTitle,
-  ComparisonCard,
-  BulletList,  // ← add this line
-} as const;
-```
-
-### Step 3 — Add it to the backend prompt (one block in server.py)
-
-```python
-# backend/server.py — inside COMPONENTS list
-ComponentMeta(
-    name="BulletList",
-    description="Full-screen bullet list with staggered reveal.",
-    props={
-        "heading": "string (required) — section heading",
-        "bullets": "string[] (required) — 3–6 bullet points",
-        "accentColor": "string (optional) — hex color for bullets",
-    },
-),
-```
-
-### Step 4 — Add the TypeScript type (one union arm in videoScriptSchema.ts)
-
-```ts
-// shared/videoScriptSchema.ts
-export type BulletListData = { heading: string; bullets: string[]; accentColor?: string };
-
-// Extend the Scene union:
-| { id: string; type: "BulletList"; duration_frames: number; transition: TransitionType; data: BulletListData }
-```
-
-That's it. The next call to `POST /api/generate-script` will include the new component in the Groq prompt automatically.
+The backend picks it up automatically from the regenerated catalog. Details in
+[CLAUDE.md](./CLAUDE.md#adding-a-new-scene-component).
 
 ---
 
-## Project Structure
+## Commands
 
+**Frontend** (`frontend/`)
+
+```bash
+npm run dev        # Remotion Studio at :3000
+npm run build      # bundle (regenerates catalog + examples first)
+npm run lint       # eslint + tsc — the correctness gate (no test suite)
+npm run catalog    # regenerate shared/componentCatalog.json from registry.ts
 ```
-my-video/
-├── backend/
-│   ├── server.py           ← FastAPI HTTP server (JSON generation)
-│   ├── config.py           ← Groq keys, model names, paths
-│   ├── agents/             ← 4-agent pipeline agents
-│   └── utils/api.py        ← Groq chat_completion() with retry chain
-│
-├── frontend/
-│   └── src/
-│       ├── registry.ts         ← Component registry (extend here)
-│       ├── DynamicVideo.tsx    ← JSON-driven Remotion composition
-│       ├── ThemeContext.tsx    ← React context for JSON theme
-│       ├── Root.tsx            ← Remotion composition registration
-│       ├── components/         ← Scene component library
-│       │   ├── AnimatedTitle.tsx
-│       │   ├── ComparisonCard.tsx
-│       │   ├── ScalingArrow.tsx
-│       │   ├── ServerRack.tsx
-│       │   ├── SceneLayout.tsx
-│       │   ├── DataStream.tsx
-│       │   ├── GlassPanel.tsx
-│       │   └── GlowingNode.tsx
-│       └── scenes/             ← Hand-crafted demo scenes
-│
-└── shared/
-    ├── videoScriptSchema.ts    ← TypeScript types (source of truth)
-    └── examples/
-        └── demo.json           ← "How Neural Networks Learn" 60s demo
+
+**Backend** (`backend/`)
+
+```bash
+uvicorn server:app --reload --port 8000   # API (fires the full pipeline per request)
+python ask_server.py                       # Claude HTTP shim on :8080 (for LLM_BACKEND=ask)
+python test_dry_run.py                     # pipeline wiring test with mocked LLM calls (no keys)
+python ../test_pipeline.py                 # end-to-end generate_script() (needs a live LLM backend)
 ```
+
+## Notes
+
+- Run backend commands from **inside `backend/`** (imports are resolved via a `sys.path` insert in `server.py`).
+- Re-running the same topic **resumes from checkpoints**; pass `force_restart: true` to regenerate.
+- Generated/derived files (`shared/componentCatalog.json`, `frontend/src/generated/*`) are committed but
+  produced from source — change `registry.ts` / examples and regenerate; don't hand-edit them.

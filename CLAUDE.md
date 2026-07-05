@@ -9,9 +9,9 @@ pipeline (backend) emits a **VideoScript JSON**; a Remotion/React app (frontend)
 video. The two halves share nothing but the JSON contract — the backend never touches React/Remotion,
 the frontend never calls an LLM.
 
-> The root `README.md` describes an older 2-component version under `my-video/` paths — it is stale.
-> Trust the code and this file. There are now ~34 components and a LangGraph pipeline (not the
-> "Director → Sync → Assembler" chain the README draws).
+> `README.md` (repo root) covers setup + usage; this file covers the deeper architecture. There are
+> ~59 scene components and a LangGraph pipeline (researcher → director → scriptwriter ∥
+> visual_architect → merge → validator → [tts] → assembler).
 
 ## Commands
 
@@ -23,7 +23,7 @@ npm run build      # remotion bundle (also regenerates catalog + examples via pr
 npm run lint       # eslint src && tsc  — this is the only typecheck/lint gate
 npm run catalog          # regenerate shared/componentCatalog.json from registry.ts
 npm run register-examples # regenerate src/generated/examples.generated.ts from shared/examples/*.json
-npx remotion render DynamicVideo out/video.mp4 --props='<VideoScript JSON>'
+npx remotion render DynamicVideo out/video.mp4 --props=<script.json>  # generic composition; size/duration from props
 ```
 There is no frontend test suite; `npm run lint` (eslint + `tsc`) is the correctness gate.
 
@@ -33,6 +33,7 @@ There is no frontend test suite; `npm run lint` (eslint + `tsc`) is the correctn
 uvicorn server:app --reload --port 8000   # main API (fires the full pipeline per request)
 python test_dry_run.py                     # pipeline wiring test with mocked agent LLM calls (no API keys)
 python ../test_pipeline.py                 # end-to-end generate_script() call (needs a live LLM backend)
+python test_azure.py                        # smoke-test the Azure OpenAI backend (needs AZURE_OPENAI_* in .env)
 ```
 The default LLM backend is **`ask`** (see below), which requires `ask_server.py` running separately:
 ```bash
@@ -40,8 +41,10 @@ python ask_server.py   # HTTP shim on :8080 that shells out to the `claude` CLI
 ```
 
 ### Env
-Copy `.env.example` → `.env` at repo root (auto-loaded by `config.py`). `GROQ_API_KEY` only matters
-when `LLM_BACKEND=groq`; `DEEPGRAM_API_KEY` only when `enable_audio=true`.
+Copy `.env.example` → `.env` at repo root (auto-loaded by `config.py`). `LLM_BACKEND` picks the
+transport (`ask` default | `groq` | `azure`): `GROQ_API_KEY` matters only for `groq`, `AZURE_OPENAI_*`
+only for `azure`. `DEEPGRAM_API_KEY` only when `enable_audio=true`. Rendering knobs (`RENDER_*`,
+`REMOTION_BROWSER_EXECUTABLE`) are optional — see "Rendering to mp4" below.
 
 ## Architecture
 
@@ -90,8 +93,20 @@ researcher → director → ┬─ scriptwriter ──┐
 - `ask` (default): every agent call goes through `utils/ask_client.py` → `ask_server.py` → the local
   `claude` CLI (model `opus`). This is how the pipeline runs without paid API keys.
 - `groq`: `utils/api.py` walks a rate-limit-aware model chain on Groq (`utils/rate_limiter.py`).
+- `azure`: `utils/azure_client.py` calls Azure OpenAI via the `AzureOpenAI` SDK (deployment from
+  `AZURE_OPENAI_DEPLOYMENT_NAME`). All three are dispatched from `utils/api.py:chat_completion`.
 
 Optional Langfuse tracing via `utils/tracing.py` (`@observe`), enabled when Langfuse env vars are set.
+
+### Rendering to mp4 (`backend/render/`)
+Separate from the LangGraph graph (not a node). A generated VideoScript is turned into video with
+`npx remotion render`: `render/adapter.py` (engine dispatch, only `remotion`) → `render/remotion_adapter.py`
+(writes a props file, shells out to the frontend's generic `DynamicVideo` composition) →
+`backend/renders/<slug>.mp4`. `render/jobs.py` runs renders in a background daemon thread with in-memory
+status. Triggered by `POST /api/render {slug|topic}` (poll `GET /api/render/{job_id}`) or `render:true`
+on `/api/generate-script`. Narration audio is fetched over HTTP from the running API
+(`/audio/<slug>.mp3`), so the server must be up during a render; `npx remotion` needs the frontend's
+`node_modules` + a Chrome (set `REMOTION_BROWSER_EXECUTABLE` in sandboxes).
 
 ### Frontend: registry.ts is the single source of truth
 `frontend/src/registry.ts` declares, for every component, four things in lockstep:
@@ -104,12 +119,20 @@ Optional Langfuse tracing via `utils/tracing.py` (`@observe`), enabled when Lang
 `build-catalog.ts` merges CATALOG + META per component into `componentCatalog.json`. A missing META
 entry is a hard error at catalog build.
 
-`DynamicVideo.tsx` renders each scene into a CSS-grid `layout` (`full`, `left-right`,
-`title-main-sidebar`, …). Each scene has `panels: [{ area, type, data }]`; `PanelCell` looks up the
-component in `COMPONENT_REGISTRY` and drops it into its grid `area`. The theme's `primary` color is
-injected as the default `accentColor` for every panel. Scenes also carry a `transition` overlay and
-optional TTS `audio_url` + `captions`. `normaliseScene()` still accepts the legacy single
-`{type,data}` scene shape.
+`DynamicVideo.tsx` renders each scene into a CSS-grid `layout` (5: `full`, `left-right`,
+`title-content`, `title-left-right`, `title-main-sidebar`). Each scene has
+`panels: [{ area, type, size_ratio?, data }]`; `PanelCell` looks up the component in
+`COMPONENT_REGISTRY` and drops it into its grid `area`. Column widths come from each panel's
+`size_ratio` (or its component category) via `layout.ts`, and `PanelCell` passes each cell's pixel size
+through `PanelSizeContext` so components size to their cell (`usePanelSize()`), not the full canvas. The
+theme's `primary` color is injected as the default `accentColor`. Scenes cross-dissolve into each other
+(opacity crossfade in `SceneWrapper`, no timeline compression, so audio/captions stay synced);
+`CaptionLayer.tsx` draws word-timed captions at the composition root. `normaliseScene()` still accepts
+the legacy single `{type,data}` shape.
+
+`Root.tsx` registers one `<Composition>` per generated example (from `examples.generated.ts`) plus a
+generic `DynamicVideo` composition whose `calculateMetadata` derives duration/fps/size from `--props` —
+that generic one is what the backend render pipeline targets.
 
 ## Adding a new scene component
 
@@ -130,5 +153,7 @@ optional TTS `audio_url` + `captions`. `normaliseScene()` still accepts the lega
   enforces it (timing + a last-scene fixup in `server.py`).
 - Generated files are committed but derived — don't hand-edit `shared/componentCatalog.json`,
   `frontend/src/generated/*`. Change the source (`registry.ts`, `shared/examples/*.json`) and rerun.
+- `shared/examples/*.json` are curated demos (committed); `shared/generated/*.json` are per-request
+  pipeline outputs (gitignored). `register-examples` scans both, so both preview in Studio.
 - Backend imports are bare (`from graph...`, `from utils...`), resolved by `server.py` inserting
   `backend/` onto `sys.path`. Run backend commands from inside `backend/`.
