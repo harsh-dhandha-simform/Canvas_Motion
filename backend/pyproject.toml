@@ -17,4 +17,5 @@ dependencies = [
     "httpx[http2]>=0.28.1",
     "pydantic>=2.13.4",
     "deepgram-sdk>=7.4.0",
+    "openai>=1.40.0",
 ]

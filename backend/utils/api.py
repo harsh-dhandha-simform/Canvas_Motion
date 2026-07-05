@@ -77,6 +77,20 @@ def chat_completion(
             lf.update_current_generation(model=f"ask:{ASK_MODEL}", output=answer)
         return answer
 
+    if LLM_BACKEND == "azure":
+        from utils.azure_client import azure_chat
+        from config import AZURE_OPENAI_DEPLOYMENT_NAME
+        answer = azure_chat(
+            messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_model=response_model,
+            agent_name=agent_name,
+        )
+        if lf:
+            lf.update_current_generation(model=f"azure:{AZURE_OPENAI_DEPLOYMENT_NAME}", output=answer)
+        return answer
+
     est_tokens = estimate_tokens(messages)
     client = get_client()
 

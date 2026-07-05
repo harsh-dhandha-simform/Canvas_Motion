@@ -55,9 +55,10 @@ DEEPGRAM_API_KEY: str = os.environ.get("DEEPGRAM_API_KEY", "")
 # ---------------------------------------------------------------------------
 # LLM backend selection
 # ---------------------------------------------------------------------------
-# "ask"  → route every agent call through the self-hosted /ask endpoint
-#          (Claude Code CLI behind ask_server.py)
-# "groq" → original Groq fallback-chain client
+# "ask"   → route every agent call through the self-hosted /ask endpoint
+#           (Claude Code CLI behind ask_server.py)
+# "groq"  → original Groq fallback-chain client
+# "azure" → Azure OpenAI chat completions via the openai AzureOpenAI SDK
 LLM_BACKEND: str = os.environ.get("LLM_BACKEND", "ask")
 
 # Self-hosted Claude /ask endpoint (ask_server.py)
@@ -71,6 +72,19 @@ ASK_EFFORT: str = os.environ.get("ASK_EFFORT", "medium")
 # Client timeout must exceed ask_server.py's CLAUDE_TIMEOUT (default 600) so the
 # server's own clean timeout response wins over a client-side socket cutoff.
 ASK_TIMEOUT_SECONDS: int = int(os.environ.get("ASK_TIMEOUT_SECONDS", "660"))
+
+# Azure OpenAI  (LLM_BACKEND="azure")
+AZURE_OPENAI_API_KEY: str = os.environ.get("AZURE_OPENAI_API_KEY", "")
+AZURE_OPENAI_ENDPOINT: str = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
+# On Azure the "model" is the DEPLOYMENT name you created, not the base model id.
+AZURE_OPENAI_DEPLOYMENT_NAME: str = os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o")
+AZURE_OPENAI_API_VERSION: str = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
+
+if LLM_BACKEND == "azure" and not (AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT):
+    raise EnvironmentError(
+        "LLM_BACKEND=azure requires AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT "
+        "(plus AZURE_OPENAI_DEPLOYMENT_NAME and AZURE_OPENAI_API_VERSION). Set them in .env."
+    )
 
 if LLM_BACKEND == "groq" and not GROQ_API_KEY:
     raise EnvironmentError(
